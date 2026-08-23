@@ -52,6 +52,26 @@ function parseText(text, slots) {
   }
   if (/בלי ילדים|אין ילדים|רק מבוגרים|ללא ילדים/.test(t)) { s.no_children = true; s.children_ages = []; }
 
+  // children COUNT without ages: "שני ילדים", "2 ילדים", "ילד אחד" —
+  // remember how many, so the next question is "באילו גילאים?" and not
+  // "נוסעים גם ילדים?" (the customer already said so)
+  if (!(s.children_ages || []).length) {
+    const cm = t.match(/(\d{1,2}|[א-ת]+)\s*ילדים/);
+    if (cm) { const n = +cm[1] || heNum(cm[1]); if (n) { s.children_count = n; s.no_children = false; } }
+    if (/ילד אחד|ילדה אחת/.test(t)) { s.children_count = 1; s.no_children = false; }
+  }
+
+  // bare numbers as the ANSWER to the ages question: "4 ו 9", "4,9", "9 4"
+  if ((s._lastQuestion === 'children' || s._lastQuestion === 'children_ages') && !(s.children_ages || []).length) {
+    const nums = [...t.matchAll(/\b(\d{1,2})\b/g)].map(x => +x[1]).filter(n => n >= 0 && n <= 17);
+    if (nums.length >= 2 && nums.length <= 4) { s.children_ages = nums; s.no_children = false; }
+    else if (nums.length === 1) {
+      // one number: if we already know the count it's an age, otherwise a count
+      if (s.children_count === 1 || nums[0] <= 17 && s.children_count) { s.children_ages = [nums[0]]; s.no_children = false; }
+      else { s.children_count = nums[0]; s.no_children = false; }
+    }
+  }
+
   // --- adults: "זוג", "2 מבוגרים", "אנחנו 4", "4 אנשים"
   if (/זוג(?!ל)/.test(t) && s.adults == null) s.adults = 2;
   let m = t.match(/(\d{1,2}|[א-ת]+)\s*מבוגרים/);
@@ -114,16 +134,36 @@ function parseText(text, slots) {
   return s;
 }
 
-// which single question to ask next (max 2 total is enforced by server.js)
-function nextQuestion(slots) {
-  if (slots.adults == null) return { key: 'adults', he: 'כמה מבוגרים תהיו בחופשה?' };
-  if (!(slots.children_ages || []).length && slots.no_children !== true)
-    return { key: 'children', he: 'נוסעים גם ילדים, ואם כן — באילו גילאים?' };
-  if (slots.month == null) return { key: 'month', he: 'מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם "גמיש")' };
-  const kids = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
-  if (kids && slots.needs_hebrew_kids_club == null)
-    return { key: 'kids_club', he: 'תרצו קייטנת סקי בעברית לילדים?' };
-  return null;
+// which single question to ask next (max 2 total is enforced by server.js).
+// prevKey = the question the user just answered; never repeat it verbatim —
+// if the answer wasn't understood, ask again in a clearer way.
+function nextQuestion(slots, prevKey) {
+  let q = null;
+  if (slots.adults == null) q = { key: 'adults', he: 'כמה מבוגרים תהיו בחופשה?' };
+  else if (!(slots.children_ages || []).length && slots.no_children !== true) {
+    q = slots.children_count
+      ? { key: 'children_ages', he: 'באילו גילאים הילדים?' }
+      : { key: 'children', he: 'נוסעים גם ילדים, ואם כן — באילו גילאים?' };
+  }
+  else if (slots.month == null) q = { key: 'month', he: 'מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם "גמיש")' };
+  else {
+    const kids = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
+    if (kids && slots.needs_hebrew_kids_club == null)
+      q = { key: 'kids_club', he: 'תרצו קייטנת סקי בעברית לילדים?' };
+  }
+  if (q && prevKey && (q.key === prevKey ||
+      (q.key === 'children' && prevKey === 'children_ages') ||
+      (q.key === 'children_ages' && prevKey === 'children'))) {
+    const retry = {
+      adults: 'סליחה, לא הצלחתי להבין — רק מספר המבוגרים (למשל: 2)',
+      children: 'רק גילאי הילדים במספרים, למשל: 5 ו-9 (או "בלי ילדים")',
+      children_ages: 'רק הגילאים במספרים, למשל: 5 ו-9',
+      month: 'באיזה חודש? דצמבר, ינואר, פברואר או מרץ (או "גמיש")',
+      kids_club: 'קייטנה בעברית לילדים — כן או לא?',
+    };
+    q = { key: q.key, he: retry[q.key] || q.he };
+  }
+  return q;
 }
 
 /* ---------- template phrasing (offline replacement for the phrasing model) ---------- */

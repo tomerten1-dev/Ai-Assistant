@@ -109,7 +109,7 @@ async function handleChat(body) {
     // ---- offline demo mode: regex NLU, zero cost ----
     const lastUser = [...messages].reverse().find(m => m.role === 'user');
     slots = offline.parseText(lastUser ? lastUser.content : '', prevSlots);
-    const q = offline.nextQuestion(slots);
+    const q = offline.nextQuestion(slots, prevSlots._lastQuestion || null);
     if (q) { slots._lastQuestion = q.key; replyIfNotReady = q.he; }
     else delete slots._lastQuestion;
   }
