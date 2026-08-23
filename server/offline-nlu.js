@@ -27,6 +27,17 @@ const DESTS = [
   [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונז'נבר|מונזנבר/, 'Montgenevre', 'france'],
   [/סולדאו/, 'Soldeu', 'andorra'], [/פאס דה לה קאסה|פאס/, 'Pas de la Casa', 'andorra'],
 ];
+// Destinations and brands that appear on pingwin.co.il but are NOT in the
+// winter 26/27 commitments workbook — the closed universe (spec 3.2.1).
+const NOT_SOLD = [
+  [/זאלבאך|סאלבאך/, 'זאלבאך'], [/צל אם ?זה|צל ?אם|zell/i, 'צל אם זה'],
+  [/סנט ?אנטון|st\.? ?anton/i, 'סנט אנטון'], [/ואל ?ד'?יזר|val ?d/i, "ואל ד'יזר"],
+  [/לה ?פלאן|la ?plagne/i, 'לה פלאן'], [/קלאב ?מד|club ?med/i, 'קלאב מד'],
+  [/הינטרגלם/, 'הינטרגלם'], [/קצברג/, 'קצברג'], [/פראגלטו|פרגלטו/, 'פראגלטו'],
+  [/סוצ'?י/, "סוצ'י"], [/סנט ?מוריץ/, 'סנט מוריץ'], [/דולומיטים|איטליה/, 'איטליה'],
+  [/שוויץ/, 'שוויץ'],
+];
+
 const PREFS = [
   [/אפרה/, 'אפרה-סקי'], [/ספא/, 'ספא'], [/קרוב למסלול|על המסלול/, 'קרוב למסלולים'],
   [/שקט/, 'שקט'], [/מתחיל/, 'מתחילים'], [/זול|תקציב|חסכוני/, 'תקציב'],
@@ -38,7 +49,9 @@ const PREFS = [
 // "לא רוצים צרפת", "חוץ מצרפת", "בלי צרפת", "מלבד צרפת", "לא לצרפת"
 function isNegated(t, idx) {
   const before = t.slice(Math.max(0, idx - 24), idx);
-  return /(?:^|[^א-ת])(?:לא|בלי|בלא|חוץ ?מ|מלבד|למעט|פרט ל)\s*(?:רוצים?|רוצה|מעוניינים?|מעוניין|צריכים?|צריך|רוצות)?\s*(?:ל|ב|מ|את)?\s*$/.test(before);
+  // the leading ו matters: in "לא צרפת ולא בולגריה" the second negation is
+  // written "ולא", and missing it left Bulgaria selected — the exact bug again
+  return /(?:^|[^א-ת])ו?(?:לא|בלי|בלא|חוץ ?מ|מלבד|למעט|פרט ל)\s*(?:רוצים?|רוצה|מעוניינים?|מעוניין|צריכים?|צריך|רוצות)?\s*(?:ל|ב|מ|את)?\s*$/.test(before);
 }
 
 function parseText(text, slots) {
@@ -67,6 +80,11 @@ function parseText(text, slots) {
         }
       }
     }
+    // ages written as words: "תינוק בן שנה", "בן שנתיים"
+    if (!ages.length) {
+      if (/בן שנה|בת שנה|תינוק בן שנה/.test(t)) ages = [1];
+      else if (/שנתיים/.test(t)) ages = [2];
+    }
     // --- bare numbers answering the children question ARE the ages
     if (!ages.length && askedChildren) {
       ages = allNums.filter(n => n >= 0 && n <= 17).slice(0, 4);
@@ -85,15 +103,27 @@ function parseText(text, slots) {
   }
 
   // --- adults: "זוג", "2 מבוגרים", "אנחנו 4", "4 אנשים"
-  if (/זוג(?!ל)/.test(t) && s.adults == null) s.adults = 2;
+  // A correction ("בעצם 4", "סליחה, 3") must override an earlier number —
+  // silently keeping the first one books the wrong size room.
+  const correcting = /בעצם|סליחה|טעות|תתקן|לא נכון|התכוונתי|שיניתי|בעצמנו/.test(t);
+  if (/אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד/.test(t)) s.adults = 1;
+  if (/זוג(?!ל)/.test(t) && (s.adults == null || correcting)) s.adults = 2;
   let m = t.match(/(\d{1,2}|[א-ת]+)\s*מבוגרים/);
   if (m) s.adults = +m[1] || heNum(m[1]) || s.adults;
-  if (s.adults == null) {
-    m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2})/) || t.match(/(\d{1,2})\s*(?:אנשים|נוסעים|אורחים)/);
-    if (m) {
-      const total = +m[1];
+  // an explicit party statement always wins, corrected or not
+  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2})/) || t.match(/(\d{1,2})\s*(?:אנשים|נוסעים|אורחים)/);
+  if (m) {
+    const total = +m[1];
+    const kids = (s.children_ages || []).length;
+    s.adults = kids && total > kids ? total - kids : total;
+  }
+  // "בעצם 4" — a bare number that is explicitly a correction
+  if (correcting) {
+    const cm = t.match(/(?:בעצם|סליחה|טעות|התכוונתי|שיניתי)[^\d]{0,12}(\d{1,2})(?!\d)/);
+    if (cm) {
+      const n = +cm[1];
       const kids = (s.children_ages || []).length;
-      s.adults = kids && total > kids ? total - kids : total;
+      if (n >= 1 && n <= 20) s.adults = kids && n > kids ? n - kids : n;
     }
   }
   // "משפחה של 4" / "4 נפשות" with known kids
@@ -114,17 +144,41 @@ function parseText(text, slots) {
   }
 
   // --- month
+  s.out_of_season = false;
   for (const [re, v] of MONTHS) if (re.test(t)) { s.month = v; break; }
+  // a numeric date the customer wrote as "15.2" / "5/1"
+  if (s.month == null) {
+    const dm = t.match(/(?:^|[^\d])(\d{1,2})[./](\d{1,2})(?![\d])/);
+    if (dm) {
+      const mo = +dm[2];
+      if ([12, 1, 2, 3].includes(mo)) s.month = mo;
+      else if (mo >= 1 && mo <= 12) s.out_of_season = true;
+    }
+  }
+  // the season runs December–March; anything else should be said out loud
+  // rather than answered with a repeat of "מתי תרצו לצאת?"
+  if (s.month == null && /אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|קיץ|פסח/.test(t)) {
+    s.out_of_season = true;
+  }
   if (/לא משנה|גמיש|מתי שיש|כל תאריך|אין העדפה/.test(t)) {
     if (s.month == null) s.month = 'any';
     s.flexible_dates = true;
   }
 
-  // --- departure airport (config/departures.json holds what each one flies)
-  if (/מחיפה|מ ?חיפה|חיפה/.test(t)) s.departure_airport = 'haifa';
-  else if (/תל ?-?אביב|ת"א|נתב"ג|נתבג|בן ?-?גוריון|מרכז/.test(t)) s.departure_airport = 'tlv';
-  // "לא משנה" answering the airport question = no constraint, but stop asking
-  else if (answering === 'airport' && /לא משנה|כל אחד|שניהם|מה שיש/.test(t)) s.departure_airport = 'any';
+  // --- departure airport. A city name alone is NOT a departure airport:
+  // "מה מזג האוויר בתל אביב" used to set the airport. Require either a
+  // "from" prefix or an explicit flight word nearby.
+  const flightCtx = /טיס|ממריא|יוצאים|יוצא|לעוף|לטוס|המראה|שדה/.test(t);
+  if (/מחיפה/.test(t) || (flightCtx && /חיפה/.test(t))) s.departure_airport = 'haifa';
+  else if (/מתל ?-?אביב|מנתב"ג|מנתבג|מבן ?-?גוריון/.test(t) ||
+           (flightCtx && /תל ?-?אביב|ת"א|נתב"ג|נתבג|בן ?-?גוריון/.test(t))) s.departure_airport = 'tlv';
+  else if (answering === 'airport') {
+    // answering the airport question — a bare city name is unambiguous here
+    if (/חיפה/.test(t)) s.departure_airport = 'haifa';
+    else if (/תל ?-?אביב|ת"א|נתב"ג|נתבג|בן ?-?גוריון|מרכז/.test(t)) s.departure_airport = 'tlv';
+    // "לא משנה" = no constraint, but stop asking
+    else if (/לא משנה|כל אחד|שניהם|מה שיש|לא חשוב/.test(t)) s.departure_airport = 'any';
+  }
 
   // "לא משנה" answering the destination question
   if (answering === 'country' && /לא משנה|כל מקום|מה שיש|אין העדפה|לא חשוב/.test(t)) s.country = 'any';
@@ -134,16 +188,20 @@ function parseText(text, slots) {
   // ignoring the "לא" is worse than not understanding at all, because the
   // customer gets exactly what they ruled out.
   s.excluded_countries = [...(s.excluded_countries || [])];
+  // NO break: "לא צרפת ולא בולגריה" names two countries and rules out both.
+  // Stopping at the first match served the customer the second one.
   for (const [re, v] of COUNTRIES) {
     const m2 = re.exec(t);
     if (!m2) continue;
     if (isNegated(t, m2.index)) {
       if (!s.excluded_countries.includes(v)) s.excluded_countries.push(v);
       if (s.country === v) s.country = null;         // retract an earlier pick
-    } else if (!s.excluded_countries.includes(v)) {
+    } else {
+      // a plain mention also RETRACTS an earlier exclusion — people change
+      // their mind ("לא צרפת" … "בעצם כן צרפת") and must be able to say so
+      s.excluded_countries = s.excluded_countries.filter(x => x !== v);
       s.country = v;
     }
-    break;
   }
   for (const [re, dest, country] of DESTS) {
     const m2 = re.exec(t);
@@ -152,10 +210,16 @@ function parseText(text, slots) {
       if (s.destination === dest) s.destination = null;
     } else {
       s.destination = dest;
-      if (!s.excluded_countries.includes(country)) s.country = s.country || country;
+      s.excluded_countries = s.excluded_countries.filter(x => x !== country);
+      s.country = s.country || country;
     }
-    break;
   }
+
+  // --- a place pingwin.co.il markets but this winter's workbook doesn't sell.
+  // Saying nothing and quietly showing France instead reads as a bot that
+  // ignored the question; naming the gap is the honest move.
+  s.unavailable_destination = null;
+  for (const [re, label] of NOT_SOLD) if (re.test(t)) { s.unavailable_destination = label; break; }
 
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
@@ -230,6 +294,25 @@ const MONTH_HE = { 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מ�
 
 function phrase(result, slots, cards) {
   const lines = [];
+  const note = ty => (result.notes || []).find(n => n.type === ty);
+
+  // name the gap before showing substitutes — a silent swap reads as a bot
+  // that ignored the question
+  const notSold = note('destination_not_sold');
+  if (notSold) lines.push(`${notSold.name} לא נמכר אצלנו בחורף הזה. הנה מה שכן פנוי:`);
+
+  if (note('out_of_season')) {
+    lines.push('עונת הסקי שלנו היא דצמבר עד סוף מרץ. בחודשים אחרים אין לנו יציאות.');
+  }
+
+  const campAge = note('camp_age_mismatch');
+  if (campAge) {
+    const ages = (campAge.ages || []).join(', ');
+    lines.push(ages
+      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-13, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
+      : 'הקייטנות שלנו מיועדות לגילאי 4-13. הנה מה שפנוי:');
+  }
+
   const airportNote = (result.notes || []).find(n => n.type === 'airport_cannot_reach');
   if (airportNote) {
     const c = { france: 'לצרפת', austria: 'לאוסטריה', andorra: 'לאנדורה', bulgaria: 'לבולגריה' }[airportNote.requested_country] || '';
@@ -275,4 +358,18 @@ function phrase(result, slots, cards) {
   return lines.join('\n');
 }
 
-module.exports = { parseText, nextQuestion, phrase };
+// Questions that deserve a real answer rather than another round of offers:
+// asking for someone else's booking, or for an exact price. Silence here reads
+// as evasion; these say plainly what the bot can and cannot do (red rules 2-3).
+function deflect(text) {
+  const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  if (/מי הזמין|שם של מי|מספר הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|מי תפס/.test(t)) {
+    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
+  }
+  if (/כמה (זה )?עולה|מחיר מדויק|בכמה|כמה יעלה|כמה בשקלים|תן לי הנחה|הנחה של|בחינם/.test(t)) {
+    return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
+  }
+  return null;
+}
+
+module.exports = { parseText, nextQuestion, phrase, deflect };

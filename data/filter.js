@@ -118,6 +118,16 @@ class SkiSearch {
         !(slots.excluded_countries || []).includes('france')) {
       notes.push({ type: 'france_february_gap' });
     }
+    // a kids club was asked for, but no child falls in 4–13
+    if (slots.needs_hebrew_kids_club && !SkiSearch.neededAgeGroups(slots.children_ages).size) {
+      notes.push({ type: 'camp_age_mismatch', ages: slots.children_ages || [] });
+    }
+    // a destination pingwin markets but this workbook does not sell
+    if (slots.unavailable_destination) {
+      notes.push({ type: 'destination_not_sold', name: slots.unavailable_destination });
+    }
+    if (slots.out_of_season) notes.push({ type: 'out_of_season' });
+
     // departure airport that cannot reach what was asked for — say so up front
     const airport = slots.departure_airport;
     const airportSheets = this.allowedSheets(airport);
@@ -218,9 +228,11 @@ class SkiSearch {
       // widening the search must not resurrect what they ruled out
       if ((slots.excluded_countries || []).includes(u.country)) continue;
       if (destination && !matchDestination(destination, u, this.resortOf(u.hotel))) continue;
-      // 5. camps — hard filter when requested
+      // 5. camps — hard filter when requested AND a child is actually of camp
+      //    age. Asking for a club for a 16-year-old used to filter every unit
+      //    away and report "no availability", which was simply false.
       let camps = null;
-      if (slots.needs_hebrew_kids_club) {
+      if (slots.needs_hebrew_kids_club && SkiSearch.neededAgeGroups(slots.children_ages).size) {
         const resort = this.resortOf(u.hotel);
         camps = this.campsCoverage(resort, u.date, slots.children_ages);
         if (!resort) continue;                  // unknown resort — can't promise a camp

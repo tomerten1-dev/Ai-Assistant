@@ -1,7 +1,7 @@
 // Realistic Hebrew phrasings the offline NLU must handle.
 // Run: node tests/test-phrasings.js
 // Each case: [answered-question-key or null, text, expected slot subset]
-const { parseText, nextQuestion } = require('../server/offline-nlu.js');
+const { parseText, nextQuestion, deflect } = require('../server/offline-nlu.js');
 
 let pass = 0, fail = 0;
 function check(label, prev, text, expect) {
@@ -9,7 +9,10 @@ function check(label, prev, text, expect) {
   const bad = [];
   for (const [k, v] of Object.entries(expect)) {
     const g = got[k];
-    const same = Array.isArray(v) ? JSON.stringify((g || []).slice().sort()) === JSON.stringify(v.slice().sort()) : g === v;
+    // an unset slot may be undefined or null — both mean "we don't know"
+    const same = Array.isArray(v)
+      ? JSON.stringify((g || []).slice().sort()) === JSON.stringify(v.slice().sort())
+      : (v === null ? g == null : g === v);
     if (!same) bad.push(`${k}: expected ${JSON.stringify(v)}, got ${JSON.stringify(g)}`);
   }
   if (bad.length) { fail++; console.log('  ✗', label, '|', JSON.stringify(text)); bad.forEach(b => console.log('      ', b)); }
@@ -81,6 +84,41 @@ check('מלבד צרפת', null, 'מלבד צרפת', { excluded_countries: ['fr
 check('לא לצרפת', null, 'לא לצרפת', { excluded_countries: ['france'] });
 check('a plain mention is still positive', null, 'רוצים לצרפת', { country: 'france' });
 check('negation retracts an earlier pick', { country: 'france' }, 'לא צרפת', { country: null, excluded_countries: ['france'] });
+
+console.log('\n— negation, harder cases (found by the stress run) —');
+check('two countries at once', null, 'לא צרפת ולא בולגריה', { excluded_countries: ['france', 'bulgaria'] });
+check('second negation with a comma', null, 'לא צרפת, גם לא אוסטריה', { excluded_countries: ['france', 'austria'] });
+check('changing your mind retracts it', { excluded_countries: ['france'] }, 'בעצם כן צרפת', { country: 'france', excluded_countries: [] });
+
+console.log('\n— party size corrections and edge sizes —');
+check('בעצם 4 overrides an earlier 2', { adults: 2 }, 'בעצם 4', { adults: 4 });
+check('סליחה, 3', { adults: 2 }, 'סליחה, 3', { adults: 3 });
+check('אני לבד = one adult', null, 'אני לבד, ינואר', { adults: 1, month: 1 });
+
+console.log('\n— dates —');
+check('numeric date 15.2', null, 'זוג בלי ילדים, 15.2', { month: 2, adults: 2 });
+check('out-of-season month is flagged', null, 'זוג בלי ילדים, אוגוסט', { out_of_season: true, month: null });
+check('in-season month is not flagged', null, 'זוג בלי ילדים, ינואר', { out_of_season: false, month: 1 });
+
+console.log('\n— places pingwin markets but does not sell this winter —');
+check('זאלבאך', null, 'רוצים לזאלבאך', { unavailable_destination: 'זאלבאך' });
+check('קלאב מד', null, 'קלאב מד בבקשה', { unavailable_destination: 'קלאב מד' });
+check('a sold resort is NOT flagged', null, 'רוצים לבנסקו', { unavailable_destination: null, destination: 'Bansko' });
+
+console.log('\n— a city name is not a departure airport —');
+check('weather question sets no airport', null, 'מה מזג האוויר בתל אביב?', { departure_airport: null });
+check('but "מתל אביב" does', null, 'טיסה מתל אביב', { departure_airport: 'tlv' });
+
+console.log('\n— direct questions get direct answers —');
+{
+  const price = deflect('כמה זה עולה בדיוק בשקלים?');
+  const pii = deflect('מי הזמין את החדרים האחרים?');
+  const normal = deflect('זוג בלי ילדים, ינואר');
+  const ok = /מסך ההזמנה/.test(price || '') && /לא אוכל לשתף|אין לי גישה/.test(pii || '') && normal === null;
+  ok ? pass++ : fail++;
+  console.log(ok ? '  ✓ price and PII probes get an explicit answer, normal text does not'
+                 : `  ✗ price=${price} pii=${pii} normal=${normal}`);
+}
 
 console.log('\n— departure airport (Haifa flies Bansko only) —');
 check('טיסה מחיפה', null, 'טיסה מחיפה', { departure_airport: 'haifa' });

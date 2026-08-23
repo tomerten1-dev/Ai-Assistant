@@ -35,7 +35,7 @@ const EMPTY_SLOTS = {
   adults: null, children_ages: [], no_children: null, month: null,
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
-  excluded_countries: [],
+  excluded_countries: [], unavailable_destination: null, out_of_season: false,
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
@@ -70,6 +70,8 @@ function toSearchSlots(slots) {
     month: any(slots.month),
     country: any(slots.country),
     departure_airport: any(slots.departure_airport),
+    unavailable_destination: slots.unavailable_destination || null,
+    out_of_season: !!slots.out_of_season,
   };
 }
 
@@ -165,6 +167,13 @@ async function handleChat(body) {
     }
   }
 
+  // ---- off-topic: acknowledge, then steer back (red rule 9) ----
+  // Answering "what's the weather in Tel Aviv?" with "how many adults?" is a
+  // non-sequitur; one line of acknowledgement makes it a conversation.
+  const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
+    /\?|איך|מה |למה|מי /.test(lastUser) &&
+    !/סקי|חופש|מלון|טיסה|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין/.test(lastUser);
+
   // ---- step 3: what to ask next (same logic whichever layer filled slots) ----
   // Only BLOCKING gaps hold results back. The rest (departure airport,
   // destination) are gathered after the customer has seen something concrete —
@@ -176,9 +185,23 @@ async function handleChat(body) {
     else { pendingQuestion = q; delete slots._lastQuestion; }
   }
 
+  const OFF_TOPIC_HE = 'אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.';
+  const SEASON_HE = 'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.';
+  // a direct answer to a direct question (exact price, other customers'
+  // bookings) — showing offers again instead would read as evasion
+  const deflection = offline.deflect(lastUser);
+  const preamble = [
+    deflection,
+    offTopic && !deflection ? OFF_TOPIC_HE : null,
+    slots.out_of_season ? SEASON_HE : null,
+  ].filter(Boolean).join('\n');
+
   const mustSearch = replyIfNotReady == null || questionsAsked >= MAX_QUESTIONS;
   if (!mustSearch) {
-    return { reply_he: replyIfNotReady, slots, cards: [], chips: [], model_used: modelUsed };
+    return {
+      reply_he: (preamble ? preamble + '\n' : '') + replyIfNotReady,
+      slots, cards: [], chips: [], model_used: modelUsed,
+    };
   }
   if (mustSearch && replyIfNotReady) { pendingQuestion = null; delete slots._lastQuestion; }
 
@@ -208,7 +231,7 @@ async function handleChat(body) {
   return {
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
-    reply_he: intro,
+    reply_he: (preamble ? preamble + '\n' : '') + intro,
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
