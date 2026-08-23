@@ -594,10 +594,21 @@ function cardFacts(c, asked, open) {
         break;
       // The hotel page names the facilities but usually does NOT say whether
       // using them is included, so we quote what it says and stop there.
-      case 'ספא ובריכה':
-        if (c.spa_he) say(topic, 'ספא: ' + c.spa_he);
-        else defer('ספא ובריכה');
+      case 'ספא ובריכה': {
+        if (c.spa_access === 'none') { say(topic, 'אין ספא במלון הזה'); break; }
+        if (!c.spa_he && !c.spa_access_he) { defer('ספא ובריכה'); break; }
+        // Facilities first, then the access terms — but the facilities quote
+        // often already states them, and repeating "כניסה חופשית" three times
+        // in one line reads like a machine, not an answer.
+        const ACCESS_WORDS = /כניסה חופשית|חינם|כלול|בתשלום|בתוספת|לרשות האורחים|לשימוש אורחי/;
+        const bits = [c.spa_he];
+        if (c.spa_access_he && !(c.spa_he && ACCESS_WORDS.test(c.spa_he))) bits.push(c.spa_access_he);
+        const said = bits.filter(Boolean).join(' ');
+        if (c.spa_note_he && !said.includes(c.spa_note_he.slice(0, 14))) bits.push(c.spa_note_he);
+        if (c.spa_min_age && !said.includes('מגיל')) bits.push('מגיל ' + c.spa_min_age + ' ומעלה');
+        say(topic, 'ספא: ' + bits.filter(Boolean).join('. '));
         break;
+      }
       case 'חדרי רחצה':
         if (rf.bath_he) say(topic, 'חדרי רחצה: ' + rf.bath_he);
         else defer('חדרי הרחצה');

@@ -36,6 +36,25 @@ if (ORDER_RE.test(flat)) {
   process.exit(1);
 }
 
+// What the customer is told about spa access. "not_stated" is the honest
+// majority case: the page lists the facilities and says nothing about whether
+// using them is included, so we say that rather than guess. An earlier scrape
+// DID guess, and answered "כלול" for hotels that charge for entry.
+function spaSentence(sp) {
+  switch (sp.access) {
+    case 'free':
+      return 'כניסה חופשית לספא לאורחי המלון';
+    case 'entries':
+      return sp.entries + ' כניסות חופשיות לספא כלולות במחיר לאורחי פינגווין';
+    case 'paid':
+      return 'הכניסה לספא בתוספת תשלום במקום — נציג ימסור את העלות';
+    case 'guests':
+      return 'הספא עומד לרשות אורחי המלון';
+    default:
+      return 'יש ספא במלון; דף המלון אינו מציין אם השימוש כלול — נציג יאמת מול המלון';
+  }
+}
+
 const FIELDS = ['board_he', 'transfer_he', 'ski_pass_he', 'equipment_he',
                 'wifi_he', 'spa_he'];
 
@@ -52,6 +71,22 @@ for (const [name, info] of Object.entries(resorts.hotels)) {
   const r = raw.hotels[name];
   if (!r) { missing.push(name); continue; }
   for (const f of FIELDS) if (r[f]) info[f] = stripMoney(r[f]);
+  // Spa access, phrased once here so every consumer says the same thing and
+  // none of them has to decide. The internal cost never crosses this line.
+  if (r.spa) {
+    const sp = r.spa;
+    // clear first: this file is merged into repeatedly, and a value left over
+    // from a previous run is a claim nobody wrote
+    delete info.spa_access_he; delete info.spa_note_he; delete info.spa_min_age;
+    info.spa_access = sp.access;
+    if (sp.access !== 'none') {
+      info.spa_access_he = spaSentence(sp);
+      if (sp.note_he) info.spa_note_he = sp.note_he;
+      if (sp.min_age) info.spa_min_age = sp.min_age;
+    } else {
+      delete info.spa_he;
+    }
+  }
   if (NO_PASS.includes(info.country)) {
     if (info.ski_pass_he) dropped.push(name + ' (' + info.ski_pass_he + ')');
     info.ski_pass_he = null;

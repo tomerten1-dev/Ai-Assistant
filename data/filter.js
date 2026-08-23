@@ -419,6 +419,10 @@ class SkiSearch {
       board_he: info.board_he || null,         // בסיס האירוח מדף המלון
       wifi_he: info.wifi_he || null,           // ציטוט מדף המלון
       spa_he: info.spa_he || null,             // ציטוט מדף המלון
+      spa_access: info.spa_access || 'none',   // free|entries|paid|guests|not_stated|none
+      spa_access_he: info.spa_access_he || null,
+      spa_note_he: info.spa_note_he || null,
+      spa_min_age: info.spa_min_age || null,
       transfer_he: info.transfer_he || null,   // הסעות / מרחק מהשדה
       ski_pass_he: skiPassIncluded ? (info.ski_pass_he || null) : null,
       ski_pass_included: skiPassIncluded,

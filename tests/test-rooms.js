@@ -206,5 +206,58 @@ t('a hotel page that says nothing produces no invented amenity', () => {
   }
 });
 
+
+t('every hotel has a spa verdict, and none of them is a guess', () => {
+  const OK = ['free', 'entries', 'paid', 'guests', 'not_stated', 'none'];
+  for (const [name, info] of Object.entries(resorts.hotels)) {
+    assert.ok(OK.includes(info.spa_access), name + ' has spa_access=' + info.spa_access);
+    if (info.spa_access === 'none') {
+      assert.ok(!info.spa_access_he, name + ' has no spa but a spa sentence');
+    } else {
+      assert.ok(info.spa_access_he, name + ' has a spa but nothing to say about access');
+    }
+  }
+});
+
+t('a hotel that charges for the spa is never described as free', () => {
+  // the first scrape answered "כלול" for hotels that charge at the door
+  for (const [name, info] of Object.entries(resorts.hotels)) {
+    if (info.spa_access !== 'paid') continue;
+    assert.ok(/בתוספת תשלום/.test(info.spa_access_he), name + ': ' + info.spa_access_he);
+    assert.ok(!/כניסה חופשית לספא|כלולות במחיר/.test(info.spa_access_he), name);
+  }
+});
+
+t('"not stated" says so out loud instead of guessing', () => {
+  const unknown = Object.entries(resorts.hotels).filter(([, i]) => i.spa_access === 'not_stated');
+  assert.ok(unknown.length, 'expected some hotels whose page is silent on access');
+  for (const [name, info] of unknown) {
+    assert.ok(/נציג יאמת/.test(info.spa_access_he), name + ': ' + info.spa_access_he);
+  }
+});
+
+t('the spa entry price never reaches the customer, only the rep', () => {
+  const raw = require('../data/rooms-raw.json').hotels;
+  const priced = Object.entries(raw).filter(([, h]) => h.spa && h.spa.cost_internal_he);
+  assert.ok(priced.length, 'expected some hotels with a recorded entry price');
+  for (const [name] of priced) {
+    const info = resorts.hotels[name];
+    const shown = [info.spa_access_he, info.spa_note_he, info.spa_he].filter(Boolean).join(' ');
+    assert.ok(!/\d[\d,.]*\s*(€|יורו|אירו|₪)/.test(shown), name + ' leaks a price: ' + shown);
+  }
+});
+
+t('a hotel with no spa says so rather than staying silent', () => {
+  const slots = nlu.parseText('זוג בינואר, יש ספא ובריכה?', {});
+  const r = search.search(slots);
+  const cards = r.candidates.slice(0, 8);
+  nlu.phrase(r, slots, cards);
+  for (const c of cards) {
+    if (c.spa_access !== 'none') continue;
+    const facts = (c.facts_he || []).join(' ');
+    assert.ok(/אין ספא/.test(facts), c.hotel + ' has no spa and said nothing: ' + facts);
+  }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
