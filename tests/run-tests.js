@@ -77,6 +77,33 @@ t('france_february_gap note present', r4b.notes.some(n => n.type === 'france_feb
 t('offers alternatives (relaxed location or month)', r4b.candidates.length > 0);
 t('alternatives are NOT France-in-February', r4b.candidates.every(c => !(c.country === 'france' && c.date.slice(5, 7) === '02')));
 
+console.log('\n[departure airport] Haifa flies only Bansko, Friday→Wednesday (Tomer 23/08)');
+const haifa = engine.search({ adults: 2, children_ages: [], no_children: true, month: 1, departure_airport: 'haifa' });
+t('returns results from Haifa', haifa.candidates.length > 0);
+t('every Haifa result is Bulgaria', haifa.candidates.every(c => c.country === 'bulgaria'));
+t('every Haifa result departs on a Friday',
+  haifa.candidates.every(c => new Date(c.date + 'T00:00:00Z').getUTCDay() === 5),
+  haifa.candidates.map(c => c.date).join(','));
+t('every Haifa result is the 5-night Fri→Wed product', haifa.candidates.every(c => c.nights === 5));
+t('Haifa never offers France/Austria/Andorra', !haifa.candidates.some(c => c.country !== 'bulgaria'));
+
+const haifaFrance = engine.search({ adults: 2, children_ages: [], no_children: true, month: 1, country: 'france', departure_airport: 'haifa' });
+t('Haifa+France explains instead of listing France',
+  haifaFrance.notes.some(n => n.type === 'airport_cannot_reach' && n.requested_country === 'france'));
+t('Haifa+France offers Bulgaria alternatives, not France',
+  haifaFrance.candidates.length > 0 && haifaFrance.candidates.every(c => c.country === 'bulgaria'));
+
+const tlv = engine.search({ adults: 2, children_ages: [], no_children: true, month: 1, departure_airport: 'tlv' });
+t('Tel Aviv is unrestricted', new Set(tlv.candidates.map(c => c.country)).size >= 1 && tlv.candidates.length > 0);
+
+// Feb from Haifa has only 2-3 studios: a family of 4 needs two rooms, and
+// those rooms must still be inside the Haifa-reachable product
+const haifaFamily = engine.search({ adults: 2, children_ages: [5, 9], month: 2, departure_airport: 'haifa' });
+t('family of 4 from Haifa gets a two-room option, not an empty answer',
+  haifaFamily.candidates.length > 0 || haifaFamily.two_room_splits.length > 0);
+t('those two-room options stay in Bulgaria',
+  haifaFamily.two_room_splits.every(s => s.country === 'bulgaria'));
+
 console.log('\n— guardrails —');
 const r5 = engine.search({ adults: 2, children_ages: [], month: 1 });
 t('never more than 8 candidates', r5.candidates.length <= 8);

@@ -10,11 +10,21 @@ function loadJSON(p) { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, p),
 const MONTHS = { 12: '12', 1: '01', 2: '02', 3: '03' };
 
 class SkiSearch {
-  constructor({ availability, resorts, camps, pricing } = {}) {
+  constructor({ availability, resorts, camps, pricing, departures } = {}) {
     this.av = availability || loadJSON('availability.json');
     this.resorts = resorts || loadJSON('resorts.json');
     this.camps = camps || loadJSON('camps.json');
     this.pricing = pricing || loadJSON('pricing.json');
+    this.departures = departures ||
+      JSON.parse(fs.readFileSync(path.join(DATA_DIR, '..', 'config', 'departures.json'), 'utf8'));
+  }
+
+  // which sheets a departure airport can actually fly (config/departures.json).
+  // null = no restriction.
+  allowedSheets(airport) {
+    const a = airport && this.departures.airports[airport];
+    if (!a || a.all_products) return null;
+    return a.sheets || [];
   }
 
   hotelInfo(name) { return this.resorts.hotels[name] || {}; }
@@ -98,8 +108,30 @@ class SkiSearch {
     if (+slots.month === 2 && slots.country === 'france') {
       notes.push({ type: 'france_february_gap' });
     }
+    // departure airport that cannot reach what was asked for — say so up front
+    const airport = slots.departure_airport;
+    const airportSheets = this.allowedSheets(airport);
+    if (airportSheets) {
+      const info = this.departures.airports[airport];
+      const reachable = new Set(this.av.units.filter(u => airportSheets.includes(u.sheet)).map(u => u.country));
+      if (slots.country && !reachable.has(slots.country)) {
+        notes.push({
+          type: 'airport_cannot_reach', airport, airport_he: info.he,
+          requested_country: slots.country, note_he: info.note_he,
+        });
+      } else {
+        notes.push({ type: 'airport_limited', airport, airport_he: info.he, note_he: info.note_he });
+      }
+    }
 
     let candidates = this._filter(slots, party, { month: slots.month, country: slots.country, destination: slots.destination });
+
+    // asked for a country the chosen airport cannot fly → drop the country,
+    // keep the airport (the flight is the hard constraint, not the wish)
+    if (!candidates.length && notes.some(n => n.type === 'airport_cannot_reach')) {
+      candidates = this._filter(slots, party, { month: slots.month, country: null, destination: null });
+      if (candidates.length) relaxed.push({ type: 'location' });
+    }
 
     // relaxation ladder (spec 6.1): adjacent month → country/dest → two rooms → human
     if (!candidates.length && slots.month != null) {
@@ -113,7 +145,9 @@ class SkiSearch {
       if (candidates.length) relaxed.push({ type: 'location' });
     }
     let splits = [];
-    if (!candidates.length && party >= 5) {
+    // any party that no single unit can hold may still fit in two rooms —
+    // not just large groups (e.g. a family of 4 where only 2-3 studios exist)
+    if (!candidates.length && party >= 3) {
       splits = this._twoRoomSplits(slots, party);
       if (splits.length) relaxed.push({ type: 'two_rooms' });
     }
@@ -154,9 +188,12 @@ class SkiSearch {
     };
   }
 
-  _filter(slots, party, { month, country, destination }) {
+  _filter(slots, party, { month, country, destination, ignoreAirport }) {
     const out = [];
+    const sheets = ignoreAirport ? null : this.allowedSheets(slots.departure_airport);
     for (const u of this.av.units) {
+      // 0. departure airport — Haifa flies only specific products
+      if (sheets && !sheets.includes(u.sheet)) continue;
       // 1. free — availability.json only contains free units by construction
       // 2. occupancy
       const fit = this.fits(u, party, slots.adults);
@@ -183,7 +220,11 @@ class SkiSearch {
   /* ---- two rooms in the same hotel, same date (PNR never splits a room) ---- */
   _twoRoomSplits(slots, party) {
     const byHotelDate = new Map();
+    const sheets = this.allowedSheets(slots.departure_airport);
     for (const u of this.av.units) {
+      // the departure airport binds here too — never split into rooms the
+      // customer's flight cannot reach
+      if (sheets && !sheets.includes(u.sheet)) continue;
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       const k = u.hotel + '||' + u.date;

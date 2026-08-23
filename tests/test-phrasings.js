@@ -72,6 +72,12 @@ check('צרפת', null, 'צרפת', { country: 'france' });
 check('בנסקו', null, 'רוצים לבנסקו', { destination: 'Bansko', country: 'bulgaria' });
 check('מאיירהופן', null, 'מאיירהופן בבקשה', { destination: 'Mayrhofen', country: 'austria' });
 
+console.log('\n— departure airport (Haifa flies Bansko only) —');
+check('טיסה מחיפה', null, 'טיסה מחיפה', { departure_airport: 'haifa' });
+check('יוצאים מחיפה', null, 'אנחנו 2 ויוצאים מחיפה בינואר', { departure_airport: 'haifa', adults: 2, month: 1 });
+check('מתל אביב', null, 'טיסה מתל אביב', { departure_airport: 'tlv' });
+check('נתב"ג', null, 'יוצאים מנתב"ג', { departure_airport: 'tlv' });
+
 console.log('\n— never repeat the same question —');
 {
   // asked about children, answer not understood → must rephrase, not echo

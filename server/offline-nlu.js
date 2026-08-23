@@ -113,6 +113,10 @@ function parseText(text, slots) {
     s.flexible_dates = true;
   }
 
+  // --- departure airport (config/departures.json holds what each one flies)
+  if (/מחיפה|מ ?חיפה|חיפה/.test(t)) s.departure_airport = 'haifa';
+  else if (/תל ?-?אביב|ת"א|נתב"ג|בן ?-?גוריון/.test(t)) s.departure_airport = 'tlv';
+
   // --- country / destination
   for (const [re, v] of COUNTRIES) if (re.test(t)) { s.country = v; break; }
   for (const [re, dest, country] of DESTS) if (re.test(t)) { s.destination = dest; s.country = s.country || country; break; }
@@ -178,6 +182,14 @@ const MONTH_HE = { 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מ�
 
 function phrase(result, slots, cards) {
   const lines = [];
+  const airportNote = (result.notes || []).find(n => n.type === 'airport_cannot_reach');
+  if (airportNote) {
+    const c = { france: 'לצרפת', austria: 'לאוסטריה', andorra: 'לאנדורה', bulgaria: 'לבולגריה' }[airportNote.requested_country] || '';
+    lines.push(`אין לנו טיסות מ${airportNote.airport_he} ${c}. ${airportNote.note_he} הנה מה שיוצא מ${airportNote.airport_he}:`);
+  } else {
+    const limited = (result.notes || []).find(n => n.type === 'airport_limited');
+    if (limited) lines.push(limited.note_he);
+  }
   if ((result.notes || []).some(n => n.type === 'france_february_gap')) {
     lines.push('שימו לב: אין לנו יציאות לצרפת בפברואר (מדלגים מ-30.1 ל-6.3) — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:');
   }

@@ -29,7 +29,7 @@ const engine = new SkiSearch();
 const EMPTY_SLOTS = {
   adults: null, children_ages: [], no_children: null, month: null,
   flexible_dates: null, country: null, destination: null,
-  needs_hebrew_kids_club: null, preferences: [],
+  departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
