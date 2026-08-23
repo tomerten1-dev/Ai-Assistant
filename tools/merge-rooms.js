@@ -19,13 +19,25 @@ const resorts = JSON.parse(fs.readFileSync(resortsPath, 'utf8'));
 // --- PII gate (spec 2a). This file is public content, so it must not carry a
 // customer name or an order number even by accident.
 const ORDER_RE = /\d{6}/;
+
+// Red rule 3: no numbers in money reach the customer. Two hotel pages price
+// spa entry ("בתשלום של כ-20 יורו"), and that text feeds straight onto a card, so
+// the figure is removed here rather than trusted to never be shown.
+function stripMoney(text) {
+  return String(text)
+    .replace(/\s*\(?\s*כ?-?\s*\d[\d,.]*\s*(?:€|יורו|אירו|₪|ש\"?ח|שקלים?)[^)א-ת]*\)?/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.])/g, '$1')
+    .trim();
+}
 const flat = JSON.stringify(raw);
 if (ORDER_RE.test(flat)) {
   console.error('PII gate: rooms-raw.json contains a 6-digit sequence (order number?)');
   process.exit(1);
 }
 
-const FIELDS = ['board_he', 'transfer_he', 'ski_pass_he', 'equipment_he'];
+const FIELDS = ['board_he', 'transfer_he', 'ski_pass_he', 'equipment_he',
+                'wifi_he', 'spa_he'];
 
 // Some Bulgarian hotel pages list a ski pass among their inclusions. Tomer's
 // rule (confirmed 23/08/2026) is that the ski pass is NOT part of a Bulgarian
@@ -39,7 +51,7 @@ let hotels = 0, rooms = 0, missing = [], dropped = [];
 for (const [name, info] of Object.entries(resorts.hotels)) {
   const r = raw.hotels[name];
   if (!r) { missing.push(name); continue; }
-  for (const f of FIELDS) if (r[f]) info[f] = r[f];
+  for (const f of FIELDS) if (r[f]) info[f] = stripMoney(r[f]);
   if (NO_PASS.includes(info.country)) {
     if (info.ski_pass_he) dropped.push(name + ' (' + info.ski_pass_he + ')');
     info.ski_pass_he = null;

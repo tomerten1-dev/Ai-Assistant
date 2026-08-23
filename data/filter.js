@@ -417,6 +417,8 @@ class SkiSearch {
         ? twinElsewhere.name + ' — ' + (twinElsewhere.beds_he || 'מיטות נפרדות')
         : null,
       board_he: info.board_he || null,         // בסיס האירוח מדף המלון
+      wifi_he: info.wifi_he || null,           // ציטוט מדף המלון
+      spa_he: info.spa_he || null,             // ציטוט מדף המלון
       transfer_he: info.transfer_he || null,   // הסעות / מרחק מהשדה
       ski_pass_he: skiPassIncluded ? (info.ski_pass_he || null) : null,
       ski_pass_included: skiPassIncluded,

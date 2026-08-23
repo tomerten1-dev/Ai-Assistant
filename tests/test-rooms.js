@@ -173,5 +173,38 @@ t('the equipment supplement stays a number the customer never sees', () => {
   assert.ok(!/[0-9]/.test(say), 'supplement wording carries a number: ' + say);
 });
 
+
+t('no amenity text carries a price (red rule 3)', () => {
+  // two hotel pages price spa entry in euros, and that text feeds a card
+  const MONEY = /\d[\d,.]*\s*(€|₪|יורו|אירו|שקל|ש"ח)/;
+  for (const [name, info] of Object.entries(resorts.hotels)) {
+    assert.ok(!MONEY.test(info.spa_he || ''), name + ' spa: ' + info.spa_he);
+    assert.ok(!MONEY.test(info.wifi_he || ''), name + ' wifi: ' + info.wifi_he);
+  }
+});
+
+t('wifi and spa are quoted from the hotel page, per hotel', () => {
+  const slots = nlu.parseText('זוג בפברואר באוסטריה, יש ספא ובריכה? ויש WIFI?', {});
+  assert.ok(slots.unverifiable.includes('WIFI'), JSON.stringify(slots.unverifiable));
+  assert.ok(slots.unverifiable.includes('ספא ובריכה'), JSON.stringify(slots.unverifiable));
+  const r = search.search(slots);
+  const cards = r.candidates.slice(0, 3);
+  nlu.phrase(r, slots, cards);
+  for (const c of cards) {
+    const facts = (c.facts_he || []).join(' | ');
+    const info = resorts.hotels[c.hotel];
+    if (info.spa_he) assert.ok(facts.includes(info.spa_he), c.hotel + ' spa not quoted');
+    if (info.wifi_he) assert.ok(facts.includes(info.wifi_he), c.hotel + ' wifi not quoted');
+  }
+});
+
+t('a hotel page that says nothing produces no invented amenity', () => {
+  // Tuxer and Kumbichlhof state neither wifi nor spa — silence must stay silence
+  for (const name of ['Tuxer', 'Pension Kumbichlhof']) {
+    assert.strictEqual(resorts.hotels[name].wifi_he, undefined, name + ' invented wifi');
+    assert.strictEqual(resorts.hotels[name].spa_he, undefined, name + ' invented spa');
+  }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

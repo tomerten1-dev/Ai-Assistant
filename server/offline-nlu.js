@@ -254,6 +254,8 @@ function parseText(text, slots) {
     [/נסיעה קצרה|קרוב לשדה|זמן נסיעה|כמה זמן מהשדה|מרחק מהשדה/, 'המרחק משדה התעופה'],
     [/חדר גדול|חדר מרווח|סוויטה|חדרי שינה|כמה חדרים|דירה גדולה|כמה מ"ר|גודל החדר/, 'גודל החדר'],
     [/מקלח|אמבטי|שירותים בחדר|חדרי רחצה|כמה שירותים/, 'חדרי רחצה'],
+    [/wifi|וויפי|ויי ?פיי|אינטרנט/i, 'WIFI'],
+    [/ספא|בריכה|סאונה|ג'קוזי|חמאם/, 'ספא ובריכה'],
   ];
   s.unverifiable = [];
   for (const [re, label] of UNVERIFIABLE) if (re.test(t) && !s.unverifiable.includes(label)) s.unverifiable.push(label);
@@ -585,6 +587,16 @@ function cardFacts(c, asked, open) {
         break;
       case 'השכרת ציוד':
         say(topic, c.equipment_he);
+        break;
+      case 'WIFI':
+        if (c.wifi_he) say(topic, 'WIFI: ' + c.wifi_he);
+        else defer('WIFI');
+        break;
+      // The hotel page names the facilities but usually does NOT say whether
+      // using them is included, so we quote what it says and stop there.
+      case 'ספא ובריכה':
+        if (c.spa_he) say(topic, 'ספא: ' + c.spa_he);
+        else defer('ספא ובריכה');
         break;
       case 'חדרי רחצה':
         if (rf.bath_he) say(topic, 'חדרי רחצה: ' + rf.bath_he);
