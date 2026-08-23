@@ -53,11 +53,18 @@ const OFF_COMMITMENT = [
   [/שוויץ/, 'שוויץ', null],
 ];
 
+// Customers describe what they want, not our tag names: "סאונה וג'קוזי" is
+// a spa request and "מרחק הליכה קצר מהמעליות" is a slopes-proximity request.
 const PREFS = [
-  [/אפרה/, 'אפרה-סקי'], [/ספא/, 'ספא'], [/קרוב למסלול|על המסלול/, 'קרוב למסלולים'],
-  [/שקט/, 'שקט'], [/מתחיל/, 'מתחילים'], [/זול|תקציב|חסכוני/, 'תקציב'],
-  [/עיירה|אטרקציות|חיי לילה|בילויים|דברים לעשות/, 'עיירה תוססת'],
+  [/אפרה|חיי לילה|ברים/, 'אפרה-סקי'],
+  [/ספא|סאונה|ג'?קוזי|בריכה|עיסוי|מרחץ/, 'ספא'],
+  [/קרוב למסלול|על המסלול|קרוב למעלי|ליד המעלי|הליכה קצרה|מרחק הליכה קצר|ski ?in/i, 'קרוב למסלולים'],
+  [/שקט|רגוע|לא רועש/, 'שקט'],
+  [/מתחיל|לא גלשנו|פעם ראשונה|ללמוד לגלוש/, 'מתחילים'],
+  [/זול|תקציב|חסכוני|משתלם/, 'תקציב'],
+  [/עיירה|אטרקציות|בילויים|דברים לעשות/, 'עיירה תוססת'],
   [/הכל כלול/, 'הכל כלול'],
+  [/משפח|ילדים קטנים/, 'משפחות'],
 ];
 
 // is the word at `idx` preceded by a negation? covers "לא צרפת",
@@ -95,7 +102,10 @@ function parseText(text, slots) {
     // stopping at the first comma silently dropped three of them — which
     // books a room for the wrong number of people. It stops at a month name
     // instead, so "בני 5 ו-9, פברואר" doesn't swallow the date.
-    const ageChunk = t.match(/(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)[^.!?]{0,45}/g);
+    // The age words need Hebrew boundaries. Without them "לא בשבת" matched the
+    // "בת" inside "שבת" and invented a 2-year-old out of "יש 2 חברים שומרים",
+    // which then cost the party an adult. JS \b does not work here.
+    const ageChunk = t.match(/(?:^|[^א-ת])(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)(?![א-ת])[^.!?]{0,45}/g);
     let ages = [];
     if (ageChunk) {
       for (let chunk of ageChunk) {
@@ -220,6 +230,35 @@ function parseText(text, slots) {
   if (/לא משנה|גמיש|מתי שיש|כל תאריך|אין העדפה/.test(t)) {
     if (s.month == null) s.month = 'any';
     s.flexible_dates = true;
+  }
+
+  // --- requirements the commitments workbook has no data for (spec 3.6: no
+  // board basis, no ski pass, no equipment, no bed layout). Naming them and
+  // handing them to a rep is honest; ignoring them looks like we didn't read.
+  const UNVERIFIABLE = [
+    [/מיטות נפרדות|מיטות ?נפרדות|טווין|twin/i, 'מיטות נפרדות'],
+    [/ארוחת בוקר|חצי פנסיון|פנסיון מלא|כולל ארוחות/, 'בסיס האירוח'],
+    [/סקי ?פס/, 'סקי פס'],
+    [/השכרת ציוד|ציוד סנובורד|ציוד סקי|השכרה/, 'השכרת ציוד'],
+    [/הסעות|העברות|טרנספר/, 'הסעות משדה התעופה'],
+    [/נסיעה קצרה|קרוב לשדה|זמן נסיעה/, 'משך הנסיעה מהשדה'],
+    [/חדר גדול|חדר מרווח|סוויטה/, 'גודל החדר'],
+  ];
+  s.unverifiable = [];
+  for (const [re, label] of UNVERIFIABLE) if (re.test(t) && !s.unverifiable.includes(label)) s.unverifiable.push(label);
+
+  // --- Sabbath observance: a hard constraint, not a preference. Saturday
+  // departures must disappear entirely rather than be ranked lower.
+  if (/שומר[יי]? שבת|שומרים שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|שבת שלום|כשר/.test(t)) {
+    s.no_saturday_flights = true;
+  }
+
+  // --- trip length: "לשבוע" is a requirement, not a wish. A 3-night weekend
+  // shown to someone who asked for a week is the wrong product.
+  if (/לשבוע|שבוע שלם|7 לילות|שבועיים/.test(t)) s.nights_wanted = 7;
+  else {
+    const nm = t.match(/(\d{1,2})\s*לילות/);
+    if (nm) s.nights_wanted = +nm[1];
   }
 
   // --- departure airport. A city name alone is NOT a departure airport:
@@ -412,6 +451,7 @@ function phrase(result, slots, cards) {
     if (r.type === 'month') lines.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
     if (r.type === 'location') lines.push('לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
     if (r.type === 'two_rooms') lines.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
+    if (r.type === 'nights') lines.push(`לא מצאתי בדיוק ${r.wanted} לילות, אז הרחבתי גם למשכים אחרים:`);
     if (r.type === 'human_rep') lines.push('לא מצאתי התאמה במערכת — נציג אנושי ישמח לעזור: 04-8557722.');
   }
   // acknowledge an active preference, so a refine chip visibly does something
@@ -424,7 +464,16 @@ function phrase(result, slots, cards) {
     if (others.length) bits.push('לפי ' + others.join(', '));
     lines.push('סידרתי מחדש ' + bits.join(' ו') + ' (הנציג יאשר סופית):');
   }
+  // say out loud what was taken into account, then what a rep must confirm
+  const applied = note('applied_requirements');
+  if (cards.length && applied && applied.items.length >= 2) {
+    lines.push('לקחתי בחשבון: ' + applied.items.join(' · ') + '.');
+  }
   if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
+  // requirements the workbook simply cannot answer — never silently dropped
+  if (cards.length && (slots.unverifiable || []).length) {
+    lines.push('את ' + slots.unverifiable.join(', ') + ' נציג יאמת מול המלון לפני הסגירה.');
+  }
 
   for (const c of cards) {
     const why = [];

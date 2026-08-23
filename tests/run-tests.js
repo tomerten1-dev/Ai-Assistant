@@ -158,6 +158,28 @@ t('it names only genuinely open dates',
   !!note && note.open_dates.length > 0 && note.open_dates.every(d => isOpen('austria', d)));
 t('it never appears as a bookable card', offComm.candidates.every(c => c.hotel !== 'זאלבאך'));
 
+console.log('\n[sabbath] Saturday departures are unusable, not merely less attractive');
+const shabbat = engine.search({
+  adults: 4, children_ages: [], no_children: true, month: 2,
+  no_saturday_flights: true, nights_wanted: 7,
+});
+t('returns results', shabbat.candidates.length > 0);
+t('zero Saturday departures',
+  shabbat.candidates.every(c => new Date(c.date + 'T00:00:00Z').getUTCDay() !== 6),
+  shabbat.candidates.map(c => c.date).join(','));
+t('every result is the requested 7 nights', shabbat.candidates.every(c => c.nights === 7));
+t('every result actually holds 4 people', shabbat.candidates.every(c => c.occ_effective.max >= 4));
+// the constraint must survive the relaxation ladder — a widened search that
+// re-introduces a Saturday flight is useless to a Sabbath-observant customer
+const shabbatTight = engine.search({
+  adults: 4, children_ages: [], no_children: true, month: 2, country: 'austria',
+  no_saturday_flights: true, nights_wanted: 7,
+});
+t('Sabbath rule survives relaxation',
+  shabbatTight.candidates.every(c => new Date(c.date + 'T00:00:00Z').getUTCDay() !== 6));
+t('the applied requirements are reported back',
+  shabbat.notes.some(n => n.type === 'applied_requirements' && n.items.includes('בלי טיסות בשבת')));
+
 console.log('\n— guardrails —');
 const r5 = engine.search({ adults: 2, children_ages: [], month: 1 });
 t('never more than 8 candidates', r5.candidates.length <= 8);

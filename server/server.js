@@ -36,6 +36,7 @@ const EMPTY_SLOTS = {
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
+  no_saturday_flights: null, nights_wanted: null, unverifiable: [],
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
@@ -72,6 +73,8 @@ function toSearchSlots(slots) {
     departure_airport: any(slots.departure_airport),
     off_commitment_destination: slots.off_commitment_destination || null,
     off_commitment_country: slots.off_commitment_country || null,
+    no_saturday_flights: !!slots.no_saturday_flights,
+    nights_wanted: slots.nights_wanted || null,
     out_of_season: !!slots.out_of_season,
   };
 }
@@ -84,7 +87,7 @@ function toSearchSlots(slots) {
 function slotsChanged(before, after) {
   const keys = ['adults', 'children_ages', 'children_count', 'no_children', 'month',
     'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club',
-    'excluded_countries'];
+    'excluded_countries', 'no_saturday_flights', 'nights_wanted'];
   for (const k of keys) if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) return true;
   return (after.preferences || []).length !== (before.preferences || []).length;
 }
@@ -170,7 +173,14 @@ async function handleChat(body) {
     try {
       const parsed = await fillSlotsWithModel(messages, prevSlots, questionsAsked);
       if (parsed && parsed.slots) {
-        slots = { ...slots, ...parsed.slots };
+        // union the preference lists rather than letting the model's replace
+        // the regex layer's: "סאונה וג'קוזי" was read as ספא locally, and a
+        // model reply that omitted it was silently dropping the request
+        const merged = { ...slots, ...parsed.slots };
+        merged.preferences = [...new Set([
+          ...(slots.preferences || []), ...(parsed.slots.preferences || []),
+        ])];
+        slots = merged;
         modelUsed = true;
         if (!parsed.ready_to_search && parsed.reply_he) replyIfNotReady = parsed.reply_he;
       }
@@ -207,7 +217,11 @@ async function handleChat(body) {
   const SEASON_HE = 'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.';
   // a direct answer to a direct question (exact price, other customers'
   // bookings) — showing offers again instead would read as evasion
-  const deflection = offline.deflect(lastUser);
+  // A briefing is not a question. "…- סקי פס - השכרת ציוד…" inside a long
+  // requirements list used to trigger the "what's included" explainer and
+  // push the actual answer down; those items are covered by the
+  // unverifiable line instead.
+  const deflection = slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser);
   const preamble = [
     deflection,
     offTopic && !deflection ? OFF_TOPIC_HE : null,

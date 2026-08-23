@@ -165,6 +165,30 @@ check('2+2 party notation', null, '2+2, ינואר', { adults: 2, children_count
 check('ages as 5+9 after a count', null, '2 מבוגרים 2 ילדים 5+9 פבר', { adults: 2, children_ages: [5, 9], month: 2 });
 check('גדולים / קטנים', null, '2 גדולים 2 קטנים ינואר', { adults: 2, children_count: 2, month: 1 });
 
+console.log('\n— the snowboard-group brief (a real customer message) —');
+{
+  const brief = 'אנחנו 4 חברים ומחפשים חבילת סנובורד לשבוע במהלך חודש פברואר, ' +
+    'מלון עם מיטות נפרדות, חדר גדול, מרחק הליכה קצר מהמעליות, סאונה וג׳קוזי במלון, ' +
+    'ארוחת בוקר כלולה, סקי פס, השכרת ציוד סנובורד, הסעות משדה התעופה, ' +
+    'טיסות לא בשבת יש 2 חברים שומרים';
+  const s = parseText(brief, {});
+  const checks = [
+    ['four adults, not three', s.adults === 4],
+    // "לא בשבת" contains "בת" — it must not become a 2-year-old
+    ['no phantom child from "שבת"', (s.children_ages || []).length === 0],
+    ['February', s.month === 2],
+    ['a week', s.nights_wanted === 7],
+    ['Sabbath constraint captured', s.no_saturday_flights === true],
+    ['sauna/jacuzzi read as spa', (s.preferences || []).includes('ספא')],
+    ['short walk read as slope proximity', (s.preferences || []).includes('קרוב למסלולים')],
+    ['unverifiable items collected', (s.unverifiable || []).includes('מיטות נפרדות') &&
+      (s.unverifiable || []).includes('השכרת ציוד')],
+  ];
+  const bad = checks.filter(c => !c[1]).map(c => c[0]);
+  bad.length ? fail++ : pass++;
+  console.log(bad.length ? '  ✗ brief: ' + bad.join('; ') : '  ✓ every requirement in the brief was read correctly');
+}
+
 console.log('\n— a city name is not a departure airport —');
 check('weather question sets no airport', null, 'מה מזג האוויר בתל אביב?', { departure_airport: null });
 check('but "מתל אביב" does', null, 'טיסה מתל אביב', { departure_airport: 'tlv' });

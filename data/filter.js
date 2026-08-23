@@ -146,6 +146,17 @@ class SkiSearch {
       });
     }
     if (slots.out_of_season) notes.push({ type: 'out_of_season' });
+    // Tell the customer which of their stated requirements actually shaped the
+    // search, and which ones this system cannot verify — a long requirements
+    // list answered with three silent cards looks like nothing was read.
+    const applied = [];
+    if (slots.no_saturday_flights) applied.push('בלי טיסות בשבת');
+    if (slots.nights_wanted) applied.push(`${slots.nights_wanted} לילות`);
+    if (slots.departure_airport && slots.departure_airport !== 'any') {
+      applied.push('יציאה מ' + (this.departures.airports[slots.departure_airport] || {}).he);
+    }
+    for (const p of slots.preferences || []) applied.push(p);
+    if (applied.length) notes.push({ type: 'applied_requirements', items: applied });
 
     // departure airport that cannot reach what was asked for — say so up front
     const airport = slots.departure_airport;
@@ -172,7 +183,15 @@ class SkiSearch {
       if (candidates.length) relaxed.push({ type: 'location' });
     }
 
-    // relaxation ladder (spec 6.1): adjacent month → country/dest → two rooms → human
+    // relaxation ladder (spec 6.1). Trip length gives before the month does —
+    // a nearby week is usually closer to what was asked than a short break.
+    // Sabbath observance is NEVER relaxed: it is not a preference.
+    if (!candidates.length && slots.nights_wanted) {
+      candidates = this._filter(slots, party, {
+        month: slots.month, country: slots.country, destination: slots.destination, ignoreNights: true,
+      });
+      if (candidates.length) relaxed.push({ type: 'nights', wanted: slots.nights_wanted });
+    }
     if (!candidates.length && slots.month != null) {
       for (const m of adjacentMonths(+slots.month)) {
         candidates = this._filter(slots, party, { month: m, country: slots.country, destination: slots.destination });
@@ -227,7 +246,7 @@ class SkiSearch {
     };
   }
 
-  _filter(slots, party, { month, country, destination, ignoreAirport }) {
+  _filter(slots, party, { month, country, destination, ignoreAirport, ignoreNights }) {
     const out = [];
     const sheets = ignoreAirport ? null : this.allowedSheets(slots.departure_airport);
     for (const u of this.av.units) {
@@ -239,6 +258,11 @@ class SkiSearch {
       // 2. occupancy
       const fit = this.fits(u, party, slots.adults);
       if (fit === false) continue;
+      // 2b. Sabbath observance — a Saturday departure is unusable, not merely
+      //     less attractive, so it is filtered out rather than down-ranked
+      if (slots.no_saturday_flights && new Date(u.date + 'T00:00:00Z').getUTCDay() === 6) continue;
+      // 2c. trip length the customer actually asked for
+      if (!ignoreNights && slots.nights_wanted && u.nights !== slots.nights_wanted) continue;
       // 3. month / date
       if (month != null && !SkiSearch.inMonth(u.date, month)) continue;
       // 4. country / destination
