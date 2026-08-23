@@ -38,37 +38,42 @@ function parseText(text, slots) {
   const s = { ...slots };
   const t = ' ' + text.replace(/\s+/g, ' ').trim() + ' ';
 
-  // --- children ages: "ילדים בני 5 ו-9", "ילד בן 7", "בני 5,9", "גילאי 4 ו-6"
-  const ageChunk = t.match(/(?:ילדים|ילד|ילדה|בני|בגילאי|גילאי|בן|בת)[^.,!?]{0,30}/g);
-  if (ageChunk) {
-    const ages = [];
-    for (const chunk of ageChunk) {
-      for (const m of chunk.matchAll(/\b(\d{1,2})\b/g)) {
-        const n = +m[1];
-        if (n >= 0 && n <= 17) ages.push(n);
+  // The question we just asked is the strongest signal about what this
+  // message means. A bare "4" after "באילו גילאים?" is an AGE — never a count.
+  const answering = s._lastQuestion || null;
+  const askedChildren = answering === 'children' || answering === 'children_ages';
+  const allNums = [...t.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)].map(x => +x[1]);
+
+  // --- explicit "no children"
+  if (/בלי ילדים|אין ילדים|רק מבוגרים|ללא ילדים|לא נוסעים ילדים/.test(t) ||
+      (askedChildren && /^ ?(לא|אין|לא נוסעים|בלי) ?$/.test(t))) {
+    s.no_children = true; s.children_ages = []; s.children_count = 0;
+  } else {
+    // --- ages stated with an age word: "ילדים בני 5 ו-9", "ילד בן 7", "גילאי 4 ו-6"
+    const ageChunk = t.match(/(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)[^.,!?]{0,30}/g);
+    let ages = [];
+    if (ageChunk) {
+      for (const chunk of ageChunk) {
+        for (const m of chunk.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)) {
+          const n = +m[1];
+          if (n >= 0 && n <= 17) ages.push(n);
+        }
       }
     }
+    // --- bare numbers answering the children question ARE the ages
+    if (!ages.length && askedChildren) {
+      ages = allNums.filter(n => n >= 0 && n <= 17).slice(0, 4);
+    }
     if (ages.length) { s.children_ages = ages; s.no_children = false; }
-  }
-  if (/בלי ילדים|אין ילדים|רק מבוגרים|ללא ילדים/.test(t)) { s.no_children = true; s.children_ages = []; }
 
-  // children COUNT without ages: "שני ילדים", "2 ילדים", "ילד אחד" —
-  // remember how many, so the next question is "באילו גילאים?" and not
-  // "נוסעים גם ילדים?" (the customer already said so)
-  if (!(s.children_ages || []).length) {
-    const cm = t.match(/(\d{1,2}|[א-ת]+)\s*ילדים/);
-    if (cm) { const n = +cm[1] || heNum(cm[1]); if (n) { s.children_count = n; s.no_children = false; } }
-    if (/ילד אחד|ילדה אחת/.test(t)) { s.children_count = 1; s.no_children = false; }
-  }
-
-  // bare numbers as the ANSWER to the ages question: "4 ו 9", "4,9", "9 4"
-  if ((s._lastQuestion === 'children' || s._lastQuestion === 'children_ages') && !(s.children_ages || []).length) {
-    const nums = [...t.matchAll(/\b(\d{1,2})\b/g)].map(x => +x[1]).filter(n => n >= 0 && n <= 17);
-    if (nums.length >= 2 && nums.length <= 4) { s.children_ages = nums; s.no_children = false; }
-    else if (nums.length === 1) {
-      // one number: if we already know the count it's an age, otherwise a count
-      if (s.children_count === 1 || nums[0] <= 17 && s.children_count) { s.children_ages = [nums[0]]; s.no_children = false; }
-      else { s.children_count = nums[0]; s.no_children = false; }
+    // --- child COUNT when no ages given yet: "שני ילדים", "3 ילדים",
+    //     "ילד אחד", and bare singular "ילד" / "ילדה" (Hebrew has no \b)
+    if (!(s.children_ages || []).length) {
+      const cm = t.match(/(\d{1,2}|[א-ת]+)\s*ילדים/);
+      if (cm) { const n = +cm[1] || heNum(cm[1]); if (n) { s.children_count = n; s.no_children = false; } }
+      else if (/(?:^|[^א-ת])(?:ילד|ילדה|בת|בן)(?![א-ת])/.test(t) || /ילד אחד|ילדה אחת/.test(t)) {
+        s.children_count = 1; s.no_children = false;
+      }
     }
   }
 
@@ -119,11 +124,13 @@ function parseText(text, slots) {
   if (/^ ?(לא|אין צורך|לא צריך) ?$/.test(t) && s._lastQuestion === 'kids_club') s.needs_hebrew_kids_club = false;
   if (/^ ?(לא|אין|בלי) ?$/.test(t) && s._lastQuestion === 'children') { s.no_children = true; s.children_ages = []; }
 
-  // bare numbers as an answer to the open question
-  const bare = t.trim().match(/^(\d{1,2})(?:\s*(?:אנשים|נוסעים))?$/);
-  if (bare) {
-    if (s._lastQuestion === 'adults' || s.adults == null) s.adults = +bare[1];
-    else if (s._lastQuestion === 'month' && +bare[1] >= 1 && +bare[1] <= 12) s.month = +bare[1];
+  // bare answer to the adults question — digits ("2") or words ("שניים")
+  if (answering === 'adults' && s.adults == null) {
+    const bare = t.trim().match(/^(\d{1,2}|[א-ת]+)(?:\s*(?:אנשים|נוסעים|מבוגרים))?$/);
+    if (bare) { const n = +bare[1] || heNum(bare[1]); if (n) s.adults = n; }
+  } else if (answering === 'month' && s.month == null) {
+    const bare = t.trim().match(/^(\d{1,2})$/);
+    if (bare && +bare[1] >= 1 && +bare[1] <= 12) s.month = +bare[1];
   }
 
   // --- preferences (only if mentioned!)
@@ -142,7 +149,7 @@ function nextQuestion(slots, prevKey) {
   if (slots.adults == null) q = { key: 'adults', he: 'כמה מבוגרים תהיו בחופשה?' };
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
     q = slots.children_count
-      ? { key: 'children_ages', he: 'באילו גילאים הילדים?' }
+      ? { key: 'children_ages', he: slots.children_count === 1 ? 'בן כמה הילד?' : 'באילו גילאים הילדים?' }
       : { key: 'children', he: 'נוסעים גם ילדים, ואם כן — באילו גילאים?' };
   }
   else if (slots.month == null) q = { key: 'month', he: 'מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם "גמיש")' };
