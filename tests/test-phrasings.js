@@ -253,5 +253,29 @@ console.log('\n— never repeat the same question —');
                  : `  ✗ got departure_airport=${s.departure_airport}`);
 }
 
+console.log('\n— never ask what the customer just told us —');
+{
+  const { nextQuestion } = require('../server/offline-nlu');
+  const ask = (text) => {
+    const slots = parseText(text, {});
+    if (slots.adults == null) slots.adults = 2;   // step past the adults question
+    return nextQuestion(slots, null) || {};
+  };
+  const want = (text, key) => {
+    const q = ask(text);
+    if (q.key === key) { pass++; console.log('  ✓ "' + text + '" → ' + q.he); }
+    else { fail++; console.log('  ✗ "' + text + '" asked ' + q.key + ': ' + q.he); }
+  };
+  // "זוג עם ילדים" was answered with "נוסעים גם ילדים?" — they just said so.
+  want('זוג עם ילדים', 'children_ages');
+  want('משפחה עם ילדים, פברואר', 'children_ages');
+  want('אנחנו 4 עם הילדים', 'children_ages');
+  want('זוג עם 2 ילדים', 'children_ages');
+  want('זוג עם ילד', 'children_ages');
+  const q = ask('זוג בלי ילדים');
+  if (!/ילד/.test(q.he || '')) { pass++; console.log('  ✓ "בלי ילדים" skips the question entirely'); }
+  else { fail++; console.log('  ✗ asked about children anyway: ' + q.he); }
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

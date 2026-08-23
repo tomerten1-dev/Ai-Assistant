@@ -156,6 +156,12 @@ function parseText(text, slots) {
       else if (/(?:^|[^א-ת])(?:ילד|ילדה|בת|בן)(?![א-ת])/.test(t) || /ילד אחד|ילדה אחת/.test(t)) {
         s.children_count = 1; s.no_children = false;
       }
+      // "זוג עם ילדים" — plural with no number. We do not know HOW MANY, but we
+      // certainly know there ARE children, and asking "נוסעים גם ילדים?" after
+      // the customer just said so reads as not having listened.
+      if (/(?:^|[^א-ת])(?:ילדים|ילדות|קטנים|הילדים)(?![א-ת])/.test(t) && !/בלי ילדים|ללא ילדים|אין ילדים/.test(t)) {
+        s.no_children = false;
+      }
     }
     // "2 ילדים 5+9" — once we know HOW MANY children there are, a digit pair
     // is their ages rather than another party count. Must run after the count
@@ -422,7 +428,9 @@ function nextQuestion(slots, prevKey) {
   // blocking: without these the search cannot run at all
   if (slots.adults == null) q = { key: 'adults', blocking: true, he: 'כמה מבוגרים תהיו בחופשה?' };
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
-    q = slots.children_count
+    // no_children === false means we were told there ARE children, even when
+    // the count is still unknown — so ask what is missing, not what we know
+    q = (slots.children_count || slots.no_children === false)
       ? { key: 'children_ages', blocking: true, he: slots.children_count === 1 ? 'בן כמה הילד?' : 'באילו גילאים הילדים?' }
       : { key: 'children', blocking: true, he: 'נוסעים גם ילדים, ואם כן — באילו גילאים?' };
   }
