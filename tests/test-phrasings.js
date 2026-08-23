@@ -105,6 +105,38 @@ check('זאלבאך', null, 'רוצים לזאלבאך', { off_commitment_destin
 check('קלאב מד', null, 'קלאב מד בבקשה', { off_commitment_destination: 'קלאב מד' });
 check('a resort we DO hold commitments for is not flagged', null, 'רוצים לבנסקו', { off_commitment_destination: null, destination: 'Bansko' });
 
+console.log('\n— every child must survive the parse (round-2 stress findings) —');
+check('four ages separated by commas', null, '2 מבוגרים וארבעה ילדים בני 4, 6, 9, 12, ינואר',
+  { adults: 2, children_ages: [4, 6, 9, 12], month: 1 });
+check('three ages, comma and vav', null, 'זוג עם ילדים בני 5, 8 ו-12, מרץ', { children_ages: [5, 8, 12], month: 3 });
+check('ages spelled out', null, 'זוג שני ילדים בני שש ותשע פברואר', { children_ages: [6, 9], month: 2 });
+check('the month is not swallowed as an age', null, 'זוג עם ילדים בני 5 ו-9, פברואר', { children_ages: [5, 9], month: 2 });
+
+console.log('\n— party words —');
+check('שני זוגות = 4 adults', null, 'שני זוגות, ינואר', { adults: 4 });
+check('שני הורים = 2 adults', null, 'שני הורים ושני ילדים בני 7 ו-11', { adults: 2, children_ages: [7, 11] });
+check('a single זוג is still 2', null, 'זוג, ינואר', { adults: 2 });
+
+console.log('\n— follow-up questions get answers, not another card dump —');
+{
+  const cases = [
+    ['כמה לילות זה?', /לילות/],
+    ['מה כלול במחיר?', /טיסה|העברות|סקי פס/],
+    ['באיזו שעה הטיסה?', /אינן סופיות|לא אציין/],
+    ['אני רוצה להזמין את הראשון', /המשך להזמנה|תחזרו אליי/],
+    ['מה ההבדל בין המלונות?', /ההבדלים|כרטיס/],
+    ['זה לא מה שביקשתי', /לחדד|צ׳יפים/],
+    ['תודה רבה!', /בשמחה/],
+  ];
+  let ok = true;
+  for (const [msg, re] of cases) {
+    const got = deflect(msg);
+    if (!got || !re.test(got)) { ok = false; console.log(`      ✗ "${msg}" → ${got}`); }
+  }
+  ok ? pass++ : fail++;
+  console.log(ok ? '  ✓ all seven common follow-ups are answered' : '  ✗ some follow-ups unanswered');
+}
+
 console.log('\n— a city name is not a departure airport —');
 check('weather question sets no airport', null, 'מה מזג האוויר בתל אביב?', { departure_airport: null });
 check('but "מתל אביב" does', null, 'טיסה מתל אביב', { departure_airport: 'tlv' });

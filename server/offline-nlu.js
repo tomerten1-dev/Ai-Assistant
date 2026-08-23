@@ -78,13 +78,26 @@ function parseText(text, slots) {
     s.no_children = true; s.children_ages = []; s.children_count = 0;
   } else {
     // --- ages stated with an age word: "ילדים בני 5 ו-9", "ילד בן 7", "גילאי 4 ו-6"
-    const ageChunk = t.match(/(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)[^.,!?]{0,30}/g);
+    // The chunk must span commas: "בני 4, 6, 9, 12" is FOUR children, and
+    // stopping at the first comma silently dropped three of them — which
+    // books a room for the wrong number of people. It stops at a month name
+    // instead, so "בני 5 ו-9, פברואר" doesn't swallow the date.
+    const ageChunk = t.match(/(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)[^.!?]{0,45}/g);
     let ages = [];
     if (ageChunk) {
-      for (const chunk of ageChunk) {
+      for (let chunk of ageChunk) {
+        chunk = chunk.split(/ינואר|פברואר|מרץ|מארס|דצמבר|חנוכה|פורים/)[0];
         for (const m of chunk.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)) {
           const n = +m[1];
           if (n >= 0 && n <= 17) ages.push(n);
+        }
+        // ages spelled out: "בני שש ותשע"
+        if (!ages.length) {
+          for (const w of chunk.split(/[^א-ת]+/)) {
+            // "שש ותשע" — the second number carries the connecting vav
+            const n = HE_NUM[w] != null ? HE_NUM[w] : HE_NUM[w.replace(/^ו/, '')];
+            if (n != null && n >= 1 && n <= 17) ages.push(n);
+          }
         }
       }
     }
@@ -115,7 +128,14 @@ function parseText(text, slots) {
   // silently keeping the first one books the wrong size room.
   const correcting = /בעצם|סליחה|טעות|תתקן|לא נכון|התכוונתי|שיניתי|בעצמנו/.test(t);
   if (/אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד/.test(t)) s.adults = 1;
-  if (/זוג(?!ל)/.test(t) && (s.adults == null || correcting)) s.adults = 2;
+  // "שני זוגות" is four people, not two
+  let pm = t.match(/(\d{1,2}|[א-ת]+)\s*זוגות/);
+  if (pm) { const n = +pm[1] || heNum(pm[1]); if (n) s.adults = n * 2; }
+  else if (/זוג(?!ל|ות)/.test(t) && (s.adults == null || correcting)) s.adults = 2;
+  // "שני הורים" / "ההורים" — parents are adults
+  let hm = t.match(/(\d{1,2}|[א-ת]+)\s*הורים/);
+  if (hm) { const n = +hm[1] || heNum(hm[1]); if (n) s.adults = n; }
+  else if (/ההורים|הורים/.test(t) && s.adults == null) s.adults = 2;
   let m = t.match(/(\d{1,2}|[א-ת]+)\s*מבוגרים/);
   if (m) s.adults = +m[1] || heNum(m[1]) || s.adults;
   // an explicit party statement always wins, corrected or not
@@ -403,6 +423,29 @@ function deflect(text) {
   }
   if (/כמה (זה )?עולה|מחיר מדויק|בכמה|כמה יעלה|כמה בשקלים|תן לי הנחה|הנחה של|בחינם/.test(t)) {
     return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
+  }
+  // Common follow-ups that were being answered by silently re-showing the same
+  // three cards — which reads as a bot that did not listen.
+  if (/כמה לילות|כמה ימים|משך|כמה זמן/.test(t)) {
+    return 'מספר הלילות מופיע על כל כרטיס — הוא משתנה לפי המוצר (7 לילות ברוב היעדים, ובבנסקו יש גם סופי שבוע קצרים).';
+  }
+  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה|סקי פס/.test(t)) {
+    return 'ההרכב המדויק משתנה בין המלונות — טיסה, העברות, לינה וסקי פס מפורטים בדף המלון ובמסך ההזמנה, ונציג יעבור על זה איתכם.';
+  }
+  if (/שעה|שעות טיסה|מתי ממריא|מתי הטיסה|לוח טיסות/.test(t)) {
+    return 'שעות הטיסה אינן סופיות ועשויות להשתנות, ולכן לא אציין אותן כאן. נציג ימסור לכם את הפרטים המעודכנים.';
+  }
+  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת/.test(t)) {
+    return 'מצוין. לחצו "המשך להזמנה" בכרטיס שבחרתם כדי לראות את המחיר המדויק, או "תחזרו אליי" ונציג יסגור איתכם — ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.';
+  }
+  if (/מה ההבדל|במה שונ|להשוות|השוואה|איזה עדיף|מה ממליץ|מה הכי טוב/.test(t)) {
+    return 'ההבדלים המרכזיים מופיעים על כל כרטיס — היישוב, המרחק מהמעלית, מה יש במלון וטווח המחיר. נציג ישמח לעבור איתכם על ההבדלים לעומק.';
+  }
+  if (/לא מה שביקשתי|לא התאים|לא רלוונטי|לא זה|לא מדויק/.test(t)) {
+    return 'סליחה על כך. אפשר לחדד — יעד אחר, חודש אחר, או תקציב? אפשר גם ללחוץ על אחד הצ׳יפים למטה.';
+  }
+  if (/^ ?(תודה|תודה רבה|מעולה|מגניב|סבבה|יופי)[!. ]* ?$/.test(t)) {
+    return 'בשמחה. אם תרצו לחדד משהו — יעד, חודש או תקציב — אני כאן.';
   }
   return null;
 }

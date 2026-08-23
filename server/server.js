@@ -116,9 +116,21 @@ async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
 function presentCards(result, slots) {
   // top 3 for display; ranked by the deterministic sort, but prefer showing
   // three DIFFERENT hotels before a second room of the same hotel
+  // never show the same hotel on the same date twice — with only one hotel
+  // in a resort (Borovets) the fill step used to repeat an identical card
+  const uniq = [];
+  const seenExact = new Set();
+  for (const c of result.candidates) {
+    // one card per hotel+date: a second room type at the same hotel on the
+    // same day looks like a duplicate to the customer, and the rep handles
+    // room choice anyway
+    const k = `${c.hotel}|${c.date}`;
+    if (seenExact.has(k)) continue;
+    seenExact.add(k); uniq.push(c);
+  }
   const seen = new Set(), diverse = [];
-  for (const c of result.candidates) if (!seen.has(c.hotel)) { diverse.push(c); seen.add(c.hotel); }
-  for (const c of result.candidates) if (!diverse.includes(c)) diverse.push(c);
+  for (const c of uniq) if (!seen.has(c.hotel)) { diverse.push(c); seen.add(c.hotel); }
+  for (const c of uniq) if (!diverse.includes(c)) diverse.push(c);
   return diverse.slice(0, 3).map((c, i) => ({
     index: i,
     hotel: c.hotel, resort: c.resort, country: c.country,
@@ -171,9 +183,14 @@ async function handleChat(body) {
   // ---- off-topic: acknowledge, then steer back (red rule 9) ----
   // Answering "what's the weather in Tel Aviv?" with "how many adults?" is a
   // non-sequitur; one line of acknowledgement makes it a conversation.
+  // A question we have a real answer for is NOT off topic — "כמה לילות זה?"
+  // was getting the "I only do ski holidays" line, which is absurd. Anything
+  // deflect() recognises is on topic by definition, and the vocabulary below
+  // covers the rest of the domain.
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
+    !offline.deflect(lastUser) &&
     /\?|איך|מה |למה|מי /.test(lastUser) &&
-    !/סקי|חופש|מלון|טיסה|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין/.test(lastUser);
+    !/סקי|חופש|מלון|טיסה|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין|לילות|כלול|הבדל|להזמין|הזמנה|ביקשתי|מסלול|ספא|גלישה|מדריך|העבר|יעדים|אופצי|המלצ/.test(lastUser);
 
   // ---- step 3: what to ask next (same logic whichever layer filled slots) ----
   // Only BLOCKING gaps hold results back. The rest (departure airport,

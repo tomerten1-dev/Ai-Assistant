@@ -91,6 +91,56 @@ const CASES = [
   { id: 'camp-feb', turns: ['זוג עם ילדים בני 5 ו-10, פברואר, קייטנה בעברית'], expect: { campsHonest: true } },
   { id: 'camp-nowhere', turns: ['זוג עם ילד בן 5, ינואר, קייטנה באנדורה'], expect: { noCrash: true } },
 
+  // ================= round 2 =================
+  // --- multi-turn conversations where requirements move ---
+  { id: 'r2-change-month', turns: ['זוג בלי ילדים, ינואר', 'בעצם עדיף פברואר'], expect: { month: 2 } },
+  { id: 'r2-change-country', turns: ['זוג בלי ילדים, ינואר, אוסטריה', 'ומה יש בבולגריה?'], expect: { onlyCountry: 'bulgaria' } },
+  { id: 'r2-add-child', turns: ['זוג בלי ילדים, ינואר', 'שכחתי, מצטרף גם ילד בן 8'], expect: { noCrash: true } },
+  { id: 'r2-add-airport-late', turns: ['זוג בלי ילדים, פברואר', 'טיסה מחיפה'], expect: { onlyCountry: 'bulgaria', fridayOnly: true } },
+  { id: 'r2-exclude-then-airport', turns: ['זוג בלי ילדים, ינואר', 'לא צרפת', 'מחיפה'], expect: { notCountry: 'france' } },
+  { id: 'r2-repeat-same', turns: ['זוג בלי ילדים, ינואר', 'זוג בלי ילדים, ינואר'], expect: { cards: '>0' } },
+
+  // --- questions about what was just shown ---
+  { id: 'r2-how-many-nights', turns: ['זוג בלי ילדים, ינואר', 'כמה לילות זה?'], expect: { noCrash: true } },
+  { id: 'r2-whats-included', turns: ['זוג בלי ילדים, ינואר', 'מה כלול במחיר?'], expect: { noCrash: true } },
+  { id: 'r2-flight-times', turns: ['זוג בלי ילדים, ינואר', 'באיזו שעה הטיסה?'], expect: { noFlightPromise: true } },
+  { id: 'r2-compare', turns: ['זוג בלי ילדים, ינואר', 'מה ההבדל בין המלונות?'], expect: { noCrash: true } },
+  { id: 'r2-book-now', turns: ['זוג בלי ילדים, ינואר', 'אני רוצה להזמין את הראשון'], expect: { noCrash: true } },
+
+  // --- camps, deeper ---
+  { id: 'r2-camp-waitlist', turns: ['זוג עם ילד בן 7, ינואר, קייטנה בעברית'], expect: { campsHonest: true } },
+  { id: 'r2-camp-three-kids', turns: ['זוג עם ילדים בני 5, 8 ו-12, מרץ, קייטנה'], expect: { campsHonest: true } },
+  { id: 'r2-camp-age-6', turns: ['זוג עם ילד בן 6, ינואר, קייטנה בעברית'], expect: { campsHonest: true } },
+  { id: 'r2-camp-bansko', turns: ['זוג עם ילד בן 9, פברואר, בנסקו, קייטנה'], expect: { onlyCountry: 'bulgaria' } },
+
+  // --- party sizes that need two rooms ---
+  { id: 'r2-family-six', turns: ['2 מבוגרים וארבעה ילדים בני 4, 6, 9, 12, ינואר'], expect: { noCrash: true } },
+  { id: 'r2-three-adults', turns: ['3 מבוגרים, פברואר'], expect: { noCrash: true } },
+  { id: 'r2-two-couples', turns: ['שני זוגות, ינואר'], expect: { noCrash: true } },
+
+  // --- specific dates rather than months ---
+  { id: 'r2-week-of', turns: ['זוג בלי ילדים, בשבוע של 9 בינואר'], expect: { noCrash: true } },
+  { id: 'r2-exact-date', turns: ['זוג בלי ילדים, 6.3'], expect: { noCrash: true } },
+  { id: 'r2-range', turns: ['זוג בלי ילדים, בין ינואר לפברואר'], expect: { noCrash: true } },
+
+  // --- messy input ---
+  { id: 'r2-english-mix', turns: ['couple, no kids, January, Austria please'], expect: { noCrash: true } },
+  { id: 'r2-very-long', turns: ['שלום רב, אנחנו משפחה מחיפה, שני הורים ושני ילדים בני 7 ו-11, מחפשים חופשת סקי בחודש פברואר, חשוב לנו שיהיה ספא במלון וגם קייטנה בעברית לילדים, ושלא יהיה יקר מדי, מה אתם ממליצים?'], expect: { noCrash: true } },
+  { id: 'r2-no-punctuation', turns: ['זוג שני ילדים בני שש ותשע פברואר קייטנה'], expect: { noCrash: true } },
+  { id: 'r2-just-numbers', turns: ['2 2 5 9 1'], expect: { noCrash: true } },
+  { id: 'r2-frustrated', turns: ['זוג בלי ילדים, ינואר', 'זה לא מה שביקשתי'], expect: { noCrash: true } },
+  { id: 'r2-thanks', turns: ['זוג בלי ילדים, ינואר', 'תודה רבה!'], expect: { noCrash: true } },
+
+  // --- conflicting constraints ---
+  { id: 'r2-haifa-austria', turns: ['זוג בלי ילדים, ינואר, מחיפה לאוסטריה'], expect: { onlyCountry: 'bulgaria' } },
+  { id: 'r2-exclude-all', turns: ['זוג בלי ילדים, ינואר', 'לא צרפת, לא אוסטריה, לא בולגריה, לא אנדורה'], expect: { noCrash: true } },
+  { id: 'r2-camp-and-haifa', turns: ['זוג עם ילד בן 8, פברואר, מחיפה, קייטנה בעברית'], expect: { noCrash: true } },
+
+  // --- resorts we do hold, asked by name ---
+  { id: 'r2-mayrhofen', turns: ['זוג בלי ילדים, ינואר, מאיירהופן'], expect: { onlyCountry: 'austria' } },
+  { id: 'r2-val-thorens', turns: ['זוג בלי ילדים, ינואר, ואל טורנס'], expect: { onlyCountry: 'france' } },
+  { id: 'r2-borovets', turns: ['זוג בלי ילדים, ינואר, בורובץ'], expect: { onlyCountry: 'bulgaria' } },
+
   // --- cases genuinely worth spending a model call on ---
   { id: 'live-freeform', live: true, turns: ['בא לנו לנשום אוויר הרים אחרי החגים, מה אתם מציעים'], expect: { noCrash: true } },
   { id: 'live-story', live: true, turns: ['אני ואשתי עם הבן שלנו בן 7, רוצים משהו רגוע שהוא יוכל ללמוד לגלוש, מתישהו אחרי אמצע ינואר'], expect: { noCrash: true } },
@@ -143,6 +193,12 @@ function audit(c, res, transcript) {
   }
   for (const s of e.replyHas || []) if (!reply.includes(s)) issues.push(`reply missing "${s}"`);
   for (const s of e.replyLacks || []) if (reply.includes(s)) issues.push(`reply should not contain "${s}"`);
+  if (e.month && res.slots && res.slots.month !== e.month) {
+    issues.push(`month should be ${e.month}, slots say ${res.slots.month}`);
+  }
+  if (e.noFlightPromise && /\d{1,2}:\d{2}/.test(reply)) {
+    issues.push('promised a flight time — not in the data');
+  }
   if (e.onTopic && !/סקי|חופש|פינגווין|נציג|מלון|יעד|נוסע|תאריך|חודש|04-8557722/.test(reply)) {
     issues.push(`drifted off topic: "${reply.slice(0, 70)}"`);
   }
