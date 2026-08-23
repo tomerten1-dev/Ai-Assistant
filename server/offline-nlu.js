@@ -471,6 +471,18 @@ function phrase(result, slots, cards) {
     lines.push('עונת הסקי שלנו היא דצמבר עד סוף מרץ. בחודשים אחרים אין לנו יציאות.');
   }
 
+  // the child's age group does not run on some of these weeks — name the ones
+  // where it does, instead of only flagging what is missing
+  const gap = note('camp_group_gap');
+  if (gap && gap.missing.length) {
+    const fmt = d => { const [y, m, dd] = d.split('-'); return +dd + '.' + +m; };
+    // chronological, and only a handful — a wall of dates is not an answer
+    const when = [...new Set([...(gap.dates || []), ...(gap.other_dates || [])])].sort().slice(0, 4);
+    lines.push(when.length
+      ? `שימו לב: קבוצת ${gap.missing.join(', ')} לא פועלת בכל השבועות. היא כן פועלת ב-${when.map(fmt).join(', ')} — כדאי לשקול את התאריכים האלה.`
+      : `שימו לב: קבוצת ${gap.missing.join(', ')} אינה פועלת בתאריכים שמצאתי. נציג יבדוק מתי היא נפתחת.`);
+  }
+
   const campAge = note('camp_age_mismatch');
   if (campAge) {
     const ages = (campAge.ages || []).join(', ');

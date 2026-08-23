@@ -58,17 +58,21 @@
     + 'box-shadow:0 3px 12px rgba(16,32,48,.28);display:flex;align-items:center;justify-content:center;transition:transform .15s}'
     + '.fab:hover{transform:scale(1.06)}'
     + '.fab:focus-visible{outline:3px solid ' + THEME.accent + '}'
-    + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(392px,calc(100vw - 24px));height:min(600px,calc(100dvh - 110px));'
+    + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100dvh - 110px));'
     + 'background:' + THEME.bg + ';border-radius:' + THEME.radius + ';box-shadow:0 10px 36px rgba(16,32,48,.22);border:1px solid #dfe5ea;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
-    + '.win.big{width:min(860px,calc(100vw - 24px));height:min(820px,calc(100dvh - 110px))}'
+    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100dvh - 116px)}'
+    + '.win.max{width:calc(100vw - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
+    + '.win.max .msgs{padding:20px 24px}'
     + '@media (max-width:480px){.win{bottom:0;' + THEME.position + ':0;width:100vw;height:100dvh;border-radius:0}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
     + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf1}'
     + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
     + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
+    + '.hdr .exp{margin-inline-start:auto;font-size:16px}'
+    + '.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;padding:3px 7px;border-radius:7px;line-height:1}'
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
@@ -88,14 +92,14 @@
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
     + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
-    + '.cards-row .card{flex:1 1 210px;min-width:0}'
+    + '.cards-row .card{flex:1 1 270px;min-width:0}'
     + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:5px}'
-    + '.card .photo{width:calc(100% + 24px);margin:-12px -12px 3px;height:112px;object-fit:cover;border-radius:11px 11px 0 0;display:block;background:#e8edf1}'
+    + '.card .photo{width:calc(100% + 24px);margin:-12px -12px 3px;height:130px;object-fit:cover;border-radius:11px 11px 0 0;display:block;background:#e8edf1}'
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
     + '.card .hname{font-weight:700;font-size:14.5px;color:' + THEME.text + ';line-height:1.3}'
-    + '.card .meta{font-size:12px;color:' + THEME.textLight + ';line-height:1.4}'
+    + '.card .meta{font-size:12.5px;color:' + THEME.textLight + ';line-height:1.4}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
-    + '.card .facts div{font-size:12px;color:' + THEME.text + ';line-height:1.45}'
+    + '.card .facts div{font-size:12.5px;color:' + THEME.text + ';line-height:1.45}'
     + '.card .why{font-size:12.5px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:6px;padding:7px 9px;line-height:1.4}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
     + '.tag{font-size:11.5px;padding:3px 9px;border-radius:4px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
@@ -155,9 +159,25 @@
   var hTxt = el('div');
   hTxt.appendChild(el('div', 'ttl', 'פינגווין | ייעוץ חופשות סקי'));
   hTxt.appendChild(el('div', 'sub', 'זמינות בזמן אמת מתוך המלאי שלנו'));
+  // Let the customer decide how much room the chat gets. A fixed box the
+  // page cannot escape is the most common complaint about widgets like this,
+  // and three offers side by side need real width to be readable.
+  var hExp = el('button', 'x exp', '⤡');
+  hExp.title = 'הגדלת החלון';
+  hExp.setAttribute('aria-label', hExp.title);
+  function setExpanded(max) {
+    win.classList.toggle('max', max);
+    hExp.textContent = max ? '⤢' : '⤡';
+    hExp.title = max ? 'הקטנת החלון' : 'הגדלת החלון';
+    hExp.setAttribute('aria-label', hExp.title);
+    try { localStorage.setItem('pingwin_bot_max', max ? '1' : '0'); } catch (e) {}
+    scrollDown();
+  }
+  hExp.addEventListener('click', function () { setExpanded(!win.classList.contains('max')); });
+  try { if (localStorage.getItem('pingwin_bot_max') === '1') setExpanded(true); } catch (e) {}
   var hX = el('button', 'x', '✕');
   hX.setAttribute('aria-label', 'סגירת הצ׳אט');
-  hdr.appendChild(hTxt); hdr.appendChild(hX);
+  hdr.appendChild(hTxt); hdr.appendChild(hExp); hdr.appendChild(hX);
 
   var msgs = el('div', 'msgs');
   msgs.setAttribute('aria-live', 'polite');

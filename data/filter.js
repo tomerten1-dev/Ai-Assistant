@@ -202,6 +202,28 @@ class SkiSearch {
         if (candidates.length) { relaxed.push({ type: 'month', from: +slots.month, to: m }); break; }
       }
     }
+    // A family that asked for a camp and is shown weeks where their child's
+    // age group does not run deserves to be told which week it DOES run. The
+    // bot used to print "אין קבוצת 4-6 בשבוע זה" on three cards and never
+    // mention that the group runs a fortnight later.
+    if (slots.needs_hebrew_kids_club && candidates.some(c => (c.camps && c.camps.missing || []).length)) {
+      const missing = [...new Set(candidates.flatMap(c => (c.camps && c.camps.missing) || []))];
+      const covered = [...new Set(candidates
+        .filter(c => c.camps && !(c.camps.missing || []).length)
+        .map(c => c.date))].sort();
+      // also look past the current filter: the group may run in another month
+      const wider = [];
+      for (const w of this.camps.weeks || []) {
+        if (slots.country && w.country !== slots.country) continue;
+        const cov = this.campsCoverage(w.resort, w.week, slots.children_ages);
+        if (!cov.missing.length && !covered.includes(w.week)) wider.push(w.week);
+      }
+      notes.push({
+        type: 'camp_group_gap', missing,
+        dates: covered, other_dates: [...new Set(wider)].sort(),
+      });
+    }
+
     let splits = [];
     // Two rooms in the country they ASKED for beat one room in a country they
     // did not. A group of six wanting Austria was being sent to Bulgaria while
@@ -237,10 +259,17 @@ class SkiSearch {
       // first, however well we then explain it.
       c.reqScore = this._requirementScore(c, slots);
     }
-    // when a kids club was requested, full coverage outranks everything —
-    // a hotel whose week runs only one of the needed age groups must not
-    // crowd out one that runs both
-    const campRank = c => (c.camps ? (c.camps.full ? 2 : 1) : 0);
+    // When a kids club was requested, coverage outranks everything else. The
+    // ladder matters: a week where the child's age group DOES NOT RUN AT ALL
+    // is not merely a bit worse than one where it runs with a waiting list —
+    // it is useless to that family. Ranking both as "partial" put three weeks
+    // with no 4-6 group ahead of the one week that had it.
+    const campRank = (c) => {
+      if (!c.camps) return 0;
+      if (c.camps.full) return 3;                                  // runs, places free
+      if (!(c.camps.missing || []).length) return 2;               // runs, waiting list
+      return 1;                                                    // does not run at all
+    };
     candidates.sort((a, b) =>
       (campRank(b) - campRank(a)) ||
       // hotels that actually satisfy what the customer named come first
