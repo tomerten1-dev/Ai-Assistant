@@ -251,7 +251,7 @@ function parseText(text, slots) {
     [/סקי ?פס/, 'סקי פס'],
     [/השכרת ציוד|ציוד סנובורד|ציוד סקי|השכרה/, 'השכרת ציוד'],
     [/הסעות|העברות|טרנספר/, 'הסעות משדה התעופה'],
-    [/נסיעה קצרה|קרוב לשדה|זמן נסיעה|כמה זמן מהשדה|מרחק מהשדה/, 'משך הנסיעה מהשדה'],
+    [/נסיעה קצרה|קרוב לשדה|זמן נסיעה|כמה זמן מהשדה|מרחק מהשדה/, 'המרחק משדה התעופה'],
     [/חדר גדול|חדר מרווח|סוויטה|חדרי שינה|כמה חדרים|דירה גדולה|כמה מ"ר|גודל החדר/, 'גודל החדר'],
     [/מקלח|אמבטי|שירותים בחדר|חדרי רחצה|כמה שירותים/, 'חדרי רחצה'],
   ];
@@ -590,9 +590,12 @@ function cardFacts(c, asked, open) {
         if (rf.bath_he) say(topic, 'חדרי רחצה: ' + rf.bath_he);
         else defer('חדרי הרחצה');
         break;
-      case 'משך הנסיעה מהשדה':
+      // Distance in km only, never a duration (Tomer, 24/08): the time
+      // depends on weather, traffic and snow on the road, and a number we
+      // cannot honour is worse than no number at all.
+      case 'המרחק משדה התעופה':
         if (c.transfer_he) say(topic, 'הסעות: ' + c.transfer_he);
-        else defer('משך הנסיעה מהשדה');
+        else defer('המרחק משדה התעופה');
         break;
       // 'הסעות משדה התעופה' is a package-wide rule, phrased once for all cards
     }
@@ -600,15 +603,41 @@ function cardFacts(c, asked, open) {
   return out;
 }
 
+// Standing answers to the questions customers actually ask (config/faq.json).
+// Before this, anything with a question mark and no ski vocabulary in it got
+// "אני כאן בעיקר להתאמת חופשות סקי" — i.e. a customer asking about
+// cancellation or kosher food was told that is not our subject.
+const FAQ = (() => {
+  const raw = JSON.parse(require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'config', 'faq.json'), 'utf8'));
+  return raw.entries.map(e => ({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he }));
+})();
+
+// Order matters: the file lists the more specific patterns first, and the
+// first match wins. Returns {id, he} so callers can log which answer fired.
+function faq(text) {
+  // Hebrew keyboards produce ׳ and ״ (geresh/gershayim) where the patterns
+  // use ' and " — "צ׳ק אין" must match "צ'ק אין"
+  const t = ' ' + String(text || '')
+    .replace(/[׳‘’]/g, "'")
+    .replace(/[״“”]/g, '"')
+    .replace(/\s+/g, ' ') + ' ';
+  for (const e of FAQ) if (e.re.test(t)) return { id: e.id, he: e.he };
+  return null;
+}
+
 // Questions that deserve a real answer rather than another round of offers:
 // asking for someone else's booking, or for an exact price. Silence here reads
 // as evasion; these say plainly what the bot can and cannot do (red rules 2-3).
 function deflect(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  if (/מי הזמין|שם של מי|מספר הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|מי תפס/.test(t)) {
+  // "מספר ההזמנה" with the definite article was walking straight past this
+  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|פרטיו של לקוח|מי תפס/.test(t)) {
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
   }
-  if (/כמה (זה )?עולה|מחיר מדויק|בכמה|כמה יעלה|כמה בשקלים|תן לי הנחה|הנחה של|בחינם/.test(t)) {
+  // any request for a number in money — "מה המחיר המדויק" and "מחיר בשקלים"
+  // were slipping past and reaching the offers instead of the red-rule answer
+  if (/כמה (זה )?עולה|מחיר מדויק|המחיר המדויק|בכמה|כמה יעלה|בשקלים|ביורו|מה המחיר|תן לי מחיר|תן לי הנחה|הנחה של|בחינם/.test(t)) {
     return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
   }
   // Common follow-ups that were being answered by silently re-showing the same
@@ -649,4 +678,5 @@ function deflect(text) {
   return null;
 }
 
-module.exports = { parseText, nextQuestion, phrase, deflect };
+module.exports = {
+  faq, parseText, nextQuestion, phrase, deflect };

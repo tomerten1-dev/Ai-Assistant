@@ -198,8 +198,13 @@ async function handleChat(body) {
   // was getting the "I only do ski holidays" line, which is absurd. Anything
   // deflect() recognises is on topic by definition, and the vocabulary below
   // covers the rest of the domain.
+  // A standing answer exists for most of what customers actually ask
+  // (config/faq.json). It is on topic by definition, so it also switches the
+  // off-topic line off — telling someone that cancellation terms are "not my
+  // subject" was the most expensive sentence this bot could say.
+  const faqHit = offline.faq(lastUser);
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
-    !offline.deflect(lastUser) &&
+    !faqHit && !offline.deflect(lastUser) &&
     /\?|איך|מה |למה|מי /.test(lastUser) &&
     !/סקי|חופש|מלון|טיסה|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין|לילות|כלול|הבדל|להזמין|הזמנה|ביקשתי|מסלול|ספא|גלישה|מדריך|העבר|יעדים|אופצי|המלצ/.test(lastUser);
 
@@ -222,9 +227,19 @@ async function handleChat(body) {
   // requirements list used to trigger the "what's included" explainer and
   // push the actual answer down; those items are covered by the
   // unverifiable line instead.
-  const deflection = slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser);
+  // The FAQ is checked first: it holds the topic-specific answer, so "כמה עולה
+  // שיעור סקי?" gets the lesson answer rather than the generic price line.
+  // No FAQ pattern can match a red-rule question (customer names, exact
+  // prices, flight times) — tests/test-faq.js pins that.
+  const deflection = faqHit ? null
+    : (slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser));
+  // deflect() guards the red rules (no customer names, no exact prices) so it
+  // wins; the FAQ answer follows only when there is nothing to guard against.
+  // Unlike deflect(), the FAQ answers even when the same message also filled
+  // slots — "2 מבוגרים בפברואר, יש אוכל כשר?" deserves an answer and offers.
   const preamble = [
     deflection,
+    !deflection && faqHit ? faqHit.he : null,
     offTopic && !deflection ? OFF_TOPIC_HE : null,
     slots.out_of_season ? SEASON_HE : null,
   ].filter(Boolean).join('\n');

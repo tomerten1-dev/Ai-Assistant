@@ -369,7 +369,7 @@ class SkiSearch {
       if (want && RANK[want]) s += RANK[want].test(board) ? 3 : -1;
       else if (/ארוחת בוקר|חצי פנסיון|פנסיון מלא|הכל כלול/.test(board)) s += 2;
     }
-    if (asked.has('משך הנסיעה מהשדה')) {
+    if (asked.has('המרחק משדה התעופה')) {
       const km = SkiSearch.transferKm(info.transfer_he);
       // most pages give no distance; that silence is not evidence of a long
       // drive, so unknown scores the same as an average one — only a genuinely
