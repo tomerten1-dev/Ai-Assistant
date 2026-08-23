@@ -108,7 +108,9 @@
     + '.btn.sec:hover{background:' + THEME.bgAlt + '}'
     + '.chips{display:flex;flex-wrap:wrap;gap:7px;align-self:stretch;padding-inline-start:32px}'
     + '.chip{border:1px solid #d8dfe6;background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:99px;'
-    + 'padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
+    // min-height 36px: a 30px chip is below the comfortable tap target on a
+    // phone, and chips are the main way a customer refines on mobile
+    + 'padding:8px 14px;min-height:36px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
     + '.chip:hover{background:' + THEME.bgAlt + ';color:' + THEME.primaryDark + ';border-color:' + THEME.primary + '}'
     // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
     + '.inp{display:flex;gap:8px;padding:12px 14px 14px;background:' + THEME.bg + ';align-items:flex-end}'
@@ -288,12 +290,21 @@
     f.appendChild(note); f.appendChild(go);
     msgs.appendChild(f); scrollDown();
     go.addEventListener('click', function () {
-      if (!iName.value.trim() || !iPhone.value.trim()) { note.textContent = 'נדרשים שם וטלפון ליצירת קשר.'; return; }
+      var nameVal = iName.value.trim();
+      var phoneVal = iPhone.value.trim();
+      if (!nameVal || !phoneVal) { note.textContent = 'נדרשים שם וטלפון ליצירת קשר.'; return; }
+      // a rep can do nothing with "אבג" — require a real Israeli-length number
+      var digits = phoneVal.replace(/\D/g, '');
+      if (digits.length < 9 || digits.length > 15) {
+        note.textContent = 'מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567';
+        return;
+      }
+      if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
       go.disabled = true;
       fetch(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          name: iName.value.trim(), phone: iPhone.value.trim(),
+          name: nameVal, phone: phoneVal,
           context: {
             hotel: card.hotel, resort: card.resort, date: card.date, nights: card.nights,
             room: card.room, party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null
