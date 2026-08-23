@@ -28,11 +28,14 @@ const COUNTRIES = [
 const DESTS = [
   [/מ[אי]?יי?רהופן|מאירהופן/, 'Mayrhofen', 'austria'], [/אישגי?ל/, 'Ischgl', 'austria'],
   [/ו?ואל ?טורנס/, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
-  [/לה ?דוז|לה 2|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?/, 'Bansko', 'bulgaria'],
+  [/לה ?דוז|לה ?דו ?אלפ|לה 2|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?/, 'Bansko', 'bulgaria'],
   [/בורוב[ץץז]/, 'Borovets', 'bulgaria'], [/אבורי?אז/, 'Avoriaz', 'france'],
   [/לז ?ארק|לה ?ארק/, 'Les Arcs', 'france'], [/פליין|גרנד ?מסיף/, 'Flaine Grand Massif', 'france'],
-  [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונז'?נבר/, 'Montgenevre', 'france'],
-  [/סולדאו/, 'Soldeu', 'andorra'], [/פאס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
+  [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונט?ז['׳״"]?נבר/, 'Montgenevre', 'france'],
+  // Les Menuires was missing entirely — "לה מנואר" named a resort we sell and
+  // the bot heard nothing, so it could be neither asked for nor ruled out
+  [/לה ?מנו[אי]?ר|מנואר|les ?menuires/i, 'Les Menuires', 'france'],
+  [/סולדאו/, 'Soldeu', 'andorra'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
 ];
 // Resorts and brands pingwin sells, but which carry NO room commitments in
 // the winter 26/27 workbook.
@@ -313,12 +316,20 @@ function parseText(text, slots) {
       s.country = v;
     }
   }
+  // A resort can be ruled out just like a country. "לא בנסקו" used only to clear a
+  // resort the customer had picked; it never recorded the refusal, so three
+  // Bansko hotels came straight back. Ruling out a resort does NOT rule out
+  // its country — Bansko is not Bulgaria, Borovets is still on the table.
+  s.excluded_destinations = [...(s.excluded_destinations || [])];
   for (const [re, dest, country] of DESTS) {
     const m2 = re.exec(t);
     if (!m2) continue;
     if (isNegated(t, m2.index)) {
+      if (!s.excluded_destinations.includes(dest)) s.excluded_destinations.push(dest);
       if (s.destination === dest) s.destination = null;
     } else {
+      // naming it plainly retracts an earlier refusal — people change their mind
+      s.excluded_destinations = s.excluded_destinations.filter(x => x !== dest);
       s.destination = dest;
       s.excluded_countries = s.excluded_countries.filter(x => x !== country);
       s.country = s.country || country;

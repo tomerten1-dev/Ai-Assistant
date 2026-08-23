@@ -29,6 +29,8 @@ const CASES = [
   { id: 'neg-except', turns: ['זוג בלי ילדים, ינואר', 'חוץ מאוסטריה'], expect: { notCountry: 'austria' } },
   { id: 'neg-then-positive', turns: ['זוג בלי ילדים, ינואר', 'לא צרפת', 'בעצם כן צרפת'], expect: {} },
   { id: 'neg-two-countries', turns: ['זוג בלי ילדים, ינואר', 'לא צרפת ולא בולגריה'], expect: { notCountry: 'france' } },
+  { id: 'neg-resort-bansko', turns: ['שני מבוגרים לבולגריה בפברואר', 'לא בנסקו'], expect: { noResort: 'Bansko' } },
+  { id: 'neg-resort-two', turns: ['זוג בלי ילדים, פברואר', 'לא בנסקו ולא בורובץ'], expect: { noResort: 'Bansko' } },
   { id: 'neg-kids-club', turns: ['זוג עם ילד בן 8, ינואר', 'בלי קייטנה'], expect: { cards: '>0' } },
 
   // --- the closed universe: hotels on the website but NOT in the workbook ---
@@ -181,6 +183,9 @@ function audit(c, res, transcript) {
   }
   if (e.noHotelNamed && cards.some(x => x.hotel.includes(e.noHotelNamed))) {
     issues.push(`offered ${e.noHotelNamed} — outside the workbook`);
+  }
+  if (e.noResort && cards.some(x => x.resort === e.noResort)) {
+    issues.push(`offered ${e.noResort} after the customer ruled it out`);
   }
   if (e.fridayOnly && cards.some(x => new Date(x.date + 'T00:00:00Z').getUTCDay() !== 5)) {
     issues.push('Haifa result not on a Friday');

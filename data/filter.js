@@ -288,6 +288,9 @@ class SkiSearch {
       // an exclusion the customer stated ("לא צרפת") is never relaxed away —
       // widening the search must not resurrect what they ruled out
       if ((slots.excluded_countries || []).includes(u.country)) continue;
+      // a resort the customer ruled out ("לא בנסקו") — the country stays open
+      if ((slots.excluded_destinations || []).some(
+        d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
       if (destination && !matchDestination(destination, u, this.resortOf(u.hotel))) continue;
       // 5. camps — hard filter when requested AND a child is actually of camp
       //    age. Asking for a club for a 16-year-old used to filter every unit
@@ -317,6 +320,9 @@ class SkiSearch {
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       if ((slots.excluded_countries || []).includes(u.country)) continue;
+      // a resort the customer ruled out ("לא בנסקו") — the country stays open
+      if ((slots.excluded_destinations || []).some(
+        d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
       const k = u.hotel + '||' + u.date;
       if (!byHotelDate.has(k)) byHotelDate.set(k, []);
       byHotelDate.get(k).push(u);

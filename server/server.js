@@ -35,7 +35,8 @@ const EMPTY_SLOTS = {
   adults: null, children_ages: [], no_children: null, month: null,
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
-  excluded_countries: [], off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
+  excluded_countries: [], excluded_destinations: [],
+  off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [],
 };
 

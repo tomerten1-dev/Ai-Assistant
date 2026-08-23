@@ -90,6 +90,14 @@ check('two countries at once', null, 'לא צרפת ולא בולגריה', { ex
 check('second negation with a comma', null, 'לא צרפת, גם לא אוסטריה', { excluded_countries: ['france', 'austria'] });
 check('changing your mind retracts it', { excluded_countries: ['france'] }, 'בעצם כן צרפת', { country: 'france', excluded_countries: [] });
 
+// A resort can be refused just like a country. "לא בנסקו" used to clear a resort the
+// customer had chosen and record nothing, so Bansko came straight back.
+check('a refused resort is remembered', null, 'לא בנסקו', { excluded_destinations: ['Bansko'] });
+check('refusing a resort keeps its country open', { country: 'bulgaria' }, 'לא בנסקו',
+  { country: 'bulgaria', excluded_destinations: ['Bansko'] });
+check('naming it again retracts the refusal', { excluded_destinations: ['Bansko'] }, 'בעצם כן בנסקו',
+  { destination: 'Bansko', excluded_destinations: [] });
+
 console.log('\n— party size corrections and edge sizes —');
 check('בעצם 4 overrides an earlier 2', { adults: 2 }, 'בעצם 4', { adults: 4 });
 check('סליחה, 3', { adults: 2 }, 'סליחה, 3', { adults: 3 });
