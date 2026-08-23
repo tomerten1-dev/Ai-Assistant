@@ -48,8 +48,11 @@ function spaSentence(sp) {
       return sp.entries + ' כניסות חופשיות לספא כלולות במחיר לאורחי פינגווין';
     case 'paid':
       return 'הכניסה לספא בתוספת תשלום במקום — נציג ימסור את העלות';
+    // Tomer, 24/08: "לשימוש אורחי המלון" and "לרשות האורחים" mean free.
+    // The bucket stays separate in the data because it records what the page
+    // actually said, but the customer hears the same thing as 'free'.
     case 'guests':
-      return 'הספא עומד לרשות אורחי המלון';
+      return 'כניסה חופשית לספא לאורחי המלון';
     default:
       return 'יש ספא במלון; דף המלון אינו מציין אם השימוש כלול — נציג יאמת מול המלון';
   }

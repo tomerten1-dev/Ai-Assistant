@@ -259,5 +259,14 @@ t('a hotel with no spa says so rather than staying silent', () => {
   }
 });
 
+
+t('"לרשות האורחים" is told to the customer as free (Tomer, 24/08)', () => {
+  const guests = Object.entries(resorts.hotels).filter(([, i]) => i.spa_access === 'guests');
+  assert.ok(guests.length, 'expected hotels whose page says the spa is for guests');
+  for (const [name, info] of guests) {
+    assert.ok(/כניסה חופשית/.test(info.spa_access_he), name + ': ' + info.spa_access_he);
+  }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
