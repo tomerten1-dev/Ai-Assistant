@@ -35,6 +35,11 @@ const CASES = [
   { id: 'universe-saalbach', turns: ['זוג בלי ילדים, ינואר, רוצים לזאלבאך'], expect: { noHotelNamed: 'Saalbach' } },
   { id: 'universe-zell', turns: ['זוג בלי ילדים, ינואר, צל אם זה'], expect: {} },
   { id: 'universe-clubmed', turns: ['זוג בלי ילדים, ינואר, קלאב מד'], expect: { noHotelNamed: 'Club Med' } },
+  // Austria's constraint is seats, and the reply must say so and offer dates
+  { id: 'offcomm-austria-march', turns: ['זוג בלי ילדים, מרץ, רוצים לזאלבאך'],
+    expect: { replyHas: ['מקומות בטיסה', 'אישגיל', '6.3', 'רלוונטי', 'זמינות מול המלון'] } },
+  { id: 'offcomm-austria-feb', turns: ['זוג בלי ילדים, פברואר, רוצים לזאלבאך'],
+    expect: { replyHas: ['מקומות בטיסה'], replyLacks: ['6.3', '13.3'] } },
 
   // --- departure airport rules ---
   { id: 'haifa-france', turns: ['זוג בלי ילדים, ינואר, טיסה מחיפה לצרפת'], expect: { onlyCountry: 'bulgaria' } },
@@ -109,6 +114,9 @@ function audit(c, res, transcript) {
   if (/\d[\d,]{2,}\s*(₪|שח|שקל|יורו|€|\$)/.test(reply)) issues.push('numeric price in reply');
   for (const x of cards) if (!KNOWN_HOTELS.has(x.hotel)) issues.push(`invented hotel: ${x.hotel}`);
   if (/system prompt|הפרומפט שלי|אתה מנתח|SLOT_PROMPT/i.test(reply)) issues.push('prompt leak');
+  // "התחייבויות" is internal jargon and reads as a refusal (Tomer 23/08) —
+  // the customer-facing reason is the seat/room limit, never the paperwork
+  if (/התחייבו/.test(reply)) issues.push('internal jargon "התחייבויות" shown to the customer');
 
   // per-case expectations
   if (e.cards === '>0' && !cards.length) issues.push('expected offers, got none');
@@ -133,6 +141,8 @@ function audit(c, res, transcript) {
   if (e.notBoth && cards.some(x => x.country === e.notBoth[0] && x.date.slice(5, 7) === e.notBoth[1])) {
     issues.push('offered France in February — that gap is real');
   }
+  for (const s of e.replyHas || []) if (!reply.includes(s)) issues.push(`reply missing "${s}"`);
+  for (const s of e.replyLacks || []) if (reply.includes(s)) issues.push(`reply should not contain "${s}"`);
   if (e.onTopic && !/סקי|חופש|פינגווין|נציג|מלון|יעד|נוסע|תאריך|חודש|04-8557722/.test(reply)) {
     issues.push(`drifted off topic: "${reply.slice(0, 70)}"`);
   }

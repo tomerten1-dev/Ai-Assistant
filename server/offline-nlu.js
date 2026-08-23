@@ -304,6 +304,9 @@ function nextQuestion(slots, prevKey) {
 }
 
 /* ---------- template phrasing (offline replacement for the phrasing model) ---------- */
+const OFF_COMMITMENT_COPY = JSON.parse(
+  require('fs').readFileSync(require('path').join(__dirname, '..', 'config', 'off-commitment.json'), 'utf8'));
+
 const MONTH_HE = { 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מרץ' };
 function fmtDay(iso) {
   const d = new Date(iso + 'T00:00:00Z');
@@ -319,16 +322,18 @@ function phrase(result, slots, cards) {
   // it to a rep, while still showing what IS on commitment
   const offComm = note('destination_off_commitment');
   if (offComm) {
+    // wording lives in config/off-commitment.json so Tomer can edit it without
+    // touching code. Never the word "התחייבויות" — that is internal jargon and
+    // reads as a refusal; explain the real constraint (seats) instead.
+    const cfg = OFF_COMMITMENT_COPY;
+    const tpl = (cfg.constraint_by_country || {})[offComm.country] || cfg.constraint_default;
     const dates = (offComm.open_dates || []).map(fmtDay);
-    if (dates.length) {
-      lines.push(
-        `${offComm.name} לא נמצא ברשימת ההתחייבויות שלנו, אבל בתאריכים ${dates.join(', ')} אין הגבלת התחייבויות — ` +
-        `בהם נציג יכול לבדוק עבורכם, בכפוף לאישור מול המלון ולמקום בטיסה. בינתיים, הנה מה שזמין מיידית:`);
-    } else {
-      lines.push(
-        `${offComm.name} לא נמצא ברשימת ההתחייבויות שלנו. אפשר להזמין אותו רק בתאריכים שאין בהם הגבלת התחייבויות, ` +
-        `בכפוף לאישור מול המלון ולמקום בטיסה — נציג יבדוק עבורכם. בינתיים, הנה מה שזמין מיידית:`);
-    }
+    lines.push([
+      tpl.replace('{resort}', offComm.name),
+      dates.length ? cfg.with_dates_he.replace('{dates}', dates.join(', ')) : cfg.no_dates_he,
+      cfg.caveat_he,
+      cfg.meanwhile_he,
+    ].join(' '));
   }
 
   if (note('out_of_season')) {
