@@ -36,7 +36,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "משותף לשני האגפים STRASS ו-SPORT",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Sport": {
@@ -88,7 +89,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "משותף לשני האגפים STRASS ו-SPORT",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Hotel Ferienhof": {
@@ -143,11 +145,12 @@
       "spa_he": "מרכז ספא עם סאונה וחדר מנוחה",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Berghof": {
@@ -167,11 +170,12 @@
       "spa_he": "מרכז ספא חדש ובו מספר סוגי סאונות, איזור מנוחה, בריכת שחיה פנימית וחיצונית",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Alpenhof Kristal": {
@@ -191,11 +195,12 @@
       "spa_he": "מרכז ספא מרווח עם חדרי סאונה יבשה ורטובה, חדר מרגוע ומיטות פסיפס חמות",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "SCHLOSSHOF": {
@@ -215,11 +220,12 @@
       "spa_he": "מרכז ספא עם בריכה (כולל אינג'קטורים מפנקים)",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Cheval Blanc (allotment)": {
@@ -257,7 +263,8 @@
         "entries": null,
         "cost_internal_he": "כ-20 יורו",
         "note_he": "הספא הוא של מלון הדירות PLEIN SUD הסמוך",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Belambra Val Claret": {
@@ -298,11 +305,12 @@
       "spa_he": "בריכת שחיה מקורה ומחוממת, הוט טאב, סאונה יבשה ורטובה",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": "בשעות עומס ייתכן שיידרש רישום מראש להוט טאב ולספא",
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Casa Karina": {
@@ -336,11 +344,12 @@
       "spa_he": "ספא גדול, אחד הגדולים במלונות בנסקו, ובו בריכת שחייה מחוממת ומספר סוגי סאונה",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Club Soleil Les 2 Alpes": {
@@ -372,7 +381,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "שתי סאונות במרפסת הפנורמית, ברישום מראש",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Belambra Les Cretes L2A 1800": {
@@ -396,7 +406,8 @@
         "entries": null,
         "cost_internal_he": "10€ לשעה",
         "note_he": "מי שמזמין טיפול נכנס בחינם לפני או אחרי הטיפול",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Belambra L'Oree des Pistes": {
@@ -450,11 +461,12 @@
       "spa_he": "ספא הכולל בריכת שחיה מקורה ומחוממת, חמאם וסאונה",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": 16
+        "min_age": 16,
+        "source": "tomer 24/08/2026"
       }
     },
     "Golf": {
@@ -485,7 +497,8 @@
         "entries": null,
         "cost_internal_he": "כ-20€ לאדם לכניסה של שעתיים",
         "note_he": "מגיל 16 ומעלה",
-        "min_age": 16
+        "min_age": 16,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Residence Oxalys": {
@@ -523,7 +536,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "יש 2 אזורי ספא; הכניסה החופשית היא לאחד מהם בלבד, בין 10:30 ל-20:00",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Hotel Kashmir": {
@@ -550,11 +564,12 @@
       "spa_he": "מרכז ספא עם בריכת שחייה מקורה, חדרי טיפולים, סאונות, הוט טאב וחדר כושר",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Pension Kumbichlhof": {
@@ -605,7 +620,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Strolz": {
@@ -625,11 +641,12 @@
       "spa_he": "מרכז ספא עם סאונה, חדר מנוחה ובריכת שחייה מחוממת",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Landhaus Roscher": {
@@ -660,7 +677,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "אין ספא בפנסיון עצמו; אורחי הפנסיון יכולים להיכנס לבריכת השחייה המקורה של מלון STRASS",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Tuxer": {
@@ -727,11 +745,12 @@
       "spa_he": "מרכז ספא עם סאונה וג'קוזי",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Res Village Montana (allotment)": {
@@ -783,7 +802,8 @@
         "entries": null,
         "cost_internal_he": "כ-20 יורו לכניסה, תשלום במקום",
         "note_he": "בנוסף: כניסה אחת חופשית למרכז הספורט La Board במרכז ואל טורנס",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Plein Sud (allotment)": {
@@ -821,7 +841,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Belambra Avoriaz": {
@@ -845,7 +866,8 @@
         "entries": null,
         "cost_internal_he": "כ-20 יורו",
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Belambra Tignes Val Claret": {
@@ -886,11 +908,12 @@
       "spa_he": "בריכת שחיה מקורה ומחוממת, הוט טאב, סאונה יבשה ורטובה",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Edenarc - Arc 1800": {
@@ -924,11 +947,12 @@
       "spa_he": "בריכת שחייה מחוממת חיצונית ופנימית, ג'קוזי, סאונה יבשה ורטובה וחדר כושר",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": "מגבות לשימוש בספא בתשלום",
-        "note_he": null,
-        "min_age": 16
+        "note_he": "מגבות לשימוש בספא בתשלום",
+        "min_age": 16,
+        "source": "tomer 24/08/2026"
       }
     },
     "l'Eclose Alpe d'Huez": {
@@ -987,7 +1011,8 @@
         "entries": null,
         "cost_internal_he": "מסאז'ים בתשלום נוסף",
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Ynycio": {
@@ -1035,11 +1060,12 @@
       "spa_he": "ספא מפואר ומושקע עם בריכת שחייה מחוממת, מספר סוגי סאונה, חמאם וג'קוזי חיצוני",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
-        "note_he": "כניסה לבריכה מתחת לגיל 13 בליווי מבוגר",
-        "min_age": 16
+        "note_he": "כניסה לבריכה מתחת לגיל 13 בליווי מבוגר; סאונות, חמאם וג'קוזי מגיל 16",
+        "min_age": 16,
+        "source": "tomer 24/08/2026"
       }
     },
     "Club Soleil Oz": {
@@ -1085,7 +1111,8 @@
         "entries": null,
         "cost_internal_he": "מסאז'ים בתוספת תשלום",
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Club Soleil Montgenevre": {
@@ -1165,7 +1192,8 @@
         "entries": 2,
         "cost_internal_he": null,
         "note_he": "2 כניסות חינם כלולות במחיר לאורחי פינגווין",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "MAGIC PAS": {
@@ -1189,7 +1217,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "כניסה חופשית ללקוחות פינגווין",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "GRAND PAS": {
@@ -1220,7 +1249,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": "ילדים מגיל 12 בליווי הורים בלבד",
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "LODGE PARK (Allotment)": {
@@ -1244,7 +1274,8 @@
         "entries": null,
         "cost_internal_he": "כ-28 יורו לכניסה",
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Vihren": {
@@ -1271,11 +1302,12 @@
       "spa_he": "מרכז ספא גדול ומפנק עם בריכת שחייה, ג'קוזי, חדר כושר וחדרי סאונה שונים",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": "טיפולים בתשלום במקום",
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     },
     "Regnum": {
@@ -1320,7 +1352,8 @@
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "pingwin.co.il 24/08/2026"
       }
     },
     "Rila": {
@@ -1375,14 +1408,15 @@
       "spa_he": "מרכז ספא עשיר וגדול עם בריכת שחייה חצי אולימפית מקורה המשקיפה למסלולי הסקי",
       "spa": {
         "has": true,
-        "access": "not_stated",
+        "access": "free",
         "entries": null,
         "cost_internal_he": null,
         "note_he": null,
-        "min_age": null
+        "min_age": null,
+        "source": "tomer 24/08/2026"
       }
     }
   },
   "_amenities_source": "WIFI וספא — ציטוט מדפי המלונות ב-pingwin.co.il, 24/08/2026. רק מה שכתוב בדף. איפה שהדף לא אומר אם השימוש כלול, לא ניחשנו.",
-  "_spa_source": "גישה לספא — נקראה מכל 39 דפי המלונות ב-pingwin.co.il, 24/08/2026. 'not_stated' פירושו שהדף מונה את המתקנים ולא אומר אם השימוש כלול — ושם הבוט אומר שנציג יאמת, ולא מנחש."
+  "_spa_source": "גישה לספא — נקראה מ-39 דפי המלונות ב-pingwin.co.il (24/08/2026). 15 מלונות שהדף שתק לגביהם סווגו ככלולים לפי תומר, 24/08/2026, והשדה source מציין לכל מלון מאיפה הגיעה ההכרעה."
 }

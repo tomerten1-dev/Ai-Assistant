@@ -228,12 +228,15 @@ t('a hotel that charges for the spa is never described as free', () => {
   }
 });
 
-t('"not stated" says so out loud instead of guessing', () => {
-  const unknown = Object.entries(resorts.hotels).filter(([, i]) => i.spa_access === 'not_stated');
-  assert.ok(unknown.length, 'expected some hotels whose page is silent on access');
-  for (const [name, info] of unknown) {
+t('"not stated" would say so out loud instead of guessing', () => {
+  // Tomer answered all fifteen unknowns on 24/08, so none are left today —
+  // but the fallback must stay honest for the next hotel we add.
+  for (const [name, info] of Object.entries(resorts.hotels)) {
+    if (info.spa_access !== 'not_stated') continue;
     assert.ok(/נציג יאמת/.test(info.spa_access_he), name + ': ' + info.spa_access_he);
   }
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'tools', 'merge-rooms.js'), 'utf8');
+  assert.ok(/אינו מציין אם השימוש כלול/.test(src), 'the honest fallback sentence was removed');
 });
 
 t('the spa entry price never reaches the customer, only the rep', () => {
@@ -265,6 +268,30 @@ t('"לרשות האורחים" is told to the customer as free (Tomer, 24/08)', 
   assert.ok(guests.length, 'expected hotels whose page says the spa is for guests');
   for (const [name, info] of guests) {
     assert.ok(/כניסה חופשית/.test(info.spa_access_he), name + ': ' + info.spa_access_he);
+  }
+});
+
+
+t('every spa verdict records where it came from', () => {
+  const raw = require('../data/rooms-raw.json').hotels;
+  for (const [name, h] of Object.entries(raw)) {
+    if (!h.spa || !h.spa.has) continue;
+    assert.ok(h.spa.source, name + ' has a spa verdict with no source');
+    assert.ok(/^(tomer|pingwin\.co\.il)/.test(h.spa.source), name + ': ' + h.spa.source);
+  }
+});
+
+t('an age limit is stated once, not twice', () => {
+  const nlu2 = require('../server/offline-nlu');
+  for (const [name, info] of Object.entries(resorts.hotels)) {
+    if (!info.spa_min_age) continue;
+    const card = { hotel: name, spa_access: info.spa_access, spa_access_he: info.spa_access_he,
+                   spa_he: info.spa_he, spa_note_he: info.spa_note_he, spa_min_age: info.spa_min_age,
+                   room_facts: {}, occ: {} };
+    nlu2.phrase({ candidates: [], notes: [], relaxed: [] }, { unverifiable: ['ספא ובריכה'] }, [card]);
+    const line = (card.facts_he || []).join(' ');
+    const ages = (line.match(/מגיל/g) || []).length;
+    assert.ok(ages <= 1, name + ' repeats the age limit: ' + line);
   }
 });
 

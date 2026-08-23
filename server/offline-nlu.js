@@ -603,8 +603,9 @@ function cardFacts(c, asked, open) {
         const ACCESS_WORDS = /כניסה חופשית|חינם|כלול|בתשלום|בתוספת|לרשות האורחים|לשימוש אורחי/;
         const bits = [c.spa_he];
         if (c.spa_access_he && !(c.spa_he && ACCESS_WORDS.test(c.spa_he))) bits.push(c.spa_access_he);
-        const said = bits.filter(Boolean).join(' ');
+        let said = bits.filter(Boolean).join(' ');
         if (c.spa_note_he && !said.includes(c.spa_note_he.slice(0, 14))) bits.push(c.spa_note_he);
+        said = bits.filter(Boolean).join(' ');   // recompute: the note often carries the age itself
         if (c.spa_min_age && !said.includes('מגיל')) bits.push('מגיל ' + c.spa_min_age + ' ומעלה');
         say(topic, 'ספא: ' + bits.filter(Boolean).join('. '));
         break;

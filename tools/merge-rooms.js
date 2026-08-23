@@ -43,7 +43,7 @@ if (ORDER_RE.test(flat)) {
 function spaSentence(sp) {
   switch (sp.access) {
     case 'free':
-      return 'כניסה חופשית לספא לאורחי המלון';
+      return 'הספא כלול — כניסה חופשית לאורחי המלון';
     case 'entries':
       return sp.entries + ' כניסות חופשיות לספא כלולות במחיר לאורחי פינגווין';
     case 'paid':
@@ -52,7 +52,7 @@ function spaSentence(sp) {
     // The bucket stays separate in the data because it records what the page
     // actually said, but the customer hears the same thing as 'free'.
     case 'guests':
-      return 'כניסה חופשית לספא לאורחי המלון';
+      return 'הספא כלול — כניסה חופשית לאורחי המלון';
     default:
       return 'יש ספא במלון; דף המלון אינו מציין אם השימוש כלול — נציג יאמת מול המלון';
   }
