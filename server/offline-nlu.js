@@ -36,12 +36,14 @@ const DESTS = [
 // not quote availability for them either: it says what it has on commitment,
 // and hands the rest to a rep.
 const OFF_COMMITMENT = [
-  [/זאלבאך|סאלבאך/, 'זאלבאך'], [/צל אם ?זה|צל ?אם|zell/i, 'צל אם זה'],
-  [/סנט ?אנטון|st\.? ?anton/i, 'סנט אנטון'], [/ואל ?ד'?יזר|val ?d/i, "ואל ד'יזר"],
-  [/לה ?פלאן|la ?plagne/i, 'לה פלאן'], [/קלאב ?מד|club ?med/i, 'קלאב מד'],
-  [/הינטרגלם/, 'הינטרגלם'], [/קצברג/, 'קצברג'], [/פראגלטו|פרגלטו/, 'פראגלטו'],
-  [/סוצ'?י/, "סוצ'י"], [/סנט ?מוריץ/, 'סנט מוריץ'], [/דולומיטים|איטליה/, 'איטליה'],
-  [/שוויץ/, 'שוויץ'],
+  [/זאלבאך|סאלבאך/, 'זאלבאך', 'austria'], [/צל אם ?זה|צל ?אם|zell/i, 'צל אם זה', 'austria'],
+  [/סנט ?אנטון|st\.? ?anton/i, 'סנט אנטון', 'austria'], [/הינטרגלם/, 'הינטרגלם', 'austria'],
+  [/קצברג/, 'קצברג', 'austria'],
+  [/ואל ?ד'?יזר|val ?d/i, "ואל ד'יזר", 'france'], [/לה ?פלאן|la ?plagne/i, 'לה פלאן', 'france'],
+  [/קלאב ?מד|club ?med/i, 'קלאב מד', null],
+  [/פראגלטו|פרגלטו/, 'פראגלטו', null], [/סוצ'?י/, "סוצ'י", null],
+  [/סנט ?מוריץ/, 'סנט מוריץ', null], [/דולומיטים|איטליה/, 'איטליה', null],
+  [/שוויץ/, 'שוויץ', null],
 ];
 
 const PREFS = [
@@ -225,7 +227,13 @@ function parseText(text, slots) {
   // and quietly showing something else reads as a bot that ignored the
   // question; claiming it is unavailable would be wrong. Name it and route it.
   s.off_commitment_destination = null;
-  for (const [re, label] of OFF_COMMITMENT) if (re.test(t)) { s.off_commitment_destination = label; break; }
+  s.off_commitment_country = null;
+  for (const [re, label, country] of OFF_COMMITMENT) {
+    if (!re.test(t)) continue;
+    s.off_commitment_destination = label;
+    s.off_commitment_country = country;
+    break;
+  }
 
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
@@ -297,6 +305,10 @@ function nextQuestion(slots, prevKey) {
 
 /* ---------- template phrasing (offline replacement for the phrasing model) ---------- */
 const MONTH_HE = { 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מרץ' };
+function fmtDay(iso) {
+  const d = new Date(iso + 'T00:00:00Z');
+  return `${d.getUTCDate()}.${d.getUTCMonth() + 1}`;
+}
 
 function phrase(result, slots, cards) {
   const lines = [];
@@ -307,9 +319,16 @@ function phrase(result, slots, cards) {
   // it to a rep, while still showing what IS on commitment
   const offComm = note('destination_off_commitment');
   if (offComm) {
-    lines.push(
-      `${offComm.name} לא נמצא ברשימת ההתחייבויות שלנו לחורף הזה. אפשר להזמין אותו בתאריכים שאין בהם התחייבות, ` +
-      `בכפוף לאישור מול המלון — נציג יבדוק עבורכם. בינתיים, הנה מה שזמין מיידית מההתחייבויות שלנו:`);
+    const dates = (offComm.open_dates || []).map(fmtDay);
+    if (dates.length) {
+      lines.push(
+        `${offComm.name} לא נמצא ברשימת ההתחייבויות שלנו, אבל בתאריכים ${dates.join(', ')} אין הגבלת התחייבויות — ` +
+        `בהם נציג יכול לבדוק עבורכם, בכפוף לאישור מול המלון ולמקום בטיסה. בינתיים, הנה מה שזמין מיידית:`);
+    } else {
+      lines.push(
+        `${offComm.name} לא נמצא ברשימת ההתחייבויות שלנו. אפשר להזמין אותו רק בתאריכים שאין בהם הגבלת התחייבויות, ` +
+        `בכפוף לאישור מול המלון ולמקום בטיסה — נציג יבדוק עבורכם. בינתיים, הנה מה שזמין מיידית:`);
+    }
   }
 
   if (note('out_of_season')) {

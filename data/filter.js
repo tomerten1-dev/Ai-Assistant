@@ -17,6 +17,16 @@ class SkiSearch {
     this.pricing = pricing || loadJSON('pricing.json');
     this.departures = departures ||
       JSON.parse(fs.readFileSync(path.join(DATA_DIR, '..', 'config', 'departures.json'), 'utf8'));
+    this.restrictions = loadJSON('restrictions.json');
+  }
+
+  // Dates in a country that carry NO "מכירת התחייבויות בלבד" note. On those,
+  // hotels outside the workbook can also be sold — subject to the flight not
+  // being full and to hotel confirmation, neither of which the workbook knows.
+  // So this answers "worth a rep checking", never "available".
+  openDates(country, month) {
+    const all = (this.restrictions.open || {})[country] || [];
+    return month == null ? all : all.filter(d => SkiSearch.monthOf(d) === +month);
   }
 
   // which sheets a departure airport can actually fly (config/departures.json).
@@ -126,7 +136,14 @@ class SkiSearch {
     // dates free of the "commitments only" restriction, and always subject to
     // hotel confirmation (Tomer 23/08). The bot routes it, never quotes it.
     if (slots.off_commitment_destination) {
-      notes.push({ type: 'destination_off_commitment', name: slots.off_commitment_destination, needs_rep: true });
+      // name the dates that are actually free of the restriction, so the
+      // customer gets something concrete instead of a vague "ask a rep"
+      const c = slots.off_commitment_country || slots.country || null;
+      const open = c ? this.openDates(c, slots.month) : [];
+      notes.push({
+        type: 'destination_off_commitment', name: slots.off_commitment_destination,
+        needs_rep: true, open_dates: open, country: c,
+      });
     }
     if (slots.out_of_season) notes.push({ type: 'out_of_season' });
 

@@ -133,6 +133,31 @@ t('exclusion holds through relaxation and two-room splits',
   noFranceTight.candidates.every(c => c.country !== 'france') &&
   (noFranceTight.two_room_splits || []).every(s => s.country !== 'france'));
 
+console.log('\n[restrictions] "מכירת התחייבויות בלבד" is per departure date (Tomer 23/08)');
+const restrictions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'restrictions.json'), 'utf8'));
+const isOpen = (c, d) => (restrictions.open[c] || []).includes(d);
+const isRestricted = (c, d) => (restrictions.restricted[c] || []).includes(d);
+// the three dates Tomer named explicitly
+t('Austria 06/03 is open', isOpen('austria', '2027-03-06'));
+t('Austria 20/02 is restricted', isRestricted('austria', '2027-02-20'));
+t('Austria 27/02 is restricted', isRestricted('austria', '2027-02-27'),
+  'this date is stored as text, not a date cell — it must still be read');
+t('no date is both open and restricted',
+  Object.keys(restrictions.open).every(c => (restrictions.open[c] || []).every(d => !isRestricted(c, d))));
+t('every workbook departure date is classified',
+  [...new Set(av.units.map(u => u.country + '|' + u.date))]
+    .every(k => { const [c, d] = k.split('|'); return isOpen(c, d) || isRestricted(c, d); }));
+// an off-commitment resort must be routed, never quoted as available
+const offComm = engine.search({
+  adults: 2, children_ages: [], no_children: true, month: 3,
+  off_commitment_destination: 'זאלבאך', off_commitment_country: 'austria',
+});
+const note = offComm.notes.find(n => n.type === 'destination_off_commitment');
+t('off-commitment resort raises a rep-routing note', !!note && note.needs_rep === true);
+t('it names only genuinely open dates',
+  !!note && note.open_dates.length > 0 && note.open_dates.every(d => isOpen('austria', d)));
+t('it never appears as a bookable card', offComm.candidates.every(c => c.hotel !== 'זאלבאך'));
+
 console.log('\n— guardrails —');
 const r5 = engine.search({ adults: 2, children_ages: [], month: 1 });
 t('never more than 8 candidates', r5.candidates.length <= 8);
