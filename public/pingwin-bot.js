@@ -62,8 +62,8 @@
     + 'background:' + THEME.bg + ';border-radius:' + THEME.radius + ';box-shadow:0 10px 36px rgba(16,32,48,.22);border:1px solid #dfe5ea;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
-    // מצב מורחב — נפתח ברגע שמתחילים לכתוב, נוח יותר לקריאה ולכרטיסים
-    + '.win.big{width:min(560px,calc(100vw - 24px));height:min(760px,calc(100dvh - 110px))}'
+    // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
+    + '.win.big{width:min(860px,calc(100vw - 24px));height:min(820px,calc(100dvh - 110px))}'
     + '@media (max-width:480px){.win{bottom:0;' + THEME.position + ':0;width:100vw;height:100dvh;border-radius:0}}'
     + '.hdr{background:' + THEME.primary + ';color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}'
     + '.hdr .ttl{font-weight:700;font-size:16px}'
@@ -71,25 +71,30 @@
     + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px}'
     + '.hdr .x:hover{background:rgba(255,255,255,.15)}'
     + '.msgs{flex:1;overflow-y:auto;padding:14px;background:' + THEME.bgAlt + ';display:flex;flex-direction:column;gap:10px}'
-    + '.m{max-width:85%;padding:10px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}'
+    // cap bubble width so lines stay readable once the window widens
+    + '.m{max-width:min(85%,520px);padding:10px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}'
     + '.m.user{align-self:flex-start;background:' + THEME.bubbleUser + ';color:' + THEME.bubbleUserText + ';border-bottom-right-radius:4px}'
     + '.m.bot{align-self:flex-end;background:' + THEME.bubbleBot + ';color:' + THEME.bubbleBotText + ';border-bottom-left-radius:4px}'
     + '.typing{align-self:flex-end;background:' + THEME.bubbleBot + ';border-radius:14px;padding:12px 18px;display:flex;gap:5px}'
     + '.typing i{width:7px;height:7px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}'
-    + '.card .photo{width:calc(100% + 28px);margin:-14px -14px 4px;height:150px;object-fit:cover;border-radius:13px 13px 0 0;display:block;background:#e8edf1}'
-    + '.card .hname{font-weight:700;font-size:15.5px;color:' + THEME.text + '}'
-    + '.card .meta{font-size:13px;color:' + THEME.textLight + '}'
-    + '.card .why{font-size:13.5px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px}'
+    // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
+    + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
+    + '.cards-row .card{flex:1 1 210px;min-width:0}'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:5px}'
+    + '.card .photo{width:calc(100% + 24px);margin:-12px -12px 3px;height:112px;object-fit:cover;border-radius:11px 11px 0 0;display:block;background:#e8edf1}'
+    + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
+    + '.card .hname{font-weight:700;font-size:14.5px;color:' + THEME.text + ';line-height:1.3}'
+    + '.card .meta{font-size:12px;color:' + THEME.textLight + ';line-height:1.4}'
+    + '.card .why{font-size:12.5px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:6px;padding:7px 9px;line-height:1.4}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
     + '.tag{font-size:11.5px;padding:3px 9px;border-radius:4px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
     + '.tag.warn{background:#f7f1e3;color:#7a5c1e;border:1px solid #e5d9bd}'
     + '.tag.rec{background:#e8eef4;color:' + THEME.primaryDark + ';border:1px solid #cfdae4}'
     + '.card .price{font-size:14px;font-weight:700;color:' + THEME.primaryDark + '}'
-    + '.card .btns{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}'
-    + '.btn{flex:1;min-width:130px;padding:9px 10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit}'
+    + '.card .btns{display:flex;gap:6px;margin-top:auto;padding-top:6px;flex-wrap:wrap}'
+    + '.btn{flex:1 1 100%;padding:9px 10px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit}'
     + '.btn.pri{background:' + THEME.primary + ';color:#fff}'
     + '.btn.pri:hover{background:' + THEME.primaryDark + '}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
@@ -188,7 +193,7 @@
     return s;
   }
 
-  function addCard(c) {
+  function addCard(c, container) {
     var card = el('div', 'card');
     if (c.image) {
       var im = document.createElement('img');
@@ -205,9 +210,9 @@
     var occTxt = c.room;
     if (c.occ && c.occ.min != null) occTxt += ' · עד ' + c.occ.max + ' נוסעים';
     card.appendChild(el('div', 'meta', occTxt));
-    if (c.occ_composition_he) card.appendChild(el('div', 'meta', c.occ_composition_he));
-    if (c.desc_he) card.appendChild(el('div', 'meta', c.desc_he));
-    if (c.lift_he) card.appendChild(el('div', 'meta', 'מרחק ממעלית: ' + c.lift_he));
+    if (c.occ_composition_he) card.appendChild(el('div', 'meta clamp', c.occ_composition_he));
+    if (c.desc_he) card.appendChild(el('div', 'meta clamp', c.desc_he));
+    if (c.lift_he) card.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
 
     var tags = el('div', 'tags');
     if (c.recommended) tags.appendChild(el('span', 'tag rec', 'מומלץ'));
@@ -219,10 +224,11 @@
     if (tags.childNodes.length) card.appendChild(tags);
 
     card.appendChild(el('div', 'price', 'טווח מחיר: ' + c.price_range));
-    if (c.why_he) card.appendChild(el('div', 'why', c.why_he));
+    if (c.why_he) card.appendChild(el('div', 'why clamp', c.why_he));
 
     var btns = el('div', 'btns');
-    var b1 = el('button', 'btn sec', 'תחזרו אליי עם פרטים על ההצעה הזו');
+    var b1 = el('button', 'btn sec', 'תחזרו אליי');
+    b1.title = 'תחזרו אליי עם פרטים על ההצעה הזו';
     b1.addEventListener('click', function () { openLeadForm(c); });
     btns.appendChild(b1);
     if (c.booking_url) {
@@ -231,7 +237,8 @@
       btns.appendChild(b2);
     }
     card.appendChild(btns);
-    msgs.appendChild(card); scrollDown();
+    (container || msgs).appendChild(card);
+    if (!container) scrollDown();
   }
 
   function addChips(labels) {
@@ -290,18 +297,29 @@
     input.style.height = 'auto'; // shrink back after send
     state.busy = true; send.disabled = true; showTyping(true);
 
-    fetch(API_BASE + '/api/chat', {
+    // keep the typing indicator on screen long enough to be seen — offline
+    // mode answers almost instantly, which otherwise feels like a jump cut
+    var minWait = new Promise(function (res) { setTimeout(res, 650); });
+    var call = fetch(API_BASE + '/api/chat', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ messages: state.messages, slots: state.slots })
-    }).then(function (r) { return r.json(); }).then(function (data) {
+    }).then(function (r) { return r.json(); });
+
+    Promise.all([call, minWait]).then(function (both) {
+      var data = both[0];
       showTyping(false);
       state.slots = data.slots || state.slots;
       if (data.reply_he) {
         addMsg('bot', data.reply_he);
         state.messages.push({ role: 'assistant', content: data.reply_he });
       }
-      (data.cards || []).forEach(addCard);
       if (data.cards && data.cards.length) {
+        // three offers side by side, so the customer barely scrolls
+        win.classList.add('big');
+        var row = el('div', 'cards-row');
+        msgs.appendChild(row);
+        data.cards.forEach(function (c) { addCard(c, row); });
+        scrollDown();
         state.messages.push({ role: 'assistant', content: '[הוצגו ' + data.cards.length + ' הצעות: ' + data.cards.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
       }
       if (data.two_room_splits && data.two_room_splits.length && (!data.cards || !data.cards.length)) {
