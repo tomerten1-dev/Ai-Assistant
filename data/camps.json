@@ -1,0 +1,1468 @@
+{
+ "_comment": "נבנה אוטומטית מקבצי הליווי — ספירת מקומות בלבד, אפס פרטים אישיים. קבוצה רגילה = גילאי 6-13 (מחולקת לרמות); קבוצות 4-6 נפתחות רק בתאריכים ספציפיים. הלקוח לא מחויב עד אישור סופי במייל + קבלה.",
+ "age_policy": {
+  "regular": {
+   "age_min": 6,
+   "age_max": 13,
+   "note": "הקבוצה הפופולרית, רוב השבועות"
+  },
+  "young": {
+   "age_min": 4,
+   "age_max": 6,
+   "note": "רק בשבועות שבהם מופיעה קבוצת גילאי 4-6"
+  }
+ },
+ "resorts": [
+  "Mayrhofen",
+  "Les 2 Alpes",
+  "Tignes",
+  "Bansko"
+ ],
+ "weeks": [
+  {
+   "resort": "Tignes",
+   "country": "france",
+   "week": "2026-12-05",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 8,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 8,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 8,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 8,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 8,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 9,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 5,
+     "free": 4
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 15,
+     "taken": 9,
+     "free": 6
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-01-02",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 5,
+     "free": 3
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 3,
+     "free": 5
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-07",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-08",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-01-09",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 7,
+     "free": 1
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 3,
+     "free": 5
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Mayrhofen",
+   "country": "austria",
+   "week": "2027-01-09",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 1,
+     "free": 7
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-10",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-14",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-15",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 4,
+     "free": 6
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 4,
+     "taken": 1,
+     "free": 3
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-01-16",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 2,
+     "free": 6
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-17",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 3,
+     "free": 7
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-21",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-22",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 5,
+     "free": 5
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 19,
+     "taken": 1,
+     "free": 18
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-01-23",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 4,
+     "free": 4
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 5,
+     "free": 3
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Mayrhofen",
+   "country": "austria",
+   "week": "2027-01-23",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 6,
+     "free": 2
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 2,
+     "free": 6
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-24",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-28",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-29",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 6,
+     "free": 4
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-01-30",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 8,
+     "free": 0
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 4,
+     "free": 4
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 1,
+     "free": 7
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-01-31",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 3,
+     "free": 7
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 4,
+     "taken": 4,
+     "free": 0
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-04",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-05",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 2,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-07",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-11",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-12",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-14",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-18",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-19",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-21",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-25",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-26",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": true,
+     "min_children": 3,
+     "capacity": 4,
+     "taken": 0,
+     "free": 4
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-02-28",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-04",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-05",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 9,
+     "free": 1
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-03-06",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 6,
+     "free": 2
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 3,
+     "free": 5
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-07",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 3,
+     "free": 7
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-11",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-12",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-03-13",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 1,
+     "free": 7
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Mayrhofen",
+   "country": "austria",
+   "week": "2027-03-13",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-14",
+   "groups": [],
+   "no_camp": true
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-18",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-19",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 19,
+     "taken": 1,
+     "free": 18
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 4,
+     "taken": 0,
+     "free": 4
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Les 2 Alpes",
+   "country": "france",
+   "week": "2027-03-20",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 7,
+     "free": 1
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 4,
+     "free": 4
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 5,
+     "taken": 0,
+     "free": 5
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Mayrhofen",
+   "country": "austria",
+   "week": "2027-03-20",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 1,
+     "free": 7
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Tignes",
+   "country": "france",
+   "week": "2027-03-20",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 1,
+     "free": 7
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 0,
+     "free": 8
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 8,
+     "taken": 2,
+     "free": 6
+    },
+    {
+     "age_group": "4-6",
+     "level": "beginners",
+     "is_waitlist": true,
+     "min_children": 3,
+     "capacity": 1,
+     "taken": 1,
+     "free": 0
+    }
+   ],
+   "no_camp": false
+  },
+  {
+   "resort": "Bansko",
+   "country": "bulgaria",
+   "week": "2027-03-21",
+   "groups": [
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    },
+    {
+     "age_group": "6-13",
+     "level": "beginners",
+     "is_waitlist": false,
+     "min_children": null,
+     "capacity": 9,
+     "taken": 0,
+     "free": 9
+    },
+    {
+     "age_group": "6-13",
+     "level": "level1",
+     "is_waitlist": true,
+     "min_children": 5,
+     "capacity": 10,
+     "taken": 0,
+     "free": 10
+    }
+   ],
+   "no_camp": false
+  }
+ ]
+}

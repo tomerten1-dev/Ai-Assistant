@@ -1,0 +1,11 @@
+{
+  "name": "pingwin-ski-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "בוט התאמת חופשות סקי לאתר פינגווין — דמו",
+  "scripts": {
+    "build:data": "node tools/build-availability.js && node tools/build-camps.js",
+    "test": "node tests/run-tests.js && node tests/test-offline.js && node tests/test-orchestration.js",
+    "start": "node server/server.js"
+  }
+}

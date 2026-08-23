@@ -1,0 +1,9 @@
+node_modules/
+.env
+.DS_Store
+# ---- PII: raw commitments workbook never enters git ----
+source-data/
+*.xlsm
+*.xlsx
+/tmp/
+server-data/

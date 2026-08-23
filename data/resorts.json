@@ -1,0 +1,794 @@
+{
+  "_comment": "מיפוי מלון→יישוב + siteID + כללי תפוסה. המקור: pingwin.co.il בלבד (חוק אדום 5), נאסף 23/08/2026. room_rules: פירוש X+Y וחדרים בלי מספרי תפוסה, מדף המלון באתר. composition_he מוצג ללקוח כשרלוונטי.",
+  "_todo": [
+    "TODO: recommended לפי הנחיית תומר",
+    "TODO: תיאורי יישוב (description) לכרטיסים — מדפי האתר"
+  ],
+  "base_url": "https://www.pingwin.co.il",
+  "hotels": {
+    "Strass": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 269,
+      "page": "Sport+%26+Spa+Hotel+Strass.html",
+      "note": "מלון אחד עם שני אגפים: Strass ו-Sport",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "אפרה-סקי",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [
+        {
+          "match": "J. Suite",
+          "occ_min": 1,
+          "occ_max": 4,
+          "composition_he": "ג'וניור סוויט עד 4 אורחים, שיבוץ לפי מספר האורחים"
+        }
+      ],
+      "desc_he": "מלון 4 כוכבים במרכז מאיירהופן עם ספא גדול ובריכה, צמוד למעלית הראשית.",
+      "lift_he": "צמוד למעלית הראשית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387705761652.jpg&targ=s269&height=600&width=480"
+    },
+    "Sport": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 269,
+      "page": "Sport+%26+Spa+Hotel+Strass.html",
+      "note": "אגף Sport של מלון Strass",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "אפרה-סקי",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [
+        {
+          "match": "J. Suite",
+          "occ_min": 1,
+          "occ_max": 4,
+          "composition_he": "ג'וניור סוויט עד 4 אורחים, שיבוץ לפי מספר האורחים"
+        }
+      ],
+      "desc_he": "אגף Sport של מלון Strass — ספא גדול ובריכה במרכז מאיירהופן, צמוד למעלית.",
+      "lift_he": "צמוד למעלית הראשית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387705761652.jpg&targ=s269&height=600&width=480"
+    },
+    "Hotel Ferienhof": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 2116,
+      "page": "Hotel+Ferienhof.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "משפחות",
+        "מתחילים"
+      ],
+      "room_rules": [
+        {
+          "match": "DBL 2+2",
+          "occ_min": 2,
+          "occ_max": 4,
+          "composition_he": "זוג + שני ילדים או שלושה מבוגרים (Type1)"
+        }
+      ],
+      "desc_he": "מלון משופץ עם ספא וסאונה, כחמש דקות הליכה מהמעלית הראשית.",
+      "lift_he": "כ-500 מטר מהמעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17447260273141.jpg&targ=s2116&height=600&width=480"
+    },
+    "Alpenhof Kristal": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 1408,
+      "page": "Alpenhof+Kristal.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון 4 כוכבים עם ספא מרווח וסאונה, דקות ספורות מהמעלית הראשית.",
+      "lift_he": "כ-10 דקות הליכה מהמעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16368902988385.jpg&targ=s1408&height=600&width=480"
+    },
+    "Pension Kumbichlhof": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 1966,
+      "page": "Pension+Kumbi.html",
+      "recommended": false,
+      "tags": [
+        "משפחות",
+        "מתחילים"
+      ],
+      "room_rules": [],
+      "desc_he": "פנסיון משפחתי כפרי במיקום מרכזי עם גישה קלה למסלולי הסקי.",
+      "lift_he": "כ-5 דקות הליכה מהמעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16553629325959.jpg&targ=s1966&height=600&width=480"
+    },
+    "Waldheim": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 1897,
+      "page": "Hotel+Waldheim.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון 4 כוכבים עם ספא וסאונה, 200 מטר ממעלית הפנקן.",
+      "lift_he": "כ-200 מטר ממעלית הפנקן",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17395244413355.jpg&targ=s1897&height=600&width=480"
+    },
+    "Berghof": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 1246,
+      "page": "Berghof+Hotel.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון מפואר עם ספא חדש, בריכות שחייה וחדרים מרווחים במרכז מאיירהופן.",
+      "lift_he": "כ-700 מטר מהמעלית הראשית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17393677567225.jpg&targ=s1246&height=600&width=480"
+    },
+    "Strolz": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 1917,
+      "page": "Hotel+Strolz.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "משפחות",
+        "מתחילים"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון בניהול משפחתי עם ספא ובריכה מחוממת.",
+      "lift_he": "כ-1000 מטר, או 4 דקות באוטובוס הסקי",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16943436572098.jpg&targ=s1917&height=600&width=480"
+    },
+    "Landhaus Roscher": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 2079,
+      "page": "Landhaus+Roscher.html",
+      "recommended": false,
+      "tags": [
+        "משפחות",
+        "מתחילים"
+      ],
+      "room_rules": [],
+      "desc_he": "פנסיון פשוט ונעים, 400 מטר ממעלית הסקי, עם גישה לבריכה מקורה.",
+      "lift_he": "כ-400 מטר מהמעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17157746410545.jpg&targ=s2079&height=600&width=480"
+    },
+    "Tuxer": {
+      "sheet": "מאיירהופן",
+      "resort": "Mayrhofen",
+      "country": "austria",
+      "siteID": 2080,
+      "page": "Apartment+Tuxer.html",
+      "recommended": false,
+      "tags": [
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [
+        {
+          "match": "App 2 BDRM",
+          "occ_min": 4,
+          "occ_max": 5,
+          "composition_he": "דירת 2 חדרים + סלון, 95 מ\"ר, 4-5 אנשים (החמישי על ספה נפתחת)"
+        }
+      ],
+      "desc_he": "דירה מרווחת ל-4-5 אורחים, תחנת סקי-בס במרחק 50 מטר.",
+      "lift_he": "סקי-בס 50 מטר; כ-800 מטר מהמעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17157814365507.jpg&targ=s2080&height=600&width=480"
+    },
+    "SCHLOSSHOF": {
+      "sheet": "אישגיל",
+      "resort": "Ischgl",
+      "country": "austria",
+      "siteID": 1257,
+      "page": "Schlosshof.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון 4 כוכבים עם ספא ובריכה, גלישה ישירה מהמדרונות אל המלון.",
+      "lift_he": "כ-400 מטר ממעלית סילברטה, חזרה על מגלשיים עד המלון",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16278000737008.jpg&targ=s1257&height=600&width=480"
+    },
+    "Mutmanor": {
+      "sheet": "אישגיל",
+      "resort": "Ischgl",
+      "country": "austria",
+      "siteID": 1234,
+      "page": "Mutmanor.html",
+      "recommended": false,
+      "tags": [
+        "אפרה-סקי",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון קטן ונעים באישגיל, קרוב למעליות ולמרכזי הבילוי.",
+      "lift_he": "כ-100 מטר מהמנהרה למעלית Pardatschgratbahn",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17211321642247.jpg&targ=s1234&height=600&width=480"
+    },
+    "Castel": {
+      "sheet": "אישגיל",
+      "resort": "Ischgl",
+      "country": "austria",
+      "siteID": 2093,
+      "page": "Garni+Castel.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "שקט"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון משפחתי 4 כוכבים עם ספא ועיצוב אוסטרי, בסביבה שקטה.",
+      "lift_he": "כ-200 מטר מהמנהרה למעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17211093170973.jpg&targ=s2093&height=600&width=480"
+    },
+    "Cheval Blanc (allotment)": {
+      "sheet": "ואל טורנס",
+      "resort": "Val Thorens",
+      "country": "france",
+      "siteID": 1292,
+      "page": "Cheval+Blanc.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "בית דירות בגלישה ישירה עם מטבחון וגישה למרכז ספורט.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1523342886.jpg&targ=s1292&height=600&width=480"
+    },
+    "Res Village Montana (allotment)": {
+      "sheet": "ואל טורנס",
+      "resort": "Val Thorens",
+      "country": "france",
+      "siteID": 1293,
+      "page": "Residence+Montana.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "בתי דירות מרווחים במרכז ואל טורנס, גלישה ישירה מהדלת.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1523348720.jpg&targ=s1293&height=600&width=480"
+    },
+    "Plein Sud (allotment)": {
+      "sheet": "ואל טורנס",
+      "resort": "Val Thorens",
+      "country": "france",
+      "siteID": 1288,
+      "page": "Plein+Sud.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "דירות עם ספא בוואל טורנס, גלישה ישירה מהמלון.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1379412724(2).jpg&targ=s1288&height=600&width=480"
+    },
+    "Residence Oxalys": {
+      "sheet": "ואל טורנס",
+      "resort": "Val Thorens",
+      "country": "france",
+      "siteID": 1402,
+      "page": "Oxalys+Residence.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "דירות 4 כוכבים עם ספא וגישה ישירה למסלולים.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17239773260303.jpg&targ=s1402&height=600&width=480"
+    },
+    "Hotel Kashmir": {
+      "sheet": "ואל טורנס",
+      "resort": "Val Thorens",
+      "country": "france",
+      "siteID": 1665,
+      "page": "Hotel+Kashmir.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון מבוקש בוואל טורנס עם ספא, בריכה מקורה וחדרים משפחתיים.",
+      "lift_he": "צמוד למסלול המוביל למעלית Plein Sud",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1524660274.jpg&targ=s1665&height=600&width=480"
+    },
+    "Belambra Val Claret": {
+      "sheet": "בלמברה (שבת)",
+      "resort": "Tignes",
+      "country": "france",
+      "siteID": 2152,
+      "page": "Club+Belambra+Val+claret.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [
+        {
+          "match": "Premium with View 2+1",
+          "occ_min": 1,
+          "occ_max": 3,
+          "composition_he": "זוג + ילד עד גיל 10 (מיטת ספה)"
+        }
+      ],
+      "desc_he": "מועדון בלמברה בגובה 2100 מ' עם ספא ובריכה מחוממת, סקי אין-אאוט.",
+      "lift_he": "Ski In / Ski Out בגובה 2100 מטר",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17811675267595.jpg&targ=s2152&height=600&width=480"
+    },
+    "Belambra Les Cretes L2A 1800": {
+      "sheet": "בלמברה (שבת)",
+      "resort": "Les 2 Alpes",
+      "country": "france",
+      "siteID": 1844,
+      "page": "Club+Belambra+Les+Cretes.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מועדון בלמברה חדש בגובה 1800 עם גישה ישירה למסלולים וספא מחומם.",
+      "lift_he": "הליכה קצרה מחדר הציוד אל המעליות",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=1721637640023.jpg&targ=s1844&height=600&width=480"
+    },
+    "Belambra L'Oree des Pistes": {
+      "sheet": "בלמברה (שבת)",
+      "resort": "Les 2 Alpes",
+      "country": "france",
+      "siteID": 1963,
+      "page": "Belambra+L%27Oree+des+Pistes.html",
+      "recommended": false,
+      "tags": [
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [
+        {
+          "match": "Premium 3 +1",
+          "occ_min": 2,
+          "occ_max": 4,
+          "composition_he": "עד 3 מבוגרים + ילד עד גיל 10 (אסור 4 מבוגרים)"
+        }
+      ],
+      "desc_he": "מלון בלמברה בלב לה דוז, 50 מטר ממעליות הסקי, חצי פנסיון.",
+      "lift_he": "כ-50 מטר מהמעליות",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17764024784758.jpg&targ=s1963&height=600&width=480"
+    },
+    "Golf": {
+      "sheet": "בלמברה (שבת)",
+      "resort": "Les Arcs",
+      "country": "france",
+      "siteID": 1440,
+      "page": "Club+Belambra+Du+Golf.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "מועדון גדול ב-Arc 1800 עם הכל כלול, מרכז ספא וסקי ישיר מהמלון.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387654126408.jpg&targ=s1440&height=600&width=480"
+    },
+    "Belambra Grand Massif": {
+      "sheet": "בלמברה (שבת) / צרפת יום ראשון",
+      "resort": "Flaine Grand Massif",
+      "country": "france",
+      "siteID": 2048,
+      "page": "Club+Belambra+-+Panorama.html",
+      "note": "באתר נקרא Club Belambra - Panorama; יציאות שבת וגם ראשון — מוצרים נפרדים",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [
+        {
+          "match": "Premium 2 bdrm + balcony 4+1",
+          "occ_min": 1,
+          "occ_max": 5,
+          "composition_he": "סוויטת 2 חדרים ~39 מ\"ר; החמישי — ילד עד גיל 11.99"
+        }
+      ],
+      "desc_he": "מועדון בלמברה חדש ומפואר בגרנד מסיף — הכל כלול, ספא וחדר ילדים.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17149944711988.jpg&targ=s2048&height=600&width=480"
+    },
+    "Belambra Avoriaz": {
+      "sheet": "צרפת יום ראשון",
+      "resort": "Avoriaz",
+      "country": "france",
+      "siteID": 1949,
+      "page": "Club+Belambra+Les+Cimes.html",
+      "note": "באתר נקרא Club Belambra Les Cimes",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "מועדון בלב אבוריאז — עיירה ללא רכבים — עם גישה ישירה ל-600 ק\"מ מסלולים.",
+      "lift_he": "במרכז העיירה, צמוד למסלולים",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16412157461118.jpg&targ=s1949&height=600&width=480"
+    },
+    "Belambra Tignes Val Claret": {
+      "sheet": "חנוכה בלמברה טין 5-12.12",
+      "resort": "Tignes",
+      "country": "france",
+      "siteID": 1903,
+      "page": "Club+Belambra+Val+claret+%D7%97%D7%A0%D7%95%D7%9B%D7%94.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [
+        {
+          "match": "Premium with View 2+1",
+          "occ_min": 1,
+          "occ_max": 3,
+          "composition_he": "זוג + ילד עד גיל 10 (מיטת ספה)"
+        }
+      ],
+      "desc_he": "מועדון בלמברה בטין בגובה 2100 מ' — הכל כלול, ספא וסקי אין-אאוט.",
+      "lift_he": "Ski In / Ski Out בגובה 2100 מטר",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17811843391398.jpg&targ=s1903&height=600&width=480"
+    },
+    "Edenarc - Arc 1800": {
+      "sheet": "Odalys+Ynycio",
+      "resort": "Les Arcs",
+      "country": "france",
+      "siteID": 1513,
+      "page": "Res%27+Prestige+Edenarc.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "דירות פרימיום עם ספא וגלישה ישירה ב-Les Arcs.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=155912187974.jpg&targ=s1513&height=600&width=480"
+    },
+    "l'Eclose Alpe d'Huez": {
+      "sheet": "Odalys+Ynycio",
+      "resort": "Alpe d'Huez",
+      "country": "france",
+      "siteID": 1962,
+      "page": "Residence+Prestige+l%27Eclose.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "דירות חדישות עם ספא, בריכה מחוממת וחדר כושר, 150 מטר מהמעלית.",
+      "lift_he": "כ-150 מטר ממעלית ALPE EXPRESS",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16889904934349.jpg&targ=s1962&height=600&width=480"
+    },
+    "Ynycio": {
+      "sheet": "Odalys+Ynycio",
+      "resort": "Tignes",
+      "country": "france",
+      "siteID": 1973,
+      "page": "Residence+Ynycio.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "אפרה-סקי",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון דירות חדש עם ספא מפואר, בר אפרה-סקי וגלישה ישירה מהמלון.",
+      "lift_he": "יציאה ישירה למסלול",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17239801138983.jpg&targ=s1973&height=600&width=480"
+    },
+    "Club Soleil Oz": {
+      "sheet": "קלאב סוליי VCS",
+      "resort": "Oz en Oisans",
+      "country": "france",
+      "siteID": 1278,
+      "page": "Club+Du+Soleil+-+Oz.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מועדון חדש עם ספא מלא, פנסיון מלא ויין בארוחות, צמוד לגונדולה.",
+      "lift_he": "צמוד לגונדולה הראשית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16920987411756.jpg&targ=s1278&height=600&width=480"
+    },
+    "Club Soleil Les 2 Alpes": {
+      "sheet": "קלאב סוליי VCS",
+      "resort": "Les 2 Alpes",
+      "country": "france",
+      "siteID": 1673,
+      "page": "Club+Du+Soleil+L2A.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "קרוב למסלולים",
+        "משפחות",
+        "מתחילים"
+      ],
+      "room_rules": [
+        {
+          "match": "DBL 2+1",
+          "occ_min": 1,
+          "occ_max": 3,
+          "composition_he": "זוג + ילד עד גיל 18 (אסור 3 מבוגרים)"
+        },
+        {
+          "match": "connected 4+2",
+          "occ_min": 3,
+          "occ_max": 6,
+          "min_adults": 3,
+          "composition_he": "שני חדרים מקושרים; מינימום 3 מבוגרים, מקסימום 4 מבוגרים + 2 ילדים"
+        }
+      ],
+      "desc_he": "מועדון עם שלוש ארוחות ביום, ציוד סקי כלול ומועדוני ילדים.",
+      "lift_he": "כ-30 מדרגות מהמסלול",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16921037754051.jpg&targ=s1673&height=600&width=480"
+    },
+    "Club Soleil Montgenevre": {
+      "sheet": "קלאב סוליי VCS",
+      "resort": "Montgenevre",
+      "country": "france",
+      "siteID": 2115,
+      "page": "Club+Du+Soleil+-+Montgenevre.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "קרוב למסלולים",
+        "משפחות",
+        "מתחילים"
+      ],
+      "room_rules": [],
+      "desc_he": "מועדון גדול ופשוט — פנסיון מלא וציוד כלול, מתאים למשפחות.",
+      "lift_he": "צמוד למסלולים",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17761546184473.jpg&targ=s2115&height=600&width=480"
+    },
+    "Club Soleil Les Menuires": {
+      "sheet": "צרפת יום ראשון",
+      "resort": "Les Menuires",
+      "country": "france",
+      "siteID": 1195,
+      "page": "Club+Du+Soleil+L.M.html",
+      "recommended": false,
+      "tags": [
+        "הכל כלול",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מועדון בלה מנואיר עם סקי אין-אאוט ופנסיון מלא.",
+      "lift_he": "Ski In / Ski Out",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16057943132418.jpg&targ=s1195&height=600&width=480"
+    },
+    "FONT PAS": {
+      "sheet": "אנדורה",
+      "resort": "Pas de la Casa",
+      "country": "andorra",
+      "siteID": 984,
+      "page": "Font+D%27argent+Pas.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון מודרני במרכז העיירה עם מרכז ספא, כ-50 מטר מהמעליות.",
+      "lift_he": "כ-50 מטר מהמעליות",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=1718803448899.jpg&targ=s984&height=600&width=480"
+    },
+    "MAGIC PAS": {
+      "sheet": "אנדורה",
+      "resort": "Pas de la Casa",
+      "country": "andorra",
+      "siteID": 444,
+      "page": "Magic+Pas.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון 4 כוכבים במרכז פאס דה לה קאסה עם ספא חינם וחדרים משפחתיים.",
+      "lift_he": "כ-100 מטר מהמדרונות",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17162928290634.jpg&targ=s444&height=600&width=480"
+    },
+    "GRAND PAS": {
+      "sheet": "אנדורה",
+      "resort": "Pas de la Casa",
+      "country": "andorra",
+      "siteID": 445,
+      "page": "Hotel+Grand+Pas.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות",
+        "עיירה תוססת"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון 4 כוכבים עם ספא ובריכה מקורה, קרוב למסלולי הגלישה.",
+      "lift_he": "הליכה קצרה מהמסלולים",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17162918787375.jpg&targ=s445&height=600&width=480"
+    },
+    "LODGE PARK (Allotment)": {
+      "sheet": "אנדורה",
+      "resort": "Soldeu",
+      "country": "andorra",
+      "siteID": 243,
+      "page": "Lodge+Park+Hotel.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון איכותי בסולדאו עם ספא מודרני, חדרים רחבים וחדר משחקים לילדים.",
+      "lift_he": "כ-250 מטר",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1493557445.jpg&targ=s243&height=600&width=480"
+    },
+    "Casa Karina": {
+      "sheet": "בולגריה",
+      "resort": "Bansko",
+      "country": "bulgaria",
+      "siteID": 1435,
+      "page": "Casa+Karina.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "אפרה-סקי",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [
+        {
+          "match": "Appt 1 bedroom",
+          "occ_min": 2,
+          "occ_max": 4,
+          "composition_he": "דירת חדר שינה וסלון ~50 מ\"ר; 2 מבוגרים + 2 ילדים (עד 11.99) או 3 מבוגרים"
+        },
+        {
+          "match": "Appt 2 bedrooms",
+          "occ_min": 4,
+          "occ_max": 6,
+          "composition_he": "דירת 2 חדרי שינה וסלון ~60 מ\"ר; 4 מבוגרים + 2 ילדים או 5 מבוגרים"
+        }
+      ],
+      "desc_he": "מלון בבנסקו עם ספא גדול, שתי דקות הליכה מהגונדולה.",
+      "lift_he": "כ-2 דקות הליכה מהגונדולה",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17478293319051.jpeg&targ=s1435&height=600&width=480"
+    },
+    "Vihren": {
+      "sheet": "בולגריה",
+      "resort": "Bansko",
+      "country": "bulgaria",
+      "siteID": 1107,
+      "page": "Vihren+Royal+Palace+spa.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "אפרה-סקי",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון ספא במרכז בנסקו עם בריכה וג'קוזי, כ-100 מטר מהגונדולה.",
+      "lift_he": "כ-100 מטר מהגונדולה",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1338992721(2).jpg&targ=s1107&height=600&width=480"
+    },
+    "Regnum": {
+      "sheet": "בולגריה",
+      "resort": "Bansko",
+      "country": "bulgaria",
+      "siteID": 1765,
+      "page": "Regnum+Ski+hotel+%26+Spa.html",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "מלון מרשים עם ספא יוקרתי, בריכה מקורה וחדרים מרווחים.",
+      "lift_he": "כ-500 מטר מהגונדולה",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17711536372614.jpg&targ=s1765&height=600&width=480"
+    },
+    "Rila": {
+      "sheet": "בולגריה",
+      "resort": "Borovets",
+      "country": "bulgaria",
+      "siteID": 1161,
+      "page": "Hotel+Rila.html",
+      "note": "שים לב: בורובץ, לא בנסקו! אין שם קייטנה בעברית",
+      "recommended": false,
+      "tags": [
+        "ספא",
+        "קרוב למסלולים",
+        "משפחות"
+      ],
+      "room_rules": [],
+      "desc_he": "המלון המבוקש בבורובץ — ספא עשיר, בריכה מקורה ו-20 מטר מהמעלית.",
+      "lift_he": "כ-20 מטר מהמעלית",
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16751815232711.jpg&targ=s1161&height=600&width=480"
+    }
+  }
+}
