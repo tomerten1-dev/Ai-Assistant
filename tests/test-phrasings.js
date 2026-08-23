@@ -88,10 +88,29 @@ console.log('\n— never repeat the same question —');
   console.log(ok ? '  ✓ rephrases instead of repeating' : `  ✗ repeated identical question: ${q1 && q1.he}`);
 }
 {
-  // full slots → no question at all
-  const q = nextQuestion({ adults: 2, children_ages: [5, 9], month: 2, needs_hebrew_kids_club: true }, null);
+  // every matching parameter known → nothing left to ask
+  const q = nextQuestion({
+    adults: 2, children_ages: [5, 9], month: 2, needs_hebrew_kids_club: true,
+    departure_airport: 'tlv', country: 'austria',
+  }, null);
   q === null ? pass++ : fail++;
-  console.log(q === null ? '  ✓ no question when slots complete' : `  ✗ asked anyway: ${q.he}`);
+  console.log(q === null ? '  ✓ no question when every parameter is known' : `  ✗ asked anyway: ${q.he}`);
+}
+{
+  // essentials known but airport/destination still open → keep gathering
+  const q = nextQuestion({ adults: 2, children_ages: [5, 9], month: 2, needs_hebrew_kids_club: true }, null);
+  const ok = q && q.key === 'airport';
+  ok ? pass++ : fail++;
+  console.log(ok ? '  ✓ asks about the departure airport once essentials are in'
+                 : `  ✗ expected the airport question, got ${q && q.key}`);
+}
+{
+  // "לא משנה" is an answer, not a gap — it must not be re-asked
+  const s = parseText('לא משנה', { _lastQuestion: 'airport', adults: 2, children_ages: [7], month: 1, needs_hebrew_kids_club: false });
+  const ok = s.departure_airport === 'any' && (nextQuestion(s, 'airport') || {}).key !== 'airport';
+  ok ? pass++ : fail++;
+  console.log(ok ? '  ✓ "לא משנה" on the airport question stops the asking'
+                 : `  ✗ got departure_airport=${s.departure_airport}`);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

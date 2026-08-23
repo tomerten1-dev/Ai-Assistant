@@ -10,18 +10,23 @@ const fs = require('fs');
 const path = require('path');
 const { loadEnv } = require('./env.js');
 const { callClaude, parseModelJSON } = require('./claude.js');
-const { SLOT_PROMPT, PHRASE_PROMPT } = require('./prompts.js');
+const { callOpenAI, spend: openaiSpend, model: openaiModel } = require('./openai.js');
+const { SLOT_PROMPT: SLOT_PROMPT_LEAN } = require('./prompt-slots.js');
 const offline = require('./offline-nlu.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
 
 loadEnv();
-// no API key → free offline demo mode (regex NLU, template phrasing).
-// add a key to .env and restart to upgrade to Claude automatically.
+const has = k => process.env[k] && !process.env[k].includes('xxxx');
+// Provider is chosen by whichever key is present. With none, the bot still
+// works fully on the deterministic Hebrew layer — free, no account.
 function aiMode() {
-  const k = process.env.ANTHROPIC_API_KEY;
-  return k && !k.includes('xxxx') ? 'claude' : 'offline';
+  if (has('OPENAI_API_KEY')) return 'openai';
+  if (has('ANTHROPIC_API_KEY')) return 'claude';
+  return 'offline';
 }
+// how many questions the bot may ask before it must show results
+const MAX_QUESTIONS = +(process.env.MAX_QUESTIONS || 3);
 const PORT = +(process.env.PORT || 8787);
 const ROOT = path.join(__dirname, '..');
 const engine = new SkiSearch();
@@ -56,10 +61,51 @@ function assistantQuestionCount(messages) {
 }
 
 function toSearchSlots(slots) {
+  // "any" is a real answer ("לא משנה") — it means asked-and-answered, so we
+  // stop asking, but it must not become a filter
+  const any = v => (v === 'any' ? null : v);
   return {
     ...slots,
-    month: slots.month === 'any' ? null : slots.month,
+    month: any(slots.month),
+    country: any(slots.country),
+    departure_airport: any(slots.departure_airport),
   };
+}
+
+/* ---------- token economy: when is the model actually worth calling? ----------
+   The Hebrew regex layer runs first and costs nothing. We only pay for a model
+   call when that layer learned nothing from this message — i.e. the customer
+   phrased something we don't recognise. Simple turns ("4 ו-9", "ינואר",
+   "בלי ילדים", chip clicks) never reach the model at all. */
+function slotsChanged(before, after) {
+  const keys = ['adults', 'children_ages', 'children_count', 'no_children', 'month',
+    'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club'];
+  for (const k of keys) if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) return true;
+  return (after.preferences || []).length !== (before.preferences || []).length;
+}
+function shouldAskModel(before, after, text) {
+  const t = (text || '').trim();
+  if (!t || t.length <= 2) return false;              // "כן" / "לא" / "2"
+  const words = t.split(/\s+/).length;
+  // nothing was understood — the phrasing is outside the regex vocabulary
+  if (!slotsChanged(before, after)) return true;
+  // a long message usually carries more than the one thing we matched; pay for
+  // it only while blocking slots are still open, so refinements stay free
+  if (words >= 8 && requiredMissing(after).length > 0) return true;
+  return false;
+}
+
+async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
+  // only the last few turns are sent — older ones are already folded into slots
+  const recent = messages.slice(-4);
+  const payload = [
+    ...recent,
+    { role: 'user', content: `slots: ${JSON.stringify(prevSlots)}\nשאלות שנשאלו: ${questionsAsked}/${MAX_QUESTIONS}\nהחזר JSON.` },
+  ];
+  const raw = aiMode() === 'openai'
+    ? await callOpenAI({ system: SLOT_PROMPT_LEAN, messages: payload, maxTokens: 400 })
+    : await callClaude({ system: SLOT_PROMPT_LEAN, messages: payload, maxTokens: 400 });
+  return parseModelJSON(raw);
 }
 
 function presentCards(result, slots) {
@@ -94,82 +140,75 @@ async function handleChat(body) {
   const prevSlots = { ...EMPTY_SLOTS, ...(body.slots || {}) };
   const questionsAsked = assistantQuestionCount(messages);
 
-  let slots, replyIfNotReady = null;
-  if (aiMode() === 'claude') {
-    // ---- call 1: slot filling (Claude) ----
-    const slotInput = [
-      ...messages,
-      { role: 'user', content: `<מצב-נוכחי>\nslots עדכני: ${JSON.stringify(prevSlots)}\nמספר שאלות שכבר נשאלו: ${questionsAsked}\n</מצב-נוכחי>\nעדכן את ה-slots לפי השיחה והחזר JSON בלבד.` },
-    ];
-    const parsed = parseModelJSON(await callClaude({ system: SLOT_PROMPT, messages: slotInput }));
-    if (!parsed || !parsed.slots) return { reply_he: FALLBACK_HE, slots: prevSlots, cards: [], chips: [] };
-    slots = { ...EMPTY_SLOTS, ...parsed.slots };
-    if (!parsed.ready_to_search) replyIfNotReady = parsed.reply_he || FALLBACK_HE;
-  } else {
-    // ---- offline demo mode: regex NLU, zero cost ----
-    const lastUser = [...messages].reverse().find(m => m.role === 'user');
-    slots = offline.parseText(lastUser ? lastUser.content : '', prevSlots);
+  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+  const lastUser = lastUserMsg ? lastUserMsg.content : '';
+
+  // ---- step 1: deterministic Hebrew parse — always runs, always free ----
+  let slots = offline.parseText(lastUser, prevSlots);
+  let replyIfNotReady = null;
+  let modelUsed = false;
+
+  // ---- step 2: escalate to the model ONLY if step 1 learned nothing ----
+  if (aiMode() !== 'offline' && shouldAskModel(prevSlots, slots, lastUser)) {
+    try {
+      const parsed = await fillSlotsWithModel(messages, prevSlots, questionsAsked);
+      if (parsed && parsed.slots) {
+        slots = { ...slots, ...parsed.slots };
+        modelUsed = true;
+        if (!parsed.ready_to_search && parsed.reply_he) replyIfNotReady = parsed.reply_he;
+      }
+    } catch (e) {
+      // model unreachable → carry on with what the free layer understood
+      console.error('slot model failed:', e.message, e.detail || '');
+    }
+  }
+
+  // ---- step 3: what to ask next (same logic whichever layer filled slots) ----
+  // Only BLOCKING gaps hold results back. The rest (departure airport,
+  // destination) are gathered after the customer has seen something concrete —
+  // being interviewed before any offer is what makes a bot feel like a form.
+  let pendingQuestion = null;
+  if (!replyIfNotReady) {
     const q = offline.nextQuestion(slots, prevSlots._lastQuestion || null);
-    if (q) { slots._lastQuestion = q.key; replyIfNotReady = q.he; }
-    else delete slots._lastQuestion;
+    if (q && q.blocking) { slots._lastQuestion = q.key; replyIfNotReady = q.he; }
+    else { pendingQuestion = q; delete slots._lastQuestion; }
   }
 
-  const missing = requiredMissing(slots);
-  const mustSearch = missing.length === 0 || questionsAsked >= 2 || replyIfNotReady == null;
-
+  const mustSearch = replyIfNotReady == null || questionsAsked >= MAX_QUESTIONS;
   if (!mustSearch) {
-    return { reply_he: replyIfNotReady, slots, cards: [], chips: [] };
+    return { reply_he: replyIfNotReady, slots, cards: [], chips: [], model_used: modelUsed };
   }
+  if (mustSearch && replyIfNotReady) { pendingQuestion = null; delete slots._lastQuestion; }
 
-  // ---- deterministic search (no AI) ----
+  // ---- deterministic search (no AI, ever) ----
   const result = engine.search(toSearchSlots(slots));
   const cards = presentCards(result, slots);
 
-  // ---- call 2: phrasing ----
-  const phrasingPayload = {
-    conversation_summary: messages.filter(m => m.role === 'user').map(m => m.content).join(' | ').slice(0, 800),
-    slots,
-    notes: result.notes, relaxed: result.relaxed,
-    two_room_splits: result.two_room_splits,
-    cards: cards.map(c => ({
-      index: c.index, hotel: c.hotel, resort: c.resort, country_he: c.country_he,
-      date: c.date, date_label: c.date_label, nights: c.nights, room: c.room,
-      occ: c.occ, occ_composition_he: c.occ_composition_he,
-      desc_he: c.desc_he, lift_he: c.lift_he, tags: c.tags,
-      price_range: c.price_range, recommended: c.recommended,
-      camps: c.camps, occ_unverified: c.occ_unverified,
-    })),
-  };
-  let intro;
-  if (aiMode() === 'claude') {
-    let phrased = null;
-    try {
-      phrased = parseModelJSON(await callClaude({
-        system: PHRASE_PROMPT,
-        messages: [{ role: 'user', content: JSON.stringify(phrasingPayload) }],
-        maxTokens: 900,
-      }));
-    } catch (e) { /* fall back to plain intro below */ }
-    intro = (phrased && phrased.intro_he) ||
-      (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
-        'לא מצאתי התאמה מדויקת — נציג ישמח לעזור: 04-8557722');
-    for (const c of cards) {
-      const w = phrased && (phrased.cards || []).find(x => x.index === c.index);
-      c.why_he = (w && w.why_he) || '';
-    }
-    if (phrased && phrased.outro_he) intro = [intro, phrased.outro_he].join('\n');
-  } else {
-    intro = offline.phrase(result, slots, cards) ||
-      (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
-        'לא מצאתי התאמה מדויקת — נציג ישמח לעזור: 04-8557722');
-  }
+  // ---- phrasing is templated, not generated ----
+  // This halves the token bill, and it is also the strongest safety property
+  // in the system: the model never sees the inventory, so it cannot invent a
+  // hotel, a date, a price or an availability claim. Every word on a card
+  // comes from the workbook or from pingwin.co.il.
+  const intro = offline.phrase(result, slots, cards) ||
+    (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
+      'לא מצאתי התאמה מדויקת — נציג ישמח לעזור: 04-8557722');
+
+  // still-unknown matching parameters ride along as one-tap chips, so the
+  // customer completes the picture by choosing rather than by being asked
+  const gapChips = [];
+  if (slots.departure_airport == null) gapChips.push('טיסה מנתב"ג', 'טיסה מחיפה');
+  if (slots.country == null && slots.destination == null) gapChips.push('אוסטריה', 'צרפת', 'אנדורה', 'בולגריה');
 
   return {
+    // the remaining parameters are offered as chips, not asked as a question —
+    // a customer looking at three real offers should not also face an interview
     reply_he: intro,
+    model_used: modelUsed,
+    pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
     two_room_splits: result.two_room_splits,
     notes: result.notes, relaxed: result.relaxed,
-    chips: cards.length ? CHIP_LABELS : [],
+    chips: cards.length ? [...gapChips, ...CHIP_LABELS] : gapChips,
     chip_to_pref: CHIP_TO_PREF,
   };
 }
@@ -177,9 +216,30 @@ async function handleChat(body) {
 /* ---------- http plumbing ---------- */
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
+// Loaded via GTM, the widget runs on pingwin.co.il while this API runs
+// elsewhere — so the browser needs CORS. ALLOWED_ORIGINS in .env is a
+// comma-separated allowlist; "*" is fine for the demo, not for production.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  const ok = ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin);
+  if (!ok) return false;
+  res.setHeader('access-control-allow-origin', ALLOWED_ORIGINS.includes('*') ? '*' : origin);
+  res.setHeader('vary', 'Origin');
+  res.setHeader('access-control-allow-headers', 'content-type');
+  res.setHeader('access-control-allow-methods', 'POST, GET, OPTIONS');
+  res.setHeader('access-control-max-age', '86400');
+  return true;
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
+    if (!applyCors(req, res)) { res.writeHead(403); res.end('origin not allowed'); return; }
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
     if (req.method === 'POST' && url.pathname === '/api/chat') {
       let raw = '';
       for await (const chunk of req) { raw += chunk; if (raw.length > 100_000) { req.destroy(); return; } }

@@ -115,7 +115,12 @@ function parseText(text, slots) {
 
   // --- departure airport (config/departures.json holds what each one flies)
   if (/מחיפה|מ ?חיפה|חיפה/.test(t)) s.departure_airport = 'haifa';
-  else if (/תל ?-?אביב|ת"א|נתב"ג|בן ?-?גוריון/.test(t)) s.departure_airport = 'tlv';
+  else if (/תל ?-?אביב|ת"א|נתב"ג|נתבג|בן ?-?גוריון|מרכז/.test(t)) s.departure_airport = 'tlv';
+  // "לא משנה" answering the airport question = no constraint, but stop asking
+  else if (answering === 'airport' && /לא משנה|כל אחד|שניהם|מה שיש/.test(t)) s.departure_airport = 'any';
+
+  // "לא משנה" answering the destination question
+  if (answering === 'country' && /לא משנה|כל מקום|מה שיש|אין העדפה|לא חשוב/.test(t)) s.country = 'any';
 
   // --- country / destination
   for (const [re, v] of COUNTRIES) if (re.test(t)) { s.country = v; break; }
@@ -145,23 +150,33 @@ function parseText(text, slots) {
   return s;
 }
 
-// which single question to ask next (max 2 total is enforced by server.js).
+// which single question to ask next (the cap lives in server.js).
+// Ordered by how much each parameter narrows the search: party size and dates
+// are blocking, then the ones that change WHICH packages qualify (kids club,
+// departure airport), then destination. Preferences are never asked — they
+// arrive only if the customer raises them, or via the chips after results.
 // prevKey = the question the user just answered; never repeat it verbatim —
 // if the answer wasn't understood, ask again in a clearer way.
 function nextQuestion(slots, prevKey) {
   let q = null;
-  if (slots.adults == null) q = { key: 'adults', he: 'כמה מבוגרים תהיו בחופשה?' };
+  const kidsInCampRange = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
+  // blocking: without these the search cannot run at all
+  if (slots.adults == null) q = { key: 'adults', blocking: true, he: 'כמה מבוגרים תהיו בחופשה?' };
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
     q = slots.children_count
-      ? { key: 'children_ages', he: slots.children_count === 1 ? 'בן כמה הילד?' : 'באילו גילאים הילדים?' }
-      : { key: 'children', he: 'נוסעים גם ילדים, ואם כן — באילו גילאים?' };
+      ? { key: 'children_ages', blocking: true, he: slots.children_count === 1 ? 'בן כמה הילד?' : 'באילו גילאים הילדים?' }
+      : { key: 'children', blocking: true, he: 'נוסעים גם ילדים, ואם כן — באילו גילאים?' };
   }
-  else if (slots.month == null) q = { key: 'month', he: 'מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם "גמיש")' };
-  else {
-    const kids = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
-    if (kids && slots.needs_hebrew_kids_club == null)
-      q = { key: 'kids_club', he: 'תרצו קייטנת סקי בעברית לילדים?' };
-  }
+  else if (slots.month == null) q = { key: 'month', blocking: true, he: 'מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם "גמיש")' };
+  // a kids club can invalidate an entire week, so it is worth asking up front
+  else if (kidsInCampRange && slots.needs_hebrew_kids_club == null)
+    q = { key: 'kids_club', blocking: true, he: 'תרצו קייטנת סקי בעברית לילדים?' };
+  // non-blocking: these sharpen the match, but the customer sees offers first
+  // and refines from there rather than being interviewed
+  else if (slots.departure_airport == null)
+    q = { key: 'airport', blocking: false, he: 'מאיפה נוח לכם לטוס — נתב"ג או חיפה? (מחיפה יש רק בנסקו)' };
+  else if (slots.country == null && slots.destination == null)
+    q = { key: 'country', blocking: false, he: 'יש יעד שמושך אתכם — אוסטריה, צרפת, אנדורה או בולגריה? (אפשר גם "לא משנה")' };
   if (q && prevKey && (q.key === prevKey ||
       (q.key === 'children' && prevKey === 'children_ages') ||
       (q.key === 'children_ages' && prevKey === 'children'))) {
@@ -171,6 +186,8 @@ function nextQuestion(slots, prevKey) {
       children_ages: 'רק הגילאים במספרים, למשל: 5 ו-9',
       month: 'באיזה חודש? דצמבר, ינואר, פברואר או מרץ (או "גמיש")',
       kids_club: 'קייטנה בעברית לילדים — כן או לא?',
+      airport: 'שדה היציאה — נתב"ג או חיפה?',
+      country: 'איזו מדינה — אוסטריה, צרפת, אנדורה, בולגריה, או "לא משנה"?',
     };
     q = { key: q.key, he: retry[q.key] || q.he };
   }
