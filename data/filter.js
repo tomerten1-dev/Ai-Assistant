@@ -27,6 +27,15 @@ class SkiSearch {
     return a.sheets || [];
   }
 
+  // some products are sold from ONE airport only (Fri→Wed Bansko is Haifa
+  // exclusive). Hide them from everyone else, including customers who never
+  // named an airport — offering a flight they cannot take is worse than
+  // showing one option less.
+  sheetBlockedFor(sheet, airport) {
+    const owner = (this.departures.exclusive_sheets || {})[sheet];
+    return !!owner && owner !== airport;
+  }
+
   hotelInfo(name) { return this.resorts.hotels[name] || {}; }
   resortOf(name) { return this.hotelInfo(name).resort || null; }
   price(name) { return this.pricing.hotels[name] || this.pricing.default; }
@@ -192,8 +201,10 @@ class SkiSearch {
     const out = [];
     const sheets = ignoreAirport ? null : this.allowedSheets(slots.departure_airport);
     for (const u of this.av.units) {
-      // 0. departure airport — Haifa flies only specific products
+      // 0. departure airport — Haifa flies only specific products, and some
+      //    products are exclusive to one airport
       if (sheets && !sheets.includes(u.sheet)) continue;
+      if (!ignoreAirport && this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
       // 1. free — availability.json only contains free units by construction
       // 2. occupancy
       const fit = this.fits(u, party, slots.adults);
@@ -225,6 +236,7 @@ class SkiSearch {
       // the departure airport binds here too — never split into rooms the
       // customer's flight cannot reach
       if (sheets && !sheets.includes(u.sheet)) continue;
+      if (this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       const k = u.hotel + '||' + u.date;

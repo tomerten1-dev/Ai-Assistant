@@ -94,7 +94,19 @@ t('Haifa+France offers Bulgaria alternatives, not France',
   haifaFrance.candidates.length > 0 && haifaFrance.candidates.every(c => c.country === 'bulgaria'));
 
 const tlv = engine.search({ adults: 2, children_ages: [], no_children: true, month: 1, departure_airport: 'tlv' });
-t('Tel Aviv is unrestricted', new Set(tlv.candidates.map(c => c.country)).size >= 1 && tlv.candidates.length > 0);
+t('Tel Aviv still gets results', tlv.candidates.length > 0);
+
+// the Fri→Wed product is Haifa-exclusive (Tomer 23/08): nobody else sees it
+const FRI_WED = 'בולגריה סופ"ש שישי-רביעי';
+const friWedDates = new Set(av.units.filter(u => u.sheet === FRI_WED).map(u => u.date));
+const leaks = s => s.candidates.filter(c => c.country === 'bulgaria' && c.nights === 5 && friWedDates.has(c.date));
+t('Tel Aviv never sees the Haifa-exclusive product', leaks(tlv).length === 0);
+const noAirport = engine.search({ adults: 2, children_ages: [], no_children: true, month: 1 });
+t('customers who named no airport do not see it either', leaks(noAirport).length === 0);
+t('Haifa still does see it', engine.search({ adults: 2, children_ages: [], no_children: true, month: 1, departure_airport: 'haifa' }).candidates.length > 0);
+t('two-room splits respect the exclusivity too',
+  engine.search({ adults: 4, children_ages: [], no_children: true, month: 2, departure_airport: 'tlv' })
+    .two_room_splits.every(s => !friWedDates.has(s.date) || s.country !== 'bulgaria'));
 
 // Feb from Haifa has only 2-3 studios: a family of 4 needs two rooms, and
 // those rooms must still be inside the Haifa-reachable product
