@@ -121,10 +121,12 @@ class SkiSearch {
 
     // preference scoring (soft) + recommended-first ordering
     const prefs = slots.preferences || [];
+    const wantsBudget = p_budget(prefs);
     for (const c of candidates) {
       const info = this.hotelInfo(c.hotel);
+      // how many of the customer's stated wishes this hotel actually matches
       c.score = prefs.reduce((s, p) => s + ((info.tags || []).includes(p) ? 1 : 0), 0);
-      if (p_budget(prefs) && this.price(c.hotel).length <= 2) c.score += 1;
+      c.priceRank = this.price(c.hotel).length; // 2=₪₪ … 4=₪₪₪₪
       c.recommended = !!info.recommended;
     }
     // when a kids club was requested, full coverage outranks everything —
@@ -133,7 +135,11 @@ class SkiSearch {
     const campRank = c => (c.camps ? (c.camps.full ? 2 : 1) : 0);
     candidates.sort((a, b) =>
       (campRank(b) - campRank(a)) ||
-      (b.recommended - a.recommended) || (b.score - a.score) || a.date.localeCompare(b.date));
+      // an explicit wish outranks "recommended" — the customer asked for it
+      (b.score - a.score) ||
+      // "תקציב חסכוני" means cheapest first, not merely a tiebreak
+      (wantsBudget ? a.priceRank - b.priceRank : 0) ||
+      (b.recommended - a.recommended) || a.date.localeCompare(b.date));
 
     // hotel diversity: before capping at 8, prefer one unit per hotel in rank
     // order, then fill remaining slots with extra rooms of already-shown hotels

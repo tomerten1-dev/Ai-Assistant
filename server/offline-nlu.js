@@ -187,6 +187,16 @@ function phrase(result, slots, cards) {
     if (r.type === 'two_rooms') lines.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
     if (r.type === 'human_rep') lines.push('לא מצאתי התאמה במערכת — נציג אנושי ישמח לעזור: 04-8557722.');
   }
+  // acknowledge an active preference, so a refine chip visibly does something
+  const prefs = slots.preferences || [];
+  if (cards.length && prefs.length && !lines.length) {
+    const budget = /תקציב/.test(prefs.join(' '));
+    const others = prefs.filter(p => !/תקציב/.test(p));
+    const bits = [];
+    if (budget) bits.push('מהזול ליקר');
+    if (others.length) bits.push('לפי ' + others.join(', '));
+    lines.push('סידרתי מחדש ' + bits.join(' ו') + ' (הנציג יאשר סופית):');
+  }
   if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
 
   for (const c of cards) {

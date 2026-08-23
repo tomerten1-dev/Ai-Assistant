@@ -65,18 +65,25 @@
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
     + '.win.big{width:min(860px,calc(100vw - 24px));height:min(820px,calc(100dvh - 110px))}'
     + '@media (max-width:480px){.win{bottom:0;' + THEME.position + ':0;width:100vw;height:100dvh;border-radius:0}}'
-    + '.hdr{background:' + THEME.primary + ';color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}'
-    + '.hdr .ttl{font-weight:700;font-size:16px}'
-    + '.hdr .sub{font-size:12px;opacity:.85}'
-    + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px}'
-    + '.hdr .x:hover{background:rgba(255,255,255,.15)}'
-    + '.msgs{flex:1;overflow-y:auto;padding:14px;background:' + THEME.bgAlt + ';display:flex;flex-direction:column;gap:10px}'
-    // cap bubble width so lines stay readable once the window widens
-    + '.m{max-width:min(85%,520px);padding:10px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}'
-    + '.m.user{align-self:flex-start;background:' + THEME.bubbleUser + ';color:' + THEME.bubbleUserText + ';border-bottom-right-radius:4px}'
-    + '.m.bot{align-self:flex-end;background:' + THEME.bubbleBot + ';color:' + THEME.bubbleBotText + ';border-bottom-left-radius:4px}'
-    + '.typing{align-self:flex-end;background:' + THEME.bubbleBot + ';border-radius:14px;padding:12px 18px;display:flex;gap:5px}'
-    + '.typing i{width:7px;height:7px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
+    // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
+    + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf1}'
+    + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
+    + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
+    + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;padding:3px 7px;border-radius:7px;line-height:1}'
+    + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
+    // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
+    // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
+    + '.msgs{position:relative;flex:1;overflow-y:auto;padding:20px 18px 16px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:18px}'
+    + '.m{font-size:14.5px;line-height:1.65;white-space:pre-wrap;word-wrap:break-word}'
+    + '.m.user{align-self:flex-start;max-width:min(80%,460px);background:' + THEME.bgAlt + ';color:' + THEME.text + ';'
+    + 'border:1px solid #e4e9ee;border-radius:14px;padding:9px 13px}'
+    + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:32px;position:relative}'
+    + '.m.bot::before{content:"P";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:6px;'
+    + 'background:' + THEME.primary + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:.3px}'
+    + '.typing{align-self:stretch;padding:2px 0 2px 32px;padding-inline-start:32px;display:flex;gap:5px;align-items:center;position:relative}'
+    + '.typing::before{content:"P";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:6px;'
+    + 'background:' + THEME.primary + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}'
+    + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
@@ -99,15 +106,20 @@
     + '.btn.pri:hover{background:' + THEME.primaryDark + '}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
     + '.btn.sec:hover{background:' + THEME.bgAlt + '}'
-    + '.chips{display:flex;flex-wrap:wrap;gap:7px;align-self:stretch}'
-    + '.chip{border:1.5px solid ' + THEME.primary + ';background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border-radius:99px;'
-    + 'padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600}'
-    + '.chip:hover{background:' + THEME.bgAlt + '}'
-    + '.inp{display:flex;gap:8px;padding:12px;border-top:1px solid #e3eaf1;background:' + THEME.bg + ';align-items:flex-end}'
-    + '.inp textarea{flex:1;border:1.5px solid #cfdae4;border-radius:12px;padding:10px 14px;font-size:14.5px;font-family:inherit;direction:rtl;'
-    + 'resize:none;overflow-y:auto;line-height:1.45;max-height:96px;min-height:42px}'
-    + '.inp textarea:focus{outline:none;border-color:' + THEME.primary + '}'
-    + '.send{background:' + THEME.primary + ';border:none;color:#fff;border-radius:12px;width:44px;cursor:pointer;font-size:18px}'
+    + '.chips{display:flex;flex-wrap:wrap;gap:7px;align-self:stretch;padding-inline-start:32px}'
+    + '.chip{border:1px solid #d8dfe6;background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:99px;'
+    + 'padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
+    + '.chip:hover{background:' + THEME.bgAlt + ';color:' + THEME.primaryDark + ';border-color:' + THEME.primary + '}'
+    // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
+    + '.inp{display:flex;gap:8px;padding:12px 14px 14px;background:' + THEME.bg + ';align-items:flex-end}'
+    + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #d8dfe6;border-radius:14px;'
+    + 'padding:5px 6px 5px 12px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
+    + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
+    + '.inp textarea{flex:1;border:none;background:none;padding:8px 4px;font-size:14.5px;font-family:inherit;direction:rtl;'
+    + 'resize:none;overflow-y:auto;line-height:1.5;max-height:110px;min-height:32px;color:' + THEME.text + '}'
+    + '.inp textarea:focus{outline:none}'
+    + '.send{background:' + THEME.primary + ';border:none;color:#fff;border-radius:9px;width:34px;height:34px;flex:none;'
+    + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
     + '.send:disabled{opacity:.5;cursor:default}'
     + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
     + '.form label{font-size:12.5px;color:' + THEME.textLight + '}'
@@ -161,7 +173,9 @@
   var send = el('button', 'send');
   send.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
   send.setAttribute('aria-label', 'שליחה');
-  inp.appendChild(input); inp.appendChild(send);
+  var inpBox = el('div', 'box');
+  inpBox.appendChild(input); inpBox.appendChild(send);
+  inp.appendChild(inpBox);
 
   win.appendChild(hdr); win.appendChild(msgs); win.appendChild(inp);
   wrap.appendChild(win); wrap.appendChild(fab);
@@ -169,11 +183,18 @@
 
   /* ============== ui helpers ============== */
   function scrollDown() { msgs.scrollTop = msgs.scrollHeight; }
+  // bring an element to the TOP of the view — used when offers arrive, so the
+  // customer sees them from the first card instead of landing past them
+  function scrollToTopOf(node) {
+    if (!node) return;
+    msgs.scrollTop = Math.max(0, node.offsetTop - msgs.offsetTop - 12);
+  }
 
   function addMsg(role, text) {
-    if (!text) return;
+    if (!text) return null;
     var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), text);
     msgs.appendChild(m); scrollDown();
+    return m;
   }
 
   var typingEl = null;
@@ -248,7 +269,7 @@
       ch.addEventListener('click', function () { sendText(l); });
       box.appendChild(ch);
     });
-    msgs.appendChild(box); scrollDown();
+    msgs.appendChild(box);
   }
 
   /* lead form — שם + טלפון בלבד (חוק אדום 8) */
@@ -309,8 +330,9 @@
       var data = both[0];
       showTyping(false);
       state.slots = data.slots || state.slots;
+      var introEl = null;
       if (data.reply_he) {
-        addMsg('bot', data.reply_he);
+        introEl = addMsg('bot', data.reply_he);
         state.messages.push({ role: 'assistant', content: data.reply_he });
       }
       if (data.cards && data.cards.length) {
@@ -319,7 +341,8 @@
         var row = el('div', 'cards-row');
         msgs.appendChild(row);
         data.cards.forEach(function (c) { addCard(c, row); });
-        scrollDown();
+        // park the view on the intro line + first card, not below them
+        scrollToTopOf(introEl || row);
         state.messages.push({ role: 'assistant', content: '[הוצגו ' + data.cards.length + ' הצעות: ' + data.cards.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
       }
       if (data.two_room_splits && data.two_room_splits.length && (!data.cards || !data.cards.length)) {
@@ -328,6 +351,9 @@
         });
       }
       if (data.chips && data.chips.length) addChips(data.chips);
+      // chips render below the offers; re-anchor so the offers stay in view
+      if (data.cards && data.cards.length) scrollToTopOf(introEl || row);
+      else scrollDown();
     }).catch(function () {
       showTyping(false);
       addMsg('bot', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו 04-8557722.');
