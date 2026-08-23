@@ -117,6 +117,43 @@ t('a customer name or order number never reaches the reply (red rules 1-2)', () 
   });
 });
 
+
+t('a week without the camp group for that child is never offered as a match', () => {
+  // Tomer, 24/08: offering it with a footnote is misleading. Either every week
+  // shown runs the group, or we say plainly that none does.
+  const asks = [
+    'זוג עם שני ילדים בני 4 ו-8, פברואר בבולגריה, צריך קייטנה בעברית',
+    'אנחנו 4, ילדים בני 5 ו-9, פברואר, צרפת, צריכים קייטנה בעברית',
+    'זוג עם ילד בן 4, דצמבר בבולגריה, צריך קייטנה',
+    'משפחה עם ילדים בני 7 ו-10, מרץ, צריך קייטנה בעברית',
+  ];
+  return Promise.all(asks.map(a => handleChat({ messages: [{ role: 'user', content: a }], slots: {} })))
+    .then(outs => outs.forEach((out, i) => {
+      if (!out.cards.length) return;
+      const partial = out.cards.filter(c => c.camps && (c.camps.missing || []).length);
+      if (!partial.length) return;
+      // partial is allowed only when NOTHING covers them — and then it must be said
+      assert.ok(/לא פועלת|אין קבוצ|אינה פועלת/.test(out.reply_he),
+        asks[i] + ' → offered a week with no group and did not say so: ' + out.reply_he);
+    }));
+});
+
+t('naming one child does not delete the others', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג עם שני ילדים בני 4 ו-8, פברואר בבולגריה' }], slots: {},
+  }).then(first => handleChat({
+    messages: [
+      { role: 'user', content: 'זוג עם שני ילדים בני 4 ו-8, פברואר בבולגריה' },
+      { role: 'assistant', content: first.reply_he },
+      { role: 'user', content: 'צריך קבוצה לילד ה בן 4' },
+    ],
+    slots: first.slots,
+  })).then(out => {
+    assert.deepStrictEqual(out.slots.children_ages, [4, 8], 'a child was lost: ' + JSON.stringify(out.slots.children_ages));
+    assert.strictEqual(out.slots.needs_hebrew_kids_club, true, 'the camp request was not registered');
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

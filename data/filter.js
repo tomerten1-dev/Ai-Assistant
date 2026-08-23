@@ -202,6 +202,55 @@ class SkiSearch {
         if (candidates.length) { relaxed.push({ type: 'month', from: +slots.month, to: m }); break; }
       }
     }
+    // A camp for a specific child is a hard requirement, not a preference. A
+    // week where that child's age group does not run is not a cheaper version
+    // of the holiday — it is a holiday where one child sits out. Offering it as
+    // a match, with a footnote, is misleading (Tomer, 24/08).
+    //
+    // So when nothing in the requested scope covers the children, widen the
+    // DATE — and then the destination — looking for a week that does, rather
+    // than presenting weeks that do not. Only if no week anywhere covers them
+    // do the partial ones come back, and then the phrasing says so plainly.
+    const covers = (list) => list.some(c => c.camps && !(c.camps.missing || []).length);
+    if (slots.needs_hebrew_kids_club && candidates.length && !covers(candidates)) {
+      const months = [12, 1, 2, 3].filter(m => m !== +slots.month);
+      let found = null;
+      for (const m of months) {
+        const alt = this._filter(slots, party, { month: m, country: slots.country, destination: slots.destination });
+        if (covers(alt)) { found = { list: alt, note: { type: 'camp_month', from: +slots.month || null, to: m } }; break; }
+      }
+      if (!found && (slots.country || slots.destination)) {
+        for (const m of [+slots.month, ...months].filter(x => x != null)) {
+          const alt = this._filter(slots, party, { month: m, country: null, destination: null });
+          if (covers(alt)) { found = { list: alt, note: { type: 'camp_location', to: m } }; break; }
+        }
+      }
+      if (found) {
+        candidates = found.list.filter(c => c.camps && !(c.camps.missing || []).length);
+        // this supersedes any earlier month/location widening — saying "הרחבתי
+        // לינואר" and then "הצגתי את מרץ" in the same breath is just confusing
+        for (let i = relaxed.length - 1; i >= 0; i--) {
+          if (relaxed[i].type === 'month' || relaxed[i].type === 'location') relaxed.splice(i, 1);
+        }
+        relaxed.push(found.note);
+      }
+    }
+
+    // With covered weeks in hand, an uncovered one is not a lesser option to
+    // round out the list — it is the thing the customer just ruled out. Filling
+    // the third card with it is what made the bot look like it had not read.
+    if (slots.needs_hebrew_kids_club && covers(candidates)) {
+      const dropped = candidates.filter(c => c.camps && (c.camps.missing || []).length);
+      candidates = candidates.filter(c => c.camps && !(c.camps.missing || []).length);
+      // say why the list is short, or it looks like we simply have little
+      if (dropped.length) {
+        notes.push({
+          type: 'camp_narrowed',
+          groups: [...new Set(dropped.flatMap(c => c.camps.missing))],
+        });
+      }
+    }
+
     // A family that asked for a camp and is shown weeks where their child's
     // age group does not run deserves to be told which week it DOES run. The
     // bot used to print "אין קבוצת 4-6 בשבוע זה" on three cards and never

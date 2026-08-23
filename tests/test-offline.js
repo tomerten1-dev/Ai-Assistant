@@ -18,9 +18,18 @@ function t(name, cond, detail) {
     messages: [{ role: 'user', content: 'אנחנו 4, ילדים בני 5 ו-9, פברואר, צרפת, צריכים קייטנה בעברית' }],
     slots: {},
   });
-  t('3 cards straight away', r1.cards.length === 3, 'cards=' + r1.cards.length);
+  // Fewer than three is CORRECT here: a week where the 5-year-old's group does
+  // not run is no longer offered to pad the list (Tomer, 24/08 — it misleads).
+  t('offers straight away, no interview', r1.cards.length >= 1, 'cards=' + r1.cards.length);
+  t('every week shown actually runs their camp groups',
+    r1.cards.every(c => c.camps && !(c.camps.missing || []).length),
+    JSON.stringify(r1.cards.map(c => c.camps && c.camps.missing)));
   t('slots parsed: 2 adults + [5,9]', r1.slots.adults === 2 && JSON.stringify(r1.slots.children_ages) === '[5,9]', JSON.stringify(r1.slots));
-  t('france-february explanation in reply', /פברואר/.test(r1.reply_he) && /אוסטריה|אנדורה|בולגריה/.test(r1.reply_he));
+  // The gap is still explained; what follows it is now the camp explanation
+  // rather than a list of other countries, because the binding constraint here
+  // is the child's age group, not the destination.
+  t('france-february gap explained', /אין לנו יציאות לצרפת בפברואר/.test(r1.reply_he), r1.reply_he);
+  t('and the reply says why these dates', /קבוצת הגיל|קבוצת 4-6|פועלת/.test(r1.reply_he), r1.reply_he);
   t('no card is france-in-february', r1.cards.every(c => !(c.country === 'france' && c.date.slice(5, 7) === '02')));
   t('partial camps stated when 4-6 missing', r1.cards.every(c => !c.camps || !c.camps.full ? true : true));
 

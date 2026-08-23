@@ -136,7 +136,17 @@ function parseText(text, slots) {
     if (!ages.length && askedChildren) {
       ages = allNums.filter(n => n >= 0 && n <= 17).slice(0, 4);
     }
-    if (ages.length) { s.children_ages = ages; s.no_children = false; }
+    if (ages.length) {
+      // "צריך קבוצה לילד בן 4" names one child out of two, and used to replace
+      // the whole list — a family of four silently became a family of three
+      // and was quoted the wrong room. A single age that we already know about
+      // is a reference to a child, not a new census. A full re-count ("הילדים
+      // בני 4, 8") replaces, because that IS a census.
+      const known = s.children_ages || [];
+      const oneKnownChild = ages.length === 1 && known.length > 1 && known.includes(ages[0]);
+      if (!oneKnownChild) { s.children_ages = ages; }
+      s.no_children = false;
+    }
 
     // --- child COUNT when no ages given yet: "שני ילדים", "3 ילדים",
     //     "ילד אחד", and bare singular "ילד" / "ילדה" (Hebrew has no \b)
@@ -353,7 +363,16 @@ function parseText(text, slots) {
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
   else if (/קי?יטנ|ליווי בעברית|מדריך לילדים|מדריכים.{0,20}ילדים/.test(t)) s.needs_hebrew_kids_club = true;
-  if (/^ ?(כן|בטח|כמובן|חובה|צריך|רוצים|כן כן) ?$/.test(t) && s._lastQuestion === 'kids_club') s.needs_hebrew_kids_club = true;
+  // "צריך קבוצה לילד בן 4", "כן בשביל הקטן", "חשוב לנו" — an answer to
+  // "תרצו קייטנה?" is rarely the bare word כן, and treating anything else as
+  // no answer at all left the camp requirement unset and offered weeks with no
+  // group for the child.
+  if (s._lastQuestion === 'kids_club') {
+    if (/^ ?(כן|בטח|כמובן|חובה|צריך|רוצים|כן כן) ?$/.test(t)) s.needs_hebrew_kids_club = true;
+    else if (/כן|צריך|רוצה|רוצים|חשוב|בהחלט|נשמח|מעוניינ|קבוצה|קייטנ|קיטנ|הדרכ|מדריך/.test(t)) {
+      s.needs_hebrew_kids_club = true;
+    }
+  }
   if (/^ ?(לא|אין צורך|לא צריך) ?$/.test(t) && s._lastQuestion === 'kids_club') s.needs_hebrew_kids_club = false;
   if (/^ ?(לא|אין|בלי) ?$/.test(t) && s._lastQuestion === 'children') { s.no_children = true; s.children_ages = []; }
 
@@ -483,6 +502,13 @@ function phrase(result, slots, cards) {
       : `שימו לב: קבוצת ${gap.missing.join(', ')} אינה פועלת בתאריכים שמצאתי. נציג יבדוק מתי היא נפתחת.`);
   }
 
+  // the list is short because weeks without the child's group were removed,
+  // not because we have little to sell
+  const narrowed = note('camp_narrowed');
+  if (narrowed && narrowed.groups.length) {
+    lines.push(`קבוצת ${narrowed.groups.join(', ')} פועלת רק בחלק מהשבועות, אז הצגתי רק תאריכים שבהם היא כן פועלת:`);
+  }
+
   const campAge = note('camp_age_mismatch');
   if (campAge) {
     const ages = (campAge.ages || []).join(', ');
@@ -502,14 +528,23 @@ function phrase(result, slots, cards) {
   if ((result.notes || []).some(n => n.type === 'france_february_gap')) {
     // without cards, "הנה מה שפנוי" is followed by nothing — which reads as a
     // broken promise. Say the gap, and let the no-match line do its job.
+    // Don't announce "הנה מה שפנוי" when a relaxation line is about to explain
+    // what was actually shown — two openings in a row read as two answers.
+    const willExplain = (result.relaxed || []).length > 0;
     lines.push('שימו לב: אין לנו יציאות לצרפת בפברואר (מדלגים מ-30.1 ל-6.3)' +
-      (cards.length ? ' — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:' : '.'));
+      (cards.length && !willExplain ? ' — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:' : '.'));
   }
   for (const r of result.relaxed || []) {
     if (r.type === 'month') lines.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
     if (r.type === 'location') lines.push('לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
     if (r.type === 'two_rooms') lines.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
     if (r.type === 'nights') lines.push(`לא מצאתי בדיוק ${r.wanted} לילות, אז הרחבתי גם למשכים אחרים:`);
+    if (r.type === 'camp_month') {
+      lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו פועלת קבוצת הגיל של הילד, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם היא כן פועלת:`);
+    }
+    if (r.type === 'camp_location') {
+      lines.push('ביעד שביקשתם אין שבוע שבו פועלת קבוצת הגיל של הילד. הנה יעדים שבהם היא כן פועלת:');
+    }
     if (r.type === 'human_rep') lines.push('לא מצאתי התאמה במערכת — נציג אנושי ישמח לעזור: 04-8557722.');
   }
   // acknowledge an active preference, so a refine chip visibly does something
