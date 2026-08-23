@@ -20,7 +20,10 @@ const spend = { input: 0, output: 0, calls: 0, usd: 0 };
 
 function model() { return process.env.OPENAI_MODEL || DEFAULT_MODEL; }
 
-async function callOpenAI({ system, messages, maxTokens = 400 }) {
+// `json` is on by default because slot filling wants a parseable object. The
+// phrasing call wants prose, and JSON mode would make it wrap a sentence in a
+// object for no reason and no benefit.
+async function callOpenAI({ system, messages, maxTokens = 400, json = true }) {
   const key = process.env.OPENAI_API_KEY;
   if (!key || key.includes('xxxx')) {
     const err = new Error('missing_api_key');
@@ -31,10 +34,10 @@ async function callOpenAI({ system, messages, maxTokens = 400 }) {
     model: model(),
     max_completion_tokens: maxTokens,
     messages: [{ role: 'system', content: system }, ...messages],
-    // JSON mode: the reply is always parseable, so no fence-stripping and no
-    // tokens wasted on the model explaining itself
-    response_format: { type: 'json_object' },
   };
+  // JSON mode: the reply is always parseable, so no fence-stripping and no
+  // tokens wasted on the model explaining itself
+  if (json) body.response_format = { type: 'json_object' };
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },

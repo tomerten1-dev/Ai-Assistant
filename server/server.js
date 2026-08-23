@@ -13,6 +13,7 @@ const { callClaude, parseModelJSON } = require('./claude.js');
 const { callOpenAI, spend: openaiSpend, model: openaiModel } = require('./openai.js');
 const { SLOT_PROMPT: SLOT_PROMPT_LEAN } = require('./prompt-slots.js');
 const offline = require('./offline-nlu.js');
+const phrasing = require('./prompt-phrase.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
 
@@ -80,11 +81,18 @@ function toSearchSlots(slots) {
   };
 }
 
-/* ---------- token economy: when is the model actually worth calling? ----------
-   The Hebrew regex layer runs first and costs nothing. We only pay for a model
-   call when that layer learned nothing from this message — i.e. the customer
-   phrased something we don't recognise. Simple turns ("4 ו-9", "ינואר",
-   "בלי ילדים", chip clicks) never reach the model at all. */
+/* ---------- understanding: the model reads every real message ----------
+   This used to escalate to the model only when the Hebrew regex layer learned
+   nothing, which was cheap and endlessly frustrating: every phrasing a customer
+   invented was a new bug to find and patch by hand. Tomer's call, 24/08 — pay
+   for understanding on every turn and stop playing whack-a-mole.
+
+   The regex layer still runs first, for three reasons: it is the fallback when
+   the API is down, it seeds the model with what we already understood, and it
+   still answers trivial turns ("2", "כן", a chip click) without paying at all.
+
+   What the model may NOT do is unchanged: it never sees inventory, so it can
+   never invent a hotel, a date or an availability claim. */
 function slotsChanged(before, after) {
   const keys = ['adults', 'children_ages', 'children_count', 'no_children', 'month',
     'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club',
@@ -94,14 +102,18 @@ function slotsChanged(before, after) {
 }
 function shouldAskModel(before, after, text) {
   const t = (text || '').trim();
-  if (!t || t.length <= 2) return false;              // "כן" / "לא" / "2"
-  const words = t.split(/\s+/).length;
-  // nothing was understood — the phrasing is outside the regex vocabulary
-  if (!slotsChanged(before, after)) return true;
-  // a long message usually carries more than the one thing we matched; pay for
-  // it only while blocking slots are still open, so refinements stay free
-  if (words >= 8 && requiredMissing(after).length > 0) return true;
-  return false;
+  if (!t) return false;
+  // A bare number, "כן"/"לא", or a chip click is answering a question we just
+  // asked. The regex layer gets those right every time and a model call would
+  // buy nothing — this is the whole remaining token economy.
+  if (/^[\d\s,.\-ו]{1,8}$/.test(t)) return false;
+  if (/^(כן|לא|בטח|כמובן|אוקיי|אוקי|ok|תודה|יאללה)[!.?]?$/i.test(t)) return false;
+  if (CHIP_TO_PREF[t] || t.length <= 2) return false;
+  // A short message the free layer already understood in full ("ינואר",
+  // "לא בנסקו", "בלי ילדים") has nothing left in it to pay for.
+  const words = t.split(/\s+/).filter(Boolean).length;
+  if (words <= 3 && slotsChanged(before, after)) return false;
+  return true;
 }
 
 async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
@@ -115,6 +127,35 @@ async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
     ? await callOpenAI({ system: SLOT_PROMPT_LEAN, messages: payload, maxTokens: 400 })
     : await callClaude({ system: SLOT_PROMPT_LEAN, messages: payload, maxTokens: 400 });
   return parseModelJSON(raw);
+}
+
+async function phraseWithModel({ slots, cards, result, fallback }) {
+  if (aiMode() === 'offline') return fallback;
+  // Nothing to phrase: the turn is a question or a no-match, and the template
+  // for those is careful, short and already right. Paying to reword it would
+  // buy nothing and risks softening a "no" that must stay clear.
+  if (!cards.length) return fallback;
+  try {
+    const payload = phrasing.buildPayload({ slots, cards, result, fallback });
+    // 900, not 320: on a reasoning model max_completion_tokens covers the
+    // thinking too, and a 320 cap produced an empty reply that then failed
+    // validation and silently fell back to the template on every turn.
+    const raw = aiMode() === 'openai'
+      ? await callOpenAI({ system: phrasing.PHRASE_PROMPT, messages: [{ role: 'user', content: payload }], maxTokens: 900, json: false })
+      : await callClaude({ system: phrasing.PHRASE_PROMPT, messages: [{ role: 'user', content: payload }], maxTokens: 900 });
+    const text = String(raw || '').trim();
+    const verdict = phrasing.validate(text, { cards, fallback });
+    if (!verdict.ok) {
+      // worth seeing in the log: a rejected phrasing is either a prompt bug or
+      // a model drifting towards something a customer must never be told
+      console.error('phrasing rejected (%s): %s', verdict.why, text.slice(0, 160));
+      return fallback;
+    }
+    return text;
+  } catch (e) {
+    console.error('phrasing model failed:', e.message);
+    return fallback;
+  }
 }
 
 function presentCards(result, slots) {
@@ -145,6 +186,17 @@ function presentCards(result, slots) {
     count_available: c.count_available,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,
+    // Everything the hotel pages taught us about THIS unit. This list used to
+    // stop at the line above, so the bot answered "נציג יאמת" about beds, board
+    // and spa while the answers sat one object away — the tests missed it
+    // because they phrased result.candidates directly and never came through
+    // here. tests/test-end-to-end.js now does.
+    room_facts: c.room_facts, board_he: c.board_he, transfer_he: c.transfer_he,
+    ski_pass_he: c.ski_pass_he, ski_pass_included: c.ski_pass_included,
+    equipment_he: c.equipment_he, equipment_included: c.equipment_included,
+    wifi_he: c.wifi_he, spa_he: c.spa_he, spa_access: c.spa_access,
+    spa_access_he: c.spa_access_he, spa_note_he: c.spa_note_he, spa_min_age: c.spa_min_age,
+    separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
     booking_url: buildBookingUrl({
       siteID: engine.hotelInfo(c.hotel).siteID, date: c.date,
       room: c.room, adults: slots.adults, children_ages: slots.children_ages,
@@ -237,9 +289,14 @@ async function handleChat(body) {
   // wins; the FAQ answer follows only when there is nothing to guard against.
   // Unlike deflect(), the FAQ answers even when the same message also filled
   // slots — "2 מבוגרים בפברואר, יש אוכל כשר?" deserves an answer and offers.
+  // Topics the CARDS answer per hotel. Printing the general FAQ paragraph
+  // above three cards that each state their own spa terms is noise, and worse,
+  // it reads as a hedge right before the specific answer.
+  const PER_CARD_FAQ = new Set(['spa', 'wifi']);
+  const faqSuppressed = faqHit && PER_CARD_FAQ.has(faqHit.id);
   const preamble = [
     deflection,
-    !deflection && faqHit ? faqHit.he : null,
+    !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     offTopic && !deflection ? OFF_TOPIC_HE : null,
     slots.out_of_season ? SEASON_HE : null,
   ].filter(Boolean).join('\n');
@@ -262,9 +319,15 @@ async function handleChat(body) {
   // in the system: the model never sees the inventory, so it cannot invent a
   // hotel, a date, a price or an availability claim. Every word on a card
   // comes from the workbook or from pingwin.co.il.
-  const intro = offline.phrase(result, slots, cards) ||
+  const templated = offline.phrase(result, slots, cards) ||
     (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
       'לא מצאתי התאמה מדויקת — נציג ישמח לעזור: 04-8557722');
+  // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
+  // sees the offers the deterministic filter already chose, so it cannot
+  // invent one; and anything it returns must survive validate() or we ship
+  // the template unchanged. The template is therefore the floor, never a
+  // regression.
+  const intro = await phraseWithModel({ slots, cards, result, fallback: templated });
 
   // still-unknown matching parameters ride along as one-tap chips, so the
   // customer completes the picture by choosing rather than by being asked

@@ -13,10 +13,15 @@ const claudePath = require.resolve('../server/claude.js');
 const real = require('../server/claude.js');
 let scripted = [];
 let callCount = 0;
+// Two different jobs now go to the model: understanding the message, and
+// wording the reply. They are counted separately, because the token policy is
+// about understanding — wording only happens when there are offers to word.
+let slotCalls = 0, phraseCalls = 0;
 require.cache[claudePath].exports = {
   ...real,
-  callClaude: async () => {
+  callClaude: async ({ system }) => {
     callCount++;
+    if (/מנסח|נציג של פינגווין/.test(system || '')) phraseCalls++; else slotCalls++;
     if (!scripted.length) throw new Error('stub exhausted');
     return scripted.shift();
   },
@@ -29,24 +34,31 @@ function t(name, cond, detail) {
   if (cond) { pass++; console.log('  ✓', name); }
   else { fail++; console.log('  ✗', name, detail ? '— ' + detail : ''); }
 }
-const reset = (...s) => { scripted = s; callCount = 0; };
+const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; };
 
 (async () => {
-  console.log('[tokens] a message the Hebrew layer understands costs ZERO model calls');
-  reset();
+  // Policy changed 24/08 (Tomer): the model reads every real message, because
+  // hand-written regexes could never keep up with how customers actually write.
+  // What stays free is the class of turns the regex layer gets right every
+  // time - a bare number, yes/no, a chip click.
+  console.log('[tokens] a real sentence is worth exactly one model call');
+  reset(JSON.stringify({ slots: {}, ready_to_search: true }));
   const r1 = await handleChat({
     messages: [{ role: 'user', content: 'זוג עם ילדים בני 5 ו-9, פברואר, בלי קייטנה' }],
     slots: {},
   });
-  t('no model call made', callCount === 0, 'calls=' + callCount);
+  t('one call to understand, one to phrase', slotCalls === 1 && phraseCalls === 1, 'slot=' + slotCalls + ' phrase=' + phraseCalls);
   t('still produced offers', r1.cards.length === 3, 'cards=' + r1.cards.length);
-  t('model_used reported false', r1.model_used === false);
 
-  console.log('\n[tokens] chip clicks and short answers are free too');
+  console.log('[tokens] chip clicks and one-word answers are still free');
   reset();
   await handleChat({ messages: [{ role: 'user', content: 'ינואר' }], slots: { adults: 2, no_children: true } });
   await handleChat({ messages: [{ role: 'user', content: 'כן' }], slots: { adults: 2, children_ages: [7], month: 1, _lastQuestion: 'kids_club' } });
-  t('two more turns, still zero model calls', callCount === 0, 'calls=' + callCount);
+  await handleChat({ messages: [{ role: 'user', content: '4' }], slots: { _lastQuestion: 'adults' } });
+  await handleChat({ messages: [{ role: 'user', content: 'חשוב לי ספא' }], slots: { adults: 2, no_children: true, month: 1 } });
+  // phrasing of the offers they produce, never a second look at the message.
+  // Each of these is understood for free; the calls counted here are the
+  t('cheap turns never pay to be understood', slotCalls === 0, 'slot calls=' + slotCalls);
 
   console.log('\n[tokens] only an unrecognised phrasing escalates to the model');
   reset(JSON.stringify({
@@ -58,9 +70,11 @@ const reset = (...s) => { scripted = s; callCount = 0; };
     messages: [{ role: 'user', content: 'בא לנו לנשום קצת אוויר הרים אחרי החגים, מה אתם מציעים' }],
     slots: {},
   });
-  t('model was called exactly once', callCount === 1, 'calls=' + callCount);
+  t('an unrecognised phrasing is understood by the model', callCount >= 1, 'calls=' + callCount);
   t('model result used', r2.model_used === true);
-  t('phrasing did NOT cost a second call', callCount === 1, 'calls=' + callCount);
+  // Policy changed 24/08: phrasing IS a model call now, and its output must
+  // survive validation or the template ships instead.
+  t('a reply was produced either way', typeof r2.reply_he === 'string' && r2.reply_he.length > 0);
 
   console.log('\n[safety] the model never sees inventory, so cards come from data only');
   t('cards present', r2.cards.length > 0);
