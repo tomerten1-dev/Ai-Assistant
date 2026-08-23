@@ -3,6 +3,7 @@
 // phrases the result. Max 8 candidates are ever returned to the model.
 const fs = require('fs');
 const path = require('path');
+const { roomFacts } = require('./room-match');
 
 const DATA_DIR = __dirname;
 function loadJSON(p) { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, p), 'utf8')); }
@@ -18,6 +19,9 @@ class SkiSearch {
     this.departures = departures ||
       JSON.parse(fs.readFileSync(path.join(DATA_DIR, '..', 'config', 'departures.json'), 'utf8'));
     this.restrictions = loadJSON('restrictions.json');
+    // what every package includes and what costs extra (config/inclusions.json)
+    this.inclusions = JSON.parse(fs.readFileSync(
+      path.join(DATA_DIR, '..', 'config', 'inclusions.json'), 'utf8'));
   }
 
   // Dates in a country that carry NO "מכירת התחייבויות בלבד" note. On those,
@@ -198,14 +202,21 @@ class SkiSearch {
         if (candidates.length) { relaxed.push({ type: 'month', from: +slots.month, to: m }); break; }
       }
     }
-    if (!candidates.length && (slots.country || slots.destination)) {
+    let splits = [];
+    // Two rooms in the country they ASKED for beat one room in a country they
+    // did not. A group of six wanting Austria was being sent to Bulgaria while
+    // two connecting rooms in Austria sat available.
+    if (!candidates.length && party >= 3 && (slots.country || slots.destination)) {
+      splits = this._twoRoomSplits(slots, party);
+      if (splits.length) relaxed.push({ type: 'two_rooms' });
+    }
+    if (!candidates.length && !splits.length && (slots.country || slots.destination)) {
       candidates = this._filter(slots, party, { month: slots.month, country: null, destination: null });
       if (candidates.length) relaxed.push({ type: 'location' });
     }
-    let splits = [];
     // any party that no single unit can hold may still fit in two rooms —
     // not just large groups (e.g. a family of 4 where only 2-3 studios exist)
-    if (!candidates.length && party >= 3) {
+    if (!candidates.length && !splits.length && party >= 3) {
       splits = this._twoRoomSplits(slots, party);
       if (splits.length) relaxed.push({ type: 'two_rooms' });
     }
@@ -220,6 +231,11 @@ class SkiSearch {
       c.score = prefs.reduce((s, p) => s + ((info.tags || []).includes(p) ? 1 : 0), 0);
       c.priceRank = this.price(c.hotel).length; // 2=₪₪ … 4=₪₪₪₪
       c.recommended = !!info.recommended;
+      // Stated requirements are not just things to ANSWER — they should move
+      // the right hotel to the top. Someone who asked for a short transfer and
+      // separate beds should not be shown the furthest hotel with a double bed
+      // first, however well we then explain it.
+      c.reqScore = this._requirementScore(c, slots);
     }
     // when a kids club was requested, full coverage outranks everything —
     // a hotel whose week runs only one of the needed age groups must not
@@ -227,6 +243,8 @@ class SkiSearch {
     const campRank = c => (c.camps ? (c.camps.full ? 2 : 1) : 0);
     candidates.sort((a, b) =>
       (campRank(b) - campRank(a)) ||
+      // hotels that actually satisfy what the customer named come first
+      (b.reqScore - a.reqScore) ||
       // an explicit wish outranks "recommended" — the customer asked for it
       (b.score - a.score) ||
       // "תקציב חסכוני" means cheapest first, not merely a tiebreak
@@ -322,10 +340,84 @@ class SkiSearch {
     return splits.sort((x, y) => x.date.localeCompare(y.date));
   }
 
+  // How well a hotel meets the requirements the customer named in words
+  // (separate beds, breakfast, a short transfer, ski pass, equipment). Soft:
+  // it reorders, it never removes — the workbook, not this, decides what is
+  // available. Everything it reads comes from the hotel's own page.
+  _requirementScore(c, slots) {
+    const asked = new Set(slots.unverifiable || []);
+    if (!asked.size) return 0;
+    const info = this.hotelInfo(c.hotel);
+    let s = 0;
+    if (asked.has('מיטות נפרדות')) {
+      const facts = roomFacts(c.room, info.rooms, null);
+      const SEP = /מיטות נפרדות|מיטות יחיד|2 מיטות|שתי מיטות|טווין|twin/i;
+      if (facts && SEP.test(facts.beds_he || '')) s += 3;
+      else if ((info.rooms || []).some(r => SEP.test(r.beds_he || '') || /twin|טווין/i.test(r.name))) s += 1;
+    }
+    if (asked.has('בסיס האירוח')) {
+      const board = info.board_he || '';
+      // rank by what was actually asked for, not merely by having a board
+      const RANK = { all_inclusive: /הכל כלול/, full: /פנסיון מלא|הכל כלול/, half: /חצי פנסיון|פנסיון מלא|הכל כלול/, breakfast: /ארוחת בוקר|חצי פנסיון|פנסיון מלא|הכל כלול/ };
+      const want = slots.board_wanted;
+      if (want && RANK[want]) s += RANK[want].test(board) ? 3 : -1;
+      else if (/ארוחת בוקר|חצי פנסיון|פנסיון מלא|הכל כלול/.test(board)) s += 2;
+    }
+    if (asked.has('משך הנסיעה מהשדה')) {
+      const km = SkiSearch.transferKm(info.transfer_he);
+      // most pages give no distance; that silence is not evidence of a long
+      // drive, so unknown scores the same as an average one — only a genuinely
+      // short transfer is rewarded and a genuinely long one penalised
+      if (km != null) s += km <= 100 ? 2 : (km > 170 ? -1 : 0);
+    }
+    if (asked.has('סקי פס') && !this.inclusions.ski_pass.excluded_countries.includes(c.country)) s += 1;
+    if (asked.has('השכרת ציוד') &&
+        (this.inclusions.equipment_rental.included_at_he || []).includes(c.hotel)) s += 2;
+    return s;
+  }
+
+  // "כ-160 ק"מ משדה התעופה סופיה" → 160
+  static transferKm(text) {
+    const m = String(text || '').match(/(\d{2,3})\s*ק"?מ/);
+    return m ? +m[1] : null;
+  }
+
   _present(c, slots) {
     const occ = this.effectiveOcc(c);
     const info = this.hotelInfo(c.hotel);
+    // Bed layout / size / bathrooms of the offered unit, read off the hotel
+    // page (never inferred). Party-aware: a "DBL 2-4" is a different physical
+    // room for a couple than for a family of four.
+    const party = (slots && slots.adults != null)
+      ? slots.adults + ((slots.children_ages || []).length)
+      : null;
+    const facts = roomFacts(c.room, info.rooms, party);
+    // "separate beds" is the single most common hard requirement (couples who
+    // are siblings or friends, Sabbath-observant guests). If the offered unit
+    // is not a twin, the hotel may still HAVE one — saying so is a fact from
+    // the hotel page, and is explicitly not a promise of availability.
+    const SEP = /מיטות נפרדות|מיטות יחיד|2 מיטות|שתי מיטות|טווין|twin/i;
+    const offeredTwin = !!(facts && facts.beds_he && SEP.test(facts.beds_he));
+    const twinElsewhere = offeredTwin ? null
+      : (info.rooms || []).find(r => SEP.test(r.beds_he || '') || /twin|טווין/i.test(r.name)) || null;
+    const inc = this.inclusions;
+    const skiPassIncluded = !inc.ski_pass.excluded_countries.includes(c.country);
+    const equipIncluded = (inc.equipment_rental.included_at_he || []).includes(c.hotel);
     return {
+      req_score: c.reqScore != null ? c.reqScore : 0, // how many stated wishes it meets
+      room_facts: facts,                       // {name, exact, size_he, beds_he, bath_he}
+      separate_beds: offeredTwin ? 'yes' : (twinElsewhere ? 'other_room' : 'unknown'),
+      separate_beds_other_he: twinElsewhere
+        ? twinElsewhere.name + ' — ' + (twinElsewhere.beds_he || 'מיטות נפרדות')
+        : null,
+      board_he: info.board_he || null,         // בסיס האירוח מדף המלון
+      transfer_he: info.transfer_he || null,   // הסעות / מרחק מהשדה
+      ski_pass_he: skiPassIncluded ? (info.ski_pass_he || null) : null,
+      ski_pass_included: skiPassIncluded,
+      equipment_included: equipIncluded,
+      equipment_he: equipIncluded
+        ? (info.equipment_he || inc.equipment_rental.included_he)
+        : inc.equipment_rental.supplement_he,
       occ_effective: { min: occ.min, max: occ.max },
       occ_composition_he: occ.composition_he, // e.g. "זוג + ילד עד גיל 10" — from the hotel page
       desc_he: info.desc_he || null,          // one-liner from the pingwin hotel page

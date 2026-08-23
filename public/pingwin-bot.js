@@ -94,6 +94,8 @@
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
     + '.card .hname{font-weight:700;font-size:14.5px;color:' + THEME.text + ';line-height:1.3}'
     + '.card .meta{font-size:12px;color:' + THEME.textLight + ';line-height:1.4}'
+    + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
+    + '.card .facts div{font-size:12px;color:' + THEME.text + ';line-height:1.45}'
     + '.card .why{font-size:12.5px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:6px;padding:7px 9px;line-height:1.4}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
     + '.tag{font-size:11.5px;padding:3px 9px;border-radius:4px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
@@ -236,6 +238,12 @@
     if (c.occ_composition_he) card.appendChild(el('div', 'meta clamp', c.occ_composition_he));
     if (c.desc_he) card.appendChild(el('div', 'meta clamp', c.desc_he));
     if (c.lift_he) card.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
+    // answers to what THIS customer asked about (beds, board, ski pass, ...)
+    if (c.facts_he && c.facts_he.length) {
+      var facts = el('div', 'facts');
+      for (var fi = 0; fi < c.facts_he.length; fi++) facts.appendChild(el('div', '', c.facts_he[fi]));
+      card.appendChild(facts);
+    }
 
     var tags = el('div', 'tags');
     if (c.recommended) tags.appendChild(el('span', 'tag rec', 'מומלץ'));

@@ -31,7 +31,33 @@
       ],
       "desc_he": "מלון 4 כוכבים במרכז מאיירהופן עם ספא גדול ובריכה, צמוד למעלית הראשית.",
       "lift_he": "צמוד למעלית הראשית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387705761652.jpg&targ=s269&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387705761652.jpg&targ=s269&height=600&width=480",
+      "board_he": "ארוחת בוקר או חצי פנסיון",
+      "transfer_he": "כ-170 ק\"מ משדה התעופה זלצבורג",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Strass Double Room 1-3",
+          "size_he": "כ-22 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": null,
+          "bath_he": null
+        },
+        {
+          "name": "Strass Junior Suite 1-4",
+          "size_he": "כ-30 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": null,
+          "bath_he": null
+        },
+        {
+          "name": "Strass Single Room",
+          "size_he": "12-16 מ\"ר",
+          "occupancy_he": "אדם אחד",
+          "beds_he": "מיטת יחיד",
+          "bath_he": null
+        }
+      ]
     },
     "Sport": {
       "sheet": "מאיירהופן",
@@ -58,7 +84,47 @@
       ],
       "desc_he": "אגף Sport של מלון Strass — ספא גדול ובריכה במרכז מאיירהופן, צמוד למעלית.",
       "lift_he": "צמוד למעלית הראשית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387705761652.jpg&targ=s269&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387705761652.jpg&targ=s269&height=600&width=480",
+      "board_he": "ארוחת בוקר או חצי פנסיון",
+      "transfer_he": "כ-170 ק\"מ משדה התעופה זלצבורג",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Sport Deluxe Double Room 1-4",
+          "size_he": "28-32 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": null,
+          "bath_he": null
+        },
+        {
+          "name": "Sport Junior Suite 1-4",
+          "size_he": "כ-30-32 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": null,
+          "bath_he": null
+        },
+        {
+          "name": "Sport Penthouse Suite 1-3",
+          "size_he": "כ-32 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "ספה נפתחת לאורח שלישי",
+          "bath_he": "חדר מקלחת עם חלוקי רחצה"
+        },
+        {
+          "name": "Sport Twin Room 1-2",
+          "size_he": "28-32 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "2 מיטות נפרדות",
+          "bath_he": null
+        },
+        {
+          "name": "Sport Single Room",
+          "size_he": "12-16 מ\"ר",
+          "occupancy_he": "אדם אחד",
+          "beds_he": "מיטת יחיד",
+          "bath_he": null
+        }
+      ]
     },
     "Hotel Ferienhof": {
       "sheet": "מאיירהופן",
@@ -82,7 +148,54 @@
       ],
       "desc_he": "מלון משופץ עם ספא וסאונה, כחמש דקות הליכה מהמעלית הראשית.",
       "lift_he": "כ-500 מטר מהמעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17447260273141.jpg&targ=s2116&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17447260273141.jpg&targ=s2116&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות משדה התעופה למלון וחזרה",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Single room 1-1",
+          "size_he": "14-15 מ\"ר",
+          "occupancy_he": "אדם אחד",
+          "beds_he": "מיטת יחיד",
+          "bath_he": "מקלחת"
+        },
+        {
+          "name": "DBL room type 3 1-2",
+          "size_he": "כ-16 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "מיטה זוגית 160/190 ס\"מ",
+          "bath_he": "מקלחת"
+        },
+        {
+          "name": "DBL room type 2 1-2",
+          "size_he": "17-19 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "מיטה זוגית",
+          "bath_he": "מקלחת"
+        },
+        {
+          "name": "TWIN room type 2 1-2",
+          "size_he": "17-19 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "2 מיטות נפרדות",
+          "bath_he": "מקלחת"
+        },
+        {
+          "name": "DBL room type 2 1-3",
+          "size_he": "19-22 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית וספה נפתחת",
+          "bath_he": "מקלחת"
+        },
+        {
+          "name": "DBL room type 1 2-4",
+          "size_he": "25-30 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטה זוגית וספה/מיטת קומותיים",
+          "bath_he": "מקלחת"
+        }
+      ]
     },
     "Alpenhof Kristal": {
       "sheet": "מאיירהופן",
@@ -98,7 +211,19 @@
       "room_rules": [],
       "desc_he": "מלון 4 כוכבים עם ספא מרווח וסאונה, דקות ספורות מהמעלית הראשית.",
       "lift_he": "כ-10 דקות הליכה מהמעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16368902988385.jpg&targ=s1408&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16368902988385.jpg&targ=s1408&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double Room 1-3",
+          "size_he": "25-28 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": null,
+          "bath_he": "אמבטיה או מקלחת, שירותים"
+        }
+      ]
     },
     "Pension Kumbichlhof": {
       "sheet": "מאיירהופן",
@@ -114,7 +239,19 @@
       "room_rules": [],
       "desc_he": "פנסיון משפחתי כפרי במיקום מרכזי עם גישה קלה למסלולי הסקי.",
       "lift_he": "כ-5 דקות הליכה מהמעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16553629325959.jpg&targ=s1966&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16553629325959.jpg&targ=s1966&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double room 1-3",
+          "size_he": "13-16 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית",
+          "bath_he": "מקלחת, שירותים"
+        }
+      ]
     },
     "Waldheim": {
       "sheet": "מאיירהופן",
@@ -131,7 +268,26 @@
       "room_rules": [],
       "desc_he": "מלון 4 כוכבים עם ספא וסאונה, 200 מטר ממעלית הפנקן.",
       "lift_he": "כ-200 מטר ממעלית הפנקן",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17395244413355.jpg&targ=s1897&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17395244413355.jpg&targ=s1897&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double Stilluptal 1-2",
+          "size_he": "כ-20 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "מיטה זוגית",
+          "bath_he": "מקלחת ושירותים"
+        },
+        {
+          "name": "Double Ziller 1-3",
+          "size_he": "כ-26 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית + ספה נפתחת",
+          "bath_he": "מקלחת ושירותים"
+        }
+      ]
     },
     "Berghof": {
       "sheet": "מאיירהופן",
@@ -147,7 +303,19 @@
       "room_rules": [],
       "desc_he": "מלון מפואר עם ספא חדש, בריכות שחייה וחדרים מרווחים במרכז מאיירהופן.",
       "lift_he": "כ-700 מטר מהמעלית הראשית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17393677567225.jpg&targ=s1246&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17393677567225.jpg&targ=s1246&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double Standard 1-3",
+          "size_he": "כ-30 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית, אפשרות לשלישי בספה נפתחת",
+          "bath_he": "חדר רחצה עם אמבטיה ושירותים"
+        }
+      ]
     },
     "Strolz": {
       "sheet": "מאיירהופן",
@@ -164,7 +332,19 @@
       "room_rules": [],
       "desc_he": "מלון בניהול משפחתי עם ספא ובריכה מחוממת.",
       "lift_he": "כ-1000 מטר, או 4 דקות באוטובוס הסקי",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16943436572098.jpg&targ=s1917&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16943436572098.jpg&targ=s1917&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double room 1-3",
+          "size_he": "כ-20 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": null,
+          "bath_he": "מקלחת/אמבטיה, שירותים"
+        }
+      ]
     },
     "Landhaus Roscher": {
       "sheet": "מאיירהופן",
@@ -180,7 +360,26 @@
       "room_rules": [],
       "desc_he": "פנסיון פשוט ונעים, 400 מטר ממעלית הסקי, עם גישה לבריכה מקורה.",
       "lift_he": "כ-400 מטר מהמעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17157746410545.jpg&targ=s2079&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17157746410545.jpg&targ=s2079&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות משדה התעופה למלון וחזרה",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "חדר זוגי 2-2",
+          "size_he": null,
+          "occupancy_he": "2 אנשים",
+          "beds_he": null,
+          "bath_he": "מקלחת, שירותים"
+        },
+        {
+          "name": "חדר זוגי 2-3",
+          "size_he": null,
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "מיטה זוגית, מיטה מתקפלת",
+          "bath_he": "מקלחת, שירותים"
+        }
+      ]
     },
     "Tuxer": {
       "sheet": "מאיירהופן",
@@ -203,7 +402,19 @@
       ],
       "desc_he": "דירה מרווחת ל-4-5 אורחים, תחנת סקי-בס במרחק 50 מטר.",
       "lift_he": "סקי-בס 50 מטר; כ-800 מטר מהמעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17157814365507.jpg&targ=s2080&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17157814365507.jpg&targ=s2080&height=600&width=480",
+      "board_he": "לינה בלבד",
+      "transfer_he": "העברות משדה התעופה למלון וחזרה",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "דירת 2 חדרים + סלון",
+          "size_he": "95 מ\"ר",
+          "occupancy_he": "4-5 אנשים",
+          "beds_he": "2 מיטות זוגיות, ספה נפתחת לאורח חמישי",
+          "bath_he": "חדר רחצה עם אמבטיה, שירותים נפרדים"
+        }
+      ]
     },
     "SCHLOSSHOF": {
       "sheet": "אישגיל",
@@ -220,7 +431,19 @@
       "room_rules": [],
       "desc_he": "מלון 4 כוכבים עם ספא ובריכה, גלישה ישירה מהמדרונות אל המלון.",
       "lift_he": "כ-400 מטר ממעלית סילברטה, חזרה על מגלשיים עד המלון",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16278000737008.jpg&targ=s1257&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16278000737008.jpg&targ=s1257&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות משדה התעופה למלון וחזרה",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Standard Room 2-3",
+          "size_he": "כ-20 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "מיטה זוגית, אורח שלישי בספת יחיד נפתחת",
+          "bath_he": "חדר רחצה עם מקלחת ושירותים"
+        }
+      ]
     },
     "Mutmanor": {
       "sheet": "אישגיל",
@@ -237,7 +460,26 @@
       "room_rules": [],
       "desc_he": "מלון קטן ונעים באישגיל, קרוב למעליות ולמרכזי הבילוי.",
       "lift_he": "כ-100 מטר מהמנהרה למעלית Pardatschgratbahn",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17211321642247.jpg&targ=s1234&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17211321642247.jpg&targ=s1234&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות משדה התעופה למלון וחזרה",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "חדר זוגי 2-2",
+          "size_he": "כ-20 מ\"ר",
+          "occupancy_he": "2 אנשים",
+          "beds_he": "מיטה זוגית",
+          "bath_he": "חדר רחצה עם מקלחת ושירותים"
+        },
+        {
+          "name": "חדר טריפל 2-3",
+          "size_he": "כ-23 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "מיטה זוגית וספה לאורח שלישי",
+          "bath_he": "חדר רחצה עם מקלחת ושירותים"
+        }
+      ]
     },
     "Castel": {
       "sheet": "אישגיל",
@@ -254,7 +496,19 @@
       "room_rules": [],
       "desc_he": "מלון משפחתי 4 כוכבים עם ספא ועיצוב אוסטרי, בסביבה שקטה.",
       "lift_he": "כ-200 מטר מהמנהרה למעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17211093170973.jpg&targ=s2093&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17211093170973.jpg&targ=s2093&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות משדה התעופה למלון וחזרה",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "חדר זוגי דלוקס 2-3",
+          "size_he": "כ-25 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "מיטה זוגית וספה נפתחת לאורח שלישי",
+          "bath_he": "מקלחת, שירותים"
+        }
+      ]
     },
     "Cheval Blanc (allotment)": {
       "sheet": "ואל טורנס",
@@ -271,7 +525,33 @@
       "room_rules": [],
       "desc_he": "בית דירות בגלישה ישירה עם מטבחון וגישה למרכז ספורט.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1523342886.jpg&targ=s1292&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1523342886.jpg&targ=s1292&height=600&width=480",
+      "board_he": "לינה בלבד",
+      "transfer_he": "העברות",
+      "ski_pass_he": "סקי פס ואל טורנס",
+      "rooms": [
+        {
+          "name": "חדר שינה וסלון פריבילג' 2-4",
+          "size_he": "כ-27 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "חדר שינה עם 2 מיטות נפרדות, ספה נפתחת לשני אורחים",
+          "bath_he": "שירותים + מקלחת"
+        },
+        {
+          "name": "חדר שינה ונישה + סלון קלאסיק 4-6",
+          "size_he": "כ-33 מ\"ר",
+          "occupancy_he": "4-6 אנשים",
+          "beds_he": "חדר שינה עם מיטות נפרדות, ספה נפתחת, מיטת קומתיים בנישה",
+          "bath_he": "חדר רחצה עם אמבטיה, שירותים נפרדים"
+        },
+        {
+          "name": "3 חדרי שינה עם גלריה + סלון 6-8",
+          "size_he": "כ-50 מ\"ר",
+          "occupancy_he": "6-8 אנשים",
+          "beds_he": "חדר שינה לשני אורחים, ספה נפתחת, 4 מיטות נפרדות בגלריה",
+          "bath_he": "שירותים + מקלחת, מקלחת בגלריה"
+        }
+      ]
     },
     "Res Village Montana (allotment)": {
       "sheet": "ואל טורנס",
@@ -289,7 +569,47 @@
       "room_rules": [],
       "desc_he": "בתי דירות מרווחים במרכז ואל טורנס, גלישה ישירה מהדלת.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1523348720.jpg&targ=s1293&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1523348720.jpg&targ=s1293&height=600&width=480",
+      "board_he": "לינה בלבד",
+      "transfer_he": "העברות כלולות בטיסת פינגווין",
+      "ski_pass_he": "סקי פס מקומי",
+      "rooms": [
+        {
+          "name": "חדר שינה וסלון",
+          "size_he": "32 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "2 מיטות נפרדות + ספה נפתחת",
+          "bath_he": "מקלחת ושירותים"
+        },
+        {
+          "name": "חדר שינה, נישה וסלון",
+          "size_he": "35 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "2 מיטות נפרדות + 2 מיטות בנישה",
+          "bath_he": "מקלחת ושירותים"
+        },
+        {
+          "name": "2 חדרי שינה וסלון",
+          "size_he": "45 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "4 מיטות נפרדות",
+          "bath_he": "מקלחת ושירותים"
+        },
+        {
+          "name": "2 חדרי שינה וסלון PREMIUM",
+          "size_he": "45 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטה זוגית + 2 מיטות נפרדות",
+          "bath_he": "מקלחת ושירותים"
+        },
+        {
+          "name": "2 חדרי שינה, נישה וסלון",
+          "size_he": "49 מ\"ר",
+          "occupancy_he": "4-6 אנשים",
+          "beds_he": "4 מיטות נפרדות + מיטת קומתיים",
+          "bath_he": "2 מקלחות, שירותים"
+        }
+      ]
     },
     "Plein Sud (allotment)": {
       "sheet": "ואל טורנס",
@@ -306,7 +626,33 @@
       "room_rules": [],
       "desc_he": "דירות עם ספא בוואל טורנס, גלישה ישירה מהמלון.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1379412724(2).jpg&targ=s1288&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1379412724(2).jpg&targ=s1288&height=600&width=480",
+      "board_he": "לינה בלבד, ארוחת בוקר או חצי פנסיון",
+      "transfer_he": "העברות כלולות במחיר",
+      "ski_pass_he": "סקי פס מקומי",
+      "rooms": [
+        {
+          "name": "2 חדרי שינה וסלון 2-4",
+          "size_he": "כ-50-60 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "חדר שינה עם מיטה זוגית וחדר שינה נוסף עם 2 מיטות",
+          "bath_he": "2 חדרי רחצה"
+        },
+        {
+          "name": "2 חדרי שינה וסלון 5",
+          "size_he": "כ-50-60 מ\"ר",
+          "occupancy_he": "5 אנשים",
+          "beds_he": "חדר שינה עם מיטה זוגית, חדר נוסף עם 2 מיטות, מיטה מתקפלת",
+          "bath_he": "2 חדרי רחצה"
+        },
+        {
+          "name": "3 חדרי שינה וסלון",
+          "size_he": "כ-70-80 מ\"ר",
+          "occupancy_he": "4-6 אנשים",
+          "beds_he": "חדר שינה עם מיטה זוגית ו-2 חדרי שינה נוספים",
+          "bath_he": "3 חדרי רחצה"
+        }
+      ]
     },
     "Residence Oxalys": {
       "sheet": "ואל טורנס",
@@ -324,7 +670,32 @@
       "room_rules": [],
       "desc_he": "דירות 4 כוכבים עם ספא וגישה ישירה למסלולים.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17239773260303.jpg&targ=s1402&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17239773260303.jpg&targ=s1402&height=600&width=480",
+      "transfer_he": "טיסת פינגווין ישירה לגרנובל או לליון, העברות, נציג ישראלי",
+      "ski_pass_he": "סקי פס מקומי",
+      "rooms": [
+        {
+          "name": "חדר שינה, נישה וסלון 2-4",
+          "size_he": "כ-45 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטה זוגית, מיטת קומתיים או 2 מיטות יחיד בנישה",
+          "bath_he": "חדר רחצה עם מקלחת, חדר שירותים נפרד"
+        },
+        {
+          "name": "2 חדרי שינה וסלון 4-5",
+          "size_he": "כ-65 מ\"ר",
+          "occupancy_he": "4-5 אנשים",
+          "beds_he": "מיטה זוגית, 3 מיטות ליחיד",
+          "bath_he": "חדר רחצה עם מקלחת, חדר רחצה עם אמבטיה ושירותים"
+        },
+        {
+          "name": "4 חדרי שינה וסלון 6-8",
+          "size_he": "כ-95 מ\"ר",
+          "occupancy_he": "6-8 אנשים",
+          "beds_he": "מיטה זוגית, 3 חדרים עם 2 מיטות ליחיד",
+          "bath_he": "4 חדרי רחצה, 2 שירותים"
+        }
+      ]
     },
     "Hotel Kashmir": {
       "sheet": "ואל טורנס",
@@ -341,7 +712,26 @@
       "room_rules": [],
       "desc_he": "מלון מבוקש בוואל טורנס עם ספא, בריכה מקורה וחדרים משפחתיים.",
       "lift_he": "צמוד למסלול המוביל למעלית Plein Sud",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1524660274.jpg&targ=s1665&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1524660274.jpg&targ=s1665&height=600&width=480",
+      "board_he": "ארוחת בוקר (חצי פנסיון בתוספת)",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס מקומי",
+      "rooms": [
+        {
+          "name": "Family Suite 45M 2-4",
+          "size_he": "45 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטה זוגית ושתי מיטות יחיד",
+          "bath_he": "שני שירותים, שתי מקלחות או אמבטיות"
+        },
+        {
+          "name": "Prestige Suite 80M 4-5",
+          "size_he": "80 מ\"ר",
+          "occupancy_he": "3-5 אנשים",
+          "beds_he": "שתי מיטות זוגיות ומיטת יחיד",
+          "bath_he": "שני שירותים, שני חדרי אמבטיה או מקלחת"
+        }
+      ]
     },
     "Belambra Val Claret": {
       "sheet": "בלמברה (שבת)",
@@ -366,7 +756,40 @@
       ],
       "desc_he": "מועדון בלמברה בגובה 2100 מ' עם ספא ובריכה מחוממת, סקי אין-אאוט.",
       "lift_he": "Ski In / Ski Out בגובה 2100 מטר",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17811675267595.jpg&targ=s2152&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17811675267595.jpg&targ=s2152&height=600&width=480",
+      "board_he": "הכל כלול — ארוחות בוקר, צהריים וערב ושתייה חופשית",
+      "transfer_he": "טיסת פינגווין לליון, העברות",
+      "ski_pass_he": "סקי פס מורחב כולל ואל דיזר",
+      "rooms": [
+        {
+          "name": "Premium with View 2+1 pax",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד הניתנות להצמדה, ספה נפתחת לילד עד גיל 10",
+          "bath_he": "אמבטיה ושירותים"
+        },
+        {
+          "name": "Premium with View 3-4 pax",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "3-4 אנשים",
+          "beds_he": "2 מיטות יחיד, 2 מיטות יחיד או מיטת קומתיים",
+          "bath_he": "אמבטיה ושירותים"
+        },
+        {
+          "name": "Premium Amazing View 2-4 pax",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "2 מיטות יחיד, 2 מיטות יחיד או מיטת קומתיים",
+          "bath_he": "אמבטיה ושירותים"
+        },
+        {
+          "name": "Premium Amazing View + Balcony 2 pax",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "2 מיטות יחיד או מיטה זוגית",
+          "bath_he": "אמבטיה ושירותים"
+        }
+      ]
     },
     "Belambra Les Cretes L2A 1800": {
       "sheet": "בלמברה (שבת)",
@@ -384,7 +807,19 @@
       "room_rules": [],
       "desc_he": "מועדון בלמברה חדש בגובה 1800 עם גישה ישירה למסלולים וספא מחומם.",
       "lift_he": "הליכה קצרה מחדר הציוד אל המעליות",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=1721637640023.jpg&targ=s1844&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=1721637640023.jpg&targ=s1844&height=600&width=480",
+      "board_he": "הכל כלול — ארוחת בוקר, צהריים וערב, שתייה חופשית קלה, חמה, חריפה ומגוון קוקטיילים",
+      "transfer_he": "כ-110 ק\"מ משדה התעופה של גרנובל וכ-160 ק\"מ משדה התעופה ליון",
+      "ski_pass_he": "סקי פס מקומי",
+      "rooms": [
+        {
+          "name": "Premium Amazing View 2-4 pax",
+          "size_he": "כ-28 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "2 מיטות יחיד 90×200 (ניתנות להצמדה) ובנוסף מיטת קומתיים 90×200",
+          "bath_he": "חדר רחצה עם אמבטיה או מקלחת ושירותים"
+        }
+      ]
     },
     "Belambra L'Oree des Pistes": {
       "sheet": "בלמברה (שבת)",
@@ -407,7 +842,26 @@
       ],
       "desc_he": "מלון בלמברה בלב לה דוז, 50 מטר ממעליות הסקי, חצי פנסיון.",
       "lift_he": "כ-50 מטר מהמעליות",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17764024784758.jpg&targ=s1963&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17764024784758.jpg&targ=s1963&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות כלולות",
+      "ski_pass_he": "סקי פס מקומי",
+      "rooms": [
+        {
+          "name": "Premium Room 2-3",
+          "size_he": "14-18 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "3 מיטות יחיד (90×200) או מיטה זוגית (140×200) + מיטת יחיד",
+          "bath_he": "חדר רחצה עם אמבטיה או מקלחת"
+        },
+        {
+          "name": "Premium with Balcony 3+1",
+          "size_he": "19-25 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "3 מיטות יחיד (90×200) + מיטת יחיד נפתחת (80×180)",
+          "bath_he": "חדר רחצה עם אמבטיה או מקלחת"
+        }
+      ]
     },
     "Golf": {
       "sheet": "בלמברה (שבת)",
@@ -426,7 +880,26 @@
       "room_rules": [],
       "desc_he": "מועדון גדול ב-Arc 1800 עם הכל כלול, מרכז ספא וסקי ישיר מהמלון.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387654126408.jpg&targ=s1440&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17387654126408.jpg&targ=s1440&height=600&width=480",
+      "board_he": "הכל כלול — ארוחות בוקר, צהריים וערב ושתייה חופשית כולל יין",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס מקומי לז ארק",
+      "rooms": [
+        {
+          "name": "חדר זוגי Classic 2-3",
+          "size_he": "20-25 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "2 מיטות יחיד או ספת יחיד נפתחת",
+          "bath_he": "חדר רחצה, שירותים, מייבש שיער"
+        },
+        {
+          "name": "Premium 2-2",
+          "size_he": "20-25 מ\"ר",
+          "occupancy_he": "2 אנשים",
+          "beds_he": "2 מיטות יחיד או ספת יחיד נפתחת",
+          "bath_he": "חדר רחצה, שירותים, מייבש שיער"
+        }
+      ]
     },
     "Belambra Grand Massif": {
       "sheet": "בלמברה (שבת) / צרפת יום ראשון",
@@ -452,7 +925,26 @@
       ],
       "desc_he": "מועדון בלמברה חדש ומפואר בגרנד מסיף — הכל כלול, ספא וחדר ילדים.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17149944711988.jpg&targ=s2048&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17149944711988.jpg&targ=s2048&height=600&width=480",
+      "board_he": "הכל כלול — ארוחות בוקר, צהריים וערב ושתייה חופשית",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס מרחבי גראנד מאסיף כלול",
+      "rooms": [
+        {
+          "name": "Premium 2-2 balcony",
+          "size_he": "18-20 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "מיטה זוגית (160×200)",
+          "bath_he": "חדר רחצה, שירותים נפרדים"
+        },
+        {
+          "name": "Premium 2 bedrooms with balcony 4+1",
+          "size_he": "כ-39 מ\"ר",
+          "occupancy_he": "1-5 אנשים",
+          "beds_he": "מיטה זוגית (160×200) וספת יחיד נפתחת, 2 מיטות נפרדות (90×200)",
+          "bath_he": "חדר רחצה, שירותים"
+        }
+      ]
     },
     "Belambra Avoriaz": {
       "sheet": "צרפת יום ראשון",
@@ -472,7 +964,19 @@
       "room_rules": [],
       "desc_he": "מועדון בלב אבוריאז — עיירה ללא רכבים — עם גישה ישירה ל-600 ק\"מ מסלולים.",
       "lift_he": "במרכז העיירה, צמוד למסלולים",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16412157461118.jpg&targ=s1949&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16412157461118.jpg&targ=s1949&height=600&width=480",
+      "board_he": "הכל כלול — ארוחות בוקר, צהריים וערב ושתייה חופשית כולל יין",
+      "transfer_he": "העברות מנמל התעופה ז'נבה, כלולות בחופשה",
+      "ski_pass_he": "סקי פס מורחב כלול",
+      "rooms": [
+        {
+          "name": "Classic 2-3",
+          "size_he": "20-25 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "2 מיטות יחיד (100×200), ספה נפתחת (80×190)",
+          "bath_he": "מקלחת, שירותים"
+        }
+      ]
     },
     "Belambra Tignes Val Claret": {
       "sheet": "חנוכה בלמברה טין 5-12.12",
@@ -497,7 +1001,40 @@
       ],
       "desc_he": "מועדון בלמברה בטין בגובה 2100 מ' — הכל כלול, ספא וסקי אין-אאוט.",
       "lift_he": "Ski In / Ski Out בגובה 2100 מטר",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17811843391398.jpg&targ=s1903&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17811843391398.jpg&targ=s1903&height=600&width=480",
+      "board_he": "הכל כלול — ארוחות בוקר, צהריים וערב ושתייה חופשית",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס מורחב כלול",
+      "rooms": [
+        {
+          "name": "Premium 2 pax PMR — חדר נגיש",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "מיטה זוגית (140×190)",
+          "bath_he": "אמבטיה ושירותים"
+        },
+        {
+          "name": "Premium 2-4 pax",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "משתנה לפי תפוסה: 2 מיטות יחיד, 2+1, או 4 מיטות",
+          "bath_he": "אמבטיה ושירותים"
+        },
+        {
+          "name": "Premium with View 2+1 pax",
+          "size_he": "כ-25-30 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד + ספה נפתחת לילד עד גיל 10",
+          "bath_he": "אמבטיה ושירותים"
+        },
+        {
+          "name": "Premium 2 bdrm Amazing View + Balcony",
+          "size_he": "כ-45-50 מ\"ר",
+          "occupancy_he": "4-5 אנשים",
+          "beds_he": "חדר שינה ראשון: 2 מיטות יחיד; חדר שני: 3 מיטות יחיד",
+          "bath_he": "חדר רחצה ושירותים"
+        }
+      ]
     },
     "Edenarc - Arc 1800": {
       "sheet": "Odalys+Ynycio",
@@ -514,7 +1051,33 @@
       "room_rules": [],
       "desc_he": "דירות פרימיום עם ספא וגלישה ישירה ב-Les Arcs.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=155912187974.jpg&targ=s1513&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=155912187974.jpg&targ=s1513&height=600&width=480",
+      "board_he": "לינה בלבד",
+      "transfer_he": "העברות כלולות",
+      "ski_pass_he": "סקי פס לז ארק",
+      "rooms": [
+        {
+          "name": "חדר שינה + סלון",
+          "size_he": "כ-36-43 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטה זוגית בחדר שינה, ספה נפתחת בסלון",
+          "bath_he": "חדר רחצה ושירותים"
+        },
+        {
+          "name": "2 חדרי שינה + סלון סטנדרט",
+          "size_he": "כ-50-56 מ\"ר",
+          "occupancy_he": "4-6 אנשים",
+          "beds_he": "מיטה זוגית, 2 מיטות יחיד, ספה נפתחת",
+          "bath_he": "2 שירותים + 2 מקלחות"
+        },
+        {
+          "name": "2 חדרי שינה וסלון קומפורט",
+          "size_he": "כ-60-70 מ\"ר",
+          "occupancy_he": "4-6 אנשים",
+          "beds_he": "מיטה זוגית, 2 מיטות יחיד, ספה נפתחת",
+          "bath_he": "חדר רחצה עם מקלחת, חדר רחצה נוסף עם אמבטיה"
+        }
+      ]
     },
     "l'Eclose Alpe d'Huez": {
       "sheet": "Odalys+Ynycio",
@@ -531,7 +1094,54 @@
       "room_rules": [],
       "desc_he": "דירות חדישות עם ספא, בריכה מחוממת וחדר כושר, 150 מטר מהמעלית.",
       "lift_he": "כ-150 מטר ממעלית ALPE EXPRESS",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16889904934349.jpg&targ=s1962&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16889904934349.jpg&targ=s1962&height=600&width=480",
+      "board_he": "לינה בלבד",
+      "transfer_he": "טיסת פינגווין ישירה לגרנובל או לליון, העברות",
+      "ski_pass_he": "סקי פס אלפ דואז",
+      "rooms": [
+        {
+          "name": "חדר שינה + סלון",
+          "size_he": "כ-31 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטה זוגית + ספה נפתחת ל-2 אורחים",
+          "bath_he": "חדר רחצה ושירותים נפרדים"
+        },
+        {
+          "name": "חדר שינה, נישה וסלון",
+          "size_he": "כ-39 מ\"ר",
+          "occupancy_he": "3-6 אנשים",
+          "beds_he": "מיטה זוגית + מיטת קומתיים + ספה נפתחת",
+          "bath_he": "חדר מקלחת ושירותים נפרדים"
+        },
+        {
+          "name": "2 חדרי שינה + סלון",
+          "size_he": "כ-45 מ\"ר",
+          "occupancy_he": "3-6 אנשים",
+          "beds_he": "2 מיטות זוגיות + ספה נפתחת",
+          "bath_he": "2 חדרי רחצה + שירותים נפרדים"
+        },
+        {
+          "name": "3 חדרי שינה + סלון",
+          "size_he": "כ-60 מ\"ר",
+          "occupancy_he": "4-8 אנשים",
+          "beds_he": "3 מיטות זוגיות + ספה נפתחת",
+          "bath_he": "2 חדרי רחצה + 2 שירותים"
+        },
+        {
+          "name": "3 חדרי שינה, נישה וסלון",
+          "size_he": "כ-65 מ\"ר",
+          "occupancy_he": "5-10 אנשים",
+          "beds_he": "3 מיטות זוגיות + מיטת קומתיים + ספה",
+          "bath_he": "2 חדרי רחצה + 2 שירותים"
+        },
+        {
+          "name": "4 חדרי שינה + סלון",
+          "size_he": "כ-80 מ\"ר",
+          "occupancy_he": "5-10 אנשים",
+          "beds_he": "4 מיטות זוגיות + ספה נפתחת",
+          "bath_he": "3 חדרי רחצה + 2 שירותים"
+        }
+      ]
     },
     "Ynycio": {
       "sheet": "Odalys+Ynycio",
@@ -549,7 +1159,47 @@
       "room_rules": [],
       "desc_he": "מלון דירות חדש עם ספא מפואר, בר אפרה-סקי וגלישה ישירה מהמלון.",
       "lift_he": "יציאה ישירה למסלול",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17239801138983.jpg&targ=s1973&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17239801138983.jpg&targ=s1973&height=600&width=480",
+      "board_he": "לינה בלבד",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס מורחב טין וואל דיזר",
+      "rooms": [
+        {
+          "name": "App 1 Bdrm + Cabin 40m 1-4",
+          "size_he": "40 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "מיטה זוגית ונישה עם 2 מיטות יחיד",
+          "bath_he": "מקלחת ושירותים"
+        },
+        {
+          "name": "App 2 Bdrm + Sauna 58m 1-4",
+          "size_he": "58 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "מיטה זוגית ו-2 מיטות יחיד או זוגית",
+          "bath_he": "2 מקלחות ושירותים"
+        },
+        {
+          "name": "App 2 Bdrm + Cabin 73m 1-6",
+          "size_he": "73 מ\"ר",
+          "occupancy_he": "1-6 אנשים",
+          "beds_he": "2 מיטות זוגיות ו-2 מיטות יחיד",
+          "bath_he": "2 מקלחות ו-2 שירותים"
+        },
+        {
+          "name": "App 2 Bdrm + Cabin Plus 60m 1-6",
+          "size_he": "60 מ\"ר",
+          "occupancy_he": "1-6 אנשים",
+          "beds_he": "מיטה זוגית, 2 מיטות יחיד",
+          "bath_he": "2 מקלחות ו-2 שירותים"
+        },
+        {
+          "name": "App 4 Bdrm 87m 1-8",
+          "size_he": "87 מ\"ר",
+          "occupancy_he": "1-8 אנשים",
+          "beds_he": "מיטה זוגית ו-6 מיטות יחיד",
+          "bath_he": "4 מקלחות ו-2 שירותים"
+        }
+      ]
     },
     "Club Soleil Oz": {
       "sheet": "קלאב סוליי VCS",
@@ -567,7 +1217,41 @@
       "room_rules": [],
       "desc_he": "מועדון חדש עם ספא מלא, פנסיון מלא ויין בארוחות, צמוד לגונדולה.",
       "lift_he": "צמוד לגונדולה הראשית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16920987411756.jpg&targ=s1278&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16920987411756.jpg&targ=s1278&height=600&width=480",
+      "board_he": "פנסיון מלא (בוקר קונטיננטלי, צהריים וערב) ויין בארוחות",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס מקומי כלול",
+      "equipment_he": "נעלי סקי, ציוד סקי או סנובורד, נעלי שלג ומזחלות כלולים. קסדה לילדים עד גיל 17 כלולה",
+      "rooms": [
+        {
+          "name": "חדר 1-2",
+          "size_he": "כ-18-20 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "2 מיטות יחיד (90×190) או מיטה זוגית (140×190)",
+          "bath_he": "חדר רחצה עם מקלחת, שירותים"
+        },
+        {
+          "name": "חדר 3-4",
+          "size_he": "כ-20-26 מ\"ר",
+          "occupancy_he": "3-4 אנשים",
+          "beds_he": "מיטה זוגית (140×190) + מיטת קומתיים (90×190)",
+          "bath_he": "חדר רחצה עם מקלחת, שירותים"
+        },
+        {
+          "name": "חדר 5",
+          "size_he": "כ-31 מ\"ר",
+          "occupancy_he": "5 אנשים",
+          "beds_he": "מיטה זוגית + מיטת קומתיים + מיטת יחיד",
+          "bath_he": "חדר רחצה עם מקלחת, שירותים"
+        },
+        {
+          "name": "חדר 6",
+          "size_he": "כ-31-35 מ\"ר",
+          "occupancy_he": "6 אנשים",
+          "beds_he": "מיטה זוגית + 2 מיטות קומתיים",
+          "bath_he": "2 חדרי רחצה עם מקלחת, שירותים"
+        }
+      ]
     },
     "Club Soleil Les 2 Alpes": {
       "sheet": "קלאב סוליי VCS",
@@ -599,7 +1283,27 @@
       ],
       "desc_he": "מועדון עם שלוש ארוחות ביום, ציוד סקי כלול ומועדוני ילדים.",
       "lift_he": "כ-30 מדרגות מהמסלול",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16921037754051.jpg&targ=s1673&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16921037754051.jpg&targ=s1673&height=600&width=480",
+      "board_he": "פנסיון מלא (בוקר, צהריים וערב) ויין בארוחות",
+      "transfer_he": "כ-110 ק\"מ משדה התעופה גרנובל",
+      "ski_pass_he": "סקי פס מקומי",
+      "equipment_he": "ציוד סקי או סנובורד ברמה בסיסית כלול לכל האורחים",
+      "rooms": [
+        {
+          "name": "Standard 2+1",
+          "size_he": "כ-16-18 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד (90×190), ובמקרה של 3 אורחים מיטה נוספת לילד עד גיל 17",
+          "bath_he": "חדר רחצה, שירותים"
+        },
+        {
+          "name": "Connected rooms 4+2",
+          "size_he": "כ-32-36 מ\"ר (2 חדרים מקושרים)",
+          "occupancy_he": "3-6 אנשים",
+          "beds_he": "בכל חדר 2 מיטות יחיד, ובמקרה הצורך מיטה נוספת לילד",
+          "bath_he": "בכל חדר: חדר רחצה, שירותים"
+        }
+      ]
     },
     "Club Soleil Montgenevre": {
       "sheet": "קלאב סוליי VCS",
@@ -617,7 +1321,27 @@
       "room_rules": [],
       "desc_he": "מועדון גדול ופשוט — פנסיון מלא וציוד כלול, מתאים למשפחות.",
       "lift_he": "צמוד למסלולים",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17761546184473.jpg&targ=s2115&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17761546184473.jpg&targ=s2115&height=600&width=480",
+      "board_he": "פנסיון מלא (בוקר קונטיננטלי, צהריים וערב) ויין בארוחות",
+      "transfer_he": "העברות כלולות בחבילה, שאטלים למרכז העיירה במהלך היום",
+      "ski_pass_he": "סקי פס מרחבי — כולל יומיים בשבוע גלישה במרחב ססטרייר באיטליה",
+      "equipment_he": "ציוד סקי או סנובורד כלול, קסדה לילדים עד גיל 17",
+      "rooms": [
+        {
+          "name": "Standard 1-5",
+          "size_he": "כ-18-22 מ\"ר",
+          "occupancy_he": "1-5 אנשים",
+          "beds_he": "מיטה זוגית או 2 מיטות יחיד, מיטת קומתיים",
+          "bath_he": "מקלחת, שירותים"
+        },
+        {
+          "name": "Standard with Balcony 1-5",
+          "size_he": "כ-18-22 מ\"ר",
+          "occupancy_he": "1-5 אנשים",
+          "beds_he": "מיטה זוגית או 2 מיטות יחיד, מיטת קומתיים",
+          "bath_he": "מקלחת, שירותים"
+        }
+      ]
     },
     "Club Soleil Les Menuires": {
       "sheet": "צרפת יום ראשון",
@@ -634,7 +1358,27 @@
       "room_rules": [],
       "desc_he": "מועדון בלה מנואיר עם סקי אין-אאוט ופנסיון מלא.",
       "lift_he": "Ski In / Ski Out",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16057943132418.jpg&targ=s1195&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16057943132418.jpg&targ=s1195&height=600&width=480",
+      "board_he": "פנסיון מלא (בוקר קונטיננטלי, צהריים וערב) ויין בארוחות",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": "סקי פס Les 3 Vallees",
+      "equipment_he": "נעלי סקי, ציוד סקי או סנובורד, נעלי שלג ומזחלות כלולים",
+      "rooms": [
+        {
+          "name": "חדר 2-2",
+          "size_he": "כ-17 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "2 מיטות יחיד (90×190) או מיטה זוגית (140×190)",
+          "bath_he": "חדר רחצה משופץ החל מחורף 2025, שירותים"
+        },
+        {
+          "name": "חדר 2-4",
+          "size_he": "כ-34 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "מיטה זוגית (140×190) ומיטת קומתיים (90×190) או 2 מיטות יחיד",
+          "bath_he": "חדר רחצה, שירותים"
+        }
+      ]
     },
     "FONT PAS": {
       "sheet": "אנדורה",
@@ -652,7 +1396,19 @@
       "room_rules": [],
       "desc_he": "מלון מודרני במרכז העיירה עם מרכז ספא, כ-50 מטר מהמעליות.",
       "lift_he": "כ-50 מטר מהמעליות",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=1718803448899.jpg&targ=s984&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=1718803448899.jpg&targ=s984&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות הלוך ושוב בהסעה של פינגווין בליווי נציג",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double room 1-3",
+          "size_he": "כ-21 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "ספה נפתחת לאורח שלישי (ילד עד גיל 12)",
+          "bath_he": "אמבטיה עם מקלחון, שירותים ומייבש שיער"
+        }
+      ]
     },
     "MAGIC PAS": {
       "sheet": "אנדורה",
@@ -670,7 +1426,19 @@
       "room_rules": [],
       "desc_he": "מלון 4 כוכבים במרכז פאס דה לה קאסה עם ספא חינם וחדרים משפחתיים.",
       "lift_he": "כ-100 מטר מהמדרונות",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17162928290634.jpg&targ=s444&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17162928290634.jpg&targ=s444&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות הלוך ושוב בהסעה של פינגווין בליווי נציג",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Double Room 1-3",
+          "size_he": "כ-25-34 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "חדר זוגי, עד 4 אורחים בחדר (לא ניתן ל-4 מבוגרים)",
+          "bath_he": "אמבטיה + מקלחת, מייבש שיער"
+        }
+      ]
     },
     "GRAND PAS": {
       "sheet": "אנדורה",
@@ -688,7 +1456,26 @@
       "room_rules": [],
       "desc_he": "מלון 4 כוכבים עם ספא ובריכה מקורה, קרוב למסלולי הגלישה.",
       "lift_he": "הליכה קצרה מהמסלולים",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17162918787375.jpg&targ=s445&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17162918787375.jpg&targ=s445&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות הלוך ושוב בהסעה של פינגווין בליווי נציג",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Interior Room 2-3",
+          "size_he": "כ-16-32 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית או 2 מיטות יחיד וספה נפתחת",
+          "bath_he": "חדר רחצה עם אמבטיה ושירותים, מייבש שיער"
+        },
+        {
+          "name": "Exterior Room 2-3",
+          "size_he": "כ-16-32 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית או 2 מיטות יחיד וספה נפתחת",
+          "bath_he": "חדר רחצה עם אמבטיה ושירותים, מייבש שיער"
+        }
+      ]
     },
     "LODGE PARK (Allotment)": {
       "sheet": "אנדורה",
@@ -705,7 +1492,19 @@
       "room_rules": [],
       "desc_he": "מלון איכותי בסולדאו עם ספא מודרני, חדרים רחבים וחדר משחקים לילדים.",
       "lift_he": "כ-250 מטר",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1493557445.jpg&targ=s243&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1493557445.jpg&targ=s243&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות הלוך ושוב בהסעה של פינגווין בליווי נציג",
+      "ski_pass_he": "סקי פס מורחב",
+      "rooms": [
+        {
+          "name": "Premium Room 1-4",
+          "size_he": "כ-22 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "כמות המיטות בחדר בהתאם לכמות המזמינים בפועל",
+          "bath_he": "מקלחת/אמבטיה, שירותים"
+        }
+      ]
     },
     "Casa Karina": {
       "sheet": "בולגריה",
@@ -736,7 +1535,33 @@
       ],
       "desc_he": "מלון בבנסקו עם ספא גדול, שתי דקות הליכה מהגונדולה.",
       "lift_he": "כ-2 דקות הליכה מהגונדולה",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17478293319051.jpeg&targ=s1435&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17478293319051.jpeg&targ=s1435&height=600&width=480",
+      "board_he": "חצי פנסיון + שתייה",
+      "transfer_he": "כ-160 ק\"מ משדה התעופה סופיה",
+      "ski_pass_he": null,
+      "rooms": [
+        {
+          "name": "Double Standard room 1-3",
+          "size_he": "28-32 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "מיטה זוגית או שתי מיטות יחיד צמודות, אורח שלישי על מיטה נוספת",
+          "bath_he": "חדר רחצה עם מקלחת"
+        },
+        {
+          "name": "One Bedroom Apartment 2-4",
+          "size_he": "50 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "2 מיטות רגילות + מיטת ספה בסלון",
+          "bath_he": "חדר רחצה"
+        },
+        {
+          "name": "Two-Bedroom Apartment 4-6",
+          "size_he": "60 מ\"ר",
+          "occupancy_he": "4-6 אנשים",
+          "beds_he": "שני חדרי שינה: מיטה זוגית או שתי מיטות יחיד בכל חדר, ספה בסלון",
+          "bath_he": "חדר רחצה"
+        }
+      ]
     },
     "Vihren": {
       "sheet": "בולגריה",
@@ -754,7 +1579,26 @@
       "room_rules": [],
       "desc_he": "מלון ספא במרכז בנסקו עם בריכה וג'קוזי, כ-100 מטר מהגונדולה.",
       "lift_he": "כ-100 מטר מהגונדולה",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1338992721(2).jpg&targ=s1107&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=p1338992721(2).jpg&targ=s1107&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות",
+      "ski_pass_he": null,
+      "rooms": [
+        {
+          "name": "Studio 1-3",
+          "size_he": null,
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": null,
+          "bath_he": null
+        },
+        {
+          "name": "Apartment 1 Bedroom 1-3",
+          "size_he": "כ-46 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": null,
+          "bath_he": "חדר רחצה עם אמבטיה"
+        }
+      ]
     },
     "Regnum": {
       "sheet": "בולגריה",
@@ -770,7 +1614,40 @@
       "room_rules": [],
       "desc_he": "מלון מרשים עם ספא יוקרתי, בריכה מקורה וחדרים מרווחים.",
       "lift_he": "כ-500 מטר מהגונדולה",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=17711536372614.jpg&targ=s1765&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=17711536372614.jpg&targ=s1765&height=600&width=480",
+      "board_he": "ארוחת בוקר",
+      "transfer_he": "העברות כלולות בחבילה",
+      "ski_pass_he": null,
+      "rooms": [
+        {
+          "name": "Superior Double Room 2-2",
+          "size_he": "24-35 מ\"ר",
+          "occupancy_he": "1-2 אנשים",
+          "beds_he": "מיטת קינג סייז או 2 מיטות יחיד",
+          "bath_he": null
+        },
+        {
+          "name": "Superior Suite 2-3",
+          "size_he": "כ-47 מ\"ר",
+          "occupancy_he": "2-3 אנשים",
+          "beds_he": "מיטת קינג סייז או 2 מיטות טווין",
+          "bath_he": "מקלחת או אמבטיה"
+        },
+        {
+          "name": "Deluxe Suite 2-4",
+          "size_he": "כ-55 מ\"ר",
+          "occupancy_he": "2-4 אנשים",
+          "beds_he": "מיטת קינג סייז או 2 מיטות טווין",
+          "bath_he": "מקלחת או אמבטיה"
+        },
+        {
+          "name": "Grand Suite 2 Bdrm 4-5",
+          "size_he": "כ-71 מ\"ר",
+          "occupancy_he": "4-5 אנשים",
+          "beds_he": "2 חדרי שינה, בכל חדר מיטת קינג סייז או טווין",
+          "bath_he": "מקלחת או אמבטיה"
+        }
+      ]
     },
     "Rila": {
       "sheet": "בולגריה",
@@ -788,7 +1665,55 @@
       "room_rules": [],
       "desc_he": "המלון המבוקש בבורובץ — ספא עשיר, בריכה מקורה ו-20 מטר מהמעלית.",
       "lift_he": "כ-20 מטר מהמעלית",
-      "image": "https://www.pingwin.co.il/thumbMini.php?src=16751815232711.jpg&targ=s1161&height=600&width=480"
+      "image": "https://www.pingwin.co.il/thumbMini.php?src=16751815232711.jpg&targ=s1161&height=600&width=480",
+      "board_he": "חצי פנסיון",
+      "transfer_he": "העברות כלולות",
+      "ski_pass_he": null,
+      "rooms": [
+        {
+          "name": "Signature Room Resort View 1-3",
+          "size_he": "כ-25 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד, ספה",
+          "bath_he": "שירותים + מקלחת"
+        },
+        {
+          "name": "Signature Room Slopes View 1-3",
+          "size_he": "כ-25 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד, ספה",
+          "bath_he": "שירותים + מקלחת"
+        },
+        {
+          "name": "Double Superior Resort View 1-3",
+          "size_he": "כ-28 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד, ספה",
+          "bath_he": "שירותים + מקלחת"
+        },
+        {
+          "name": "Double Superior Slopes View 1-3",
+          "size_he": "כ-28 מ\"ר",
+          "occupancy_he": "1-3 אנשים",
+          "beds_he": "2 מיטות יחיד, ספה",
+          "bath_he": "שירותים + מקלחת"
+        },
+        {
+          "name": "Deluxe Suites Resort View 1-4",
+          "size_he": "כ-56 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "מיטה זוגית, ספה",
+          "bath_he": "2 חדרי שירותים"
+        },
+        {
+          "name": "Deluxe Suites Slopes View 1-4",
+          "size_he": "כ-56 מ\"ר",
+          "occupancy_he": "1-4 אנשים",
+          "beds_he": "מיטה זוגית, ספה",
+          "bath_he": "2 חדרי שירותים"
+        }
+      ]
     }
-  }
+  },
+  "_rooms_source": "pingwin.co.il hotel pages, 23/08/2026 — see data/rooms-raw.json"
 }

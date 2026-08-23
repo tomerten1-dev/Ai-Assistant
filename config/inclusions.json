@@ -1,0 +1,42 @@
+{
+  "_comment": "מה כלול בחבילה ומה תוספת. מקור: תומר, 23/08/2026. פרטי סקי פס וזמני נסיעה פר מלון נאספים מ-pingwin.co.il אל data/resorts.json.",
+  "always_included": {
+    "flights": {
+      "he": "טיסות הלוך ושוב",
+      "note_he": "כלולות בכל החבילות"
+    },
+    "transfers": {
+      "he": "הסעות משדה התעופה למלון ובחזרה",
+      "note_he": "כלולות בכל החבילות"
+    }
+  },
+  "ski_pass": {
+    "included_countries": [
+      "austria",
+      "france",
+      "andorra"
+    ],
+    "excluded_countries": [
+      "bulgaria"
+    ],
+    "included_he": "סקי פס כלול בחבילה",
+    "excluded_he": "בבולגריה הסקי פס אינו כלול בחבילה",
+    "_scope_note": "חלק מהיעדים מקבלים סקי פס מקומי ולא מורחב — הסוג נשמר פר מלון ב-resorts.json (ski_pass_he), מדף המלון באתר."
+  },
+  "equipment_rental": {
+    "included_at_he": [
+      "Club Soleil Oz",
+      "Club Soleil Les 2 Alpes",
+      "Club Soleil Montgenevre",
+      "Club Soleil Les Menuires"
+    ],
+    "included_he": "השכרת ציוד כלולה במחיר (מועדוני השמש)",
+    "supplement_he": "השכרת ציוד היא תוספת בתשלום — נציג ימסור את העלות המדויקת",
+    "supplement_eur_per_person_week": [
+      100,
+      125
+    ],
+    "_show_price_to_customer": false,
+    "_todo": "תומר: חוק אדום 3 אוסר מחירים במספרים בצ'אט. כרגע הבוט אומר 'תוספת בתשלום, נציג ימסור את העלות'. אם תרצה שיציין 100-125 יורו — שנה את _show_price_to_customer ל-true."
+  }
+}

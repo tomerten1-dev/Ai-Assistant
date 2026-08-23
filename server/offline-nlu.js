@@ -178,11 +178,18 @@ function parseText(text, slots) {
   let m = t.match(/(\d{1,2}|[א-ת]+)\s*(?:מבוגר[יי]?[םמ]|גדולים)/);
   if (m) s.adults = +m[1] || heNum(m[1]) || s.adults;
   // an explicit party statement always wins, corrected or not
-  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2})/) || t.match(/(\d{1,2})\s*(?:אנשים|נוסעים|אורחים)/);
+  // "4 חברים לסנובורד" states the party as plainly as "4 אנשים" does; missing
+  // it sent a group of four to be asked "כמה מבוגרים?" they had just answered.
+  // Word numbers count too ("שני חברים"). "בנים"/"בנות" are left out on
+  // purpose — they usually mean children.
+  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2})/) ||
+      t.match(/(\d{1,2}|[א-ת]+)\s*(?:אנשים|נוסעים|אורחים|חברים|חברות|בחורים|בחורות|גברים|נשים)(?![א-ת])/);
   if (m) {
-    const total = +m[1];
-    const kids = (s.children_ages || []).length;
-    s.adults = kids && total > kids ? total - kids : total;
+    const total = +m[1] || heNum(m[1]);
+    if (total) {
+      const kids = (s.children_ages || []).length;
+      s.adults = kids && total > kids ? total - kids : total;
+    }
   }
   // "בעצם 4" — a bare number that is explicitly a correction
   if (correcting) {
@@ -237,15 +244,22 @@ function parseText(text, slots) {
   // handing them to a rep is honest; ignoring them looks like we didn't read.
   const UNVERIFIABLE = [
     [/מיטות נפרדות|מיטות ?נפרדות|טווין|twin/i, 'מיטות נפרדות'],
-    [/ארוחת בוקר|חצי פנסיון|פנסיון מלא|כולל ארוחות/, 'בסיס האירוח'],
+    [/ארוחת בוקר|חצי פנסיון|פנסיון מלא|הכל כלול|כולל ארוחות|ארוחות|בסיס אירוח|לינה בלבד/, 'בסיס האירוח'],
     [/סקי ?פס/, 'סקי פס'],
     [/השכרת ציוד|ציוד סנובורד|ציוד סקי|השכרה/, 'השכרת ציוד'],
     [/הסעות|העברות|טרנספר/, 'הסעות משדה התעופה'],
-    [/נסיעה קצרה|קרוב לשדה|זמן נסיעה/, 'משך הנסיעה מהשדה'],
-    [/חדר גדול|חדר מרווח|סוויטה/, 'גודל החדר'],
+    [/נסיעה קצרה|קרוב לשדה|זמן נסיעה|כמה זמן מהשדה|מרחק מהשדה/, 'משך הנסיעה מהשדה'],
+    [/חדר גדול|חדר מרווח|סוויטה|חדרי שינה|כמה חדרים|דירה גדולה|כמה מ"ר|גודל החדר/, 'גודל החדר'],
+    [/מקלח|אמבטי|שירותים בחדר|חדרי רחצה|כמה שירותים/, 'חדרי רחצה'],
   ];
   s.unverifiable = [];
   for (const [re, label] of UNVERIFIABLE) if (re.test(t) && !s.unverifiable.includes(label)) s.unverifiable.push(label);
+  // Which board basis, specifically. Someone asking for פנסיון מלא and shown
+  // חצי פנסיון first was answered but not served.
+  if (/הכל כלול|all inclusive/i.test(t)) s.board_wanted = 'all_inclusive';
+  else if (/פנסיון מלא/.test(t)) s.board_wanted = 'full';
+  else if (/חצי פנסיון/.test(t)) s.board_wanted = 'half';
+  else if (/ארוחת בוקר/.test(t)) s.board_wanted = 'breakfast';
 
   // --- Sabbath observance: a hard constraint, not a preference. Saturday
   // departures must disappear entirely rather than be ranked lower.
@@ -330,8 +344,24 @@ function parseText(text, slots) {
   if (/^ ?(לא|אין צורך|לא צריך) ?$/.test(t) && s._lastQuestion === 'kids_club') s.needs_hebrew_kids_club = false;
   if (/^ ?(לא|אין|בלי) ?$/.test(t) && s._lastQuestion === 'children') { s.no_children = true; s.children_ages = []; }
 
+  // "כולם מעל גיל 18 חוץ מאחת" is an answer, not noise: it says everyone is an
+  // adult apart from one minor. Read literally it used to leave the party size
+  // unknown, and the bot then announced there was no availability at all.
+  const allAdults = /כולם\s*(?:הם\s*)?(?:מבוגרים|מעל\s*(?:גיל\s*)?1[89]|בני\s*1[89]\s*ומעלה)/.test(t);
+  if (allAdults) {
+    const except = t.match(/חוץ\s*מ(אחת|אחד|שניים|שתיים|שלושה|שלוש|אחד\s*מהם|אחת\s*מהן)/);
+    if (except) {
+      const n = heNum(except[1].split(/\s/)[0]) || 1;
+      s.children_count = n;          // corrects an earlier guess — they just counted for us
+      s.no_children = false;
+    } else {
+      s.no_children = true;
+      s.children_ages = [];
+    }
+  }
+
   // bare answer to the adults question — digits ("2") or words ("שניים")
-  if (answering === 'adults' && s.adults == null) {
+  if (answering === 'adults' && s.adults == null && !allAdults) {
     const bare = t.trim().match(/^(\d{1,2}|[א-ת]+)(?:\s*(?:אנשים|נוסעים|מבוגרים))?$/);
     if (bare) { const n = +bare[1] || heNum(bare[1]); if (n) s.adults = n; }
   } else if (answering === 'month' && s.month == null) {
@@ -445,7 +475,10 @@ function phrase(result, slots, cards) {
     if (limited) lines.push(limited.note_he);
   }
   if ((result.notes || []).some(n => n.type === 'france_february_gap')) {
-    lines.push('שימו לב: אין לנו יציאות לצרפת בפברואר (מדלגים מ-30.1 ל-6.3) — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:');
+    // without cards, "הנה מה שפנוי" is followed by nothing — which reads as a
+    // broken promise. Say the gap, and let the no-match line do its job.
+    lines.push('שימו לב: אין לנו יציאות לצרפת בפברואר (מדלגים מ-30.1 ל-6.3)' +
+      (cards.length ? ' — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:' : '.'));
   }
   for (const r of result.relaxed || []) {
     if (r.type === 'month') lines.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
@@ -470,9 +503,21 @@ function phrase(result, slots, cards) {
     lines.push('לקחתי בחשבון: ' + applied.items.join(' · ') + '.');
   }
   if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
-  // requirements the workbook simply cannot answer — never silently dropped
+  // Requirements the customer named. Most of them now HAVE an answer, taken
+  // from the hotel's own page on pingwin.co.il (data/rooms-raw.json), so the
+  // bot answers instead of handing everything to a rep. Only what the page
+  // does not state is passed on — silently dropping a stated requirement reads
+  // as not having read the message.
   if (cards.length && (slots.unverifiable || []).length) {
-    lines.push('את ' + slots.unverifiable.join(', ') + ' נציג יאמת מול המלון לפני הסגירה.');
+    const open = new Set(slots.unverifiable);
+    for (const c of cards) c.facts_he = cardFacts(c, slots.unverifiable, open);
+    if (open.has('הסעות משדה התעופה')) {
+      lines.push('הסעות משדה התעופה למלון ובחזרה כלולות בכל החבילות שלנו.');
+      open.delete('הסעות משדה התעופה');
+    }
+    if (open.size) {
+      lines.push('את ' + [...open].join(', ') + ' נציג יאמת מול המלון לפני הסגירה.');
+    }
   }
 
   for (const c of cards) {
@@ -491,6 +536,59 @@ function phrase(result, slots, cards) {
   return lines.join('\n');
 }
 
+// Answers, per offered unit, to the things the customer actually asked about.
+// Every string here is either verbatim from the hotel page or a package rule
+// Tomer stated (config/inclusions.json) — nothing is inferred (red rule 1).
+// `open` starts as the full set of asked topics; a topic is removed as soon as
+// any card can answer it, so the closing "a rep will confirm" line names only
+// what really is unknown.
+function cardFacts(c, asked, open) {
+  const rf = c.room_facts || {};
+  const out = [];
+  const say = (topic, text) => { if (text) { out.push(text); open.delete(topic); } };
+  // this card cannot answer it, but another card might — so it is named here
+  // rather than swept into one blanket sentence at the end
+  const defer = (label) => out.push(label + ' — נציג יאמת מול המלון');
+
+  for (const topic of asked) {
+    switch (topic) {
+      case 'מיטות נפרדות':
+        if (c.separate_beds === 'yes') say(topic, 'מיטות: ' + rf.beds_he);
+        else if (c.separate_beds === 'other_room') {
+          say(topic, (rf.beds_he ? 'בחדר המוצע: ' + rf.beds_he + '. ' : '') +
+            'במלון יש גם ' + c.separate_beds_other_he + ' — נציג יבדוק זמינות');
+        } else defer('מיטות נפרדות');
+        break;
+      case 'גודל החדר':
+        if (rf.size_he) say(topic, 'גודל: ' + rf.size_he + (rf.bath_he ? ' · ' + rf.bath_he : ''));
+        else defer('גודל החדר');
+        break;
+      case 'בסיס האירוח':
+        if (c.board_he) say(topic, 'בסיס אירוח: ' + c.board_he);
+        else defer('בסיס האירוח');
+        break;
+      case 'סקי פס':
+        say(topic, c.ski_pass_included
+          ? (c.ski_pass_he ? 'סקי פס: ' + c.ski_pass_he + ' (כלול)' : 'סקי פס כלול בחבילה')
+          : 'סקי פס: אינו כלול בבולגריה, נרכש בנפרד');
+        break;
+      case 'השכרת ציוד':
+        say(topic, c.equipment_he);
+        break;
+      case 'חדרי רחצה':
+        if (rf.bath_he) say(topic, 'חדרי רחצה: ' + rf.bath_he);
+        else defer('חדרי הרחצה');
+        break;
+      case 'משך הנסיעה מהשדה':
+        if (c.transfer_he) say(topic, 'הסעות: ' + c.transfer_he);
+        else defer('משך הנסיעה מהשדה');
+        break;
+      // 'הסעות משדה התעופה' is a package-wide rule, phrased once for all cards
+    }
+  }
+  return out;
+}
+
 // Questions that deserve a real answer rather than another round of offers:
 // asking for someone else's booking, or for an exact price. Silence here reads
 // as evasion; these say plainly what the bot can and cannot do (red rules 2-3).
@@ -507,8 +605,17 @@ function deflect(text) {
   if (/כמה לילות|כמה ימים|משך|כמה זמן/.test(t)) {
     return 'מספר הלילות מופיע על כל כרטיס — הוא משתנה לפי המוצר (7 לילות ברוב היעדים, ובבנסקו יש גם סופי שבוע קצרים).';
   }
-  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה|סקי פס/.test(t)) {
-    return 'ההרכב המדויק משתנה בין המלונות — טיסה, העברות, לינה וסקי פס מפורטים בדף המלון ובמסך ההזמנה, ונציג יעבור על זה איתכם.';
+  // Ski pass and transfers are package-wide rules we know, so answer them
+  // instead of pointing at the booking screen. Handled per offer as well, on
+  // the card, where the pass area (local vs extended) is stated.
+  if (/סקי ?פס/.test(t)) {
+    return 'סקי פס כלול בחבילות לאוסטריה, צרפת ואנדורה. בבולגריה הוא נרכש בנפרד. ' +
+      'היקף הפס (מקומי או מרחבי) משתנה בין היעדים ומצוין על כל הצעה.';
+  }
+  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה/.test(t)) {
+    return 'בכל החבילות כלולות טיסות הלוך ושוב והסעות משדה התעופה למלון ובחזרה. ' +
+      'סקי פס כלול בכל היעדים למעט בולגריה, והשכרת ציוד היא תוספת בתשלום (במועדוני השמש היא כלולה). ' +
+      'בסיס האירוח משתנה בין המלונות ומצוין על כל הצעה.';
   }
   if (/שעה|שעות טיסה|מתי ממריא|מתי הטיסה|לוח טיסות/.test(t)) {
     return 'שעות הטיסה אינן סופיות ועשויות להשתנות, ולכן לא אציין אותן כאן. נציג ימסור לכם את הפרטים המעודכנים.';
