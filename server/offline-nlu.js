@@ -34,6 +34,13 @@ const PREFS = [
   [/הכל כלול/, 'הכל כלול'],
 ];
 
+// is the word at `idx` preceded by a negation? covers "לא צרפת",
+// "לא רוצים צרפת", "חוץ מצרפת", "בלי צרפת", "מלבד צרפת", "לא לצרפת"
+function isNegated(t, idx) {
+  const before = t.slice(Math.max(0, idx - 24), idx);
+  return /(?:^|[^א-ת])(?:לא|בלי|בלא|חוץ ?מ|מלבד|למעט|פרט ל)\s*(?:רוצים?|רוצה|מעוניינים?|מעוניין|צריכים?|צריך|רוצות)?\s*(?:ל|ב|מ|את)?\s*$/.test(before);
+}
+
 function parseText(text, slots) {
   const s = { ...slots };
   const t = ' ' + text.replace(/\s+/g, ' ').trim() + ' ';
@@ -122,9 +129,33 @@ function parseText(text, slots) {
   // "לא משנה" answering the destination question
   if (answering === 'country' && /לא משנה|כל מקום|מה שיש|אין העדפה|לא חשוב/.test(t)) s.country = 'any';
 
-  // --- country / destination
-  for (const [re, v] of COUNTRIES) if (re.test(t)) { s.country = v; break; }
-  for (const [re, dest, country] of DESTS) if (re.test(t)) { s.destination = dest; s.country = s.country || country; break; }
+  // --- country / destination, honouring negation.
+  // "לא צרפת" names France but ASKS FOR ITS OPPOSITE — matching the word and
+  // ignoring the "לא" is worse than not understanding at all, because the
+  // customer gets exactly what they ruled out.
+  s.excluded_countries = [...(s.excluded_countries || [])];
+  for (const [re, v] of COUNTRIES) {
+    const m2 = re.exec(t);
+    if (!m2) continue;
+    if (isNegated(t, m2.index)) {
+      if (!s.excluded_countries.includes(v)) s.excluded_countries.push(v);
+      if (s.country === v) s.country = null;         // retract an earlier pick
+    } else if (!s.excluded_countries.includes(v)) {
+      s.country = v;
+    }
+    break;
+  }
+  for (const [re, dest, country] of DESTS) {
+    const m2 = re.exec(t);
+    if (!m2) continue;
+    if (isNegated(t, m2.index)) {
+      if (s.destination === dest) s.destination = null;
+    } else {
+      s.destination = dest;
+      if (!s.excluded_countries.includes(country)) s.country = s.country || country;
+    }
+    break;
+  }
 
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;

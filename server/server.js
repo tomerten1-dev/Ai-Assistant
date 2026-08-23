@@ -35,6 +35,7 @@ const EMPTY_SLOTS = {
   adults: null, children_ages: [], no_children: null, month: null,
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
+  excluded_countries: [],
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
@@ -79,7 +80,8 @@ function toSearchSlots(slots) {
    "בלי ילדים", chip clicks) never reach the model at all. */
 function slotsChanged(before, after) {
   const keys = ['adults', 'children_ages', 'children_count', 'no_children', 'month',
-    'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club'];
+    'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club',
+    'excluded_countries'];
   for (const k of keys) if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) return true;
   return (after.preferences || []).length !== (before.preferences || []).length;
 }
@@ -197,7 +199,11 @@ async function handleChat(body) {
   // customer completes the picture by choosing rather than by being asked
   const gapChips = [];
   if (slots.departure_airport == null) gapChips.push('טיסה מנתב"ג', 'טיסה מחיפה');
-  if (slots.country == null && slots.destination == null) gapChips.push('אוסטריה', 'צרפת', 'אנדורה', 'בולגריה');
+  if (slots.country == null && slots.destination == null) {
+    const ex = slots.excluded_countries || [];
+    const byHe = { 'אוסטריה': 'austria', 'צרפת': 'france', 'אנדורה': 'andorra', 'בולגריה': 'bulgaria' };
+    for (const [he, code] of Object.entries(byHe)) if (!ex.includes(code)) gapChips.push(he);
+  }
 
   return {
     // the remaining parameters are offered as chips, not asked as a question —

@@ -116,6 +116,23 @@ t('family of 4 from Haifa gets a two-room option, not an empty answer',
 t('those two-room options stay in Bulgaria',
   haifaFamily.two_room_splits.every(s => s.country === 'bulgaria'));
 
+console.log('\n[negation] a ruled-out country never comes back — not even via relaxation');
+const noFrance = engine.search({
+  adults: 2, children_ages: [], no_children: true, month: 2, excluded_countries: ['france'],
+});
+t('returns results', noFrance.candidates.length > 0);
+t('zero France results', noFrance.candidates.every(c => c.country !== 'france'),
+  [...new Set(noFrance.candidates.map(c => c.country))].join(','));
+t('no France-February note when France was ruled out',
+  !noFrance.notes.some(n => n.type === 'france_february_gap'));
+// the relaxation ladder widens the search — the exclusion must survive it
+const noFranceTight = engine.search({
+  adults: 9, children_ages: [], no_children: true, month: 2, excluded_countries: ['france'],
+});
+t('exclusion holds through relaxation and two-room splits',
+  noFranceTight.candidates.every(c => c.country !== 'france') &&
+  (noFranceTight.two_room_splits || []).every(s => s.country !== 'france'));
+
 console.log('\n— guardrails —');
 const r5 = engine.search({ adults: 2, children_ages: [], month: 1 });
 t('never more than 8 candidates', r5.candidates.length <= 8);

@@ -4,7 +4,9 @@
 // gracefully instead of breaking the bot.
 // Run: node tests/test-orchestration.js
 process.env.ANTHROPIC_API_KEY = 'sk-ant-test-stub-not-real';
-delete process.env.OPENAI_API_KEY;   // exercise the claude branch of the stub
+// a placeholder value, not a delete: loadEnv() would otherwise pull the real
+// key out of .env and this suite would bill actual API calls
+process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 process.env.MAX_QUESTIONS = '3';
 
 const claudePath = require.resolve('../server/claude.js');

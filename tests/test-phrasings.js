@@ -72,6 +72,16 @@ check('צרפת', null, 'צרפת', { country: 'france' });
 check('בנסקו', null, 'רוצים לבנסקו', { destination: 'Bansko', country: 'bulgaria' });
 check('מאיירהופן', null, 'מאיירהופן בבקשה', { destination: 'Mayrhofen', country: 'austria' });
 
+console.log('\n— negation: naming a country to RULE IT OUT —');
+check('לא צרפת', null, 'לא צרפת', { excluded_countries: ['france'] });
+check('לא רוצים צרפת', null, 'לא רוצים צרפת', { excluded_countries: ['france'] });
+check('חוץ מצרפת', null, 'חוץ מצרפת', { excluded_countries: ['france'] });
+check('בלי צרפת', null, 'בלי צרפת', { excluded_countries: ['france'] });
+check('מלבד צרפת', null, 'מלבד צרפת', { excluded_countries: ['france'] });
+check('לא לצרפת', null, 'לא לצרפת', { excluded_countries: ['france'] });
+check('a plain mention is still positive', null, 'רוצים לצרפת', { country: 'france' });
+check('negation retracts an earlier pick', { country: 'france' }, 'לא צרפת', { country: null, excluded_countries: ['france'] });
+
 console.log('\n— departure airport (Haifa flies Bansko only) —');
 check('טיסה מחיפה', null, 'טיסה מחיפה', { departure_airport: 'haifa' });
 check('יוצאים מחיפה', null, 'אנחנו 2 ויוצאים מחיפה בינואר', { departure_airport: 'haifa', adults: 2, month: 1 });

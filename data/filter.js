@@ -114,7 +114,8 @@ class SkiSearch {
     const relaxed = []; // which constraints were relaxed, in order
 
     // France-February insight (spec 3.4): explain, don't return empty
-    if (+slots.month === 2 && slots.country === 'france') {
+    if (+slots.month === 2 && slots.country === 'france' &&
+        !(slots.excluded_countries || []).includes('france')) {
       notes.push({ type: 'france_february_gap' });
     }
     // departure airport that cannot reach what was asked for — say so up front
@@ -213,6 +214,9 @@ class SkiSearch {
       if (month != null && !SkiSearch.inMonth(u.date, month)) continue;
       // 4. country / destination
       if (country && u.country !== country) continue;
+      // an exclusion the customer stated ("לא צרפת") is never relaxed away —
+      // widening the search must not resurrect what they ruled out
+      if ((slots.excluded_countries || []).includes(u.country)) continue;
       if (destination && !matchDestination(destination, u, this.resortOf(u.hotel))) continue;
       // 5. camps — hard filter when requested
       let camps = null;
@@ -239,6 +243,7 @@ class SkiSearch {
       if (this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
+      if ((slots.excluded_countries || []).includes(u.country)) continue;
       const k = u.hotel + '||' + u.date;
       if (!byHotelDate.has(k)) byHotelDate.set(k, []);
       byHotelDate.get(k).push(u);

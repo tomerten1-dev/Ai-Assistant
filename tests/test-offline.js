@@ -1,6 +1,9 @@
 // Offline demo mode — end-to-end, NO AI, NO stubs, NO cost.
 // Run: node tests/test-offline.js
-delete process.env.ANTHROPIC_API_KEY; // make sure we are in offline mode
+// placeholders, not deletes — loadEnv() would otherwise load the real keys
+// from .env and this "offline" suite would quietly make paid API calls
+process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
+process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 const { handleChat } = require('../server/server.js');
 
 let pass = 0, fail = 0;
