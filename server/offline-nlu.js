@@ -12,20 +12,27 @@ const HE_NUM = {
 };
 function heNum(w) { return HE_NUM[w] || null; }
 
+// Patterns are deliberately spelling-tolerant. Real customers type "ינוואר",
+// "צרפט", "חיפא" — and a missed destination is not a harmless miss: an
+// unrecognised "חיפא" would have offered a Haifa customer flights to France.
 const MONTHS = [
-  [/דצמבר|חנוכה/, 12], [/ינואר/, 1], [/פברואר/, 2], [/מרץ|מארס|פורים/, 3],
+  [/דצמבר|דצמבר|חנוכה|דצמ(?![א-ת])/, 12],
+  [/ינו?ו?א?ר|ינאור|ינו['׳](?![א-ת])/, 1],
+  [/פברו?א?ר|פבואר|פברוא|פבר(?![א-ת])/, 2],
+  [/מר[ץץז]|מארס|מרס|פורים/, 3],
 ];
 const COUNTRIES = [
-  [/צרפת/, 'france'], [/אוסטריה/, 'austria'], [/אנדורה/, 'andorra'], [/בולגריה/, 'bulgaria'],
+  [/צרפ[תט]/, 'france'], [/אוסטרי+[הא]?/, 'austria'],
+  [/אנדור[הא]/, 'andorra'], [/בולגרי+[הא]/, 'bulgaria'],
 ];
 const DESTS = [
-  [/מאיירהופן|מאירהופן/, 'Mayrhofen', 'austria'], [/אישגיל/, 'Ischgl', 'austria'],
-  [/ואל טורנס|וואל טורנס/, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
-  [/לה דוז|לה 2|les 2/i, 'Les 2 Alpes', 'france'], [/בנסקו/, 'Bansko', 'bulgaria'],
-  [/בורובץ/, 'Borovets', 'bulgaria'], [/אבוריאז/, 'Avoriaz', 'france'],
-  [/לז ארק|לה ארק/, 'Les Arcs', 'france'], [/פליין|גרנד מסיף/, 'Flaine Grand Massif', 'france'],
-  [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונז'נבר|מונזנבר/, 'Montgenevre', 'france'],
-  [/סולדאו/, 'Soldeu', 'andorra'], [/פאס דה לה קאסה|פאס/, 'Pas de la Casa', 'andorra'],
+  [/מ[אי]?יי?רהופן|מאירהופן/, 'Mayrhofen', 'austria'], [/אישגי?ל/, 'Ischgl', 'austria'],
+  [/ו?ואל ?טורנס/, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
+  [/לה ?דוז|לה 2|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?/, 'Bansko', 'bulgaria'],
+  [/בורוב[ץץז]/, 'Borovets', 'bulgaria'], [/אבורי?אז/, 'Avoriaz', 'france'],
+  [/לז ?ארק|לה ?ארק/, 'Les Arcs', 'france'], [/פליין|גרנד ?מסיף/, 'Flaine Grand Massif', 'france'],
+  [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונז'?נבר/, 'Montgenevre', 'france'],
+  [/סולדאו/, 'Soldeu', 'andorra'], [/פאס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
 ];
 // Resorts and brands pingwin sells, but which carry NO room commitments in
 // the winter 26/27 workbook.
@@ -64,7 +71,13 @@ function isNegated(t, idx) {
 
 function parseText(text, slots) {
   const s = { ...slots };
-  const t = ' ' + text.replace(/\s+/g, ' ').trim() + ' ';
+  // normalise before matching: hyphens used as word separators ("זוג-בלי-ילדים")
+  // and repeated punctuation ("ינואר!!!") otherwise defeat every pattern below.
+  // A hyphen BETWEEN DIGITS is left alone — "5-9" is an occupancy range.
+  const t = ' ' + text
+    .replace(/([א-ת])[-–—]([א-ת])/g, '$1 $2')
+    .replace(/[!?.,]{2,}/g, ' ')
+    .replace(/\s+/g, ' ').trim() + ' ';
 
   // The question we just asked is the strongest signal about what this
   // message means. A bare "4" after "באילו גילאים?" is an AGE — never a count.
@@ -115,10 +128,21 @@ function parseText(text, slots) {
     // --- child COUNT when no ages given yet: "שני ילדים", "3 ילדים",
     //     "ילד אחד", and bare singular "ילד" / "ילדה" (Hebrew has no \b)
     if (!(s.children_ages || []).length) {
-      const cm = t.match(/(\d{1,2}|[א-ת]+)\s*ילדים/);
-      if (cm) { const n = +cm[1] || heNum(cm[1]); if (n) { s.children_count = n; s.no_children = false; } }
+      const cm = t.match(/(\d{1,2}|[א-ת]+)\s*ילדים|(\d{1,2})\s*קטנים/);
+      if (cm) { const n = +cm[1] || heNum(cm[1]) || +cm[2]; if (n) { s.children_count = n; s.no_children = false; } }
       else if (/(?:^|[^א-ת])(?:ילד|ילדה|בת|בן)(?![א-ת])/.test(t) || /ילד אחד|ילדה אחת/.test(t)) {
         s.children_count = 1; s.no_children = false;
+      }
+    }
+    // "2 ילדים 5+9" — once we know HOW MANY children there are, a digit pair
+    // is their ages rather than another party count. Must run after the count
+    // above, or there is nothing to disambiguate against.
+    if (!(s.children_ages || []).length && s.children_count) {
+      const pair = t.match(/(?:^|[^\d])(\d{1,2})\s*\+\s*(\d{1,2})(?![\d])/);
+      if (pair && +pair[1] <= 17 && +pair[2] <= 17 &&
+          !(+pair[1] === s.adults && +pair[2] === s.children_count)) {
+        s.children_ages = [+pair[1], +pair[2]];
+        s.no_children = false;
       }
     }
   }
@@ -136,7 +160,12 @@ function parseText(text, slots) {
   let hm = t.match(/(\d{1,2}|[א-ת]+)\s*הורים/);
   if (hm) { const n = +hm[1] || heNum(hm[1]); if (n) s.adults = n; }
   else if (/ההורים|הורים/.test(t) && s.adults == null) s.adults = 2;
-  let m = t.match(/(\d{1,2}|[א-ת]+)\s*מבוגרים/);
+  // "2+2" — the standard Israeli shorthand for two adults and two children
+  if (s.adults == null && !/מבוגר|ילד|גיל|בני/.test(t)) {
+    const pp = t.match(/(?:^|[^\d])(\d)\s*\+\s*(\d)(?![\d])/);
+    if (pp) { s.adults = +pp[1]; if (+pp[2]) { s.children_count = +pp[2]; s.no_children = false; } }
+  }
+  let m = t.match(/(\d{1,2}|[א-ת]+)\s*(?:מבוגר[יי]?[םמ]|גדולים)/);
   if (m) s.adults = +m[1] || heNum(m[1]) || s.adults;
   // an explicit party statement always wins, corrected or not
   m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2})/) || t.match(/(\d{1,2})\s*(?:אנשים|נוסעים|אורחים)/);
@@ -197,7 +226,7 @@ function parseText(text, slots) {
   // "מה מזג האוויר בתל אביב" used to set the airport. Require either a
   // "from" prefix or an explicit flight word nearby.
   const flightCtx = /טיס|ממריא|יוצאים|יוצא|לעוף|לטוס|המראה|שדה/.test(t);
-  if (/מחיפה/.test(t) || (flightCtx && /חיפה/.test(t))) s.departure_airport = 'haifa';
+  if (/מחיפ[הא]/.test(t) || (flightCtx && /חיפ[הא]/.test(t))) s.departure_airport = 'haifa';
   else if (/מתל ?-?אביב|מנתב"ג|מנתבג|מבן ?-?גוריון/.test(t) ||
            (flightCtx && /תל ?-?אביב|ת"א|נתב"ג|נתבג|בן ?-?גוריון/.test(t))) s.departure_airport = 'tlv';
   else if (answering === 'airport') {

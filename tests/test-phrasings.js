@@ -137,6 +137,34 @@ console.log('\n— follow-up questions get answers, not another card dump —');
   console.log(ok ? '  ✓ all seven common follow-ups are answered' : '  ✗ some follow-ups unanswered');
 }
 
+console.log('\n— spelling mistakes real customers make —');
+check('ינוואר', null, 'זוג בלי ילדים, ינוואר', { month: 1 });
+check('ינאור', null, 'זוג בלי ילדים, ינאור', { month: 1 });
+check('פבואר', null, 'זוג בלי ילדים, פבואר', { month: 2 });
+check('פברוא', null, 'זוג בלי ילדים, פברוא', { month: 2 });
+check('פבר (abbreviated)', null, 'זוג בלי ילדים, פבר', { month: 2 });
+check('אוסטרייה', null, 'ינואר, אוסטרייה', { country: 'austria' });
+check('צרפט', null, 'ינואר, צרפט', { country: 'france' });
+check('אנדורא', null, 'ינואר, אנדורא', { country: 'andorra' });
+check('בולגריא', null, 'ינואר, בולגריא', { country: 'bulgaria' });
+check('בנסק', null, 'ינואר, בנסק', { destination: 'Bansko' });
+check('מיירהופן', null, 'ינואר, מיירהופן', { destination: 'Mayrhofen' });
+check('מבוגרם', null, '2 מבוגרם, ינואר', { adults: 2 });
+check('קיטנא', null, 'ילד בן 7, קיטנא', { needs_hebrew_kids_club: true });
+// the dangerous one: a missed "חיפא" would offer flights Haifa cannot take
+check('חיפא — the airport must still be caught', null, 'טיסה מחיפא', { departure_airport: 'haifa' });
+
+console.log('\n— sloppy formatting —');
+check('hyphens used as separators', null, 'זוג-בלי-ילדים-ינואר', { adults: 2, no_children: true, month: 1 });
+check('repeated punctuation', null, 'זוג בלי ילדים!!! ינואר!!!', { adults: 2, month: 1 });
+check('emoji in the message', null, 'זוג בלי ילדים ינואר 🎿', { adults: 2, month: 1 });
+check('double spaces', null, 'זוג   בלי   ילדים,   ינואר', { adults: 2, month: 1 });
+
+console.log('\n— Israeli shorthand —');
+check('2+2 party notation', null, '2+2, ינואר', { adults: 2, children_count: 2 });
+check('ages as 5+9 after a count', null, '2 מבוגרים 2 ילדים 5+9 פבר', { adults: 2, children_ages: [5, 9], month: 2 });
+check('גדולים / קטנים', null, '2 גדולים 2 קטנים ינואר', { adults: 2, children_count: 2, month: 1 });
+
 console.log('\n— a city name is not a departure airport —');
 check('weather question sets no airport', null, 'מה מזג האוויר בתל אביב?', { departure_airport: null });
 check('but "מתל אביב" does', null, 'טיסה מתל אביב', { departure_airport: 'tlv' });
