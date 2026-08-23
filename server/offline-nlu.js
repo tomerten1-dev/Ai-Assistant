@@ -27,9 +27,15 @@ const DESTS = [
   [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונז'נבר|מונזנבר/, 'Montgenevre', 'france'],
   [/סולדאו/, 'Soldeu', 'andorra'], [/פאס דה לה קאסה|פאס/, 'Pas de la Casa', 'andorra'],
 ];
-// Destinations and brands that appear on pingwin.co.il but are NOT in the
-// winter 26/27 commitments workbook — the closed universe (spec 3.2.1).
-const NOT_SOLD = [
+// Resorts and brands pingwin sells, but which carry NO room commitments in
+// the winter 26/27 workbook.
+//
+// Tomer, 23/08: these ARE sellable — but only on dates that are not under a
+// "מכירת התחייבויות בלבד" restriction, and always subject to confirmation
+// with the hotel. So the bot must not claim they are unavailable, and must
+// not quote availability for them either: it says what it has on commitment,
+// and hands the rest to a rep.
+const OFF_COMMITMENT = [
   [/זאלבאך|סאלבאך/, 'זאלבאך'], [/צל אם ?זה|צל ?אם|zell/i, 'צל אם זה'],
   [/סנט ?אנטון|st\.? ?anton/i, 'סנט אנטון'], [/ואל ?ד'?יזר|val ?d/i, "ואל ד'יזר"],
   [/לה ?פלאן|la ?plagne/i, 'לה פלאן'], [/קלאב ?מד|club ?med/i, 'קלאב מד'],
@@ -215,11 +221,11 @@ function parseText(text, slots) {
     }
   }
 
-  // --- a place pingwin.co.il markets but this winter's workbook doesn't sell.
-  // Saying nothing and quietly showing France instead reads as a bot that
-  // ignored the question; naming the gap is the honest move.
-  s.unavailable_destination = null;
-  for (const [re, label] of NOT_SOLD) if (re.test(t)) { s.unavailable_destination = label; break; }
+  // --- a resort pingwin sells but holds no commitments for. Saying nothing
+  // and quietly showing something else reads as a bot that ignored the
+  // question; claiming it is unavailable would be wrong. Name it and route it.
+  s.off_commitment_destination = null;
+  for (const [re, label] of OFF_COMMITMENT) if (re.test(t)) { s.off_commitment_destination = label; break; }
 
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
@@ -296,10 +302,15 @@ function phrase(result, slots, cards) {
   const lines = [];
   const note = ty => (result.notes || []).find(n => n.type === ty);
 
-  // name the gap before showing substitutes — a silent swap reads as a bot
-  // that ignored the question
-  const notSold = note('destination_not_sold');
-  if (notSold) lines.push(`${notSold.name} לא נמכר אצלנו בחורף הזה. הנה מה שכן פנוי:`);
+  // a resort we sell but hold no commitments for: never say "unavailable",
+  // never quote availability we don't have — say what it depends on and route
+  // it to a rep, while still showing what IS on commitment
+  const offComm = note('destination_off_commitment');
+  if (offComm) {
+    lines.push(
+      `${offComm.name} לא נמצא ברשימת ההתחייבויות שלנו לחורף הזה. אפשר להזמין אותו בתאריכים שאין בהם התחייבות, ` +
+      `בכפוף לאישור מול המלון — נציג יבדוק עבורכם. בינתיים, הנה מה שזמין מיידית מההתחייבויות שלנו:`);
+  }
 
   if (note('out_of_season')) {
     lines.push('עונת הסקי שלנו היא דצמבר עד סוף מרץ. בחודשים אחרים אין לנו יציאות.');

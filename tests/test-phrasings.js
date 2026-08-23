@@ -101,9 +101,9 @@ check('out-of-season month is flagged', null, 'זוג בלי ילדים, אוג�
 check('in-season month is not flagged', null, 'זוג בלי ילדים, ינואר', { out_of_season: false, month: 1 });
 
 console.log('\n— places pingwin markets but does not sell this winter —');
-check('זאלבאך', null, 'רוצים לזאלבאך', { unavailable_destination: 'זאלבאך' });
-check('קלאב מד', null, 'קלאב מד בבקשה', { unavailable_destination: 'קלאב מד' });
-check('a sold resort is NOT flagged', null, 'רוצים לבנסקו', { unavailable_destination: null, destination: 'Bansko' });
+check('זאלבאך', null, 'רוצים לזאלבאך', { off_commitment_destination: 'זאלבאך' });
+check('קלאב מד', null, 'קלאב מד בבקשה', { off_commitment_destination: 'קלאב מד' });
+check('a resort we DO hold commitments for is not flagged', null, 'רוצים לבנסקו', { off_commitment_destination: null, destination: 'Bansko' });
 
 console.log('\n— a city name is not a departure airport —');
 check('weather question sets no airport', null, 'מה מזג האוויר בתל אביב?', { departure_airport: null });

@@ -35,7 +35,7 @@ const EMPTY_SLOTS = {
   adults: null, children_ages: [], no_children: null, month: null,
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
-  excluded_countries: [], unavailable_destination: null, out_of_season: false,
+  excluded_countries: [], off_commitment_destination: null, out_of_season: false,
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
@@ -70,7 +70,7 @@ function toSearchSlots(slots) {
     month: any(slots.month),
     country: any(slots.country),
     departure_airport: any(slots.departure_airport),
-    unavailable_destination: slots.unavailable_destination || null,
+    off_commitment_destination: slots.off_commitment_destination || null,
     out_of_season: !!slots.out_of_season,
   };
 }

@@ -122,9 +122,11 @@ class SkiSearch {
     if (slots.needs_hebrew_kids_club && !SkiSearch.neededAgeGroups(slots.children_ages).size) {
       notes.push({ type: 'camp_age_mismatch', ages: slots.children_ages || [] });
     }
-    // a destination pingwin markets but this workbook does not sell
-    if (slots.unavailable_destination) {
-      notes.push({ type: 'destination_not_sold', name: slots.unavailable_destination });
+    // a resort pingwin sells but holds no commitments for — bookable only on
+    // dates free of the "commitments only" restriction, and always subject to
+    // hotel confirmation (Tomer 23/08). The bot routes it, never quotes it.
+    if (slots.off_commitment_destination) {
+      notes.push({ type: 'destination_off_commitment', name: slots.off_commitment_destination, needs_rep: true });
     }
     if (slots.out_of_season) notes.push({ type: 'out_of_season' });
 
