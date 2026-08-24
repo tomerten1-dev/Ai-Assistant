@@ -756,6 +756,25 @@ function offCommitmentLine(result, slots) {
   ].join(' ');
 }
 
+// What the search had to give up on, in fixed words. Printed above anything the
+// model writes: asked for December, it showed January and said nothing about
+// the gap in three separate audit rounds.
+function relaxationLines(result) {
+  const out = [];
+  for (const r of result.relaxed || []) {
+    if (r.type === 'month') out.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
+    if (r.type === 'location') {
+      const sat = (result.notes || []).some(n => n.type === 'saturday_only');
+      out.push(sat
+        ? 'ביעד שביקשתם כל היציאות בחודש הזה יוצאות בשבת, ולכן הצגתי יעדים אחרים:'
+        : 'לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
+    }
+    if (r.type === 'two_rooms') out.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
+    if (r.type === 'nights') out.push(`לא מצאתי בדיוק ${r.wanted} לילות, אז הרחבתי גם למשכים אחרים:`);
+  }
+  return out;
+}
+
 function phrase(result, slots, cards) {
   let lines = [];
   const note = ty => (result.notes || []).find(n => n.type === ty);
@@ -838,18 +857,9 @@ function phrase(result, slots, cards) {
       (cards.length && !willExplain ? ' — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:' : '.'));
   }
   for (const r of result.relaxed || []) {
-    if (r.type === 'month') lines.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
-    if (r.type === 'location') {
-      // The reason is worth more than the fact. A Sabbath-observing family
-      // reading "לא מצאתי ביעד שביקשתם" learns nothing it can act on; the real
-      // answer is that every departure there that month is on a Saturday.
-      const sat = note('saturday_only');
-      lines.push(sat
-        ? 'ביעד שביקשתם כל היציאות בחודש הזה יוצאות בשבת, ולכן הצגתי יעדים אחרים:'
-        : 'לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
-    }
-    if (r.type === 'two_rooms') lines.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
-    if (r.type === 'nights') lines.push(`לא מצאתי בדיוק ${r.wanted} לילות, אז הרחבתי גם למשכים אחרים:`);
+    // month / location / two_rooms / nights are printed by the server, verbatim
+    // — see relaxationLines() above. Everything else below still belongs to the
+    // model's paragraph, because it is detail rather than a correction.
     if (r.type === 'camp_month') {
       lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו פועלת קבוצת הגיל של הילד, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם היא כן פועלת:`);
     }
@@ -1339,6 +1349,7 @@ function deflect(text) {
 module.exports = {
   faq,
   faqEntries,
+  relaxationLines,
   guard,
   offCommitmentLine,
   canonicalDestination,

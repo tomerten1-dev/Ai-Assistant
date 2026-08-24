@@ -542,7 +542,13 @@ async function handleChat(body) {
   // — limited flight and hotel places, and that a rep can check other dates —
   // vanished from the reply.
   const offCommLine = offline.offCommitmentLine(result, slots);
-  if (offCommLine) preamble = [preamble, offCommLine].filter(Boolean).join(String.fromCharCode(10));
+  // What the search had to widen — a different month, a different country, two
+  // rooms instead of one — is the most important sentence in the reply, and the
+  // model kept paraphrasing it into nothing. Asked for December, shown January,
+  // and not a word about the gap: three separate audit rounds.
+  const widened = offline.relaxationLines(result);
+  const fixed = [offCommLine, ...widened].filter(Boolean);
+  if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));
 
   const templated = offline.phrase(result, sayingSlots, cards) ||
     (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
