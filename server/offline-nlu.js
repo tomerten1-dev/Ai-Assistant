@@ -93,6 +93,9 @@ function parseText(text, slots) {
   // message means. A bare "4" after "באילו גילאים?" is an AGE — never a count.
   const answering = s._lastQuestion || null;
   const askedChildren = answering === 'children' || answering === 'children_ages';
+  // set by the children block below; the adults block must not also swallow
+  // a bare number that was plainly an answer about the children
+  const expectingAgesRef = { value: false };
   const allNums = [...t.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)].map(x => +x[1]);
 
   // --- explicit "no children"
@@ -134,8 +137,12 @@ function parseText(text, slots) {
       if (/בן שנה|בת שנה|תינוק בן שנה/.test(t)) ages = [1];
       else if (/שנתיים/.test(t)) ages = [2];
     }
-    // --- bare numbers answering the children question ARE the ages
-    if (!ages.length && askedChildren) {
+    // --- bare numbers ARE the ages when we know there are children and do not
+    // know how old they are. This used to require having JUST asked, which
+    // stopped working the moment a question stopped being repeated.
+    const expectingAges = expectingAgesRef.value = askedChildren ||
+      ((s.no_children === false || s.children_count) && !(s.children_ages || []).length);
+    if (!ages.length && expectingAges && /^[\s\d,.\u05d5-]+$/.test(t)) {
       ages = allNums.filter(n => n >= 0 && n <= 17).slice(0, 4);
     }
     // Remembered, not applied: the adults parser runs further down and would
@@ -310,10 +317,20 @@ function parseText(text, slots) {
     s.month_part = /תחילת/.test(t) ? 'early' : (/אמצע/.test(t) ? 'mid' : 'late');
   }
 
-  if (/לא משנה|גמיש|מתי שיש|כל תאריך|אין העדפה/.test(t)) {
+  // "גמיש בתאריך" said on its own RELEASES the month rather than merely filling
+  // it in when empty — that is what a customer means by flexible, and until now
+  // they kept being shown February after explicitly letting go of it.
+  if (/גמיש[יי]?[םמ]? בתארי|לא משנה התארי|לא משנה מתי|כל תאריך|מתי שיש/.test(t)) {
+    s.month = 'any'; s.flexible_dates = true; s.month_part = null; s.exact_day = null;
+  } else if (/לא משנה|גמיש|אין העדפה/.test(t)) {
     if (s.month == null) s.month = 'any';
     s.flexible_dates = true;
     s.month_part = null;
+  }
+  // and the same for the destination, which had no release at all
+  if (/לא משנה איז[הו] (?:מדינה|יעד)|לא משנה היעד|לא משנה לאן|כל יעד|כל מדינה/.test(t)) {
+    s.country = 'any'; s.destination = null; s.hotel = null;
+    s.excluded_countries = []; s.excluded_destinations = [];
   }
 
   // --- requirements the commitments workbook has no data for (spec 3.6: no
@@ -484,6 +501,13 @@ function parseText(text, slots) {
     const kids = (s.children_ages || []).length;
     if (n >= 1 && n <= 20) s.adults = kids && n > kids ? n - kids : n;
   }
+  // A bare number when the party size is the thing we do not know. Same
+  // reasoning as the ages above: understood by what is missing, not by what
+  // was last asked — questions are asked once now, answers arrive later.
+  if (s.adults == null && !allAdults && !expectingAgesRef.value) {
+    const bare2 = t.trim().match(/^(\d{1,2})$/);
+    if (bare2 && +bare2[1] >= 1 && +bare2[1] <= 20) s.adults = +bare2[1];
+  }
   if (answering === 'adults' && s.adults == null && !allAdults) {
     const bare = t.trim().match(/^(\d{1,2}|[א-ת]+)(?:\s*(?:אנשים|נוסעים|מבוגרים))?$/);
     if (bare) { const n = +bare[1] || heNum(bare[1]); if (n) s.adults = n; }
@@ -544,7 +568,9 @@ function nextQuestion(slots, prevKey) {
       airport: 'שדה היציאה — נתב"ג או חיפה?',
       country: 'איזו מדינה — אוסטריה, צרפת, אנדורה, בולגריה, או "לא משנה"?',
     };
-    q = { key: q.key, he: retry[q.key] || q.he };
+    // keep `blocking`: dropping it turned a question we must ask into a chip,
+    // and the turn then asked nothing at all
+    q = { key: q.key, blocking: q.blocking, he: retry[q.key] || q.he };
   }
   return q;
 }
@@ -560,7 +586,7 @@ function fmtDay(iso) {
 }
 
 function phrase(result, slots, cards) {
-  const lines = [];
+  let lines = [];
   const note = ty => (result.notes || []).find(n => n.type === ty);
 
   // a resort we sell but hold no commitments for: never say "unavailable",
@@ -734,6 +760,17 @@ function phrase(result, slots, cards) {
     if (c.recommended) why.push('מהמבוקשים ביותר אצלנו');
     if ((slots.preferences || []).includes('תקציב') && c.price_range.length <= 2) why.push('ידידותי לתקציב');
     c.why_he = why.join(' · ');
+  }
+  // Five true sentences stacked on top of each other is not an explanation, it
+  // is a wall. Keep the ones that change what the customer should DO — a
+  // constraint we could not meet, a date we moved — and drop the softer ones.
+  // The model, when available, gets all of them as context and writes something
+  // shorter; this is the templated floor.
+  if (lines.length > 3) {
+    const HARD = /אין לנו|לא מצאתי|לא פועלת|אינה פועלת|שימו לב|הרחבתי|הצגתי|אין יציאה/;
+    const hard = lines.filter(l => HARD.test(l));
+    const soft = lines.filter(l => !HARD.test(l));
+    lines = [...hard.slice(0, 3), ...soft].slice(0, 4);
   }
   return lines.join('\n');
 }

@@ -296,7 +296,12 @@ async function handleChat(body) {
   // being interviewed before any offer is what makes a bot feel like a form.
   let pendingQuestion = null;
   if (!replyIfNotReady) {
-    let q = offline.nextQuestion(slots, prevSlots._lastQuestion || null);
+    // A question we are deliberately putting again is not a retry — the
+    // customer did not fail to answer, we simply had no reason to ask before.
+    // Passing the previous key would greet them with "סליחה, לא הצלחתי להבין".
+    const reAsking = !(prevSlots.children_ages || []).length &&
+      (slots.children_ages || []).length > 0 && slots.adults == null;
+    let q = offline.nextQuestion(slots, reAsking ? null : (prevSlots._lastQuestion || null));
     // A question whose every answer leads to the same offers is not a question.
     // Skip it and take the next one, rather than spending the customer's turn.
     const asked = new Set();
@@ -356,6 +361,13 @@ async function handleChat(body) {
   // ויתקע"), and the same question is never asked twice.
   const askedBefore = new Set(prevSlots._asked || []);
   const closedBefore = !!prevSlots._closed;
+  // Asked once, not asked blindly. The party size question was put before we
+  // knew anything; once the children turn up it is a different question, and
+  // worth putting again — a family answered every other question and finished
+  // the conversation with the room size never established.
+  const kidsJustKnown = !(prevSlots.children_ages || []).length &&
+    (slots.children_ages || []).length > 0;
+  if (kidsJustKnown && slots.adults == null) askedBefore.delete('adults');
   // Only the gaps that genuinely change which rooms fit are worth a sentence.
   // The rest — airport, destination — stay as one-tap chips: a customer looking
   // at three real offers should not also be interviewed.

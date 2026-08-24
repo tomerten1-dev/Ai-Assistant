@@ -512,6 +512,78 @@ t('an exact departure date is honoured, or the gap is named', () => {
   });
 });
 
+
+t('a bare answer is understood long after the question was asked', () => {
+  // questions are asked once, so an answer usually arrives with no question
+  // immediately before it. It still has to be heard.
+  const msgs = [];
+  let slots = {};
+  const say = (txt) => {
+    msgs.push({ role: 'user', content: txt });
+    return handleChat({ messages: msgs, slots }).then(out => {
+      slots = out.slots;
+      msgs.push({ role: 'assistant', content: out.reply_he });
+      return out;
+    });
+  };
+  return say('היי')
+    .then(() => say('משפחה עם ילדים'))
+    .then(() => say('6 ו-9'))
+    .then(() => {
+      assert.deepStrictEqual(slots.children_ages, [6, 9], 'the ages were dropped');
+      return say('2 מבוגרים');
+    })
+    .then(() => {
+      assert.strictEqual(slots.adults, 2, 'the party size was dropped');
+    });
+});
+
+t('the party question is put again once the children are known', () => {
+  const msgs = [{ role: 'user', content: 'היי' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots;
+    assert.ok(/כמה תהיו/.test(a.reply_he), 'did not ask at all');
+    msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'משפחה עם ילדים בני 6 ו-9' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => {
+    assert.ok(/כמה תהיו/.test(b.reply_he),
+      'never asked again once it mattered: ' + b.reply_he);
+  });
+});
+
+t('"גמיש בתאריך" releases the month, it does not just fill it', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'גמיש בתאריך' }],
+    slots: { adults: 2, no_children: true, month: 2, country: 'france' },
+  }).then(out => {
+    assert.strictEqual(out.slots.month, 'any', 'still stuck on February');
+  });
+});
+
+t('"לא משנה איזו מדינה" releases the destination', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'לא משנה איזו מדינה' }],
+    slots: { adults: 2, no_children: true, month: 1, country: 'france' },
+  }).then(out => {
+    assert.strictEqual(out.slots.country, 'any', 'still stuck on France');
+  });
+});
+
+t('a reply never stacks more than four explanation lines', () => {
+  const asks = [
+    'משפחה מחיפה לצרפת עם ילדים בני 5 ו-8, צריך קייטנה, פברואר',
+    'משפחה של 4 עם ילדים בני 4 ו-7, פברואר בצרפת, צריך קייטנה',
+    'זוג שומרי שבת מחיפה לאוסטריה ב-12.2.27, 3 לילות',
+  ];
+  return Promise.all(asks.map(a => handleChat({ messages: [{ role: 'user', content: a }], slots: {} })))
+    .then(outs => outs.forEach((out, i) => {
+      const n = out.reply_he.split(String.fromCharCode(10)).filter(Boolean).length;
+      assert.ok(n <= 6, asks[i] + ' -> ' + n + ' lines: ' + out.reply_he);
+    }));
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
