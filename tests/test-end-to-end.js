@@ -416,6 +416,52 @@ t('the opening hours are answered when actually asked', () => {
     .then(out => assert.ok(/9:00-18:00/.test(out.reply_he), out.reply_he));
 });
 
+
+t('every card says what THAT package includes', () => {
+  const resorts2 = require('../data/resorts.json');
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, פברואר בבולגריה' }], slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length, 'no cards');
+    for (const c of out.cards) {
+      assert.ok(c.package_includes_he, c.hotel + ' says nothing about the package');
+      assert.strictEqual(c.package_includes_he, resorts2.hotels[c.hotel].package_includes_he,
+        c.hotel + ': the card text drifted from the hotel page');
+    }
+  });
+});
+
+t('the package text is per hotel, not one sentence for all', () => {
+  const hotels = require('../data/resorts.json').hotels;
+  const texts = Object.values(hotels).map(h => h.package_includes_he).filter(Boolean);
+  assert.strictEqual(texts.length, Object.keys(hotels).length, 'a hotel has no package text');
+  assert.ok(new Set(texts).size > 20, 'suspiciously few distinct package descriptions');
+  // the difference Tomer named: some hotels let the customer choose the board
+  const choice = texts.filter(t2 => /לפי בחירה|אפשרות לחצי פנסיון|חצי פנסיון בתוספת/.test(t2));
+  assert.ok(choice.length >= 3, 'the choose-your-board hotels were flattened away');
+});
+
+t('no price in money reaches the package text (red rule 3)', () => {
+  const hotels = require('../data/resorts.json').hotels;
+  const MONEY = /\d[\d,.]*\s*(₪|\$|€|שקל|ש"ח|יורו|אירו)/;
+  for (const [name, h] of Object.entries(hotels)) {
+    assert.ok(!MONEY.test(h.package_includes_he || ''), name + ': ' + h.package_includes_he);
+  }
+});
+
+t('the booking button opens that hotel, not the home page', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר באוסטריה' }], slots: {},
+  }).then(out => {
+    for (const c of out.cards) {
+      assert.ok(c.booking_url, c.hotel + ' has no booking link');
+      assert.ok(/siteID=\d+/.test(c.booking_url), c.hotel + ': ' + c.booking_url);
+      assert.ok(!/^https:\/\/www\.pingwin\.co\.il\/\?/.test(c.booking_url),
+        c.hotel + ' still links to the home page: ' + c.booking_url);
+    }
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

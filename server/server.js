@@ -199,6 +199,10 @@ function presentCards(result, slots) {
     desc_he: c.desc_he, lift_he: c.lift_he, tags: c.tags, image: c.image,
     // the whole gallery, so the card can page through the hotel's own photos
     images: (engine.hotelInfo(c.hotel).images || []).slice(0, 12),
+    // what THIS package includes, verbatim from the hotel page. It differs
+    // hotel by hotel — half board only, breakfast with half board for a
+    // supplement, ski pass or not — so a generic sentence would be wrong.
+    package_includes_he: engine.hotelInfo(c.hotel).package_includes_he || null,
     count_available: c.count_available,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,

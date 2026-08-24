@@ -133,6 +133,12 @@
     + '.card .rline .rval{font-weight:500;font-size:13px}'
     + '.card .rnote{font-size:12px;color:' + THEME.textLight + ';padding-top:2px}'
 
+    + '.card .inc{background:#f2f6f9;border:1px solid #e0e9f0;border-radius:9px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}'
+    + '.card .ilab{font-size:12px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.2px}'
+    + '.card .itxt{font-size:13px;color:' + THEME.text + ';line-height:1.55}'
+    + '.card .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'
+    + '.card .imore{align-self:flex-start;background:none;border:none;padding:0;font-family:inherit;font-size:12.5px;'
+    + 'color:' + THEME.primary + ';cursor:pointer;text-decoration:underline;text-underline-offset:3px}'
     + '.card .cdesc{font-size:13.5px;color:' + THEME.text + ';line-height:1.55}'
     + '.card .cfoot{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:2px}'
     + '.card .fits{font-size:13px;color:' + THEME.textLight + '}'
@@ -390,6 +396,26 @@
       row('חדר במלון', c.room);
     }
     card.appendChild(rows);
+
+    // What this package includes, straight from the hotel page. Clamped to
+    // three lines because some run to a paragraph; the whole thing opens on a
+    // click, the same disclosure the room row uses.
+    if (c.package_includes_he) {
+      var inc = el('div', 'inc');
+      inc.appendChild(el('span', 'ilab', 'החבילה כוללת'));
+      var itxt = el('div', 'itxt clamp3', c.package_includes_he);
+      inc.appendChild(itxt);
+      if (c.package_includes_he.length > 110) {
+        var more = el('button', 'imore', 'עוד');
+        more.addEventListener('click', function () {
+          var open = itxt.classList.toggle('clamp3');
+          more.textContent = open ? 'עוד' : 'פחות';
+        });
+        itxt.classList.add('clamp3');
+        inc.appendChild(more);
+      }
+      card.appendChild(inc);
+    }
 
     if (c.desc_he) card.appendChild(el('div', 'cdesc', c.desc_he));
     if (c.lift_he) card.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
