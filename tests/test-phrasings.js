@@ -291,5 +291,15 @@ check('סוף שבוע is a weekend, not late in the month', null, 'סוף שב�
 check('a plain month sets no half', null, 'פברואר', { month: 2, month_part: null });
 check('גמיש clears an earlier half', { month: 2, month_part: 'late' }, 'בעצם גמיש', { month_part: null });
 
+console.log('\n— Hebrew has no word boundary, so every one is written out —');
+check('"בלבד" is not "לבד"', null, 'זוג בדצמבר בלבד', { adults: 2 });
+check('but travelling alone still counts', null, 'אני נוסע לבד', { adults: 1 });
+check('שומרת שבת, feminine', null, 'משפחה שומרת שבת', { no_saturday_flights: true });
+check('שומרות שבת, plural feminine', null, 'שומרות שבת', { no_saturday_flights: true });
+check('niqqud is stripped before matching', null, 'זוּג בּפברואר', { adults: 2, month: 2 });
+check('releasing the airport', { departure_airport: 'haifa' }, 'לא חייב מחיפה', { departure_airport: 'any' });
+check('releasing the Sabbath constraint', { no_saturday_flights: true }, 'אפשר גם בשבת', { no_saturday_flights: false });
+check('naming Haifa still sets it', null, 'זוג מחיפה בפברואר', { departure_airport: 'haifa' });
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

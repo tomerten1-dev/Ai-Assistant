@@ -84,7 +84,10 @@ function parseText(text, slots) {
   // normalise before matching: hyphens used as word separators ("זוג-בלי-ילדים")
   // and repeated punctuation ("ינואר!!!") otherwise defeat every pattern below.
   // A hyphen BETWEEN DIGITS is left alone — "5-9" is an occupancy range.
+  // Hebrew keyboards and copy-paste bring niqqud along; זוּג and זוג are the
+  // same word to a reader and two different strings to a regex.
   const t = ' ' + text
+    .replace(/[\u0591-\u05C7]/g, '')
     .replace(/([א-ת])[-–—]([א-ת])/g, '$1 $2')
     .replace(/[!?.,]{2,}/g, ' ')
     .replace(/\s+/g, ' ').trim() + ' ';
@@ -200,7 +203,7 @@ function parseText(text, slots) {
   // A correction ("בעצם 4", "סליחה, 3") must override an earlier number —
   // silently keeping the first one books the wrong size room.
   const correcting = /בעצם|סליחה|טעות|תתקן|לא נכון|התכוונתי|שיניתי|בעצמנו/.test(t);
-  if (/אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד/.test(t)) {
+  if (/(?:^|[^א-ת])(?:אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד)(?![א-ת])/.test(t)) {
     s.adults = 1;
     // travelling alone answers the children question too — asking it anyway
     // reads as not having listened
@@ -357,12 +360,18 @@ function parseText(text, slots) {
   else if (/חצי פנסיון/.test(t)) s.board_wanted = 'half';
   else if (/ארוחת בוקר/.test(t)) s.board_wanted = 'breakfast';
 
+  // Taking a constraint back. Without these the bot kept repeating the Haifa
+  // note to a customer who had just said Haifa was not required.
+  if (/אפשר גם בשבת|אפשר בשבת|לא אכפת לנו משבת|לא שומרים שבת|לא שומרי שבת/.test(t)) {
+    s.no_saturday_flights = false;
+  }
+
   // --- Sabbath observance: a hard constraint, not a preference. Saturday
   // departures must disappear entirely rather than be ranked lower.
   // NOT כשר: asking whether the food is kosher says nothing about flying on
   // Saturday, and inferring it silently removed every Saturday departure from
   // a customer who had only asked about a meal.
-  if (/שומר[יי]? שבת|שומרים שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|שבת שלום/.test(t)) {
+  if (/שומר(?:ת|ים|ות|י)? שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|דתיים|שבת שלום/.test(t)) {
     s.no_saturday_flights = true;
   }
 
@@ -387,6 +396,12 @@ function parseText(text, slots) {
     else if (/תל ?-?אביב|ת"א|נתב"ג|נתבג|בן ?-?גוריון|מרכז/.test(t)) s.departure_airport = 'tlv';
     // "לא משנה" = no constraint, but stop asking
     else if (/לא משנה|כל אחד|שניהם|מה שיש|לא חשוב/.test(t)) s.departure_airport = 'any';
+  }
+
+  // Taking the airport back. This has to run AFTER the parser above, which
+  // would otherwise read "מחיפה" out of the very sentence releasing it.
+  if (/לא חייב מחיפה|לא חייב מנתב|לא משנה מאיפה|לא משנה משדה|כל שדה|לא חייב משדה|מאיפה שיוצא/.test(t)) {
+    s.departure_airport = 'any';
   }
 
   // "לא משנה" answering the destination question
