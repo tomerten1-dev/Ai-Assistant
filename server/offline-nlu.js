@@ -854,8 +854,11 @@ function phrase(result, slots, cards) {
   // answer, and offering one quietly wastes the customer's time.
   const partySize = (slots.adults || 0) + (slots.children_ages || []).length;
   if (partySize >= 9) {
-    lines.push('חבורה בגודל הזה אנחנו בונים ידנית — מקומות בטיסה ובמלון נבדקים יחד. ' +
-      'השאירו שם וטלפון ונציג יבנה לכם הצעה לכל הקבוצה, או התקשרו ל-04-8557722.');
+    lines.push(note('group_rooms_by_rep')
+      ? 'אלה המלונות והתאריכים הפנויים בתנאים שביקשתם. בחבורה בגודל הזה החלוקה לחדרים ' +
+        'ומקומות הטיסה נסגרים מול נציג — השאירו שם וטלפון או התקשרו ל-04-8557722.'
+      : 'בחבורה בגודל הזה החלוקה לחדרים ומקומות הטיסה נסגרים מול נציג. ' +
+        'השאירו שם וטלפון ונציג ישלים אתכם את ההצעה, או התקשרו ל-04-8557722.');
   }
 
   // The answer to "יקר לי", in Tomer's own words from config/guidance.json.

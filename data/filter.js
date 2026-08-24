@@ -368,7 +368,17 @@ class SkiSearch {
     // Nine and up is a group booking (see the phrasing layer). Offering two
     // rooms for twelve people alongside that is a contradiction, and the
     // two-room offer is the false half.
-    if (party >= 9) { splits = []; relaxed = relaxed.filter(r => r.type !== 'two_rooms'); }
+    // Nine and up: no single unit holds them and a two-room split is a fiction,
+    // but an empty screen is worse. Show the hotels and dates that are open in
+    // what they asked for, and let a rep build the room split (Tomer, 24/08).
+    if (party >= 9) {
+      splits = []; relaxed = relaxed.filter(r => r.type !== 'two_rooms');
+      if (!candidates.length) {
+        candidates = this._filter({ ...slots, adults: null, children_ages: [] }, null,
+          { month: slots.month, country: slots.country, destination: slots.destination });
+        if (candidates.length) notes.push({ type: 'group_rooms_by_rep', party });
+      }
+    }
     if (!candidates.length && !splits.length) relaxed.push({ type: 'human_rep' });
 
     // "יקר לי" (Tomer, 24/08): show something CHEAPER than what they were just
