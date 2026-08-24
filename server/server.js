@@ -46,6 +46,7 @@ const EMPTY_SLOTS = {
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
+  wrong_year: null,
   country_fixed: null,
 };
 

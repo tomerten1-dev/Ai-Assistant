@@ -981,6 +981,52 @@ t('a Sabbath-observing family is told why the destination is gone', () =>
   handleChat({ messages: [{ role: 'user', content: 'זוג שומרי שבת שרוצה אוסטריה בינואר' }], slots: {} })
     .then(out => assert.ok(/יוצאות בשבת/.test(out.reply_he), out.reply_he)));
 
+/* ---- the fourteenth round ---- */
+
+t('"אנחנו שלושה" written in words changes the party', () =>
+  handleChat({ messages: [{ role: 'user', content: 'לא, אנחנו שלושה' }], slots: {} })
+    .then(out => assert.equal(out.slots.adults, 3, 'adults: ' + out.slots.adults)));
+
+t('twins are two children', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש לנו תאומים בני 5 ועוד ילד בן 9, פברואר' }], slots: {} })
+    .then(out => assert.deepEqual(out.slots.children_ages, [5, 5, 9])));
+
+t('a season we do not sell is named as such', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אפשר בדצמבר 2025?' }], slots: {} })
+    .then(out => assert.ok(/2026\/27/.test(out.reply_he), out.reply_he)));
+
+t('the season we do sell raises nothing', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר 2027' }], slots: {} })
+    .then(out => assert.ok(!/מוכרים כרגע את עונת/.test(out.reply_he), out.reply_he)));
+
+t('a brand we do not sell, named in English', () =>
+  handleChat({ messages: [{ role: 'user', content: 'do you have the Kempinski in Bansko?' }], slots: {} })
+    .then(out => assert.ok(/לא מוכרים/.test(out.reply_he), out.reply_he)));
+
+t('"תפסיק לשלוח לי הצעות" stops', () =>
+  handleChat({ messages: [{ role: 'user', content: 'תפסיק לשלוח לי הצעות' }], slots: {} })
+    .then(out => assert.equal(out.cards.length, 0, 'kept pushing ' + out.cards.length + ' cards')));
+
+for (const [q, want] of [
+  ['אפשר לשלוח לי את זה למייל?', /נציג ישלח|שם וטלפון/],
+  ['אם אני משאיר פרטים זה מחייב אותי במשהו?', /לא מחייבת/],
+  ['הקייטנה כלולה במחיר?', /אינה חלק ממחיר/],
+  ['ילד בן 13, הוא בקייטנה או עם המבוגרים?', /4–13|נוער/],
+  ['אפשר חצי שבוע בבנסקו וחצי בבורובץ?', /מלון אחד ליציאה/],
+  ['אפשר לקחת מגלשיים משלי בטיסה?', /ציוד|מזוודה|כבודה/],
+  ['מתי אפשר להיכנס לחדר?', /צ'ק אין|כניסה/],
+  ['כמה מסלולים יש בבנסקו?', /דף היעד|נציג/],
+  ['כדאי לנסוע בדצמבר או לחכות לפברואר?', /אתרים גבוהים/],
+  ['יש דרישות בריאות מיוחדות?', /אין דרישות בריאות/],
+  ['אפשר חדר עם נוף להרים?', /בקשה מהמלון/],
+]) {
+  t('answered rather than deflected: ' + q.slice(0, 26), () =>
+    handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
+      assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he), 'off topic: ' + out.reply_he);
+      assert.ok(want.test(out.reply_he), out.reply_he);
+    }));
+}
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

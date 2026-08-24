@@ -250,7 +250,7 @@ function parseText(text, slots) {
   // it sent a group of four to be asked "כמה מבוגרים?" they had just answered.
   // Word numbers count too ("שני חברים"). "בנים"/"בנות" are left out on
   // purpose — they usually mean children.
-  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2})/) ||
+  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2}|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה)(?![א-ת])/) ||
       t.match(/(\d{1,2}|[א-ת]+)\s*(?:אנשים|נוסעים|אורחים|חברים|חברות|בחורים|בחורות|גברים|נשים)(?![א-ת])/);
   if (m) {
     const total = +m[1] || heNum(m[1]);
@@ -320,6 +320,15 @@ function parseText(text, slots) {
       }
       if (s.adults == null && /couple|two of us|my wife|my husband/.test(en)) s.adults = 2;
     }
+  }
+
+  // A year that is not the season we sell. "אפשר בדצמבר 2025?" was answered
+  // with December 2026 offers and no word about the year they actually asked
+  // for — the one thing that made the answer wrong.
+  s.wrong_year = null;
+  {
+    const y = t.match(/(?:^|[^\d])(20\d{2})(?![\d])/);
+    if (y && +y[1] !== 2026 && +y[1] !== 2027) s.wrong_year = +y[1];
   }
 
   // --- month
@@ -562,6 +571,17 @@ function parseText(text, slots) {
     s.preferences = [...new Set([...(s.preferences || []), 'תקציב'])];
   }
 
+  // "תאומים בני 5 ועוד ילד בן 9" — two fives, not one. The party was one seat
+  // short and the offers were sized for a family that does not exist.
+  {
+    const tw = t.match(/תאומים בני (\d{1,2})|תאומות בנות (\d{1,2})/);
+    if (tw) {
+      const age = +(tw[1] || tw[2]);
+      const ages = s.children_ages || [];
+      if (ages.filter(a => a === age).length === 1) s.children_ages = [...ages, age].sort((a, b) => a - b);
+    }
+  }
+
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
   else if (/קי?יטנ|ליווי בעברית|מדריך לילדים|מדריכים.{0,20}ילדים/.test(t)) s.needs_hebrew_kids_club = true;
@@ -745,6 +765,10 @@ function phrase(result, slots, cards) {
   if (partial && partial.ages.length) {
     const ages = partial.ages.join(', ');
     lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-13, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
+  }
+
+  if (slots.wrong_year) {
+    lines.push(`אנחנו מוכרים כרגע את עונת חורף 2026/27 — דצמבר 2026 עד סוף מרץ 2027. הנה מה שפנוי בעונה הזו:`);
   }
 
   const campAge = note('camp_age_mismatch');
@@ -1040,8 +1064,7 @@ function wantsMore(text) {
 // with three others and no explanation reads as not having heard them.
 function unknownHotel(text, known) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  if (!/מלון|רוצה את|אפשר את|hotel/i.test(t)) return null;
-  const NAMES = /(הילטון|מריוט|שרתון|קראון פלאזה|רדיסון|נובוטל|הוליי?דיי אין|קמפינסקי|רמדה|בסט ווסטרן|hilton|marriott|sheraton|radisson|novotel)/i;
+  const NAMES = /(הילטון|מריוט|שרתון|קראון פלאזה|רדיסון|נובוטל|הוליי?דיי אין|קמפינסקי|רמדה|בסט ווסטרן|hilton|marriott|sheraton|radisson|novotel|kempinski|hyatt|ריץ|ritz)/i;
   const m = t.match(NAMES);
   if (!m) return null;
   if (known && known.some(h => new RegExp(m[1], 'i').test(h))) return null;
@@ -1080,7 +1103,7 @@ function notUnderstood(text) {
 
 // A person leaving: "לא רוצה כלום, סתם בדקתי", "תודה, ביי". Three more hotels
 // on the way out is exactly what makes a chat feel like a machine.
-const FAREWELL = /לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
+const FAREWELL = /תפסיק לשלוח|תפסיקו לשלוח|די עם ההצעות|עזוב אותי|תפסיק להציע|לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
 function isFarewell(text) {
   return FAREWELL.test(String(text || '').trim());
 }
