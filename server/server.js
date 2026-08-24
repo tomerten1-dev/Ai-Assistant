@@ -213,10 +213,8 @@ function presentCards(result, slots) {
     wifi_he: c.wifi_he, spa_he: c.spa_he, spa_access: c.spa_access,
     spa_access_he: c.spa_access_he, spa_note_he: c.spa_note_he, spa_min_age: c.spa_min_age,
     separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
-    booking_url: buildBookingUrl({
-      siteID: engine.hotelInfo(c.hotel).siteID, date: c.date,
-      room: c.room, adults: slots.adults, children_ages: slots.children_ages,
-    }),
+    // the hotel's own page — the customer clicked this hotel, not the home page
+    booking_url: buildBookingUrl(engine.hotelInfo(c.hotel)),
   }));
 }
 

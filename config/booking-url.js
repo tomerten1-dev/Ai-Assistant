@@ -1,21 +1,30 @@
-// תבנית ה-URL של כפתור "המשך להזמנה" — שם הלקוח רואה את המחיר המדויק.
-// הבוט עצמו לא מחשב ולא מציג מחיר (חוק אדום 3).
+// The "המשך להזמנה" link — where the customer goes to see the real price.
+// The bot never calculates or displays a price itself (red rule 3).
 //
-// TODO (תומר): למלא את הפורמט האמיתי של מנוע ההזמנות.
-// ה-siteID של כל מלון כבר קיים ב-data/resorts.json (נאסף מהאתר).
-// דף מלון באתר: https://www.pingwin.co.il/<page>?siteID=<siteID>
-// כנראה שמנוע ההזמנות מקבל גם תאריך/הרכב — יש לאמת את שמות הפרמטרים.
-const BOOKING_BASE = 'https://www.pingwin.co.il'; // TODO: כתובת מנוע ההזמנות המדויקת
+// It used to point at https://www.pingwin.co.il/?siteID=…&date=…&room=…, with
+// parameter names that were invented as placeholders. The site ignores them,
+// so every offer landed on the home page and the customer had to find their
+// hotel again. Tomer, 24/08: send them to the hotel they clicked.
+//
+// This is the hotel's own page, and the format is certain — it is the same URL
+// this project fetches from all over the build tools:
+//     https://www.pingwin.co.il/<page>?siteID=<siteID>
+//
+// STILL OPEN (Tomer): the real booking engine. The hotel page carries a
+// pre-order popup whose fields are d_from, adults, teens, big, kids, infants —
+// if you confirm what those mean and which endpoint they post to, deepLink()
+// below is where a prefilled date and party would go. Until it is confirmed it
+// stays unused: a link that lands on the right hotel beats a link that guesses
+// at a booking URL and lands nowhere.
+const BASE = 'https://www.pingwin.co.il';
 
-function buildBookingUrl({ siteID, date, room, adults, children_ages }) {
-  if (!siteID) return null;
-  const p = new URLSearchParams();
-  p.set('siteID', String(siteID));
-  if (date) p.set('date', date);              // TODO: שם פרמטר אמיתי
-  if (room) p.set('room', room);              // TODO: שם פרמטר אמיתי
-  if (adults != null) p.set('adults', String(adults));   // TODO
-  if (children_ages && children_ages.length) p.set('children', children_ages.join(',')); // TODO
-  return `${BOOKING_BASE}/?${p.toString()}`;  // פלייסהולדר לדמו
+function buildBookingUrl({ page, siteID }) {
+  if (!page || !siteID) return null;
+  return `${BASE}/${page}?siteID=${siteID}`;
 }
 
-module.exports = { buildBookingUrl, BOOKING_BASE };
+// Placeholder for the day the engine's parameters are known. Deliberately not
+// wired up — see above.
+function deepLink() { return null; }
+
+module.exports = { buildBookingUrl, deepLink, BOOKING_BASE: BASE };
