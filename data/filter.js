@@ -200,6 +200,16 @@ class SkiSearch {
 
     let candidates = this._filter(slots, party, { month: slots.month, country: slots.country, destination: slots.destination });
 
+    // Nothing near the day they named — widen to the month and say so
+    if (!candidates.length && slots.exact_day) {
+      const wider = this._filter({ ...slots, exact_day: null }, party,
+        { month: slots.month, country: slots.country, destination: slots.destination });
+      if (wider.length) {
+        candidates = wider;
+        relaxed.push({ type: 'exact_day', wanted: slots.exact_day, month: slots.month });
+      }
+    }
+
     // Nothing in that third of the month — widen to the whole month and say so,
     // rather than silently serving the opposite end of it.
     if (!candidates.length && slots.month_part) {
@@ -456,8 +466,13 @@ class SkiSearch {
       // an exclusion the customer stated ("לא צרפת") is never relaxed away —
       // widening the search must not resurrect what they ruled out
       if ((slots.excluded_countries || []).includes(u.country)) continue;
+      // named a hotel by name — that is the search, not a ranking hint
+      if (slots.hotel && u.hotel !== slots.hotel) continue;
       // asked for a specific third of the month
       if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
+      // asked for an exact departure day — within a few days of it counts,
+      // because departures are weekly and the customer means "around then"
+      if (slots.exact_day && Math.abs(+u.date.slice(8, 10) - slots.exact_day) > 3) continue;
       // a resort the customer ruled out ("לא בנסקו") — the country stays open
       if ((slots.excluded_destinations || []).some(
         d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
@@ -490,6 +505,8 @@ class SkiSearch {
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       if ((slots.excluded_countries || []).includes(u.country)) continue;
+      // named a hotel by name — that is the search, not a ranking hint
+      if (slots.hotel && u.hotel !== slots.hotel) continue;
       // asked for a specific third of the month
       if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
       // a resort the customer ruled out ("לא בנסקו") — the country stays open

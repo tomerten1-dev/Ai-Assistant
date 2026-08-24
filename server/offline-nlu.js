@@ -109,13 +109,15 @@ function parseText(text, slots) {
     // "בת" inside "שבת" and invented a 2-year-old out of "יש 2 חברים שומרים",
     // which then cost the party an adult. JS \b does not work here.
     const ageChunk = t.match(/(?:^|[^א-ת])(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)(?![א-ת])[^.!?]{0,45}/g);
-    let ages = [];
+    let ages = [], grownUps = 0;
     if (ageChunk) {
       for (let chunk of ageChunk) {
         chunk = chunk.split(/ינואר|פברואר|מרץ|מארס|דצמבר|חנוכה|פורים/)[0];
         for (const m of chunk.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)) {
           const n = +m[1];
           if (n >= 0 && n <= 17) ages.push(n);
+          // 18 and over is an adult, whatever the sentence called them
+          else if (n >= 18 && n <= 99) grownUps++;
         }
         // ages spelled out: "בני שש ותשע"
         if (!ages.length) {
@@ -136,6 +138,10 @@ function parseText(text, slots) {
     if (!ages.length && askedChildren) {
       ages = allNums.filter(n => n >= 0 && n <= 17).slice(0, 4);
     }
+    // Remembered, not applied: the adults parser runs further down and would
+    // overwrite the sum. "ילד בן 18" is an adult, whatever the sentence called
+    // them, and asking "בן כמה הילד?" after being told 18 reads as not listening.
+    if (grownUps) s._grownUps = grownUps;
     if (ages.length) {
       // "צריך קבוצה לילד בן 4" names one child out of two, and used to replace
       // the whole list — a family of four silently became a family of three
@@ -161,6 +167,13 @@ function parseText(text, slots) {
       // the customer just said so reads as not having listened.
       if (/(?:^|[^א-ת])(?:ילדים|ילדות|קטנים|הילדים)(?![א-ת])/.test(t) && !/בלי ילדים|ללא ילדים|אין ילדים/.test(t)) {
         s.no_children = false;
+      }
+      // "וילד בן 18" was counted BOTH as a child here and as an adult above,
+      // and "אנחנו 2" then had that phantom child subtracted from it — a party
+      // of three came out as one adult.
+      if (s._grownUps && s.children_count) {
+        s.children_count = Math.max(0, s.children_count - s._grownUps);
+        if (!s.children_count) { s.no_children = true; s.children_ages = []; }
       }
     }
     // "2 ילדים 5+9" — once we know HOW MANY children there are, a digit pair
@@ -240,6 +253,15 @@ function parseText(text, slots) {
       else if (!kids && total >= 1 && total <= 20) s.adults = total;
     }
   }
+  // the over-18s counted among the "children" join the adults
+  if (s._grownUps) {
+    s.adults = (s.adults || 0) + s._grownUps;
+    if (!(s.children_ages || []).length && !s.children_count) {
+      s.no_children = true; s.children_ages = [];
+    }
+    delete s._grownUps;
+  }
+
   // "אני ואחי", "אני, אשתי ו..." — count adult person-words.
   // NOTE: JS \b doesn't work with Hebrew letters, so boundaries are explicit.
   if (s.adults == null) {
@@ -253,6 +275,14 @@ function parseText(text, slots) {
   s.out_of_season = false;
   for (const [re, v] of MONTHS) if (re.test(t)) { s.month = v; break; }
   // a numeric date the customer wrote as "15.2" / "5/1"
+  // an exact day, not just its month: "12.2.27", "5/1"
+  {
+    const dm2 = t.match(/(?:^|[^\d])(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?![\d])/);
+    if (dm2 && +dm2[1] >= 1 && +dm2[1] <= 31 && [12, 1, 2, 3].includes(+dm2[2])) {
+      s.exact_day = +dm2[1];
+      s.month = +dm2[2];
+    }
+  }
   if (s.month == null) {
     const dm = t.match(/(?:^|[^\d])(\d{1,2})[./](\d{1,2})(?![\d])/);
     if (dm) {
@@ -383,6 +413,12 @@ function parseText(text, slots) {
       s.excluded_countries = s.excluded_countries.filter(x => x !== country);
       s.country = s.country || country;
     }
+  }
+
+  // --- a hotel named by name
+  {
+    const named = hotelNamed(t);
+    if (named) s.hotel = named;
   }
 
   // --- a resort pingwin sells but holds no commitments for. Saying nothing
@@ -611,6 +647,9 @@ function phrase(result, slots, cards) {
     if (r.type === 'camp_location') {
       lines.push('ביעד שביקשתם אין שבוע שבו פועלת קבוצת הגיל של הילד. הנה יעדים שבהם היא כן פועלת:');
     }
+    if (r.type === 'exact_day') {
+      lines.push(`אין יציאה ב-${r.wanted}.${r.month} בדיוק — היציאות שלנו שבועיות. הנה הקרובות אליה:`);
+    }
     if (r.type === 'month_part') {
       const HE = { early: 'תחילת', mid: 'אמצע', late: 'סוף' };
       lines.push(`ב${HE[r.wanted] || ''} החודש שביקשתם אין יציאה מתאימה, אז הרחבתי לכל החודש:`);
@@ -777,6 +816,50 @@ function cardFacts(c, asked, open) {
   return out;
 }
 
+// Hotels by name. A customer who writes "אני רוצה את קאזה קארינה" has named
+// the thing they want; showing it alongside two others is not an answer.
+// Built from the workbook's own hotel list, so it is a closed universe by
+// construction — a name that is not in here is not something we sell.
+const HOTEL_NAMES = (() => {
+  let hotels = {};
+  try { hotels = require('../data/resorts.json').hotels; } catch (e) { return []; }
+  const out = [];
+  for (const name of Object.keys(hotels)) {
+    // the latin name as written, plus a loose Hebrew transliteration key
+    out.push([name, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')]);
+  }
+  return out;
+})();
+
+// Hebrew spellings customers actually type. Only hotels whose Hebrew name is
+// unambiguous are listed; a wrong match is worse than no match.
+const HOTEL_HE = [
+  [/קאזה ?קארינה|קזה ?קרינה/, 'Casa Karina'],
+  [/רגנום/, 'Regnum'],
+  [/ויהרן|וירן/, 'Vihren'],
+  [/רילה/, 'Rila'],
+  [/שטראס|סטראס/, 'Strass'],
+  [/ספורט ?אנד ?ספא/, 'Sport'],
+  [/פריינהוף|פרינהוף/, 'Hotel Ferienhof'],
+  [/אלפנהוף/, 'Alpenhof Kristal'],
+  [/ברגהוף/, 'Berghof'],
+  [/שבל ?בלאן|שוואל ?בלאן/, 'Cheval Blanc (allotment)'],
+  [/אוקסליס|אוקסאליס/, 'Residence Oxalys'],
+  [/קשמיר/, 'Hotel Kashmir'],
+  [/לודג' ?פארק|לודז ?פארק/, 'LODGE PARK (Allotment)'],
+];
+
+// Returns a hotel only when EXACTLY one is named. "מה עדיף קאזה קארינה או
+// רגנום?" names two, and locking the search to whichever matched first answers
+// a question the customer did not ask.
+function hotelNamed(text) {
+  const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  const found = new Set();
+  for (const [re, name] of HOTEL_HE) if (re.test(t)) found.add(name);
+  for (const [name, re] of HOTEL_NAMES) if (name.length >= 5 && re.test(t)) found.add(name);
+  return found.size === 1 ? [...found][0] : null;
+}
+
 // Standing answers to the questions customers actually ask (config/faq.json).
 // Before this, anything with a question mark and no ski vocabulary in it got
 // "אני כאן בעיקר להתאמת חופשות סקי" — i.e. a customer asking about
@@ -919,6 +1002,7 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  hotelNamed,
   wantsCallback,
   unknownAnswer,
   noMatchAnswer, parseText, nextQuestion, phrase, deflect };

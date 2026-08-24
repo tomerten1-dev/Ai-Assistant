@@ -462,6 +462,56 @@ t('the booking button opens that hotel, not the home page', () => {
   });
 });
 
+
+t('naming one hotel searches that hotel', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'אני רוצה את קאזה קארינה בפברואר' }], slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length, 'no cards');
+    for (const c of out.cards) assert.strictEqual(c.hotel, 'Casa Karina', 'offered ' + c.hotel);
+  });
+});
+
+t('naming two hotels is a comparison, not a filter', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בפברואר בבולגריה, מה עדיף קאזה קארינה או רגנום?' }],
+    slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length > 1, 'locked onto one hotel');
+    assert.ok(/לא אדרג/.test(out.reply_he), 'ranked them: ' + out.reply_he);
+    assert.ok(!/הכי טוב/.test(out.reply_he), 'red rule 6: ' + out.reply_he);
+  });
+});
+
+t('"זה כולל ארוחות?" is answered, not brushed off', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זה כולל ארוחות?' }], slots: {},
+  }).then(out => {
+    assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he), 'off-topic line: ' + out.reply_he);
+    assert.ok(/בסיס האירוח/.test(out.reply_he), out.reply_he);
+  });
+});
+
+t('an 18-year-old is an adult, and is not asked about', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'אנחנו 2 מבוגרים וילד בן 18, פברואר' }], slots: {},
+  }).then(out => {
+    assert.strictEqual(out.slots.adults, 3, JSON.stringify(out.slots.adults));
+    assert.ok(!/בן כמה הילד/.test(out.reply_he), out.reply_he);
+  });
+});
+
+t('an exact departure date is honoured, or the gap is named', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים ב-12.2.27 בבולגריה' }], slots: {},
+  }).then(out => {
+    assert.strictEqual(out.slots.exact_day, 12);
+    if (!out.cards.length) return;
+    const near = out.cards.every(c => Math.abs(+c.date.slice(8, 10) - 12) <= 3);
+    if (!near) assert.ok(/אין יציאה ב-12/.test(out.reply_he), out.reply_he);
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

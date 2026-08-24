@@ -43,7 +43,7 @@ const EMPTY_SLOTS = {
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
-  price_objection: false, shown_price_min: null, month_part: null,
+  price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [],
 };
@@ -81,6 +81,8 @@ function toSearchSlots(slots) {
     country: any(slots.country),
     departure_airport: any(slots.departure_airport),
     month_part: slots.month_part || null,
+    exact_day: slots.exact_day || null,
+    hotel: slots.hotel || null,
     price_objection: !!slots.price_objection,
     shown_price_min: slots.shown_price_min || null,
     off_commitment_destination: slots.off_commitment_destination || null,
