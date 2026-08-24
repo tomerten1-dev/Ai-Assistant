@@ -104,8 +104,8 @@
     // gallery: the photo fills the top of the card, arrows sit on it
     + '.card .gal{position:relative;width:calc(100% + 28px);margin:-14px -14px 8px;border-radius:13px 13px 0 0;overflow:hidden;background:#e8edf1}'
     + '.card .photo{width:100%;height:150px;object-fit:cover;display:block}'
-    + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;'
-    + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';font-size:19px;line-height:1;cursor:pointer;'
+    + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;'
+    + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';line-height:0;cursor:pointer;padding:0;'
     + 'display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(16,32,48,.25);opacity:0;transition:opacity .15s}'
     + '.card:hover .galb,.card:focus-within .galb{opacity:1}'
     // always reachable on a touch screen, where there is no hover
@@ -314,11 +314,25 @@
             count.textContent = (at + 1) + '/' + photos.length;
           };
         };
-        // RTL: the arrow drawn on the right moves forward
-        var prev = el('button', 'galb next', '\u2039');
+        // Chevrons drawn as SVG, not written as the characters U+2039/U+203A:
+        // those carry the Bidi_Mirrored property, so inside an RTL container the
+        // browser flips them and both arrows end up pointing outwards. The DOM
+        // was right and the screen was wrong.
+        var chevron = function (pointsLeft) {
+          var b = el('button', 'galb');
+          b.innerHTML = '<svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor"'
+            + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + (pointsLeft ? '<polyline points="7.5 1.5 1.5 7.5 7.5 13.5"/>'
+                          : '<polyline points="1.5 1.5 7.5 7.5 1.5 13.5"/>') + '</svg>';
+          return b;
+        };
+        // RTL: the chevron on the LEFT is the one that moves forward
+        var prev = chevron(true);
+        prev.className = 'galb next';
         prev.setAttribute('aria-label', 'התמונה הבאה');
         prev.addEventListener('click', step(1));
-        var next = el('button', 'galb prev', '\u203a');
+        var next = chevron(false);
+        next.className = 'galb prev';
         next.setAttribute('aria-label', 'התמונה הקודמת');
         next.addEventListener('click', step(-1));
         gal.appendChild(prev); gal.appendChild(next); gal.appendChild(count);
@@ -357,7 +371,7 @@
         d.appendChild(el('span', 'rval', val));
         panel.appendChild(d);
       };
-      if (rf.name && rf.name !== c.room) line('באתר', rf.name);
+      if (rf.name && rf.name !== c.room) line('שם החדר', rf.name);
       line('גודל', rf.size_he);
       line('מיטות', rf.beds_he);
       line('רחצה', rf.bath_he);
