@@ -63,6 +63,22 @@ t('the names of what we offered are not foreign words', () => {
   assert.strictEqual(phrasing.validate('ב-Casa Karina הספא כלול', OK).ok, true);
 });
 
+// Three audit rounds flagged the same construction: the model writing about
+// the offers using our own field names. Asking it to stop did not work.
+t('writing about the offers instead of to the customer is refused', () => {
+  for (const bad of [
+    'ההצעות נבחרו כי הן מתאימות להרכבים של 5, 3 ו-6 נוסעים',
+    'בהתאם לנימוקים של כל הצעה',
+    'האפשרויות מתאימות להרכב שסומן',
+  ]) {
+    assert.strictEqual(phrasing.validate(bad, OK).ok, false, bad);
+  }
+});
+
+t('a normal sentence about a hotel still passes', () => {
+  assert.strictEqual(phrasing.validate('בקאזה קארינה בבנסקו הספא כלול, והמלון על המסלול.', OK).ok, true);
+});
+
 t('an order number is refused (red rule 2)', () => {
   const v = phrasing.validate('ההזמנה שלכם 483920 מאושרת', OK);
   assert.strictEqual(v.ok, false);

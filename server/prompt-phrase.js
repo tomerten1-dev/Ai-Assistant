@@ -123,6 +123,13 @@ function validate(text, { cards, fallback }) {
   // red rule 6
   if (/הכי טוב|הטוב ביותר/.test(t)) return { ok: false, why: 'superlative' };
 
+  // Writing ABOUT the offers instead of to the customer. Three audit rounds in
+  // a row flagged the same handful of constructions, all of them lifted
+  // straight out of our own JSON field names.
+  if (/ההצעות (נבחרו|מתאימות|הוצגו|שנבחרו)|האפשרויות (נבחרו|מתאימות)|להרכב(ים)? של|שסומנו|נימוק|בהתאם לנימוקים|ההצעה נבחרה/.test(t)) {
+    return { ok: false, why: 'writes about the offers, not to the customer' };
+  }
+
   // red rule 1 — every hotel it names must be one we actually offered
   const shown = cards.map(c => c.hotel);
   for (const name of KNOWN_HOTELS) {

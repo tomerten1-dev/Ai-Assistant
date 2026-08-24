@@ -195,9 +195,13 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
     // Whole sentences it already said last turn, dropped. "ההצעות נראות פנויות,
     // ונציג יאשר סופית" is true every time and worth saying once.
     if (lastReply) {
-      const norm = x => x.replace(/[\s.,;:!?"'׳״]+/g, '').trim();
-      const before = new Set(String(lastReply).split(/(?<=[.!?])\s+/).map(norm).filter(Boolean));
-      const kept = text.split(/(?<=[.!?])\s+/).filter(x => !before.has(norm(x)));
+      // Near enough is repetition: "ההצעות נראות פנויות, ונציג יאשר סופית" and
+      // "הן נראות פנויות ונציג יאשר סופית את הזמינות" are the same sentence to
+      // a reader, and only the second one annoys them.
+      const norm = x => x.replace(/[\s.,;:!?"'׳״\-—]+/g, '').trim();
+      const shape = x => norm(x).slice(0, 24);
+      const before = new Set(String(lastReply).split(/(?<=[.!?])\s+/).map(shape).filter(Boolean));
+      const kept = text.split(/(?<=[.!?])\s+/).filter(x => !before.has(shape(x)));
       if (kept.length && kept.join(' ').trim().length > 25) text = kept.join(' ').trim();
     }
     const verdict = phrasing.validate(text, { cards, fallback });
@@ -586,7 +590,13 @@ async function handleChat(body) {
   // A direct answer to a direct question — a price rule, a booking decision, a
   // refusal — is complete on its own. Letting the model add three sentences of
   // card facts under it turned "ניקח את הראשון" into a lecture.
-  const answeredOnly = !!faqHit && !slotsChanged(prevSlots, slots);
+  // Some standing answers are about what we will NOT do. Letting the model add
+  // its own paragraph under them produced a reply that refused to rank hotels
+  // and then ranked them.
+  const NO_PARAGRAPH_AFTER = new Set(['compare', 'compare_countries', 'complaint',
+    'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human']);
+  const answeredOnly = !!faqHit &&
+    (!slotsChanged(prevSlots, slots) || NO_PARAGRAPH_AFTER.has(faqHit.id));
   const intro = (deflection || answeredOnly) ? templated : await phraseWithModel({
     slots: sayingSlots, cards, result, fallback: templated,
     lastReply: lastReply ? lastReply.content : null,
