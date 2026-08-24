@@ -97,6 +97,9 @@ function handoffLine() {
 }
 
 // The line the bot ends on. `kind` is 'with_offers' | 'no_offers' | 'after_question'.
+// "אם אחת מהן נראית לכם" printed above a single card. A closing line that does
+// not match what the customer is looking at is the kind of small wrongness that
+// makes a chat feel automated.
 function closing(kind) {
   const c = load().closing_he || {};
   return c[kind + '_he'] || '';

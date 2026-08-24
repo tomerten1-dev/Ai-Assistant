@@ -357,7 +357,11 @@ async function handleChat(body) {
   // them would be the token policy thrown away for nothing.
   const looksLikeQuestion = /[?]/.test(lastUser) ||
     /^\s*(מה|מי|מתי|איפה|איך|כמה|האם|יש |אפשר|צריך|למה|אם )/.test(lastUser) ||
-    (!slotsChanged(prevSlots, slots) && lastUser.trim().length > 8);
+    (!slotsChanged(prevSlots, slots) && lastUser.trim().length > 8) ||
+    // A requirement stated inside a long request is a question too: "רוצים
+    // העברות פרטיות ומלון על המסלול" has an answer waiting for it, and it was
+    // going unanswered because the same sentence also filled slots.
+    lastUser.trim().length > 60;
   if (!faqHit && looksLikeQuestion && !offline.guard(lastUser) && !offline.deflect(lastUser)) {
     faqHit = await routeToAnswer(lastUser);
   }
@@ -625,7 +629,11 @@ async function handleChat(body) {
     // two-room splits are offers too — they render as their own cards in
     // the widget, so the closing must not tell the customer we found nothing
     const anyOffer = cards.length || (result.two_room_splits || []).length;
-    const close = closedBefore ? '' : guidance.closing(anyOffer ? 'with_offers' : 'no_offers');
+    // "אם אחת מהן" above a single card reads as a machine that did not look at
+    // its own answer.
+    const oneOnly = cards.length === 1 && !(result.two_room_splits || []).length;
+    const close = closedBefore ? ''
+      : guidance.closing(anyOffer ? (oneOnly ? 'with_one_offer' : 'with_offers') : 'no_offers');
     const said = parts.join(String.fromCharCode(10));
     if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
     // A last trim on the assembled reply. phrase() caps its own lines, but a

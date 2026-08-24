@@ -1110,6 +1110,26 @@ t('grandparents are counted in the party', () =>
       assert.deepEqual(out.slots.children_ages, [8, 11]);
     }));
 
+t('a single offer is not called "one of them"', () => {
+  // pinned by construction: an exact day plus a named hotel usually leaves one
+  return handleChat({ messages: [{ role: 'user', content: 'משפחה של 5 עם ילדים בני 4 8 ו-12, סוף פברואר, מלון על המסלול, מנתב"ג' }], slots: {} })
+    .then(out => {
+      if (out.cards.length !== 1) return;             // nothing to check today
+      assert.ok(!/אם אחת מהן/.test(out.reply_he), out.reply_he);
+    });
+});
+
+for (const [q, want] of [
+  ['רוצים העברות פרטיות משדה התעופה', /הסעה פרטית|הסעות בחבילה/],
+  ['אפשר חדרים קרובים זה לזה?', /בקשה מהמלון/],
+  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /שינוי שם|חברת התעופה/],
+]) {
+  t('answered rather than deflected: ' + q.slice(0, 26), () =>
+    handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
+      assert.ok(want.test(out.reply_he), out.reply_he);
+    }));
+}
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
