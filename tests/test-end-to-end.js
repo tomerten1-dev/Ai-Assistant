@@ -154,6 +154,48 @@ t('naming one child does not delete the others', () => {
   });
 });
 
+
+t('a question whose answer changes nothing is not asked', () => {
+  // a 16-year-old has no camp group in any week, so "תרצו קייטנה?" is a
+  // formality that costs the customer a turn
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג עם ילד בן 16, מרץ' }], slots: {},
+  }).then(out => {
+    assert.ok(!/קייטנ/.test(out.reply_he), 'asked about a camp anyway: ' + out.reply_he);
+    assert.ok(out.cards.length, 'and it should have gone straight to offers');
+  });
+});
+
+t('the reply says what one bend would open up', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג עם שני ילדים בני 4 ו-8, פברואר בבולגריה, צריך קייטנה בעברית' }],
+    slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length, 'no cards');
+    assert.ok(/נפתחות|אם תוותרו|אם תהיו גמישים/.test(out.reply_he),
+      'offered no alternative at all: ' + out.reply_he);
+  });
+});
+
+t('nothing the customer said is silently dropped', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים בפברואר באוסטריה' }],
+    slots: { notes_from_customer: ['אשתי בהריון', 'חוגגים 10 שנות נישואין'] },
+  }).then(out => {
+    assert.ok(/בהריון/.test(out.reply_he), 'lost a stated constraint: ' + out.reply_he);
+    assert.ok(/נישואין/.test(out.reply_he), 'lost a stated constraint: ' + out.reply_he);
+  });
+});
+
+t('a tradeoff is never suggested for the Sabbath', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג שומרי שבת, בלי טיסות בשבת, פברואר' }], slots: {},
+  }).then(out => {
+    assert.ok(!/שבת.{0,30}(תוותרו|גמישים|נפתחות)/.test(out.reply_he),
+      'suggested trading away the Sabbath: ' + out.reply_he);
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

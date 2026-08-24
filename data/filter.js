@@ -293,6 +293,14 @@ class SkiSearch {
     }
     if (!candidates.length && !splits.length) relaxed.push({ type: 'human_rep' });
 
+    // What the customer could have if they bent one thing. Only worth saying
+    // when they already have something — with an empty result set the
+    // relaxation ladder above has already moved, and said so.
+    if (candidates.length) {
+      const room = this.tradeoffs(slots, party, this._distinctWeeks(candidates));
+      if (room.length) notes.push({ type: 'tradeoffs', items: room.slice(0, 2) });
+    }
+
     // preference scoring (soft) + recommended-first ordering
     const prefs = slots.preferences || [];
     const wantsBudget = p_budget(prefs);
@@ -422,6 +430,108 @@ class SkiSearch {
       }
     }
     return splits.sort((x, y) => x.date.localeCompare(y.date));
+  }
+
+  /* ---- is this question worth asking? ----
+     The bot asked a fixed ladder: adults, children, month, camp, airport,
+     destination — every time, in that order, whether or not the answer could
+     change anything. A rep does not do that. If only one month has anything
+     for this party, "מתי תרצו לצאת?" is not a question, it is a formality; and
+     if every remaining option flies from the same airport, asking which
+     airport wastes the customer's turn.
+
+     Returns the number of DISTINCT answers that would lead to different
+     results. 1 or 0 means the question is not worth asking. */
+  questionValue(key, slots) {
+    const party = (slots.adults || 0) + (slots.children_ages || []).length;
+    if (!party) return 2;                      // nothing known yet — must ask
+    // The constraint under test must be LIFTED before counting, or the answer
+    // is circular: filtering to January and then asking how many months are
+    // available always returns one.
+    const run = (over, opts) => this._filter({ ...slots, ...over }, party, {
+      month: slots.month, country: slots.country, destination: slots.destination, ...opts,
+    });
+
+    if (key === 'month') {
+      const all = run({ month: null }, { month: null });
+      return new Set(all.map(u => SkiSearch.monthOf(u.date))).size;
+    }
+    if (key === 'country') {
+      const all = run({ country: null, destination: null }, { country: null, destination: null });
+      return new Set(all.map(u => u.country)).size;
+    }
+    if (key === 'airport') {
+      // worth asking only if the answer would change what we can offer
+      const sizes = new Set([run({ departure_airport: null }, {}).length]);
+      for (const a of Object.keys(this.departures.airports || {})) {
+        sizes.add(run({ departure_airport: a }, {}).length);
+      }
+      return sizes.size;
+    }
+    if (key === 'kids_club') {
+      // worth asking only when some weeks run a camp for THESE children and
+      // some do not — otherwise the answer cannot change the offer set
+      const base = run({ needs_hebrew_kids_club: false }, {});
+      if (!base.length) return 2;
+      const withCamp = base.filter(u => {
+        const cov = this.campsCoverage(this.resortOf(u.hotel), u.date, slots.children_ages);
+        return cov.running.length && !cov.missing.length;
+      }).length;
+      return withCamp > 0 && withCamp < base.length ? 2 : 1;
+    }
+    return 2;
+  }
+
+  /* ---- what would open up if one constraint were dropped ----
+     A rep who is worth talking to does not just answer the question asked. He
+     says "with the Hebrew camp there is one week; without it there are eleven;
+     move a week and there are three WITH it." The bot never said anything of
+     the kind, because the relaxation ladder only ran when the result set was
+     EMPTY — with two offers in hand it stayed quiet about the eight the
+     customer could have had.
+
+     This is pure counting against the same deterministic filter. No model, no
+     invention: each entry is "how many units qualify if exactly this one
+     constraint is lifted". */
+  tradeoffs(slots, party, currentCount) {
+    const out = [];
+    const count = (over) => {
+      const alt = { ...slots, ...over };
+      const p = (alt.adults || 0) + (alt.children_ages || []).length;
+      let list = this._filter(alt, p || party, {
+        month: alt.month, country: alt.country, destination: alt.destination,
+        ignoreNights: over.nights_wanted === null,
+      });
+      if (alt.needs_hebrew_kids_club) {
+        list = list.filter(c => c.camps && !(c.camps.missing || []).length);
+      }
+      return this._distinctWeeks(list);
+    };
+
+    if (slots.needs_hebrew_kids_club) {
+      const n = count({ needs_hebrew_kids_club: false });
+      if (n > currentCount) out.push({ drop: 'camp', gain: n - currentCount, total: n });
+    }
+    if (slots.month != null && slots.month !== 'any') {
+      const n = count({ month: null });
+      if (n > currentCount) out.push({ drop: 'month', gain: n - currentCount, total: n });
+    }
+    if (slots.country || slots.destination) {
+      const n = count({ country: null, destination: null });
+      if (n > currentCount) out.push({ drop: 'country', gain: n - currentCount, total: n });
+    }
+    if (slots.nights_wanted) {
+      const n = count({ nights_wanted: null });
+      if (n > currentCount) out.push({ drop: 'nights', gain: n - currentCount, total: n });
+    }
+    // NOT offered: Sabbath flights. It is not a preference to be traded away,
+    // and suggesting it would be offensive rather than helpful.
+    return out.sort((a, b) => b.gain - a.gain);
+  }
+
+  // distinct hotel+date pairs — the unit a customer actually chooses between
+  _distinctWeeks(list) {
+    return new Set(list.map(c => c.hotel + '|' + c.date)).size;
   }
 
   // How well a hotel meets the requirements the customer named in words

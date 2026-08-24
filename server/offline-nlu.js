@@ -224,7 +224,11 @@ function parseText(text, slots) {
     m = t.match(/(?:משפחה של|של)\s*(\d{1,2})/);
     if (m) {
       const total = +m[1], kids = (s.children_ages || []).length;
+      // "משפחה של 5, הילדים בני 6 ו-9" → three adults.
+      // "משפחה של 4" alone is still four travellers; leaving adults unknown
+      // meant asking "כמה מבוגרים?" of someone who had just said.
       if (kids && total > kids) s.adults = total - kids;
+      else if (!kids && total >= 1 && total <= 20) s.adults = total;
     }
   }
   // "אני ואחי", "אני, אשתי ו..." — count adult person-words.
@@ -555,6 +559,34 @@ function phrase(result, slots, cards) {
     }
     if (r.type === 'human_rep') lines.push('לא מצאתי התאמה במערכת — נציג אנושי ישמח לעזור: 04-8557722.');
   }
+  // Offline, or when the model's wording is rejected, these still must not
+  // vanish — the template says them plainly rather than well.
+  const heard = (slots.notes_from_customer || []).filter(Boolean);
+  if (cards.length && heard.length) {
+    lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');
+  }
+
+  // What one bend would open up. Said once, for the single best trade — a list
+  // of alternatives is a menu, and a menu is not advice.
+  const trade = note('tradeoffs');
+  if (cards.length && trade && trade.items.length) {
+    const best = trade.items[0];
+    const HE = {
+      camp: 'אם תוותרו על הקייטנה בעברית',
+      month: 'אם תהיו גמישים בתאריך',
+      country: 'אם תשקלו גם יעדים אחרים',
+      nights: 'אם תהיו גמישים במספר הלילות',
+    };
+    // A precise count is useful up to a point; past it, "69 אפשרויות" reads as
+    // noise rather than advice.
+    if (HE[best.drop] && best.gain >= 2) {
+      const much = best.gain >= 12
+        ? 'נפתחות הרבה יותר אפשרויות'
+        : `נפתחות עוד ${best.gain} אפשרויות`;
+      lines.push(`${HE[best.drop]} — ${much}. אני כאן אם תרצו לראות אותן.`);
+    }
+  }
+
   // acknowledge an active preference, so a refine chip visibly does something
   const prefs = slots.preferences || [];
   if (cards.length && prefs.length && !lines.length) {

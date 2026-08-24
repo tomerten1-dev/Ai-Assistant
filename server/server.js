@@ -28,6 +28,10 @@ function aiMode() {
 }
 // how many questions the bot may ask before it must show results
 const MAX_QUESTIONS = +(process.env.MAX_QUESTIONS || 3);
+// Questions that may be skipped when the answer cannot change the result.
+// adults and children_ages are NOT here: the party size decides which rooms
+// even fit, so it is never merely informative.
+const SKIPPABLE = new Set(['month', 'country', 'airport', 'kids_club']);
 const PORT = +(process.env.PORT || 8787);
 const ROOT = path.join(__dirname, '..');
 const engine = new SkiSearch();
@@ -36,7 +40,7 @@ const EMPTY_SLOTS = {
   adults: null, children_ages: [], no_children: null, month: null,
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
-  excluded_countries: [], excluded_destinations: [],
+  excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [],
 };
@@ -233,6 +237,15 @@ async function handleChat(body) {
         merged.preferences = [...new Set([
           ...(slots.preferences || []), ...(parsed.slots.preferences || []),
         ])];
+        // Things the customer said that no slot can hold — "אשתי בהריון",
+        // "הגדול על סנובורד", "חוגגים יום נישואין". They used to fall on the
+        // floor: not filtered on, not answered, not mentioned, which is what
+        // makes a bot feel like it did not listen. They accumulate, and the
+        // phrasing layer is required to acknowledge them.
+        merged.notes_from_customer = [...new Set([
+          ...(slots.notes_from_customer || []),
+          ...(parsed.slots.notes_from_customer || []),
+        ])].slice(0, 6);
         slots = merged;
         modelUsed = true;
         if (!parsed.ready_to_search && parsed.reply_he) replyIfNotReady = parsed.reply_he;
@@ -266,7 +279,23 @@ async function handleChat(body) {
   // being interviewed before any offer is what makes a bot feel like a form.
   let pendingQuestion = null;
   if (!replyIfNotReady) {
-    const q = offline.nextQuestion(slots, prevSlots._lastQuestion || null);
+    let q = offline.nextQuestion(slots, prevSlots._lastQuestion || null);
+    // A question whose every answer leads to the same offers is not a question.
+    // Skip it and take the next one, rather than spending the customer's turn.
+    const asked = new Set();
+    while (q && !asked.has(q.key) && SKIPPABLE.has(q.key)) {
+      asked.add(q.key);
+      let value = 2;
+      try { value = engine.questionValue(q.key, toSearchSlots(slots)); }
+      catch (e) { value = 2; }                       // never let this block a turn
+      if (value > 1) break;
+      // record the non-answer so nextQuestion moves on, and try the next gap
+      if (q.key === 'month') slots.month = slots.month || 'any';
+      if (q.key === 'country') slots.country = slots.country || 'any';
+      if (q.key === 'airport') slots.departure_airport = slots.departure_airport || 'any';
+      if (q.key === 'kids_club') slots.needs_hebrew_kids_club = slots.needs_hebrew_kids_club ?? false;
+      q = offline.nextQuestion(slots, null);
+    }
     if (q && q.blocking) { slots._lastQuestion = q.key; replyIfNotReady = q.he; }
     else { pendingQuestion = q; delete slots._lastQuestion; }
   }
