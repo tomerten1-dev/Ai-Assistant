@@ -338,7 +338,8 @@ async function handleChat(body) {
   // prices, flight times) — tests/test-faq.js pins that.
   // The red-rule guard runs unconditionally — not gated on the FAQ, not gated
   // on whether the message also filled a slot.
-  const guarded = offline.guard(lastUser);
+  const guarded = offline.guard(lastUser) ||
+    offline.unknownHotel(lastUser);
   const deflection = guarded || (faqHit ? null
     : (slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser)));
   // deflect() guards the red rules (no customer names, no exact prices) so it
@@ -350,9 +351,17 @@ async function handleChat(body) {
   // it reads as a hedge right before the specific answer.
   const PER_CARD_FAQ = new Set(['spa', 'wifi']);
   const faqSuppressed = faqHit && PER_CARD_FAQ.has(faqHit.id);
+  // Suppressed is not the same as unanswered: without a word the customer is
+  // left wondering whether the question landed. One line points at the place
+  // the per-hotel answer actually is.
+  const PER_CARD_POINTER = {
+    spa: 'תנאי הספא שונים בין המלונות — מה שחל על כל אחד מהם כתוב על ההצעה שלו.',
+    wifi: 'תנאי האינטרנט שונים בין המלונות — מה שחל על כל אחד מהם כתוב על ההצעה שלו.',
+  };
   let preamble = [
     deflection,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
+    !deflection && faqSuppressed ? PER_CARD_POINTER[faqHit.id] : null,
     offTopic && !deflection ? OFF_TOPIC_HE : null,
     slots.out_of_season ? SEASON_HE : null,
   ].filter(Boolean).join('\n');
@@ -487,6 +496,24 @@ async function handleChat(body) {
       if (drop < 0) break;
       all.splice(drop, 1);
     }
+    // A sentence the customer already read, above the same offers, is noise
+    // the second time. It was the loudest thing about a long conversation:
+    // five turns in a row opening with the same two lines.
+    const cardKey = cards.map(c => c.hotel + '|' + c.date).join(',');
+    const sameOffers = !!cardKey && cardKey === (prevSlots._lastCards || null);
+    const alreadySaid = new Set(sameOffers ? (prevSlots._lastLines || []) : []);
+    if (alreadySaid.size) {
+      const fresh = all.filter(l => !alreadySaid.has(l));
+      // Everything we were about to say has already been said, above these same
+      // offers. Saying it all again is worse than saying one true short thing.
+      all = fresh.length ? fresh
+        : ['הפרטים המלאים של כל הצעה מופיעים על הכרטיס שלה. תגידו לי מה חשוב לכם ואדייק.'];
+    }
+    slots._lastCards = cardKey;
+    // The memory accumulates while the offers stand still: suppressing a line
+    // for one turn only to say it again on the next is the same repetition,
+    // one turn later.
+    slots._lastLines = [...new Set([...alreadySaid, ...all])].slice(-24);
     return all.join(String.fromCharCode(10));
   })();
 

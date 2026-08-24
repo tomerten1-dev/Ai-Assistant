@@ -681,6 +681,92 @@ for (const [q, want] of [
     }));
 }
 
+/* ---- the tenth reading round: long conversations ---- */
+
+// Five turns of one conversation all opened with the same two sentences.
+t('a line already said above the same offers is not said again', () => {
+  const msgs = [{ role: 'user', content: 'משפחה 2+2 בני 5 ו-11, פברואר בבולגריה, צריך קייטנה בעברית' }];
+  let slots = {}, firstLines = [];
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots; firstLines = a.reply_he.split(String.fromCharCode(10)).filter(Boolean);
+    msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'ומה לגבי הוויפי?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => {
+    const same = b.cards.map(c => c.hotel + '|' + c.date).join(',') ===
+      (b.slots._lastCards || '');
+    if (!same) return;                       // different offers, repetition is fine
+    const again = b.reply_he.split(String.fromCharCode(10)).filter(l => firstLines.includes(l));
+    assert.equal(again.length, 0, 'repeated: ' + again.join(' / '));
+  });
+});
+
+// The commonest question of all, and it used to be answered with silence.
+t('"מה כולל המחיר?" is answered', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מה כולל המחיר?' }], slots: {} })
+    .then(out => assert.ok(/טיסות|כלול/.test(out.reply_he), out.reply_he)));
+
+// "מחוברים" contains "ברים": a family asking for connecting rooms was sorted
+// by nightlife. The fifth Hebrew word-boundary bug in this project.
+t('"חדרים מחוברים" is not read as a request for bars', () =>
+  handleChat({ messages: [{ role: 'user', content: 'משפחה של 5, צריך חדרים מחוברים, פברואר' }], slots: {} })
+    .then(out => {
+      assert.ok(!(out.slots.preferences || []).includes('אפרה-סקי'),
+        'preferences: ' + JSON.stringify(out.slots.preferences));
+    }));
+
+// A hotel we do not sell, named outright.
+t('a hotel we do not sell is named as such, without internal wording', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אני רוצה את מלון הילטון בבנסקו' }], slots: {} })
+    .then(out => {
+      assert.ok(/לא מוכרים/.test(out.reply_he), out.reply_he);
+      assert.ok(!/התחייבו/.test(out.reply_he), 'internal wording leaked: ' + out.reply_he);
+    }));
+
+// "תשכח מהכל" clears what came before — and keeps what the same sentence says.
+t('"בעצם תשכח מהכל" starts over without dropping the new request', () => {
+  const msgs = [{ role: 'user', content: 'משפחה 2+3, מרץ, אוסטריה' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots;
+    msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'בעצם תשכח מהכל, זוג בלבד לבולגריה' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => {
+    assert.equal(b.slots.adults, 2, 'adults: ' + b.slots.adults);
+    assert.equal((b.slots.children_ages || []).length, 0, 'children survived the reset');
+    assert.equal(b.slots.country, 'bulgaria', 'country: ' + b.slots.country);
+    assert.equal(b.slots.month, null, 'March survived the reset');
+  });
+});
+
+// An English message parsed to nothing at all.
+t('an English request is understood offline too', () =>
+  handleChat({ messages: [{ role: 'user', content: 'family of 4, two kids aged 7 and 9, february, bulgaria' }], slots: {} })
+    .then(out => {
+      assert.equal(out.slots.month, 2, 'month: ' + out.slots.month);
+      assert.equal(out.slots.country, 'bulgaria', 'country: ' + out.slots.country);
+      assert.deepEqual(out.slots.children_ages, [7, 9]);
+      assert.equal(out.slots.adults, 2, 'adults: ' + out.slots.adults);
+    }));
+
+for (const [q, want] of [
+  ['כמה זמן ההעברה מהשדה למלון?', /ק"מ|מרחק/],
+  ['כמה רחוק המלון מהמסלול?', /מרחק מהמעלית|על המסלול/],
+  ['איזה חדר זה בדיוק?', /שם החדר|חדר במלון/],
+  ['אתה בוט או בן אדם?', /עוזר אוטומטי/],
+  ['הייתי אצלכם בשנה שעברה והמלון היה מאכזב', /מצטער לשמוע/],
+  ['יש הנחה אם מזמינים עכשיו?', /מזמין מוקדם|מחירים העדכניים/],
+  ['אפשר מדריך פרטי בעברית?', /שיעור פרטי/],
+  ['למה אין?', /באמת פנוי|מלאי/],
+]) {
+  t('answered rather than deflected: ' + q.slice(0, 26), () =>
+    handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
+      assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he), 'off topic: ' + out.reply_he);
+      assert.ok(want.test(out.reply_he), out.reply_he);
+    }));
+}
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

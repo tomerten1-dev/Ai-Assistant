@@ -59,7 +59,7 @@ const OFF_COMMITMENT = [
 // Customers describe what they want, not our tag names: "סאונה וג'קוזי" is
 // a spa request and "מרחק הליכה קצר מהמעליות" is a slopes-proximity request.
 const PREFS = [
-  [/אפרה|חיי לילה|ברים/, 'אפרה-סקי'],
+  [/אפרה|חיי לילה|(?:^|[^א-ת])ברים(?![א-ת])|פאבים/, 'אפרה-סקי'],
   [/ספא|סאונה|ג'?קוזי|בריכה|עיסוי|מרחץ/, 'ספא'],
   [/קרוב למסלול|על המסלול|קרוב למעלי|ליד המעלי|הליכה קצרה|מרחק הליכה קצר|ski ?in/i, 'קרוב למסלולים'],
   [/שקט|רגוע|לא רועש/, 'שקט'],
@@ -91,6 +91,16 @@ function parseText(text, slots) {
     .replace(/([א-ת])[-–—]([א-ת])/g, '$1 $2')
     .replace(/[!?.,]{2,}/g, ' ')
     .replace(/\s+/g, ' ').trim() + ' ';
+
+  // "בעצם תשכח מהכל" — starting over. Merging the new sentence into the old
+  // answers a question the customer just withdrew. It runs before the other
+  // parsers, so what the same sentence goes on to say is kept.
+  if (/תשכח מהכל|תשכחי מהכל|נתחיל מחדש|בוא נתחיל מהתחלה|תתחיל מחדש|תמחק הכל|שכח מה שאמרתי/.test(t)) {
+    for (const k of ['month', 'country', 'destination', 'month_part', 'exact_day', 'hotel',
+      'nights_wanted', 'needs_hebrew_kids_club', 'wants_two_rooms']) s[k] = null;
+    s.children_ages = []; s.no_children = null; s.adults = null;
+    s.preferences = []; s.excluded_countries = []; s.excluded_destinations = [];
+  }
 
   // The question we just asked is the strongest signal about what this
   // message means. A bare "4" after "באילו גילאים?" is an AGE — never a count.
@@ -281,6 +291,28 @@ function parseText(text, slots) {
     for (const m2 of t.matchAll(/(?:^|[^א-ת])(?:ו|ש|וש|כש)?(אני|אחי|אחותי|אשתי|בעלי|בן זוגי|בת זוגי|אמא שלי|אבא שלי|חבר שלי|חברה שלי|סבא|סבתא)(?![א-ת])/g)) people.push(m2[1]);
     const uniq = new Set(people);
     if (uniq.has('אני') && uniq.size >= 2) s.adults = uniq.size;
+  }
+
+  // A message written in English. The model handles these in production; this
+  // is the floor beneath it, so an English sentence is not parsed as silence.
+  {
+    const en = String(text || '').toLowerCase();
+    if (/[a-z]{3}/.test(en) && !/[א-ת]/.test(en)) {
+      const EN_M = [[/january|jan\b/, 1], [/february|feb\b/, 2], [/march|mar\b/, 3], [/december|dec\b/, 12]];
+      for (const [re, v] of EN_M) if (re.test(en) && s.month == null) { s.month = v; break; }
+      const EN_C = [[/bulgaria|bansko/, 'bulgaria'], [/austria|austrian/, 'austria'],
+        [/france|french|alps/, 'france'], [/andorra/, 'andorra']];
+      for (const [re, v] of EN_C) if (re.test(en) && s.country == null) { s.country = v; break; }
+      const ages = [...en.matchAll(/aged? (\d{1,2})(?: and (\d{1,2}))?/g)]
+        .flatMap(m => [m[1], m[2]]).filter(Boolean).map(Number).filter(a => a >= 0 && a <= 17);
+      if (ages.length && !(s.children_ages || []).length) s.children_ages = ages;
+      const fam = en.match(/family of (\d{1,2})|(\d{1,2}) (?:people|persons|travell?ers|adults)/);
+      if (fam && s.adults == null) {
+        const total = +(fam[1] || fam[2]);
+        s.adults = Math.max(1, total - (s.children_ages || []).length);
+      }
+      if (s.adults == null && /couple|two of us|my wife|my husband/.test(en)) s.adults = 2;
+    }
   }
 
   // --- month
@@ -960,6 +992,20 @@ function wantsMore(text) {
   return WANTS_MORE.test(String(text || '').trim());
 }
 
+// A hotel we do not sell. The customer named one specific place; answering
+// with three others and no explanation reads as not having heard them.
+function unknownHotel(text, known) {
+  const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  if (!/מלון|רוצה את|אפשר את|hotel/i.test(t)) return null;
+  const NAMES = /(הילטון|מריוט|שרתון|קראון פלאזה|רדיסון|נובוטל|הוליי?דיי אין|קמפינסקי|רמדה|בסט ווסטרן|hilton|marriott|sheraton|radisson|novotel)/i;
+  const m = t.match(NAMES);
+  if (!m) return null;
+  if (known && known.some(h => new RegExp(m[1], 'i').test(h))) return null;
+  // "התחייבות" is how the workbook talks; a customer never hears it.
+  return 'את המלון הזה אנחנו לא מוכרים — אני מציג רק מלונות שאנחנו עובדים איתם בפועל, ' +
+    'וזו הסיבה שמה שמופיע כאן באמת פנוי. אשמח להציע מלון דומה באותו יעד.';
+}
+
 // "היי" alone. Answering it with three arbitrary offers reads as a machine
 // emptying its stock; a first turn is for saying hello and asking one thing.
 const GREETING = /^ ?(היי|הי|שלום|בוקר טוב|ערב טוב|צהריים טובים|הלו|אהלן|יש מישהו|hi|hello|hey)[\s!.,?]*$/i;
@@ -1078,7 +1124,7 @@ function deflect(text) {
     return 'סקי פס כלול בחבילות לאוסטריה, צרפת ואנדורה. בבולגריה הוא נרכש בנפרד. ' +
       'היקף הפס (מקומי או מרחבי) משתנה בין היעדים ומצוין על כל הצעה.';
   }
-  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה/.test(t)) {
+  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה|מה כולל|כולל המחיר|החבילה כוללת|מה יש בחבילה/.test(t)) {
     return 'בכל החבילות כלולות טיסות הלוך ושוב והסעות משדה התעופה למלון ובחזרה. ' +
       'סקי פס כלול בכל היעדים למעט בולגריה, והשכרת ציוד היא תוספת בתשלום (במועדוני השמש היא כלולה). ' +
       'בסיס האירוח משתנה בין המלונות ומצוין על כל הצעה.';
@@ -1129,6 +1175,7 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  unknownHotel,
   isGreeting,
   wantsMore,
   hotelNamed,
