@@ -30,7 +30,11 @@ const PHRASE_PROMPT = `אתה נציג של פינגווין, סוכנות חו�
 11. אל תסיים בקריאה לפעולה ("אפשר להמשיך להזמנה", "אשאיר לנציג לחזור אליכם") — המערכת מוסיפה את זה בעצמה פעם אחת. אתה כותב רק את גוף התשובה.
 12. הלקוח קורא את התשובה הזו אחרי שכבר דיברתם. בשדה מה_כבר_אמרת נמצאת ההודעה הקודמת שלך — אל תחזור על אף נקודה שכבר נאמרה בה, ואל תסכם מחדש את מה שהלקוח ביקש. ענה על ההודעה האחרונה שלו בלבד.
 13. אם יש ערך ב-יעד_שאין_לנו_עליו_מלאי — הלקוח ביקש יעד שאנחנו מוכרים אך אין לנו עליו מקום פנוי כרגע. ההסבר על כך כבר מוצג ללקוח מעליך; אל תחזור עליו ואל תכתוב שהלקוח לא ציין יעד.
-14. בשדה כבר_ענינו_בהודעה_הזו נמצא טקסט שכבר מוצג ללקוח בתשובה הזו עצמה, מעליך. אל תסתור אותו ואל תכתוב שאין לך תשובה על משהו שכבר נענה שם.
+14. דבר עם הלקוח, לא על ההצעות. אסור לכתוב משפטים כמו "ההצעות נבחרו כי הן מתאימות להרכבים של 5, 3 ו-6 נוסעים", "בהתאם לנימוקים של כל הצעה", "להרכבי הנוסעים שסומנו". הלקוח לא יודע מה זה הרכב, נימוק או סימון — אלה מילים מתוך המערכת. כתוב מה שאדם היה אומר: מה יש שם, למה זה מתאים למה שהם ביקשו, ומה חסר.
+15. אל תכתוב כמה נוסעים הם, אלא אם הם אמרו. השדה fits בכרטיס הוא מה שהחדר מכיל, לא מי שנוסע — "מתאימות לחמישה נוסעים" נכתב ללקוח שלא אמר כמה הם, וזה נשמע כאילו לא הקשבת.
+16. אתה רשאי לנקוב בשם המלון, בשם היישוב ובתאריך — הם מופיעים ב-JSON. עדיף משפט עם שם מלון אחד קונקרטי על פני משפט על "ההצעות" בכלליות.
+17. כתוב עברית בלבד. אין מילים באנגלית או תווים אקראיים, למעט שמות מלונות ויישובים כפי שהם מופיעים ב-JSON.
+18. בשדה כבר_ענינו_בהודעה_הזו נמצא טקסט שכבר מוצג ללקוח בתשובה הזו עצמה, מעליך. אל תסתור אותו ואל תכתוב שאין לך תשובה על משהו שכבר נענה שם.
 
 סגנון: עברית טבעית, חמה ועניינית. בלי אימוג'ים. בלי צורות לוכסן ("בן/בת", "ילד/ה") — כתוב בלשון רבים או נטרלית. עד 3 משפטים, ואל תחזור על מה שכתוב על הכרטיסים עצמם — הלקוח רואה אותם. התייחס למה שהלקוח ביקש בשמו, כדי שיהיה ברור שקראת.
 
@@ -111,6 +115,22 @@ function validate(text, { cards, fallback }) {
   for (const name of KNOWN_HOTELS) {
     if (!shown.includes(name) && t.includes(name)) return { ok: false, why: 'hotel not offered: ' + name };
   }
+  // Latin letters that are not the name of something we showed. The model
+  // emitted the word "Baebele" mid-sentence to a customer; nothing caught it,
+  // because every other check is about what the words MEAN.
+  {
+    const allowed = new Set();
+    for (const c of cards) {
+      for (const part of [c.hotel, c.resort, c.room, (c.facts_he || []).join(' ')]) {
+        for (const w of String(part || '').split(/[^A-Za-z]+/)) if (w) allowed.add(w.toLowerCase());
+      }
+    }
+    for (const w of ['pingwin', 'guarantee', 'wifi', 'wi', 'fi', 'ski', 'in', 'out', 'spa']) allowed.add(w);
+    for (const w of String(t).split(/[^A-Za-z]+/)) {
+      if (w && !allowed.has(w.toLowerCase())) return { ok: false, why: 'foreign word: ' + w };
+    }
+  }
+
   // Every date it names must be one we put in front of it — either an offered
   // departure, or one the deterministic layer already named in the template
   // (camp weeks, dates free of a commitments restriction).

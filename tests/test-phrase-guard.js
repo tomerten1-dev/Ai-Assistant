@@ -51,6 +51,18 @@ t('a price in any currency is refused', () => {
   }
 });
 
+// The auditor caught the model emitting the word "Baebele" to a customer,
+// mid-sentence. Every other check here is about what words MEAN.
+t('a stray foreign word is refused', () => {
+  const v = phrasing.validate('ההצעות כוללות מועדוני הכל כלול. Baebele', OK);
+  assert.strictEqual(v.ok, false);
+  assert.ok(/foreign word/.test(v.why), v.why);
+});
+
+t('the names of what we offered are not foreign words', () => {
+  assert.strictEqual(phrasing.validate('ב-Casa Karina הספא כלול', OK).ok, true);
+});
+
 t('an order number is refused (red rule 2)', () => {
   const v = phrasing.validate('ההזמנה שלכם 483920 מאושרת', OK);
   assert.strictEqual(v.ok, false);

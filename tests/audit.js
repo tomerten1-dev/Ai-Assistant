@@ -58,6 +58,8 @@ const JUDGE_PROMPT = `אתה בודק איכות של צ'אט מכירות של 
 - נשמעת מבולבלת, מנותקת מההקשר, או לא מנוסחת בעברית תקינה
 - נקבה במחיר במספרים, הבטיחה זמינות, או חשפה פרטי לקוח אחר
 - ענתה בביטחון על משהו שנשמע כמו ניחוש
+- כתבה על ההצעות במקום לדבר עם הלקוח: "ההצעות מתאימות להרכבים של 5, 3 ו-6 נוסעים", "בהתאם לנימוקים של כל הצעה"
+- הכילה מילה או תו שאינם עברית תקינה ואינם שם מלון
 
 אשר את התשובה אם היא ענתה לעניין, או אמרה בכנות שאין לה את המידע והפנתה לנציג.
 
@@ -76,13 +78,17 @@ async function generate(kind, i) {
   } catch (e) { return []; }
 }
 
-async function judge(userText, reply, prevReply) {
+async function judge(userText, reply, prevReply, cards) {
   const raw = await callOpenAI({
     system: JUDGE_PROMPT,
     messages: [{ role: 'user', content: JSON.stringify({
       הודעת_הלקוח: userText,
       תשובת_הבוט: reply,
       התשובה_הקודמת_של_הבוט: prevReply || null,
+      // the customer SEES these as cards under the text; without them the judge
+      // marks "claimed offers and showed none" on a turn that showed three
+      הכרטיסים_שהלקוח_רואה_מתחת_לתשובה: (cards || []).map(c =>
+        `${c.hotel}, ${c.resort || ''} ${c.country_he || ''}, ${c.date}, ${c.nights} לילות`),
     }) }],
     maxTokens: 600,
   });
@@ -103,7 +109,7 @@ async function judge(userText, reply, prevReply) {
       catch (e) { bad.push({ kind, m, reply: '(שגיאה) ' + e.message, why: 'הבוט קרס' }); break; }
       slots = out.slots; hist.push({ role: 'assistant', content: out.reply_he });
       turns++;
-      const verdict = await judge(m, out.reply_he, prevReply);
+      const verdict = await judge(m, out.reply_he, prevReply, out.cards);
       if (!verdict.ok) bad.push({ kind, m, reply: out.reply_he, why: verdict.why || '' });
       prevReply = out.reply_he;
     }

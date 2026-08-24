@@ -183,12 +183,14 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
   try {
     const payload = phrasing.buildPayload({ slots, cards, result, fallback, lastReply, answered });
     const system = phrasing.PHRASE_PROMPT + guidance.forAnswering(cards[0] && cards[0].country);
-    // 900, not 320: on a reasoning model max_completion_tokens covers the
+    // 1200, not 320: on a reasoning model max_completion_tokens covers the
     // thinking too, and a 320 cap produced an empty reply that then failed
-    // validation and silently fell back to the template on every turn.
+    // validation and silently fell back to the template on every turn. The
+    // auditor still caught the occasional empty at 900, so there is headroom
+    // here — an empty reply costs the same as a full one.
     const raw = aiMode() === 'openai'
-      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 900, json: false })
-      : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: 900 });
+      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200, json: false })
+      : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200 });
     const text = String(raw || '').trim();
     const verdict = phrasing.validate(text, { cards, fallback });
     if (!verdict.ok) {

@@ -201,6 +201,23 @@ class SkiSearch {
     let candidates = this._filter(slots, party, { month: slots.month, country: slots.country, destination: slots.destination });
     let splits = [];
 
+    // A customer weighing two destinations against each other gets both, one
+    // after the other, rather than whichever the parser happened to keep.
+    if ((slots.compare || []).length > 1) {
+      const perPlace = slots.compare.map(p => this._filter(
+        { ...slots, country: p.country || null, destination: p.destination || null },
+        party, { month: slots.month, country: p.country || null, destination: p.destination || null }));
+      const mixed = [];
+      for (let i = 0; i < 3; i++) for (const list of perPlace) if (list[i]) mixed.push(list[i]);
+      if (perPlace.filter(l => l.length).length > 1) {
+        candidates = mixed;
+        notes.push({
+          type: 'comparing',
+          places: slots.compare.map((p, i) => ({ ...p, found: perPlace[i].length })),
+        });
+      }
+    }
+
     // Nothing near the day they named — widen to the month and say so
     if (!candidates.length && slots.exact_day) {
       const wider = this._filter({ ...slots, exact_day: null }, party,

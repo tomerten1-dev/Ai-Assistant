@@ -507,6 +507,28 @@ function parseText(text, slots) {
     }
   }
 
+  // Two places named in one breath ("בנסקו או אנדורה", "מתלבטים בין איטליה
+  // לצרפת") is a comparison, not a correction. Taking the last one and
+  // answering "the options are outside the destination you asked for" is the
+  // worst of both.
+  {
+    const named = [];
+    for (const [re, dest] of DESTS) {
+      const m2 = re.exec(t);
+      if (m2 && !isNegated(t, m2.index)) named.push({ destination: dest });
+    }
+    for (const [re, v] of COUNTRIES) {
+      const m2 = re.exec(t);
+      if (m2 && !isNegated(t, m2.index) && !named.some(n => n.country === v)) {
+        // a country whose resort was already named is the same wish twice
+        if (!named.some(n => DESTS.some(d => d[1] === n.destination && d[2] === v))) {
+          named.push({ country: v });
+        }
+      }
+    }
+    s.compare = named.length > 1 ? named.slice(0, 3) : null;
+  }
+
   // --- a hotel named by name
   {
     const named = hotelNamed(t);
@@ -778,6 +800,15 @@ function phrase(result, slots, cards) {
 
   if (slots.wrong_year) {
     lines.push(`אנחנו מוכרים כרגע את עונת חורף 2026/27 — דצמבר 2026 עד סוף מרץ 2027. הנה מה שפנוי בעונה הזו:`);
+  }
+
+  const cmp = note('comparing');
+  if (cmp) {
+    const empty = (cmp.places || []).filter(p => !p.found)
+      .map(p => ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' }[p.country]) || p.destination).filter(Boolean);
+    lines.push(empty.length
+      ? `הצגתי משני היעדים שציינתם. ב${empty.join(' וב')} לא מצאתי מקום פנוי בתנאים האלה.`
+      : 'הצגתי משני היעדים שציינתם, כדי שתוכלו להשוות.');
   }
 
   const campAge = note('camp_age_mismatch');

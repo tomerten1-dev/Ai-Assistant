@@ -1050,6 +1050,23 @@ t('a group of twelve is shown options, not an empty screen', () =>
       assert.ok(/נסגרים מול נציג/.test(out.reply_he), out.reply_he);
     }));
 
+// Found by tests/audit.js: a customer weighing two destinations was shown one
+// of them, and told the offers were outside the destination they asked for.
+t('two destinations named together are both shown', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מתלבטים בין בנסקו לאנדורה לסוף ינואר, זוג עם ילד בן 10' }], slots: {} })
+    .then(out => {
+      const countries = new Set(out.cards.map(c => c.country));
+      assert.ok(countries.size > 1, 'only ' + [...countries].join(',') + ' shown');
+      assert.ok(/משני היעדים/.test(out.reply_he), out.reply_he);
+    }));
+
+t('one destination is not treated as a comparison', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר בבולגריה' }], slots: {} })
+    .then(out => {
+      assert.ok(!/משני היעדים/.test(out.reply_he), out.reply_he);
+      for (const c of out.cards) assert.equal(c.country, 'bulgaria', c.hotel);
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
