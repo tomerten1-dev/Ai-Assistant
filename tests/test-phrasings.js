@@ -283,5 +283,13 @@ check('nor does a kosher kitchen', null, 'יש מטבח כשר במלון?', { n
 check('but saying you keep Shabbat does', null, 'אנחנו שומרי שבת', { no_saturday_flights: true });
 check('and so does asking not to fly on Saturday', null, 'לא טסים בשבת', { no_saturday_flights: true });
 
+console.log('\n— סוף פברואר is not פברואר —');
+check('end of the month', null, 'סוף פברואר', { month: 2, month_part: 'late' });
+check('start of the month', null, 'תחילת מרץ', { month: 3, month_part: 'early' });
+check('middle of the month', null, 'אמצע ינואר', { month: 1, month_part: 'mid' });
+check('סוף שבוע is a weekend, not late in the month', null, 'סוף שבוע בבנסקו', { month_part: null });
+check('a plain month sets no half', null, 'פברואר', { month: 2, month_part: null });
+check('גמיש clears an earlier half', { month: 2, month_part: 'late' }, 'בעצם גמיש', { month_part: null });
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

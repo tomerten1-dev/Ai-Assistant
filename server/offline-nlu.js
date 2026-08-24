@@ -257,9 +257,24 @@ function parseText(text, slots) {
   if (s.month == null && /אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|קיץ|פסח/.test(t)) {
     s.out_of_season = true;
   }
+  // "סוף פברואר" is not February. The bot heard the month, ignored the half,
+  // and offered the 4th — the opposite end of what was asked for.
+  // The part word has to sit next to the month, or "סוף שבוע" would mean late.
+  const partMatch = t.match(/(תחילת|ראשית|בתחילת|אמצע|באמצע|סוף|בסוף|שלהי)\s*(?:ה?חודש|דצמבר|ינואר|פברואר|מרץ|מארס)/);
+  if (partMatch) {
+    const w = partMatch[1];
+    if (/תחילת|ראשית/.test(w)) s.month_part = 'early';
+    else if (/אמצע/.test(w)) s.month_part = 'mid';
+    else s.month_part = 'late';
+  } else if (/^ ?(תחילת|אמצע|סוף) ?(החודש)? ?$/.test(t)) {
+    // a bare answer to "מתי בחודש?"
+    s.month_part = /תחילת/.test(t) ? 'early' : (/אמצע/.test(t) ? 'mid' : 'late');
+  }
+
   if (/לא משנה|גמיש|מתי שיש|כל תאריך|אין העדפה/.test(t)) {
     if (s.month == null) s.month = 'any';
     s.flexible_dates = true;
+    s.month_part = null;
   }
 
   // --- requirements the commitments workbook has no data for (spec 3.6: no
@@ -580,6 +595,10 @@ function phrase(result, slots, cards) {
     }
     if (r.type === 'camp_location') {
       lines.push('ביעד שביקשתם אין שבוע שבו פועלת קבוצת הגיל של הילד. הנה יעדים שבהם היא כן פועלת:');
+    }
+    if (r.type === 'month_part') {
+      const HE = { early: 'תחילת', mid: 'אמצע', late: 'סוף' };
+      lines.push(`ב${HE[r.wanted] || ''} החודש שביקשתם אין יציאה מתאימה, אז הרחבתי לכל החודש:`);
     }
     if (r.type === 'human_rep') lines.push(noMatchAnswer());
   }

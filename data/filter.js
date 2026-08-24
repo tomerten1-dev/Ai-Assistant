@@ -119,6 +119,14 @@ class SkiSearch {
     return party >= occ.min && party <= occ.max;
   }
 
+  /* ---- which third of the month a date falls in ----
+     "סוף פברואר" asked for the last third and got the 4th, because only the
+     month was ever read. */
+  static partOf(iso) {
+    const d = +iso.slice(8, 10);
+    return d <= 10 ? 'early' : (d <= 20 ? 'mid' : 'late');
+  }
+
   /* ---- month helpers ---- */
   static monthOf(iso) { return +iso.slice(5, 7); }
   static inMonth(iso, month) { return SkiSearch.monthOf(iso) === +month; }
@@ -183,6 +191,17 @@ class SkiSearch {
     }
 
     let candidates = this._filter(slots, party, { month: slots.month, country: slots.country, destination: slots.destination });
+
+    // Nothing in that third of the month — widen to the whole month and say so,
+    // rather than silently serving the opposite end of it.
+    if (!candidates.length && slots.month_part) {
+      const wider = this._filter({ ...slots, month_part: null }, party,
+        { month: slots.month, country: slots.country, destination: slots.destination });
+      if (wider.length) {
+        candidates = wider;
+        relaxed.push({ type: 'month_part', wanted: slots.month_part });
+      }
+    }
 
     // asked for a country the chosen airport cannot fly → drop the country,
     // keep the airport (the flight is the hard constraint, not the wish)
@@ -417,6 +436,8 @@ class SkiSearch {
       // an exclusion the customer stated ("לא צרפת") is never relaxed away —
       // widening the search must not resurrect what they ruled out
       if ((slots.excluded_countries || []).includes(u.country)) continue;
+      // asked for a specific third of the month
+      if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
       // a resort the customer ruled out ("לא בנסקו") — the country stays open
       if ((slots.excluded_destinations || []).some(
         d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
@@ -449,6 +470,8 @@ class SkiSearch {
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       if ((slots.excluded_countries || []).includes(u.country)) continue;
+      // asked for a specific third of the month
+      if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
       // a resort the customer ruled out ("לא בנסקו") — the country stays open
       if ((slots.excluded_destinations || []).some(
         d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;

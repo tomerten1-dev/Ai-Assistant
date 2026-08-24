@@ -289,6 +289,41 @@ t('a reply ends by moving forward, not by asking', () => {
   });
 });
 
+
+t('"סוף פברואר" returns the end of February, not the 4th', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים לבולגריה, סוף פברואר' }], slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length, 'no cards');
+    for (const c of out.cards) {
+      const day = +c.date.slice(8, 10);
+      assert.ok(day >= 21, c.hotel + ' is ' + c.date + ' — that is not the end of the month');
+    }
+  });
+});
+
+t('an empty half-month widens to the whole month and says so', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים לאוסטריה, אמצע דצמבר' }], slots: {},
+  }).then(out => {
+    if (!out.cards.length) return;                 // nothing in December at all
+    const anyMid = out.cards.some(c => { const d = +c.date.slice(8, 10); return d > 10 && d <= 20; });
+    if (!anyMid) assert.ok(/הרחבתי לכל החודש|אין יציאה מתאימה/.test(out.reply_he), out.reply_he);
+  });
+});
+
+t('the reply explains why these offers, without volunteering the rest', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'משפחה 2 מבוגרים וילדים בני 7 ו-10, פברואר, צריך קייטנה בעברית' }],
+    slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length, 'no cards');
+    for (const c of out.cards) {
+      assert.ok(c.why_he, c.hotel + ' carries no reason it was chosen');
+    }
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
