@@ -197,6 +197,8 @@ function presentCards(result, slots) {
     date: c.date, date_label: c.date_label, nights: c.nights,
     room: c.room, occ: c.occ_effective, occ_composition_he: c.occ_composition_he,
     desc_he: c.desc_he, lift_he: c.lift_he, tags: c.tags, image: c.image,
+    // the whole gallery, so the card can page through the hotel's own photos
+    images: (engine.hotelInfo(c.hotel).images || []).slice(0, 12),
     count_available: c.count_available,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,

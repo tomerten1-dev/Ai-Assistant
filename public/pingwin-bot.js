@@ -101,7 +101,41 @@
     + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:7px;'
     + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
     + '.card:hover{box-shadow:0 6px 18px rgba(16,32,48,.10);transform:translateY(-2px);border-color:#c8d5e2}'
-    + '.card .photo{width:calc(100% + 28px);margin:-14px -14px 5px;height:136px;object-fit:cover;border-radius:13px 13px 0 0;display:block;background:#e8edf1}'
+    // gallery: the photo fills the top of the card, arrows sit on it
+    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-14px -14px 8px;border-radius:13px 13px 0 0;overflow:hidden;background:#e8edf1}'
+    + '.card .photo{width:100%;height:150px;object-fit:cover;display:block}'
+    + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;'
+    + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';font-size:19px;line-height:1;cursor:pointer;'
+    + 'display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(16,32,48,.25);opacity:0;transition:opacity .15s}'
+    + '.card:hover .galb,.card:focus-within .galb{opacity:1}'
+    // always reachable on a touch screen, where there is no hover
+    + '@media (hover:none){.card .galb{opacity:1}}'
+    + '.card .galb:hover{background:#fff}'
+    + '.card .galb.prev{inset-inline-start:8px}'
+    + '.card .galb.next{inset-inline-end:8px}'
+    + '.card .galn{position:absolute;bottom:8px;inset-inline-end:10px;background:rgba(16,32,48,.62);color:#fff;'
+    + 'font-size:11.5px;padding:2px 8px;border-radius:99px;letter-spacing:.4px}'
+
+    // name and country on one line, so the eye finds the hotel first
+    + '.card .chead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}'
+    + '.card .cwhere{font-size:13px;color:' + THEME.textLight + '}'
+
+    // labelled rows: label in grey, value in ink — readable at a glance
+    + '.card .rows{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-top:1px solid #edf1f5;border-bottom:1px solid #edf1f5}'
+    + '.card .row{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}'
+    + '.card .rlab{font-size:12.5px;color:' + THEME.textLight + ';flex:none}'
+    + '.card .rval{font-size:13.5px;color:' + THEME.text + ';font-weight:600}'
+    + '.card .rlink{font-size:13.5px;color:' + THEME.primaryDark + ';font-weight:600;background:none;border:none;'
+    + 'padding:0;cursor:pointer;font-family:inherit;text-align:start;text-decoration:underline;text-underline-offset:3px}'
+    + '.card .rlink:hover{color:' + THEME.primary + '}'
+    + '.card .rpanel{display:flex;flex-direction:column;gap:4px;background:' + THEME.bgAlt + ';border-radius:8px;padding:9px 11px;margin-top:2px}'
+    + '.card .rline{display:flex;gap:7px;align-items:baseline}'
+    + '.card .rline .rval{font-weight:500;font-size:13px}'
+    + '.card .rnote{font-size:12px;color:' + THEME.textLight + ';padding-top:2px}'
+
+    + '.card .cdesc{font-size:13.5px;color:' + THEME.text + ';line-height:1.55}'
+    + '.card .cfoot{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:2px}'
+    + '.card .fits{font-size:13px;color:' + THEME.textLight + '}'
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
     + '.card .hname{font-weight:700;font-size:15.5px;color:' + THEME.text + ';line-height:1.3;letter-spacing:-.2px}'
     + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
@@ -238,34 +272,114 @@
     } else if (!on && typingEl) { typingEl.remove(); typingEl = null; }
   }
 
-  function fmtDate(iso, label) {
+  // `bare` drops the "יציאה ביום" prefix — the card now labels the row itself,
+  // and "תאריך יציאה: יציאה ביום חמישי" says it twice.
+  function fmtDate(iso, label, bare) {
     var d = new Date(iso + 'T00:00:00');
     var days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-    var s = 'יציאה ביום ' + days[d.getDay()] + ' ' + d.getDate() + '.' + (d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2);
+    var s = (bare ? 'יום ' : 'יציאה ביום ') + days[d.getDay()] + ' ' +
+      d.getDate() + '.' + (d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2);
     if (label) s += ' (' + label + ')';
     return s;
   }
 
+  /* ---------- hotel card ----------
+     Structure asked for by Tomer, 24/08: gallery with arrows, hotel name with
+     its country, labelled departure date and nights, the room as a control
+     that opens what the hotel page says about it, the hotel blurb, the price
+     band, and who it fits. Every value comes from the card the server sent —
+     the widget invents nothing. */
   function addCard(c, container) {
     var card = el('div', 'card');
-    if (c.image) {
+
+    // ---- gallery: the hotel's own photos, paged with two arrows
+    var photos = (c.images && c.images.length ? c.images : (c.image ? [c.image] : []));
+    if (photos.length) {
+      var gal = el('div', 'gal');
       var im = document.createElement('img');
       im.className = 'photo';
-      im.src = c.image;
+      im.src = photos[0];
       im.alt = c.hotel;
       im.loading = 'lazy';
-      im.addEventListener('error', function () { im.remove(); }); // hide broken images
-      card.appendChild(im);
+      im.addEventListener('error', function () { gal.remove(); });
+      gal.appendChild(im);
+      if (photos.length > 1) {
+        var at = 0;
+        var count = el('div', 'galn', '1/' + photos.length);
+        var step = function (d) {
+          return function (ev) {
+            ev.stopPropagation();
+            at = (at + d + photos.length) % photos.length;
+            im.src = photos[at];
+            count.textContent = (at + 1) + '/' + photos.length;
+          };
+        };
+        // RTL: the arrow drawn on the right moves forward
+        var prev = el('button', 'galb next', '\u2039');
+        prev.setAttribute('aria-label', 'התמונה הבאה');
+        prev.addEventListener('click', step(1));
+        var next = el('button', 'galb prev', '\u203a');
+        next.setAttribute('aria-label', 'התמונה הקודמת');
+        next.addEventListener('click', step(-1));
+        gal.appendChild(prev); gal.appendChild(next); gal.appendChild(count);
+      }
+      card.appendChild(gal);
     }
-    card.appendChild(el('div', 'hname', c.hotel));
-    card.appendChild(el('div', 'meta', (c.resort ? c.resort + ' · ' : '') + c.country_he));
-    card.appendChild(el('div', 'meta', fmtDate(c.date, c.date_label) + ' · ' + c.nights + ' לילות'));
-    var occTxt = c.room;
-    if (c.occ && c.occ.min != null) occTxt += ' · עד ' + c.occ.max + ' נוסעים';
-    card.appendChild(el('div', 'meta', occTxt));
-    if (c.occ_composition_he) card.appendChild(el('div', 'meta clamp', c.occ_composition_he));
-    if (c.desc_he) card.appendChild(el('div', 'meta clamp', c.desc_he));
+
+    // ---- name, with the country beside it
+    var head = el('div', 'chead');
+    head.appendChild(el('div', 'hname', c.hotel));
+    head.appendChild(el('div', 'cwhere', c.country_he + (c.resort ? ' · ' + c.resort : '')));
+    card.appendChild(head);
+
+    var rows = el('div', 'rows');
+    var row = function (label, value, node) {
+      var r = el('div', 'row');
+      r.appendChild(el('span', 'rlab', label));
+      if (node) r.appendChild(node); else r.appendChild(el('span', 'rval', value));
+      rows.appendChild(r);
+      return r;
+    };
+
+    row('תאריך יציאה', fmtDate(c.date, c.date_label, true) + ' · ' + c.nights + ' לילות');
+
+    // ---- the room opens what the hotel page says about it
+    var rf = c.room_facts || {};
+    var hasRoomInfo = rf.size_he || rf.beds_he || rf.bath_he || rf.occupancy_he || c.occ_composition_he;
+    if (hasRoomInfo) {
+      var btn = el('button', 'rlink', c.room + ' ▾');
+      btn.setAttribute('aria-expanded', 'false');
+      var panel = el('div', 'rpanel');
+      var line = function (label, val) {
+        if (!val) return;
+        var d = el('div', 'rline');
+        d.appendChild(el('span', 'rlab', label));
+        d.appendChild(el('span', 'rval', val));
+        panel.appendChild(d);
+      };
+      if (rf.name && rf.name !== c.room) line('באתר', rf.name);
+      line('גודל', rf.size_he);
+      line('מיטות', rf.beds_he);
+      line('רחצה', rf.bath_he);
+      line('תפוסה', rf.occupancy_he || c.occ_composition_he);
+      if (rf.exact === false) panel.appendChild(el('div', 'rnote', 'הפרטים משותפים לכל חדרי המלון — נציג יאמת את החדר המדויק.'));
+      panel.style.display = 'none';
+      btn.addEventListener('click', function () {
+        var open = panel.style.display === 'none';
+        panel.style.display = open ? 'flex' : 'none';
+        btn.textContent = c.room + (open ? ' ▴' : ' ▾');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      row('חדר במלון', null, btn);
+      rows.appendChild(panel);
+    } else {
+      row('חדר במלון', c.room);
+    }
+    card.appendChild(rows);
+
+    if (c.desc_he) card.appendChild(el('div', 'cdesc', c.desc_he));
     if (c.lift_he) card.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
+
     // answers to what THIS customer asked about (beds, board, ski pass, ...)
     if (c.facts_he && c.facts_he.length) {
       var facts = el('div', 'facts');
@@ -282,7 +396,13 @@
     if (c.occ_unverified) tags.appendChild(el('span', 'tag warn', 'ההרכב יאומת מול נציג'));
     if (tags.childNodes.length) card.appendChild(tags);
 
-    card.appendChild(el('div', 'price', 'טווח מחיר: ' + c.price_range));
+    var foot = el('div', 'cfoot');
+    foot.appendChild(el('div', 'price', 'טווח מחיר: ' + c.price_range));
+    if (c.occ && c.occ.max != null) {
+      foot.appendChild(el('div', 'fits', 'מתאים ל-' + c.occ.max + ' נוסעים'));
+    }
+    card.appendChild(foot);
+
     if (c.why_he) card.appendChild(el('div', 'why clamp', c.why_he));
 
     var btns = el('div', 'btns');
