@@ -14,6 +14,7 @@ const { callOpenAI, spend: openaiSpend, model: openaiModel } = require('./openai
 const { SLOT_PROMPT: SLOT_PROMPT_LEAN } = require('./prompt-slots.js');
 const offline = require('./offline-nlu.js');
 const phrasing = require('./prompt-phrase.js');
+const guidance = require('./guidance.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
 
@@ -127,9 +128,12 @@ async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
     ...recent,
     { role: 'user', content: `slots: ${JSON.stringify(prevSlots)}\nשאלות שנשאלו: ${questionsAsked}/${MAX_QUESTIONS}\nהחזר JSON.` },
   ];
+  // Tomer's instructions go BEFORE the built-in rules, so the hard ones stay
+  // the last word in the prompt (see server/guidance.js).
+  const system = SLOT_PROMPT_LEAN + guidance.forAsking();
   const raw = aiMode() === 'openai'
-    ? await callOpenAI({ system: SLOT_PROMPT_LEAN, messages: payload, maxTokens: 400 })
-    : await callClaude({ system: SLOT_PROMPT_LEAN, messages: payload, maxTokens: 400 });
+    ? await callOpenAI({ system, messages: payload, maxTokens: 400 })
+    : await callClaude({ system, messages: payload, maxTokens: 400 });
   return parseModelJSON(raw);
 }
 
@@ -141,12 +145,13 @@ async function phraseWithModel({ slots, cards, result, fallback }) {
   if (!cards.length) return fallback;
   try {
     const payload = phrasing.buildPayload({ slots, cards, result, fallback });
+    const system = phrasing.PHRASE_PROMPT + guidance.forAnswering(cards[0] && cards[0].country);
     // 900, not 320: on a reasoning model max_completion_tokens covers the
     // thinking too, and a 320 cap produced an empty reply that then failed
     // validation and silently fell back to the template on every turn.
     const raw = aiMode() === 'openai'
-      ? await callOpenAI({ system: phrasing.PHRASE_PROMPT, messages: [{ role: 'user', content: payload }], maxTokens: 900, json: false })
-      : await callClaude({ system: phrasing.PHRASE_PROMPT, messages: [{ role: 'user', content: payload }], maxTokens: 900 });
+      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 900, json: false })
+      : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: 900 });
     const text = String(raw || '').trim();
     const verdict = phrasing.validate(text, { cards, fallback });
     if (!verdict.ok) {

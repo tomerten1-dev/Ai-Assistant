@@ -5,7 +5,7 @@
   "description": "בוט התאמת חופשות סקי לאתר פינגווין — דמו",
   "scripts": {
     "build:data": "node tools/build-availability.js && node tools/build-camps.js && node tools/build-restrictions.js && node tools/merge-rooms.js",
-    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js",
+    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js",
     "start": "node server/server.js",
     "stress": "node tests/stress.js"
   }
