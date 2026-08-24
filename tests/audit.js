@@ -20,7 +20,19 @@ const { loadEnv } = require('../server/env.js');
 loadEnv();
 process.env.CHAT_LOG = 'off';
 const { handleChat } = require('../server/server.js');
-const { callOpenAI } = require('../server/openai.js');
+const { callOpenAI: rawCall } = require('../server/openai.js');
+
+// A round is ~200 calls over several minutes, so a single dropped connection
+// used to throw away the whole run. One retry, then give up on that line only.
+async function callOpenAI(args) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await rawCall(args); }
+    catch (e) {
+      if (attempt >= 2) throw e;
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+    }
+  }
+}
 
 const WANTED = +(process.argv[2] || 40);
 
@@ -99,7 +111,9 @@ async function judge(userText, reply, prevReply, cards) {
   let turns = 0; const bad = [];
   for (let i = 0; i < WANTED; i++) {
     const kind = KINDS[i % KINDS.length];
-    const msgs = await generate(kind, i);
+    let msgs = [];
+    try { msgs = await generate(kind, i); }
+    catch (e) { console.log('(generator failed: ' + e.message + ')'); continue; }
     if (!msgs.length) continue;
     let slots = {}; const hist = []; let prevReply = null;
     for (const m of msgs) {
@@ -109,7 +123,9 @@ async function judge(userText, reply, prevReply, cards) {
       catch (e) { bad.push({ kind, m, reply: '(שגיאה) ' + e.message, why: 'הבוט קרס' }); break; }
       slots = out.slots; hist.push({ role: 'assistant', content: out.reply_he });
       turns++;
-      const verdict = await judge(m, out.reply_he, prevReply, out.cards);
+      let verdict = { ok: true };
+      try { verdict = await judge(m, out.reply_he, prevReply, out.cards); }
+      catch (e) { /* a judge we could not reach is not a verdict */ }
       if (!verdict.ok) bad.push({ kind, m, reply: out.reply_he, why: verdict.why || '' });
       prevReply = out.reply_he;
     }
