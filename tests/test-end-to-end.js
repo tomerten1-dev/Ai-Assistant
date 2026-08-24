@@ -1067,6 +1067,29 @@ t('one destination is not treated as a comparison', () =>
       for (const c of out.cards) assert.equal(c.country, 'bulgaria', c.hotel);
     }));
 
+// "(allotment)" is a word from the commitments workbook meaning we hold rooms
+// there. The auditor caught it on a card, in front of a customer.
+t('no internal wording in a hotel name', () =>
+  handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 6 ו-9 בדצמבר' }], slots: {} })
+    .then(out => {
+      for (const c of out.cards) assert.ok(!/allotment/i.test(c.hotel), c.hotel);
+      assert.ok(!/allotment/i.test(out.reply_he), out.reply_he);
+    }));
+
+// The widening sentence is fixed text, so it never varies — and it was said
+// again on the next turn, to someone who had just read it.
+t('"הרחבתי לינואר" is said once, not on every turn after', () => {
+  const msgs = [{ role: 'user', content: 'זוג בדצמבר בבולגריה' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots;
+    assert.ok(/הרחבתי/.test(a.reply_he), 'never said it: ' + a.reply_he);
+    msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'ומה עם ספא?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => assert.ok(!/הרחבתי/.test(b.reply_he), 'said it again: ' + b.reply_he));
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

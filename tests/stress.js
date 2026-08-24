@@ -164,7 +164,11 @@ function audit(c, res, transcript) {
   if (/\b3\d{5}\b/.test(blob)) issues.push('PII: order-number-shaped digits in response');
   if (cards.some(x => /[֐-׿]/.test(x.room || ''))) issues.push('PII: Hebrew text in a room field');
   if (/\d[\d,]{2,}\s*(₪|שח|שקל|יורו|€|\$)/.test(reply)) issues.push('numeric price in reply');
-  for (const x of cards) if (!KNOWN_HOTELS.has(x.hotel)) issues.push(`invented hotel: ${x.hotel}`);
+  // Cards show the hotel's name without "(allotment)" — that word is from the
+  // commitments workbook, not from the hotel's sign.
+  const known = (n) => KNOWN_HOTELS.has(n) ||
+    [...KNOWN_HOTELS].some(k => k.replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim() === n);
+  for (const x of cards) if (!known(x.hotel)) issues.push(`invented hotel: ${x.hotel}`);
   if (/system prompt|הפרומפט שלי|אתה מנתח|SLOT_PROMPT/i.test(reply)) issues.push('prompt leak');
   // "התחייבויות" is internal jargon and reads as a refusal (Tomer 23/08) —
   // the customer-facing reason is the seat/room limit, never the paperwork

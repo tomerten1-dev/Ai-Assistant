@@ -211,6 +211,9 @@ class SkiSearch {
       for (let i = 0; i < 3; i++) for (const list of perPlace) if (list[i]) mixed.push(list[i]);
       if (perPlace.filter(l => l.length).length > 1) {
         candidates = mixed;
+        // the comparison IS the answer; a leftover "we widened" note above it
+        // reads as a contradiction of the cards right underneath
+        relaxed = relaxed.filter(r => r.type !== 'location');
         notes.push({
           type: 'comparing',
           places: slots.compare.map((p, i) => ({ ...p, found: perPlace[i].length })),
@@ -481,6 +484,22 @@ class SkiSearch {
         for (const pool of pools) if (pool.length) { spread.push(pool.shift()); more = true; }
       }
       candidates = spread;
+    }
+
+    // A comparison is only a comparison if both places survive the sort. Ranked
+    // purely by score, three Bansko hotels came out on top and Andorra — half
+    // the question — never appeared.
+    if ((slots.compare || []).length > 1) {
+      // resortOf(), not c.resort: the raw candidate carries the hotel and the
+      // country, and the resort is only attached later by _present().
+      const bucket = (c) => slots.compare.findIndex(pl =>
+        (pl.destination && this.resortOf(c.hotel) === pl.destination) ||
+        (pl.country && !pl.destination && c.country === pl.country));
+      const buckets = slots.compare.map((_, i) => candidates.filter(c => bucket(c) === i));
+      const rest = candidates.filter(c => bucket(c) < 0);
+      const woven = [];
+      for (let i = 0; i < 4; i++) for (const b of buckets) if (b[i]) woven.push(b[i]);
+      candidates = [...woven, ...rest];
     }
 
     // hotel diversity: before capping at 8, prefer one unit per hotel in rank

@@ -206,6 +206,11 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
   }
 }
 
+// The hotel's name as a customer should read it.
+function displayHotel(name) {
+  return String(name || '').replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim();
+}
+
 function presentCards(result, slots, skip) {
   // top 3 for display; ranked by the deterministic sort, but prefer showing
   // three DIFFERENT hotels before a second room of the same hotel
@@ -227,7 +232,10 @@ function presentCards(result, slots, skip) {
   for (const c of uniq) if (!diverse.includes(c)) diverse.push(c);
   return diverse.slice(0, 3).map((c, i) => ({
     index: i,
-    hotel: c.hotel, resort: c.resort, country: c.country,
+    // "(allotment)" is a word from the commitments workbook meaning we hold
+    // rooms there. It is not part of the hotel's name and it went out to
+    // customers on the cards and in the model's sentences.
+    hotel: displayHotel(c.hotel), resort: c.resort, country: c.country,
     country_he: { austria: 'אוסטריה', france: 'צרפת', andorra: 'אנדורה', bulgaria: 'בולגריה' }[c.country] || c.country,
     date: c.date, date_label: c.date_label, nights: c.nights,
     room: c.room, occ: c.occ_effective, occ_composition_he: c.occ_composition_he,
@@ -547,7 +555,11 @@ async function handleChat(body) {
   // model kept paraphrasing it into nothing. Asked for December, shown January,
   // and not a word about the gap: three separate audit rounds.
   const widened = offline.relaxationLines(result);
-  const fixed = [offCommLine, ...widened].filter(Boolean);
+  // ...but said once. A customer who has already read "לא מצאתי בדיוק בדצמבר,
+  // אז הרחבתי לינואר" does not need it again on the next turn; they know.
+  const saidFixed = new Set(prevSlots._fixed_said || []);
+  const fixed = [offCommLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
+  slots._fixed_said = [...saidFixed, ...[offCommLine, ...widened].filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));
 
   const templated = offline.phrase(result, sayingSlots, cards) ||
@@ -671,7 +683,7 @@ async function handleChat(body) {
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
-    two_room_splits: result.two_room_splits,
+    two_room_splits: (result.two_room_splits || []).map(sp => ({ ...sp, hotel: displayHotel(sp.hotel) })),
     notes: result.notes, relaxed: result.relaxed,
     chips: cards.length ? [...gapChips, ...CHIP_LABELS] : gapChips,
     chip_to_pref: CHIP_TO_PREF,
