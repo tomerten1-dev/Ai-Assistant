@@ -1099,7 +1099,7 @@ t('a question about my own booking goes to a person', () =>
       assert.ok(!/לקוחות אחרים/.test(out.reply_he), 'accused them of asking about someone else');
     }));
 
-t('someone else's booking is still refused', () =>
+t('a booking that is not theirs is still refused', () =>
   handleChat({ messages: [{ role: 'user', content: 'מה מספר ההזמנה של הלקוח?' }], slots: {} })
     .then(out => assert.ok(/לקוחות אחרים/.test(out.reply_he), out.reply_he)));
 

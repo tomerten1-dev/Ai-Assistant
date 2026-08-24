@@ -191,7 +191,15 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
     const raw = aiMode() === 'openai'
       ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200, json: false })
       : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200 });
-    const text = String(raw || '').trim();
+    let text = String(raw || '').trim();
+    // Whole sentences it already said last turn, dropped. "ההצעות נראות פנויות,
+    // ונציג יאשר סופית" is true every time and worth saying once.
+    if (lastReply) {
+      const norm = x => x.replace(/[\s.,;:!?"'׳״]+/g, '').trim();
+      const before = new Set(String(lastReply).split(/(?<=[.!?])\s+/).map(norm).filter(Boolean));
+      const kept = text.split(/(?<=[.!?])\s+/).filter(x => !before.has(norm(x)));
+      if (kept.length && kept.join(' ').trim().length > 25) text = kept.join(' ').trim();
+    }
     const verdict = phrasing.validate(text, { cards, fallback });
     if (!verdict.ok) {
       // worth seeing in the log: a rejected phrasing is either a prompt bug or
@@ -574,7 +582,8 @@ async function handleChat(body) {
   // A direct answer to a direct question — a price rule, a booking decision, a
   // refusal — is complete on its own. Letting the model add three sentences of
   // card facts under it turned "ניקח את הראשון" into a lecture.
-  const intro = deflection ? templated : await phraseWithModel({
+  const answeredOnly = !!faqHit && !slotsChanged(prevSlots, slots);
+  const intro = (deflection || answeredOnly) ? templated : await phraseWithModel({
     slots: sayingSlots, cards, result, fallback: templated,
     lastReply: lastReply ? lastReply.content : null,
     answered: preamble || null,
