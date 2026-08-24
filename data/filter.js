@@ -639,7 +639,9 @@ class SkiSearch {
       const n = count({ month: null });
       if (n > currentCount) out.push({ drop: 'month', gain: n - currentCount, total: n });
     }
-    if (slots.country || slots.destination) {
+    // "רק אוסטריה" is not a preference we may bargain with. Offering to drop
+    // the country right after the customer said "only" reads as not listening.
+    if ((slots.country || slots.destination) && !slots.country_fixed) {
       const n = count({ country: null, destination: null });
       if (n > currentCount) out.push({ drop: 'country', gain: n - currentCount, total: n });
     }

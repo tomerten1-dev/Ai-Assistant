@@ -855,6 +855,70 @@ for (const [q, want] of [
     }));
 }
 
+/* ---- the twelfth reading round ---- */
+
+// "משפחה 2+2 בני 6 ו-9" was asked how many people it was.
+t('"2+2" states the adults even when the ages are given too', () =>
+  handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 6 ו-9, פברואר, בולגריה' }], slots: {} })
+    .then(out => {
+      assert.equal(out.slots.adults, 2, 'adults: ' + out.slots.adults);
+      assert.deepEqual(out.slots.children_ages, [6, 9]);
+      assert.ok(!/כמה תהיו/.test(out.reply_he), 'asked what it had just been told');
+    }));
+
+// "רק אוסטריה" is a decision, not an opening bid.
+t('"רק אוסטריה" is not answered with "consider other countries"', () =>
+  handleChat({ messages: [{ role: 'user', content: 'רק אוסטריה, זוג, ומה יש בינואר?' }], slots: {} })
+    .then(out => {
+      assert.ok(out.slots.country_fixed, 'the "only" was not heard');
+      assert.ok(!/תשקלו גם יעדים אחרים/.test(out.reply_he), out.reply_he);
+    }));
+
+// A person leaving is let go.
+t('"לא רוצה כלום, סתם בדקתי" ends without three more hotels', () =>
+  handleChat({ messages: [{ role: 'user', content: 'לא רוצה כלום, סתם בדקתי' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'showed ' + out.cards.length + ' cards');
+      assert.ok(/אין בעיה/.test(out.reply_he), out.reply_he);
+    }));
+
+// A pointer to the per-hotel answer is an answer, not a repeat to be filtered.
+t('question after question about the hotel each get an answer', () => {
+  const msgs = [{ role: 'user', content: 'זוג בפברואר' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots; msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'יש ספא?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => {
+    slots = b.slots;
+    assert.ok(/הספא/.test(b.reply_he), b.reply_he);
+    msgs.push({ role: 'assistant', content: b.reply_he });
+    msgs.push({ role: 'user', content: 'ויש בריכה?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(c => assert.ok(/הספא|בריכה/.test(c.reply_he), 'went vague: ' + c.reply_he));
+});
+
+for (const [q, want] of [
+  ['ואינטרנט?', /האינטרנט|ויי?פיי/],
+  ['אני נוסע לבד, יש תוספת ליחיד?', /תוספת/],
+  ['אפשר חדר מעשנים?', /עישון/],
+  ['לבן שלי יש אוטיזם, יש קייטנה שתתאים?', /לא מסגרת טיפולית|מבלי לבדוק/],
+  ['זה לא עונה לי', /מה לשנות/],
+  ['אפשר לשריין עכשיו ולשלם אחר כך?', /מקדמה|חיוב/],
+  ['כמה מטרים החדר?', /שם החדר|גודל/],
+  ['הילד הקטן לא יגלוש, יש מה לעשות איתו?', /באחריות ההורים/],
+  ['אם נשבר לי רגל במדרון מי משלם?', /ביטוח/],
+  ['יש משהו לשבוע הבא?', /דצמבר עד סוף מרץ/],
+  ['ואם נחלה יומיים לפני?', /ביטול/],
+]) {
+  t('answered rather than deflected: ' + q.slice(0, 26), () =>
+    handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
+      assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he), 'off topic: ' + out.reply_he);
+      assert.ok(want.test(out.reply_he), out.reply_he);
+    }));
+}
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

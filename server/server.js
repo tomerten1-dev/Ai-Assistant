@@ -46,6 +46,7 @@ const EMPTY_SLOTS = {
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
+  country_fixed: null,
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
@@ -91,6 +92,7 @@ function toSearchSlots(slots) {
     nights_wanted: slots.nights_wanted || null,
     out_of_season: !!slots.out_of_season,
     wants_two_rooms: !!slots.wants_two_rooms,
+    country_fixed: !!slots.country_fixed,
   };
 }
 
@@ -403,6 +405,13 @@ async function handleChat(body) {
   // with three hotels in three countries is a machine emptying its stock.
   const nothingKnown = slots.adults == null && !(slots.children_ages || []).length &&
     slots.month == null && slots.country == null && slots.destination == null;
+  if (offline.isFarewell(lastUser)) {
+    return {
+      open_lead_form: false, reply_he: offline.FAREWELL_HE, model_used: false,
+      pending_parameter: null, slots, cards: [], two_room_splits: [],
+      notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
+    };
+  }
   if ((offline.isGreeting(lastUser) || !lastUser.trim()) && nothingKnown) {
     slots._lastQuestion = 'adults';
     return {
@@ -508,7 +517,10 @@ async function handleChat(body) {
     // A red-rule answer ("המחיר המדויק…") is the same sentence every time by
     // design. Dropping it as a repeat turned the third "תגיד לי מחיר" into a
     // line about cards — evasion where a rule was meant to speak.
-    const mustKeep = new Set((deflection || '').split(String.fromCharCode(10)).filter(Boolean));
+    const mustKeep = new Set([
+      ...(deflection || '').split(String.fromCharCode(10)).filter(Boolean),
+      ...(faqSuppressed ? [PER_CARD_POINTER[faqHit.id]].filter(Boolean) : []),
+    ]);
     if (alreadySaid.size) {
       const fresh = all.filter(l => !alreadySaid.has(l) || mustKeep.has(l));
       // Everything we were about to say has already been said, above these same

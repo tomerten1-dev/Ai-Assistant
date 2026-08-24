@@ -232,9 +232,16 @@ function parseText(text, slots) {
   // "סבא וסבתא עם שני נכדים" — two adults, said without the word מבוגרים
   else if (/סבא ו?סבתא|סבתא ו?סבא/.test(t) && s.adults == null) s.adults = 2;
   // "2+2" — the standard Israeli shorthand for two adults and two children
-  if (s.adults == null && !/מבוגר|ילד|גיל|בני/.test(t)) {
+  if (s.adults == null && !/מבוגר/.test(t)) {
     const pp = t.match(/(?:^|[^\d])(\d)\s*\+\s*(\d)(?![\d])/);
-    if (pp) { s.adults = +pp[1]; if (+pp[2]) { s.children_count = +pp[2]; s.no_children = false; } }
+    if (pp) {
+      s.adults = +pp[1];
+      // "2+2 בני 6 ו-9" states the children twice; the ages are the better
+      // half, so the count is only taken when no ages were given.
+      if (+pp[2] && !(s.children_ages || []).length) {
+        s.children_count = +pp[2]; s.no_children = false;
+      }
+    }
   }
   let m = t.match(/(\d{1,2}|[א-ת]+)\s*(?:מבוגר[יי]?[םמ]|גדולים)/);
   if (m) s.adults = +m[1] || heNum(m[1]) || s.adults;
@@ -466,6 +473,9 @@ function parseText(text, slots) {
       // their mind ("לא צרפת" … "בעצם כן צרפת") and must be able to say so
       s.excluded_countries = s.excluded_countries.filter(x => x !== v);
       s.country = v;
+      // "רק אוסטריה" is a decision. Suggesting they consider other countries
+      // two lines later is the opposite of listening.
+      if (/רק |ורק |בלבד|דווקא/.test(t)) s.country_fixed = true;
     }
   }
   // A resort can be ruled out just like a country. "לא בנסקו" used only to clear a
@@ -1028,6 +1038,14 @@ function unknownHotel(text, known) {
     'וזו הסיבה שמה שמופיע כאן באמת פנוי. אשמח להציע מלון דומה באותו יעד.';
 }
 
+// A person leaving: "לא רוצה כלום, סתם בדקתי", "תודה, ביי". Three more hotels
+// on the way out is exactly what makes a chat feel like a machine.
+const FAREWELL = /לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
+function isFarewell(text) {
+  return FAREWELL.test(String(text || '').trim());
+}
+const FAREWELL_HE = 'אין בעיה בכלל. אם בהמשך תרצו לבדוק — אני כאן, ואפשר גם להתקשר ל-04-8557722. חורף נעים!';
+
 // "היי" alone. Answering it with three arbitrary offers reads as a machine
 // emptying its stock; a first turn is for saying hello and asking one thing.
 const GREETING = /^ ?(היי|הי|שלום|בוקר טוב|ערב טוב|צהריים טובים|הלו|אהלן|יש מישהו|hi|hello|hey)[\s!.,?]*$/i;
@@ -1139,6 +1157,12 @@ function deflect(text) {
       'על כל הצעה כתוב למטה למה היא מתאימה. אם משהו לא מדויק — תגידו לי מה לשנות.';
   }
 
+  // "זה לא עונה לי" — a refusal without a reason. Asking what to change beats
+  // repeating the same three offers with a different sentence above them.
+  if (/לא עונה לי|לא מתאים לי|לא זה|לא אהבתי|משהו אחר לגמרי|לא בא לי אף אחד/.test(t)) {
+    return 'תגידו לי מה לשנות — יעד אחר, חודש אחר, קרוב יותר למסלול או תקציב נמוך יותר — ואביא הצעות אחרות.';
+  }
+
   // Ski pass and transfers are package-wide rules we know, so answer them
   // instead of pointing at the booking screen. Handled per offer as well, on
   // the card, where the pass area (local vs extended) is stated.
@@ -1197,6 +1221,8 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  isFarewell,
+  FAREWELL_HE,
   unknownHotel,
   isGreeting,
   wantsMore,
