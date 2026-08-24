@@ -45,7 +45,7 @@ const EMPTY_SLOTS = {
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
-  no_saturday_flights: null, nights_wanted: null, unverifiable: [],
+  no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
 };
 
 const CHIP_LABELS = ['חשוב לי אפרה-סקי', 'חשוב לי ספא', 'קרוב למסלולים', 'מתאים למתחילים', 'תקציב חסכוני'];
@@ -90,6 +90,7 @@ function toSearchSlots(slots) {
     no_saturday_flights: !!slots.no_saturday_flights,
     nights_wanted: slots.nights_wanted || null,
     out_of_season: !!slots.out_of_season,
+    wants_two_rooms: !!slots.wants_two_rooms,
   };
 }
 
@@ -174,7 +175,7 @@ async function phraseWithModel({ slots, cards, result, fallback }) {
   }
 }
 
-function presentCards(result, slots) {
+function presentCards(result, slots, skip) {
   // top 3 for display; ranked by the deterministic sort, but prefer showing
   // three DIFFERENT hotels before a second room of the same hotel
   // never show the same hotel on the same date twice — with only one hotel
@@ -187,6 +188,7 @@ function presentCards(result, slots) {
     // room choice anyway
     const k = `${c.hotel}|${c.date}`;
     if (seenExact.has(k)) continue;
+    if (skip && skip.has(k)) continue;        // already shown; "יש עוד?" wants the next ones
     seenExact.add(k); uniq.push(c);
   }
   const seen = new Set(), diverse = [];
@@ -286,7 +288,7 @@ async function handleChat(body) {
   // subject" was the most expensive sentence this bot could say.
   const faqHit = offline.faq(lastUser);
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
-    !faqHit && !offline.deflect(lastUser) &&
+    !faqHit && !offline.deflect(lastUser) && !offline.wantsMore(lastUser) &&
     /\?|איך|מה |למה|מי /.test(lastUser) &&
     !/סקי|חופש|מלון|טיסה|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין|לילות|כלול|הבדל|להזמין|הזמנה|ביקשתי|מסלול|ספא|גלישה|מדריך|העבר|יעדים|אופצי|המלצ/.test(lastUser);
 
@@ -348,7 +350,7 @@ async function handleChat(body) {
   // it reads as a hedge right before the specific answer.
   const PER_CARD_FAQ = new Set(['spa', 'wifi']);
   const faqSuppressed = faqHit && PER_CARD_FAQ.has(faqHit.id);
-  const preamble = [
+  let preamble = [
     deflection,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     offTopic && !deflection ? OFF_TOPIC_HE : null,
@@ -385,8 +387,36 @@ async function handleChat(body) {
   if (tailQuestion) slots._lastQuestion = pendingKey;
 
   // ---- deterministic search (no AI, ever) ----
+  // "היי" on its own, before the customer has told us anything. Answering it
+  // with three hotels in three countries is a machine emptying its stock.
+  const nothingKnown = slots.adults == null && !(slots.children_ages || []).length &&
+    slots.month == null && slots.country == null && slots.destination == null;
+  if (offline.isGreeting(lastUser) && nothingKnown) {
+    slots._lastQuestion = 'adults';
+    return {
+      open_lead_form: false,
+      reply_he: 'היי! אני עוזר למצוא חופשת סקי של פינגווין שבאמת פנויה.\n' +
+        'כדי להתחיל — כמה תהיו בסך הכל, ונוסעים גם ילדים? אדייק לפי זה.',
+      model_used: false, pending_parameter: 'adults', slots, cards: [],
+      two_room_splits: [], notes: [], relaxed: [],
+      chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים', 'בלי ילדים'],
+      chip_to_pref: CHIP_TO_PREF,
+    };
+  }
+
   const result = engine.search(toSearchSlots(slots));
-  const cards = presentCards(result, slots);
+  // "יש עוד?" means the next options, not the same three again. Everything
+  // already put in front of this customer is remembered and skipped; when the
+  // list runs out we say so rather than silently looping.
+  const more = offline.wantsMore(lastUser);
+  const seenBefore = new Set(prevSlots._shown || []);
+  let cards = presentCards(result, slots, more ? seenBefore : null);
+  let exhausted = false;
+  if (more && !cards.length) {
+    cards = presentCards(result, slots);      // start over rather than show nothing
+    exhausted = true;
+  }
+  slots._shown = [...seenBefore, ...cards.map(c => c.hotel + '|' + c.date)].slice(-30);
   // Remember the cheapest band actually put in front of the customer, so that
   // "יקר לי" on the next turn can be answered with something genuinely cheaper
   // rather than a reshuffle of the same prices.
@@ -431,6 +461,12 @@ async function handleChat(body) {
   // The closing line goes last of all — after the question, so the reply ends
   // by moving forward rather than by asking. Skipped when the wording already
   // contains it, which happens when the model followed the same guidance.
+  // nothing new left to show
+  if (exhausted) {
+    preamble = [preamble, 'אלה כל האפשרויות שמצאתי בתנאים האלה. אם נשנה תאריך או יעד — ייפתחו נוספות.']
+      .filter(Boolean).join(String.fromCharCode(10));
+  }
+
   const replyText = (() => {
     const parts = [preamble, intro, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how

@@ -342,6 +342,12 @@ class SkiSearch {
       splits = this._twoRoomSplits(slots, party);
       if (splits.length) relaxed.push({ type: 'two_rooms' });
     }
+    // Asked for outright ("חדר משלהן", "שני חדרים נפרדים") — not only when a
+    // single room cannot hold the party.
+    if (slots.wants_two_rooms && !splits.length && party >= 3) {
+      splits = this._twoRoomSplits(slots, party);
+      if (splits.length) relaxed.push({ type: 'two_rooms' });
+    }
     if (!candidates.length && !splits.length) relaxed.push({ type: 'human_rep' });
 
     // "יקר לי" (Tomer, 24/08): show something CHEAPER than what they were just

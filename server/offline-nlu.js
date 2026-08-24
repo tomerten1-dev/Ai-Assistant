@@ -285,7 +285,11 @@ function parseText(text, slots) {
 
   // --- month
   s.out_of_season = false;
-  for (const [re, v] of MONTHS) if (re.test(t)) { s.month = v; break; }
+  // "ומרץ ולא ינואר" names two months and wants one of them. The negated half
+  // is removed before the scan, or the first name in the sentence wins and the
+  // customer is offered exactly the month they just ruled out.
+  const tMonth = t.replace(/(?:^|[^א-ת])(?:ולא|לא|במקום|חוץ מ)\s*ב?(דצמבר|ינואר|פברואר|מרץ|מארס|מרס)(?![א-ת])/g, ' ');
+  for (const [re, v] of MONTHS) if (re.test(tMonth)) { s.month = v; break; }
   // a numeric date the customer wrote as "15.2" / "5/1"
   // an exact day, not just its month: "12.2.27", "5/1"
   {
@@ -305,7 +309,8 @@ function parseText(text, slots) {
   }
   // the season runs December–March; anything else should be said out loud
   // rather than answered with a repeat of "מתי תרצו לצאת?"
-  if (s.month == null && /אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|קיץ|פסח/.test(t)) {
+  if (s.month == null && /אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|קיץ|פסח/.test(t)
+      && !/דרכון|בתוקף|תוקף|נולד|יום הולדת|passport/.test(t)) {
     s.out_of_season = true;
   }
   // "סוף פברואר" is not February. The bot heard the month, ignored the half,
@@ -478,6 +483,20 @@ function parseText(text, slots) {
       s.price_objection = true;
       s.preferences = [...new Set([...(s.preferences || []), 'תקציב'])];
     }
+  }
+
+  // "אפשר להן חדר משלהן" — a second room, asked for in the words a parent
+  // uses. Without this the request fell on the floor and the reply offered
+  // one room for four.
+  if (/חדר משלה[םן]|חדר בנפרד|חדר נפרד|חדרים נפרדים|שני חדרים|2 חדרים|חדר לילדים/.test(t)) {
+    s.wants_two_rooms = true;
+    s.notes_from_customer = [...new Set([...(s.notes_from_customer || []), 'חדר נפרד לילדים'])];
+  }
+
+  // "אנחנו 12 אנשים, 6 זוגות" — couples, so no children, and asking anyway
+  // reads as not having listened.
+  if (/\d+ ?זוגות|זוגות בלבד|כמה זוגות/.test(t) && !(s.children_ages || []).length) {
+    s.no_children = true;
   }
 
   // --- kids club (גם האיות "קיטנה")
@@ -717,6 +736,15 @@ function phrase(result, slots, cards) {
     lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');
   }
 
+  // Nine travellers and up is a group booking: flight seats and hotel rooms
+  // are checked together, by a person. A two-room split for twelve is not an
+  // answer, and offering one quietly wastes the customer's time.
+  const partySize = (slots.adults || 0) + (slots.children_ages || []).length;
+  if (partySize >= 9) {
+    lines.push('חבורה בגודל הזה אנחנו בונים ידנית — מקומות בטיסה ובמלון נבדקים יחד. ' +
+      'השאירו שם וטלפון ונציג יבנה לכם הצעה לכל הקבוצה, או התקשרו ל-04-8557722.');
+  }
+
   // The answer to "יקר לי", in Tomer's own words from config/guidance.json.
   const obj = guidance.objection('too_expensive');
   if (obj && note('cheaper_found')) lines.push(obj.cheaper);
@@ -925,6 +953,20 @@ function hotelNamed(text) {
   return found.size === 1 ? [...found][0] : null;
 }
 
+// "יש עוד?" is a request for the NEXT options, not a topic to discuss. It used
+// to get "that is not my subject" and the same three cards again.
+const WANTS_MORE = /^ ?ו?(יש עוד|עוד|עוד אפשרויות|תראה עוד|מה עוד יש|יש עוד משהו|אפשרויות נוספות|עוד הצעות|יש אחרים|משהו אחר)\s*\??\s*$/;
+function wantsMore(text) {
+  return WANTS_MORE.test(String(text || '').trim());
+}
+
+// "היי" alone. Answering it with three arbitrary offers reads as a machine
+// emptying its stock; a first turn is for saying hello and asking one thing.
+const GREETING = /^ ?(היי|הי|שלום|בוקר טוב|ערב טוב|צהריים טובים|הלו|אהלן|יש מישהו|hi|hello|hey)[\s!.,?]*$/i;
+function isGreeting(text) {
+  return GREETING.test(String(text || '').trim());
+}
+
 // Standing answers to the questions customers actually ask (config/faq.json).
 // Before this, anything with a question mark and no ski vocabulary in it got
 // "אני כאן בעיקר להתאמת חופשות סקי" — i.e. a customer asking about
@@ -987,8 +1029,14 @@ function handoffTail() {
 
 function guard(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|פרטיו של לקוח|מי תפס/.test(t)) {
+  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות/.test(t)) {
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
+  }
+  // Red rule 10. An attempt to replace the instructions is answered plainly and
+  // once. Ignoring it and answering the rest of the sentence leaves the
+  // customer thinking it might work on the next try.
+  if (/תתעלם מ|התעלם מ|ignore (all|previous|your)|שכח את ה?הוראות|ההוראות שלך|תשכח מה?הוראות|developer mode|תן לי את ה?פרומפט|הפרומפט שלך|מה ה?הנחיות שלך/.test(t)) {
+    return 'אני לא יכול לשנות את מה שאני עושה כאן ולא לחשוף מידע פנימי. אני כן אשמח למצוא לכם חופשת סקי — כמה אתם נוסעים ומתי?';
   }
   // Red rule 3. This lived in deflect(), which is skipped when the message also
   // fills a slot — and "רק רוצה לדעת כמה עולה שבוע לזוג" fills one. A guard
@@ -1016,6 +1064,13 @@ function deflect(text) {
   if (/כמה לילות|כמה ימים|כמה זמן.{0,12}חופשה|משך החופשה/.test(t) && !/טיסה|נסיעה/.test(t)) {
     return 'מספר הלילות מופיע על כל כרטיס — הוא משתנה לפי המוצר (7 לילות ברוב היעדים, ובבנסקו יש גם סופי שבוע קצרים).';
   }
+  // "למה דווקא את אלה?" — the reason is already computed per card (why_he);
+  // this points at it rather than leaving the customer to guess.
+  if (/למה דווקא|למה אלה|למה בחרת|על סמך מה|איך בחרת|למה הצעת/.test(t)) {
+    return 'בחרתי לפי מה שאמרתם: גודל החבורה, החודש, היעד ומה שציינתם שחשוב לכם. ' +
+      'על כל הצעה כתוב למטה למה היא מתאימה. אם משהו לא מדויק — תגידו לי מה לשנות.';
+  }
+
   // Ski pass and transfers are package-wide rules we know, so answer them
   // instead of pointing at the booking screen. Handled per offer as well, on
   // the card, where the pass area (local vs extended) is stated.
@@ -1074,6 +1129,8 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  isGreeting,
+  wantsMore,
   hotelNamed,
   wantsCallback,
   unknownAnswer,
