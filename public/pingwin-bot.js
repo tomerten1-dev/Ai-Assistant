@@ -77,10 +77,15 @@
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
     // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
-    + '.msgs{position:relative;flex:1;overflow-y:auto;padding:20px 18px 16px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:18px}'
-    + '.m{font-size:14.5px;line-height:1.65;white-space:pre-wrap;word-wrap:break-word}'
-    + '.m.user{align-self:flex-start;max-width:min(80%,460px);background:' + THEME.bgAlt + ';color:' + THEME.text + ';'
-    + 'border:1px solid #e4e9ee;border-radius:14px;padding:9px 13px}'
+    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:22px 20px 18px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth}'
+    // the default Windows scrollbar is a slab down the side of a small window
+    + '.msgs::-webkit-scrollbar{width:8px}'
+    + '.msgs::-webkit-scrollbar-thumb{background:#d3dae1;border-radius:99px;border:2px solid ' + THEME.bg + '}'
+    + '.msgs::-webkit-scrollbar-thumb:hover{background:#b9c4ce}'
+    + '.msgs::-webkit-scrollbar-track{background:transparent}'
+    + '.m{font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word}'
+    + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.bgAlt + ';color:' + THEME.text + ';'
+    + 'border:1px solid #e4e9ee;border-radius:16px 16px 16px 4px;padding:10px 15px}'
     + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:32px;position:relative}'
     + '.m.bot::before{content:"P";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:6px;'
     + 'background:' + THEME.primary + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:.3px}'
@@ -93,21 +98,23 @@
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
     + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
     + '.cards-row .card{flex:1 1 270px;min-width:0}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:5px}'
-    + '.card .photo{width:calc(100% + 24px);margin:-12px -12px 3px;height:130px;object-fit:cover;border-radius:11px 11px 0 0;display:block;background:#e8edf1}'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:7px;'
+    + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
+    + '.card:hover{box-shadow:0 6px 18px rgba(16,32,48,.10);transform:translateY(-2px);border-color:#c8d5e2}'
+    + '.card .photo{width:calc(100% + 28px);margin:-14px -14px 5px;height:136px;object-fit:cover;border-radius:13px 13px 0 0;display:block;background:#e8edf1}'
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
-    + '.card .hname{font-weight:700;font-size:14.5px;color:' + THEME.text + ';line-height:1.3}'
-    + '.card .meta{font-size:12.5px;color:' + THEME.textLight + ';line-height:1.4}'
+    + '.card .hname{font-weight:700;font-size:15.5px;color:' + THEME.text + ';line-height:1.3;letter-spacing:-.2px}'
+    + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
-    + '.card .facts div{font-size:12.5px;color:' + THEME.text + ';line-height:1.45}'
-    + '.card .why{font-size:12.5px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:6px;padding:7px 9px;line-height:1.4}'
+    + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
+    + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
-    + '.tag{font-size:11.5px;padding:3px 9px;border-radius:4px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
+    + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
     + '.tag.warn{background:#f7f1e3;color:#7a5c1e;border:1px solid #e5d9bd}'
     + '.tag.rec{background:#e8eef4;color:' + THEME.primaryDark + ';border:1px solid #cfdae4}'
-    + '.card .price{font-size:14px;font-weight:700;color:' + THEME.primaryDark + '}'
-    + '.card .btns{display:flex;gap:6px;margin-top:auto;padding-top:6px;flex-wrap:wrap}'
-    + '.btn{flex:1 1 100%;padding:9px 10px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit}'
+    + '.card .price{font-size:14.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px}'
+    + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:8px;flex-wrap:wrap}'
+    + '.btn{flex:1 1 0;min-width:112px;padding:10px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
     + '.btn.pri{background:' + THEME.primary + ';color:#fff}'
     + '.btn.pri:hover{background:' + THEME.primaryDark + '}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
@@ -116,17 +123,18 @@
     + '.chip{border:1px solid #d8dfe6;background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:99px;'
     // min-height 36px: a 30px chip is below the comfortable tap target on a
     // phone, and chips are the main way a customer refines on mobile
-    + 'padding:8px 14px;min-height:36px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
+    + 'padding:9px 15px;min-height:38px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
     + '.chip:hover{background:' + THEME.bgAlt + ';color:' + THEME.primaryDark + ';border-color:' + THEME.primary + '}'
     // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
-    + '.inp{display:flex;gap:8px;padding:12px 14px 14px;background:' + THEME.bg + ';align-items:flex-end}'
+    + '.inp{display:flex;gap:8px;padding:12px 16px 16px;background:' + THEME.bg + ';align-items:flex-end;border-top:1px solid #eef2f5}'
     + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #d8dfe6;border-radius:14px;'
     + 'padding:5px 6px 5px 12px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
     + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
-    + '.inp textarea{flex:1;border:none;background:none;padding:8px 4px;font-size:14.5px;font-family:inherit;direction:rtl;'
+    + '.inp textarea{flex:1;border:none;background:none;padding:9px 4px;font-size:15px;font-family:inherit;direction:rtl;'
     + 'resize:none;overflow-y:auto;line-height:1.5;max-height:110px;min-height:32px;color:' + THEME.text + '}'
     + '.inp textarea:focus{outline:none}'
-    + '.send{background:' + THEME.primary + ';border:none;color:#fff;border-radius:9px;width:34px;height:34px;flex:none;'
+    + '.send:hover:not(:disabled){background:' + THEME.primaryDark + '}'
+    + '.send{background:' + THEME.primary + ';border:none;color:#fff;border-radius:10px;width:36px;height:36px;flex:none;'
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
     + '.send:disabled{opacity:.5;cursor:default}'
     + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
@@ -293,6 +301,10 @@
   }
 
   function addChips(labels) {
+    // only the newest row of suggestions is live; older ones are history and
+    // tapping them would answer a question that has moved on
+    var old = msgs.querySelectorAll('.chips');
+    for (var i = 0; i < old.length; i++) old[i].remove();
     var box = el('div', 'chips');
     labels.forEach(function (l) {
       var ch = el('button', 'chip', l);
@@ -418,13 +430,21 @@
   }
 
   /* ============== events ============== */
+  var STARTERS = [
+    'זוג בפברואר',
+    'משפחה עם ילדים',
+    'מה כלול בחבילה?',
+    'מתאים למתחילים',
+  ];
+
   function openWin() {
     state.open = true; win.classList.add('open');
     fab.setAttribute('aria-expanded', 'true');
     if (!state.booted) {
       state.booted = true;
-      addMsg('bot', 'שלום, כאן שירות התאמת החופשות של פינגווין.\nספרו לנו בקצרה: כמה נוסעים, גילאי הילדים אם יש, ומתי תרצו לצאת — ונציג בפניכם אפשרויות פנויות מהמלאי.');
+      addMsg('bot', 'שלום, כאן שירות התאמת החופשות של פינגווין.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת — ואציג אפשרויות פנויות מהמלאי שלנו.');
       state.messages.push({ role: 'assistant', content: 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.' });
+      addChips(STARTERS);
     }
     setTimeout(function () { input.focus(); }, 50);
   }

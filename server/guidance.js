@@ -87,12 +87,13 @@ function officeOpen(now) {
   return t >= win[0] && t < win[1];
 }
 
-// What to say when handing the customer to a person, phrased for the hour.
-function handoffLine(now) {
-  const h = load().handoff_he || {};
-  const open = officeOpen(now);
-  if (open === null) return '';
-  return open ? (h.in_hours_he || '') : (h.out_of_hours_he || '');
+// What to say when handing the customer to a person. Deliberately NOT phrased
+// for the hour (Tomer, 24/08): telling someone at 23:00 that the office is
+// closed discourages them from leaving details at the moment they wanted to.
+// One sentence, true at any hour. officeOpen() stays for answering "what are
+// your hours" — it just no longer decides how we speak.
+function handoffLine() {
+  return (load().handoff_he || {}).line_he || '';
 }
 
 // The line the bot ends on. `kind` is 'with_offers' | 'no_offers' | 'after_question'.

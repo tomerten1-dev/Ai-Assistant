@@ -403,14 +403,17 @@ t('an ordinary message does not open the form', () => {
   }).then(out => assert.ok(!out.open_lead_form, 'opened the form unasked'));
 });
 
-t('the callback line respects office hours', () => {
-  const guidance = require('../server/guidance');
-  const open = guidance.officeOpen();
+t('the callback line never talks the customer out of leaving details', () => {
   return handleChat({ messages: [{ role: 'user', content: 'תחזרו אליי' }], slots: {} })
     .then(out => {
-      if (open) assert.ok(/להתקשר עכשיו/.test(out.reply_he), out.reply_he);
-      else assert.ok(/שעות הפעילות/.test(out.reply_he), out.reply_he);
+      assert.ok(!/סגור/.test(out.reply_he), 'announced the office is closed: ' + out.reply_he);
+      assert.ok(/04-8557722/.test(out.reply_he), out.reply_he);
     });
+});
+
+t('the opening hours are answered when actually asked', () => {
+  return handleChat({ messages: [{ role: 'user', content: 'מה שעות הפעילות שלכם?' }], slots: {} })
+    .then(out => assert.ok(/9:00-18:00/.test(out.reply_he), out.reply_he));
 });
 
 (async () => {

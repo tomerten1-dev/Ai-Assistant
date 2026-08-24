@@ -109,7 +109,7 @@ t('"יקר לי" is answered in the words from the file', () => {
   assert.ok(!/\d[\d,.]*\s*(₪|יורו|€)/.test(o.cheaper + o.none), 'a price leaked into the wording');
 });
 
-t('office hours decide how a handoff is phrased', () => {
+t('the office hours are known, for answering when asked', () => {
   const sunMorning = new Date(2026, 7, 23, 10, 0);   // Sunday 10:00
   const sunEvening = new Date(2026, 7, 23, 19, 0);   // Sunday 19:00
   const friday3pm  = new Date(2026, 7, 28, 15, 0);   // Friday 15:00
@@ -118,13 +118,16 @@ t('office hours decide how a handoff is phrased', () => {
   assert.strictEqual(guidance.officeOpen(sunEvening), false);
   assert.strictEqual(guidance.officeOpen(friday3pm), false);
   assert.strictEqual(guidance.officeOpen(saturday), false);
-  assert.ok(/04-8557722/.test(guidance.handoffLine(sunMorning)), 'no number when open');
-  assert.ok(/סגור/.test(guidance.handoffLine(sunEvening)), 'did not say the office is closed');
 });
 
-t('the bot never implies someone will pick up out of hours', () => {
-  const out = guidance.handoffLine(new Date(2026, 7, 29, 23, 0));   // Saturday night
-  assert.ok(!/להתקשר עכשיו/.test(out), out);
+// Tomer, 24/08: do not phrase the handoff by the clock. "המשרד סגור כרגע"
+// talks someone out of leaving their details at the moment they wanted to.
+t('the handoff sentence is the same at any hour', () => {
+  const midnight = guidance.handoffLine(new Date(2026, 7, 29, 23, 0));
+  const midday = guidance.handoffLine(new Date(2026, 7, 23, 10, 0));
+  assert.strictEqual(midnight, midday, 'the wording still changes with the clock');
+  assert.ok(/04-8557722/.test(midday), 'no way to reach anyone: ' + midday);
+  assert.ok(!/סגור/.test(midnight), 'still announces that the office is closed');
 });
 
 t('who each destination suits reaches the prompt', () => {

@@ -883,10 +883,7 @@ function deflect(text) {
     // has to say what is about to happen
     // the form is about to open, so do not also explain where to find a button
     const h = (guidance.load().handoff_he || {});
-    const now = guidance.officeOpen();
-    return now
-      ? `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם, או שאפשר להתקשר עכשיו ל-${h.phone || ''}.`
-      : `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם בשעות הפעילות (${h.hours_he || ''}).`;
+    return `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם${h.phone ? `, או שאפשר להתקשר ל-${h.phone}` : ''}.`;
   }
   // An existing booking is never something this bot should touch.
   if (/הזמנה קיימת|כבר הזמנתי|ההזמנה שלי|לשנות תאריך.{0,15}הזמנה|לבטל את ההזמנה|שינוי בהזמנה/.test(t)) {
