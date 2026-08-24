@@ -824,6 +824,14 @@ function unknownAnswer() {
 // a slot — a sensible economy for "how many nights is it", and a hole for
 // "who booked the room on 5.2", which fills the month and then walks past the
 // customer-data guard.
+// "תחזרו אליי" is a request to be called, not a topic to discuss. The widget
+// turns this into an actual form rather than telling the customer where to
+// find a button.
+const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג/;
+function wantsCallback(text) {
+  return WANTS_CALLBACK.test(' ' + String(text || '').replace(/\s+/g, ' ') + ' ');
+}
+
 // The handoff sentence, phrased for the hour (config/guidance.json).
 function handoffTail() {
   return guidance.handoffLine();
@@ -870,8 +878,15 @@ function deflect(text) {
   }
   // "תחזרו אליי" is a request, not small talk. It used to fall through to the
   // offers and be ignored entirely.
-  if (/תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|תשאיר.{0,10}נציג/.test(t)) {
-    return 'בשמחה. לחצו "תחזרו אליי" על ההצעה שמעניינת אתכם, השאירו שם וטלפון, ונציג יחזור אליכם. ' + handoffTail();
+  if (WANTS_CALLBACK.test(t)) {
+    // the widget opens the form itself (see wantsCallback below), so this only
+    // has to say what is about to happen
+    // the form is about to open, so do not also explain where to find a button
+    const h = (guidance.load().handoff_he || {});
+    const now = guidance.officeOpen();
+    return now
+      ? `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם, או שאפשר להתקשר עכשיו ל-${h.phone || ''}.`
+      : `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם בשעות הפעילות (${h.hours_he || ''}).`;
   }
   // An existing booking is never something this bot should touch.
   if (/הזמנה קיימת|כבר הזמנתי|ההזמנה שלי|לשנות תאריך.{0,15}הזמנה|לבטל את ההזמנה|שינוי בהזמנה/.test(t)) {
@@ -907,5 +922,6 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  wantsCallback,
   unknownAnswer,
   noMatchAnswer, parseText, nextQuestion, phrase, deflect };

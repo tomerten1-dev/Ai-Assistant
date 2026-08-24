@@ -385,6 +385,34 @@ t('two-room splits count as offers for the closing line', () => {
   });
 });
 
+
+t('"תחזרו אליי" opens the form instead of describing a button', () => {
+  const asks = ['תחזרו אליי', 'רוצה שנציג יחזור אליי', 'אני רוצה לדבר עם נציג'];
+  return Promise.all(asks.map(a => handleChat({ messages: [{ role: 'user', content: a }], slots: {} })))
+    .then(outs => outs.forEach((out, i) => {
+      assert.strictEqual(out.open_lead_form, true, asks[i] + ' did not open the form');
+      assert.ok(/שם וטלפון/.test(out.reply_he), asks[i] + ': ' + out.reply_he);
+      // and it must not send them hunting for a control
+      assert.ok(!/לחצו "תחזרו אליי"/.test(out.reply_he), 'pointed at a button: ' + out.reply_he);
+    }));
+});
+
+t('an ordinary message does not open the form', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים בפברואר' }], slots: {},
+  }).then(out => assert.ok(!out.open_lead_form, 'opened the form unasked'));
+});
+
+t('the callback line respects office hours', () => {
+  const guidance = require('../server/guidance');
+  const open = guidance.officeOpen();
+  return handleChat({ messages: [{ role: 'user', content: 'תחזרו אליי' }], slots: {} })
+    .then(out => {
+      if (open) assert.ok(/להתקשר עכשיו/.test(out.reply_he), out.reply_he);
+      else assert.ok(/שעות הפעילות/.test(out.reply_he), out.reply_he);
+    });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

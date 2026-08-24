@@ -436,7 +436,12 @@ async function handleChat(body) {
     modelUsed, ms: Date.now() - startedAt,
   });
 
+  // A request to be called back opens the form, on the offer they were looking
+  // at if there is one. Telling someone where to find a button is not service.
+  const askForDetails = offline.wantsCallback(lastUser);
+
   return {
+    open_lead_form: askForDetails,
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
     reply_he: replyText,
@@ -509,7 +514,9 @@ const server = http.createServer(async (req, res) => {
       try { leads = JSON.parse(fs.readFileSync(leadsPath, 'utf8')); } catch { }
       leads.push({ ...lead, at: new Date().toISOString() });
       fs.writeFileSync(leadsPath, JSON.stringify(leads, null, 1));
-      console.log(`lead: ${lead.name} (${lead.phone}) → ${lead.context && lead.context.hotel} ${lead.context && lead.context.date}`);
+      // a lead with no hotel is legitimate: "תחזרו אליי" before choosing one
+      const ctx = lead.context || {};
+      console.log(`lead: ${lead.name} (${lead.phone}) → ${ctx.hotel || 'ללא הצעה ספציפית'} ${ctx.date || ''}`.trim());
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
       return;

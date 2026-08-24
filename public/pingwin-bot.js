@@ -303,10 +303,17 @@
   }
 
   /* lead form — שם + טלפון בלבד (חוק אדום 8) */
+  // `card` is optional: someone who simply types "תחזרו אליי" has not picked an
+  // offer yet, and should still get the form rather than a pointer to a button.
   function openLeadForm(card) {
     var f = el('div', 'form');
-    f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + card.hotel));
-    f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
+    if (card) {
+      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + card.hotel));
+      f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
+    } else {
+      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם'));
+      f.appendChild(el('div', 'note', 'השאירו שם וטלפון ונציג פינגווין יחזור אליכם.'));
+    }
     var lName = el('label', null, 'שם'); var iName = document.createElement('input');
     iName.setAttribute('aria-label', 'שם');
     var lPhone = el('label', null, 'טלפון'); var iPhone = document.createElement('input');
@@ -334,13 +341,17 @@
         body: JSON.stringify({
           name: nameVal, phone: phoneVal,
           context: {
-            hotel: card.hotel, resort: card.resort, date: card.date, nights: card.nights,
-            room: card.room, party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null
+            hotel: card ? card.hotel : null, resort: card ? card.resort : null,
+            date: card ? card.date : null, nights: card ? card.nights : null,
+            room: card ? card.room : null,
+            party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null
           }
         })
       }).then(function (r) { return r.json(); }).then(function () {
         f.remove();
-        addMsg('bot', 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + card.hotel + '.');
+        addMsg('bot', card
+          ? 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + card.hotel + '.'
+          : 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         go.disabled = false; note.textContent = 'תקלה בשליחה — נסו שוב או חייגו 04-8557722';
       });
@@ -380,6 +391,7 @@
         var row = el('div', 'cards-row');
         msgs.appendChild(row);
         data.cards.forEach(function (c) { addCard(c, row); });
+        state.lastCards = data.cards;
         // park the view on the intro line + first card, not below them
         scrollToTopOf(introEl || row);
         state.messages.push({ role: 'assistant', content: '[הוצגו ' + data.cards.length + ' הצעות: ' + data.cards.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
@@ -389,7 +401,11 @@
           addMsg('bot', s.hotel + ' — ' + fmtDate(s.date) + ' · ' + s.nights + ' לילות\nשני חדרים: ' + s.rooms.join(' + ') + ' · ' + s.price_range);
         });
       }
-      if (data.chips && data.chips.length) addChips(data.chips);
+      // asked to be called back — open the form on the offer they were looking
+      // at, or a blank one if they have not chosen yet
+      if (data.open_lead_form) {
+        openLeadForm(state.lastCards && state.lastCards.length === 1 ? state.lastCards[0] : null);
+      } else if (data.chips && data.chips.length) addChips(data.chips);
       // chips render below the offers; re-anchor so the offers stay in view
       if (data.cards && data.cards.length) scrollToTopOf(introEl || row);
       else scrollDown();
