@@ -344,6 +344,7 @@ async function handleChat(body) {
   // door waiting to supply a number (Tomer, 24/08: "שלא יהיה חייב להשיג פרטים
   // ויתקע"), and the same question is never asked twice.
   const askedBefore = new Set(prevSlots._asked || []);
+  const closedBefore = !!prevSlots._closed;
   // Only the gaps that genuinely change which rooms fit are worth a sentence.
   // The rest — airport, destination — stay as one-tap chips: a customer looking
   // at three real offers should not also be interviewed.
@@ -412,9 +413,14 @@ async function handleChat(body) {
     // contains it, which happens when the model followed the same guidance.
     reply_he: (() => {
       const parts = [preamble, intro, tailQuestion].filter(Boolean);
-      const close = guidance.closing(cards.length ? 'with_offers' : 'no_offers');
+      // Once per conversation. Ending every turn with the same sentence is how
+      // a bot sounds like a bot; a person says it when it is worth saying.
+      // two-room splits are offers too — they render as their own cards in
+      // the widget, so the closing must not tell the customer we found nothing
+      const anyOffer = cards.length || (result.two_room_splits || []).length;
+      const close = closedBefore ? '' : guidance.closing(anyOffer ? 'with_offers' : 'no_offers');
       const said = parts.join(String.fromCharCode(10));
-      if (close && !said.includes(close.slice(0, 18))) parts.push(close);
+      if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
       return parts.join(String.fromCharCode(10));
     })(),
     model_used: modelUsed,

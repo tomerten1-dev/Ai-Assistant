@@ -324,6 +324,67 @@ t('the reply explains why these offers, without volunteering the rest', () => {
   });
 });
 
+
+t('"יקר לי" as an opening message claims nothing about our prices', () => {
+  // there was no earlier offer for it to be cheaper than
+  return handleChat({ messages: [{ role: 'user', content: 'יקר לי' }], slots: {} }).then(out => {
+    assert.ok(!/המחירים הטובים ביותר/.test(out.reply_he),
+      'claimed best prices before showing any: ' + out.reply_he);
+  });
+});
+
+t('the season notice is printed once, not twice', () => {
+  return handleChat({ messages: [{ role: 'user', content: 'זוג באפריל' }], slots: {} }).then(out => {
+    const hits = (out.reply_he.match(/עונת הסקי שלנו/g) || []).length;
+    assert.strictEqual(hits, 1, 'printed ' + hits + ' times: ' + out.reply_he);
+  });
+});
+
+t('a child too old for any camp group is named', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג עם ילד בן 13 וילד בן 14, פברואר, קייטנה' }], slots: {},
+  }).then(out => {
+    assert.ok(/14/.test(out.reply_he), 'said nothing about the 14-year-old: ' + out.reply_he);
+  });
+});
+
+t('travelling alone is not asked about children', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'אני נוסע לבד בינואר' }], slots: {},
+  }).then(out => {
+    assert.strictEqual(out.slots.adults, 1);
+    assert.strictEqual(out.slots.no_children, true);
+    assert.ok(!/נוסעים גם ילדים/.test(out.reply_he), out.reply_he);
+  });
+});
+
+t('the closing line is said once per conversation, not every turn', () => {
+  const msgs = [];
+  let slots = {};
+  const turns = ['זוג בלי ילדים, ינואר', 'לא בולגריה', 'סוף פברואר'];
+  let count = 0;
+  return turns.reduce((p, txt) => p.then(() => {
+    msgs.push({ role: 'user', content: txt });
+    return handleChat({ messages: msgs, slots }).then(out => {
+      slots = out.slots;
+      msgs.push({ role: 'assistant', content: out.reply_he });
+      if (/אפשר להמשיך להזמנה|אפשר לשנות תאריך או יעד/.test(out.reply_he)) count++;
+    });
+  }), Promise.resolve()).then(() => {
+    assert.ok(count <= 1, 'closed ' + count + ' times in one conversation');
+  });
+});
+
+t('two-room splits count as offers for the closing line', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'אנחנו 12 חברים בפברואר' }], slots: {},
+  }).then(out => {
+    if (!(out.two_room_splits || []).length) return;
+    assert.ok(!/אפשר לשנות תאריך או יעד ואבדוק שוב/.test(out.reply_he),
+      'told them we found nothing while offering two rooms: ' + out.reply_he);
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

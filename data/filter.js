@@ -148,6 +148,14 @@ class SkiSearch {
     if (slots.needs_hebrew_kids_club && !SkiSearch.neededAgeGroups(slots.children_ages).size) {
       notes.push({ type: 'camp_age_mismatch', ages: slots.children_ages || [] });
     }
+    // Some children are in range and some are not. Saying nothing about the
+    // 14-year-old lets a parent assume all their children have a group.
+    if (slots.needs_hebrew_kids_club) {
+      const outside = (slots.children_ages || []).filter(a => a < 4 || a > 13);
+      if (outside.length && SkiSearch.neededAgeGroups(slots.children_ages).size) {
+        notes.push({ type: 'camp_age_partial', ages: outside });
+      }
+    }
     // a resort pingwin sells but holds no commitments for — bookable only on
     // dates free of the "commitments only" restriction, and always subject to
     // hotel confirmation (Tomer 23/08). The bot routes it, never quotes it.
@@ -292,7 +300,17 @@ class SkiSearch {
       }
       notes.push({
         type: 'camp_group_gap', missing,
-        dates: covered, other_dates: [...new Set(wider)].sort(),
+        dates: covered,
+        // nearest first: a March request should not be answered with December
+        other_dates: [...new Set(wider)].sort((a, b) => {
+          const near = (d) => {
+            const m = SkiSearch.monthOf(d);
+            const want = +slots.month || m;
+            const order = [12, 1, 2, 3];
+            return Math.abs(order.indexOf(m) - order.indexOf(want));
+          };
+          return near(a) - near(b) || a.localeCompare(b);
+        }),
       });
     }
 
@@ -328,7 +346,9 @@ class SkiSearch {
       if (cheaper.length) {
         candidates = cheaper;
         notes.push({ type: 'cheaper_found' });
-      } else {
+      } else if (ceiling) {
+        // only claim these are our best prices if we HAVE shown dearer ones;
+        // as an opening message "יקר לי" refers to nothing we said
         notes.push({ type: 'no_cheaper' });
       }
     }

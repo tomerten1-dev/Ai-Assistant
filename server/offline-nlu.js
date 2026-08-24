@@ -180,7 +180,14 @@ function parseText(text, slots) {
   // A correction ("בעצם 4", "סליחה, 3") must override an earlier number —
   // silently keeping the first one books the wrong size room.
   const correcting = /בעצם|סליחה|טעות|תתקן|לא נכון|התכוונתי|שיניתי|בעצמנו/.test(t);
-  if (/אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד/.test(t)) s.adults = 1;
+  if (/אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד/.test(t)) {
+    s.adults = 1;
+    // travelling alone answers the children question too — asking it anyway
+    // reads as not having listened
+    if (!(s.children_ages || []).length && !s.children_count) {
+      s.no_children = true; s.children_ages = [];
+    }
+  }
   // "שני זוגות" is four people, not two
   let pm = t.match(/(\d{1,2}|[א-ת]+)\s*זוגות/);
   if (pm) { const n = +pm[1] || heNum(pm[1]); if (n) s.adults = n * 2; }
@@ -537,9 +544,9 @@ function phrase(result, slots, cards) {
     ].join(' '));
   }
 
-  if (note('out_of_season')) {
-    lines.push('עונת הסקי שלנו היא דצמבר עד סוף מרץ. בחודשים אחרים אין לנו יציאות.');
-  }
+  // NOTE: the out-of-season line is printed by the server preamble. Repeating
+  // it here said the same sentence twice, two words apart.
+
 
   // the child's age group does not run on some of these weeks — name the ones
   // where it does, instead of only flagging what is missing
@@ -558,6 +565,12 @@ function phrase(result, slots, cards) {
   const narrowed = note('camp_narrowed');
   if (narrowed && narrowed.groups.length) {
     lines.push(`קבוצת ${narrowed.groups.join(', ')} פועלת רק בחלק מהשבועות, אז הצגתי רק תאריכים שבהם היא כן פועלת:`);
+  }
+
+  const partial = note('camp_age_partial');
+  if (partial && partial.ages.length) {
+    const ages = partial.ages.join(', ');
+    lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-13, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
   }
 
   const campAge = note('camp_age_mismatch');
