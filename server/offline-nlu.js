@@ -231,6 +231,10 @@ function parseText(text, slots) {
   else if (/ההורים|הורים/.test(t) && s.adults == null) s.adults = 2;
   // "סבא וסבתא עם שני נכדים" — two adults, said without the word מבוגרים
   else if (/סבא ו?סבתא|סבתא ו?סבא/.test(t) && s.adults == null) s.adults = 2;
+  // "אנחנו רוצים חופשה עם שני נכדים בני 8 ו-11" — the grandchildren were counted
+  // and the grandparents were not, so every offer was sized for two people
+  // short of the family.
+  else if (/נכד|נכדה|נכדים|נכדות/.test(t) && s.adults == null) s.adults = 2;
   // "2+2" — the standard Israeli shorthand for two adults and two children
   if (s.adults == null && !/מבוגר/.test(t)) {
     const pp = t.match(/(?:^|[^\d])(\d)\s*\+\s*(\d)(?![\d])/);
@@ -1244,6 +1248,13 @@ function handoffTail() {
 function guard(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות/.test(t)) {
+    // Their OWN booking is a different question with a different answer: we
+    // still show nothing, but "אין לי גישה לפרטי לקוחות אחרים" reads as an
+    // accusation when someone is asking about the holiday they just bought.
+    if (/שלי|שלנו|שהזמנתי|שהזמנו|שביצעתי/.test(t)) {
+      return 'אין לי גישה למערכת ההזמנות ולא אוכל לראות הזמנה קיימת. ' +
+        'נציג כן יכול — 04-8557722, או השאירו כאן שם וטלפון ונחזור אליכם.';
+    }
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
   }
   // Red rule 10. An attempt to replace the instructions is answered plainly and

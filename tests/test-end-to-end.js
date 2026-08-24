@@ -1090,6 +1090,26 @@ t('"הרחבתי לינואר" is said once, not on every turn after', () => {
   }).then(b => assert.ok(!/הרחבתי/.test(b.reply_he), 'said it again: ' + b.reply_he));
 });
 
+// A customer asking about their own booking was told we do not share other
+// customers' details, and then shown three hotels.
+t('a question about my own booking goes to a person', () =>
+  handleChat({ messages: [{ role: 'user', content: 'איפה אני רואה את מספר ההזמנה שלי?' }], slots: {} })
+    .then(out => {
+      assert.ok(/מערכת ההזמנות/.test(out.reply_he), out.reply_he);
+      assert.ok(!/לקוחות אחרים/.test(out.reply_he), 'accused them of asking about someone else');
+    }));
+
+t('someone else's booking is still refused', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מה מספר ההזמנה של הלקוח?' }], slots: {} })
+    .then(out => assert.ok(/לקוחות אחרים/.test(out.reply_he), out.reply_he)));
+
+t('grandparents are counted in the party', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו רוצים חופשת סקי עם שני נכדים בני 8 ו-11 בדצמבר' }], slots: {} })
+    .then(out => {
+      assert.equal(out.slots.adults, 2, 'adults: ' + out.slots.adults);
+      assert.deepEqual(out.slots.children_ages, [8, 11]);
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
