@@ -213,7 +213,9 @@ function parseText(text, slots) {
   if (m) {
     const total = +m[1] || heNum(m[1]);
     if (total) {
-      const kids = (s.children_ages || []).length;
+      // the children may be known by age OR only by count — "אנחנו 5 עם שלושה
+      // ילדים" said five adults before this, and would have booked for eight
+      const kids = (s.children_ages || []).length || s.children_count || 0;
       s.adults = kids && total > kids ? total - kids : total;
     }
   }
@@ -817,6 +819,24 @@ function unknownAnswer() {
   return [h.when_unknown_he, guidance.handoffLine()].filter(Boolean).join(' ');
 }
 
+// Red-rule guards, separated from the conversational deflections because they
+// must NEVER be conditional. deflect() is skipped when the message also fills
+// a slot — a sensible economy for "how many nights is it", and a hole for
+// "who booked the room on 5.2", which fills the month and then walks past the
+// customer-data guard.
+// The handoff sentence, phrased for the hour (config/guidance.json).
+function handoffTail() {
+  return guidance.handoffLine();
+}
+
+function guard(text) {
+  const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|פרטיו של לקוח|מי תפס/.test(t)) {
+    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
+  }
+  return null;
+}
+
 function deflect(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   // "מספר ההזמנה" with the definite article was walking straight past this
@@ -848,6 +868,24 @@ function deflect(text) {
   if (/שעה|שעות טיסה|מתי ממריא|מתי הטיסה|לוח טיסות/.test(t)) {
     return 'שעות הטיסה אינן סופיות ועשויות להשתנות, ולכן לא אציין אותן כאן. נציג ימסור לכם את הפרטים המעודכנים.';
   }
+  // "תחזרו אליי" is a request, not small talk. It used to fall through to the
+  // offers and be ignored entirely.
+  if (/תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|תשאיר.{0,10}נציג/.test(t)) {
+    return 'בשמחה. לחצו "תחזרו אליי" על ההצעה שמעניינת אתכם, השאירו שם וטלפון, ונציג יחזור אליכם. ' + handoffTail();
+  }
+  // An existing booking is never something this bot should touch.
+  if (/הזמנה קיימת|כבר הזמנתי|ההזמנה שלי|לשנות תאריך.{0,15}הזמנה|לבטל את ההזמנה|שינוי בהזמנה/.test(t)) {
+    return 'שינוי בהזמנה קיימת נעשה מול נציג ולא דרכי. ' + handoffTail();
+  }
+  // Dissatisfaction is on topic by definition. It used to get "I only handle
+  // ski holidays", which is the worst possible answer to an unhappy customer.
+  if (/לא מה שחיפשתי|לא מה שרציתי|לא מתאים לי|לא אהבתי|משהו אחר|לא זה/.test(t)) {
+    return 'סליחה, בואו נדייק — מה לשנות? תאריך, יעד, גודל החדר או משהו אחר?';
+  }
+  // Travelling with a pet is an ordinary travel question, not off topic.
+  if (/כלב|חתול|חיית מחמד|בעל ?חיים/.test(t)) {
+    return 'מדיניות בעלי חיים נקבעת על ידי המלון וחברת התעופה ומשתנה ביניהם. ' + handoffTail();
+  }
   if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת/.test(t)) {
     return 'מצוין. לחצו "המשך להזמנה" בכרטיס שבחרתם כדי לראות את המחיר המדויק, או "תחזרו אליי" ונציג יסגור איתכם — ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.';
   }
@@ -868,5 +906,6 @@ function deflect(text) {
 
 module.exports = {
   faq,
+  guard,
   unknownAnswer,
   noMatchAnswer, parseText, nextQuestion, phrase, deflect };

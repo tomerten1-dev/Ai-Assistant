@@ -15,6 +15,7 @@ const { SLOT_PROMPT: SLOT_PROMPT_LEAN } = require('./prompt-slots.js');
 const offline = require('./offline-nlu.js');
 const phrasing = require('./prompt-phrase.js');
 const guidance = require('./guidance.js');
+const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
 
@@ -219,6 +220,7 @@ function presentCards(result, slots) {
 
 /* ---------- chat orchestration ---------- */
 async function handleChat(body) {
+  const startedAt = Date.now();
   const messages = (body.messages || []).slice(-20).map(m => ({
     role: m.role === 'assistant' ? 'assistant' : 'user',
     content: String(m.content || '').slice(0, 2000),
@@ -321,8 +323,11 @@ async function handleChat(body) {
   // שיעור סקי?" gets the lesson answer rather than the generic price line.
   // No FAQ pattern can match a red-rule question (customer names, exact
   // prices, flight times) — tests/test-faq.js pins that.
-  const deflection = faqHit ? null
-    : (slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser));
+  // The red-rule guard runs unconditionally — not gated on the FAQ, not gated
+  // on whether the message also filled a slot.
+  const guarded = offline.guard(lastUser);
+  const deflection = guarded || (faqHit ? null
+    : (slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser)));
   // deflect() guards the red rules (no customer names, no exact prices) so it
   // wins; the FAQ answer follows only when there is nothing to guard against.
   // Unlike deflect(), the FAQ answers even when the same message also filled
@@ -405,24 +410,36 @@ async function handleChat(body) {
     for (const [he, code] of Object.entries(byHe)) if (!ex.includes(code)) gapChips.push(he);
   }
 
+  // The closing line goes last of all — after the question, so the reply ends
+  // by moving forward rather than by asking. Skipped when the wording already
+  // contains it, which happens when the model followed the same guidance.
+  const replyText = (() => {
+    const parts = [preamble, intro, tailQuestion].filter(Boolean);
+    // Once per conversation. Ending every turn with the same sentence is how
+    // a bot sounds like a bot; a person says it when it is worth saying.
+    // two-room splits are offers too — they render as their own cards in
+    // the widget, so the closing must not tell the customer we found nothing
+    const anyOffer = cards.length || (result.two_room_splits || []).length;
+    const close = closedBefore ? '' : guidance.closing(anyOffer ? 'with_offers' : 'no_offers');
+    const said = parts.join(String.fromCharCode(10));
+    if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
+    return parts.join(String.fromCharCode(10));
+  })();
+
+  // One line per turn. Every defect in this project was found by a person
+  // reading a reply; this is what makes that possible without waiting for a
+  // screenshot.
+  if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+  chatLog.logTurn({
+    conversationId: body.conversationId || slots._cid,
+    userText: lastUser, reply: replyText, cards, result, slots,
+    modelUsed, ms: Date.now() - startedAt,
+  });
+
   return {
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
-    // The closing line goes last of all — after the question, so the reply ends
-    // by moving forward rather than by asking. Skipped when the wording already
-    // contains it, which happens when the model followed the same guidance.
-    reply_he: (() => {
-      const parts = [preamble, intro, tailQuestion].filter(Boolean);
-      // Once per conversation. Ending every turn with the same sentence is how
-      // a bot sounds like a bot; a person says it when it is worth saying.
-      // two-room splits are offers too — they render as their own cards in
-      // the widget, so the closing must not tell the customer we found nothing
-      const anyOffer = cards.length || (result.two_room_splits || []).length;
-      const close = closedBefore ? '' : guidance.closing(anyOffer ? 'with_offers' : 'no_offers');
-      const said = parts.join(String.fromCharCode(10));
-      if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
-      return parts.join(String.fromCharCode(10));
-    })(),
+    reply_he: replyText,
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
