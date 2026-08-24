@@ -977,6 +977,10 @@ t('a note is addressed once, not on every turn afterwards', () => {
   });
 });
 
+t('a Sabbath-observing family is told why the destination is gone', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג שומרי שבת שרוצה אוסטריה בינואר' }], slots: {} })
+    .then(out => assert.ok(/יוצאות בשבת/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

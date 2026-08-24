@@ -775,7 +775,15 @@ function phrase(result, slots, cards) {
   }
   for (const r of result.relaxed || []) {
     if (r.type === 'month') lines.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
-    if (r.type === 'location') lines.push('לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
+    if (r.type === 'location') {
+      // The reason is worth more than the fact. A Sabbath-observing family
+      // reading "לא מצאתי ביעד שביקשתם" learns nothing it can act on; the real
+      // answer is that every departure there that month is on a Saturday.
+      const sat = note('saturday_only');
+      lines.push(sat
+        ? 'ביעד שביקשתם כל היציאות בחודש הזה יוצאות בשבת, ולכן הצגתי יעדים אחרים:'
+        : 'לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
+    }
     if (r.type === 'two_rooms') lines.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
     if (r.type === 'nights') lines.push(`לא מצאתי בדיוק ${r.wanted} לילות, אז הרחבתי גם למשכים אחרים:`);
     if (r.type === 'camp_month') {
