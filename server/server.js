@@ -330,14 +330,26 @@ async function handleChat(body) {
     slots.out_of_season ? SEASON_HE : null,
   ].filter(Boolean).join('\n');
 
-  const mustSearch = replyIfNotReady == null || questionsAsked >= MAX_QUESTIONS;
-  if (!mustSearch) {
-    return {
-      reply_he: (preamble ? preamble + '\n' : '') + replyIfNotReady,
-      slots, cards: [], chips: [], model_used: modelUsed,
-    };
+  // ALWAYS search. The question, if there is one, rides along after the offers
+  // rather than standing in front of them. A customer is never held at the
+  // door waiting to supply a number (Tomer, 24/08: "שלא יהיה חייב להשיג פרטים
+  // ויתקע"), and the same question is never asked twice.
+  const askedBefore = new Set(prevSlots._asked || []);
+  // Only the gaps that genuinely change which rooms fit are worth a sentence.
+  // The rest — airport, destination — stay as one-tap chips: a customer looking
+  // at three real offers should not also be interviewed.
+  // The question may come from the offline ladder (which names its key) or
+  // from the model itself. Either way it rides along; a model question with no
+  // key used to be discarded silently, so the turn asked nothing at all.
+  const pendingKey = slots._lastQuestion || (replyIfNotReady ? 'model:' + replyIfNotReady.slice(0, 24) : null);
+  let tailQuestion = null;
+  if (pendingKey && replyIfNotReady && !askedBefore.has(pendingKey)) {
+    tailQuestion = replyIfNotReady;
+    askedBefore.add(pendingKey);
   }
-  if (mustSearch && replyIfNotReady) { pendingQuestion = null; delete slots._lastQuestion; }
+  slots._asked = [...askedBefore];
+  delete slots._lastQuestion;
+  if (tailQuestion) slots._lastQuestion = pendingKey;
 
   // ---- deterministic search (no AI, ever) ----
   const result = engine.search(toSearchSlots(slots));
@@ -360,7 +372,15 @@ async function handleChat(body) {
 
   // still-unknown matching parameters ride along as one-tap chips, so the
   // customer completes the picture by choosing rather than by being asked
+  // The party size and the children are the two gaps that most change the
+  // answer, and they are asked at most once. After that they stay reachable as
+  // one tap, so the picture can still be completed without being nagged for it.
   const gapChips = [];
+  if (slots.adults == null) gapChips.push('2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים');
+  else if (!(slots.children_ages || []).length && slots.no_children !== true) {
+    gapChips.push('בלי ילדים');
+  }
+  if (slots.month == null) gapChips.push('דצמבר', 'ינואר', 'פברואר', 'מרץ');
   if (slots.departure_airport == null) gapChips.push('טיסה מנתב"ג', 'טיסה מחיפה');
   if (slots.country == null && slots.destination == null) {
     const ex = slots.excluded_countries || [];
@@ -371,7 +391,7 @@ async function handleChat(body) {
   return {
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
-    reply_he: (preamble ? preamble + '\n' : '') + intro,
+    reply_he: [preamble, intro, tailQuestion].filter(Boolean).join('\n'),
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,

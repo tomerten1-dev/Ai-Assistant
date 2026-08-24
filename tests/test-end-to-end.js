@@ -196,6 +196,50 @@ t('a tradeoff is never suggested for the Sabbath', () => {
   });
 });
 
+
+t('a vague first message still gets offers, not an interview', () => {
+  // Tomer, 24/08: "שלא יהיה חייב להשיג פרטים ויתקע"
+  return handleChat({
+    messages: [{ role: 'user', content: 'אני רוצה לנסוע לסקי' }], slots: {},
+  }).then(out => {
+    assert.ok(out.cards.length > 0, 'held the customer at the door: ' + out.reply_he);
+    assert.ok(/\?/.test(out.reply_he), 'showed offers but asked nothing at all');
+    // and the spread should not be three identical room sizes
+    const sizes = new Set(out.cards.map(c => c.occ && c.occ.max));
+    assert.ok(sizes.size > 1, 'no variety with an unknown party: ' + JSON.stringify([...sizes]));
+  });
+});
+
+t('the same question is never asked twice', () => {
+  const turns = ['אני רוצה לנסוע לסקי', 'פברואר', 'באוסטריה'];
+  const msgs = [];
+  let slots = {};
+  const asked = [];
+  return turns.reduce((p, txt) => p.then(() => {
+    msgs.push({ role: 'user', content: txt });
+    return handleChat({ messages: msgs, slots }).then(out => {
+      slots = out.slots;
+      msgs.push({ role: 'assistant', content: out.reply_he });
+      const q = out.reply_he.split('\n').filter(x => x.includes('?')).map(x => x.trim());
+      asked.push(...q);
+    });
+  }), Promise.resolve()).then(() => {
+    const seen = new Set();
+    for (const q of asked) {
+      assert.ok(!seen.has(q), 'asked twice: ' + q);
+      seen.add(q);
+    }
+  });
+});
+
+t('gaps stay reachable as chips after being asked once', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'אני רוצה לנסוע לסקי' }], slots: {},
+  }).then(out => {
+    assert.ok(out.chips.some(c => /נוסעים/.test(c)), 'no party chips: ' + JSON.stringify(out.chips));
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

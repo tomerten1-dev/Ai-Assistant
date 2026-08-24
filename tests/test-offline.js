@@ -33,9 +33,12 @@ function t(name, cond, detail) {
   t('no card is france-in-february', r1.cards.every(c => !(c.country === 'france' && c.date.slice(5, 7) === '02')));
   t('partial camps stated when 4-6 missing', r1.cards.every(c => !c.camps || !c.camps.full ? true : true));
 
-  console.log('[3] "אנחנו 2, ינואר" → one question, then results');
+  console.log('[3] "אנחנו 2, ינואר" → offers AND one question, never a gate');
   const r2a = await handleChat({ messages: [{ role: 'user', content: 'אנחנו 2, ינואר' }], slots: {} });
-  t('asks one question (children)', r2a.cards.length === 0 && (r2a.reply_he.match(/\?/g) || []).length === 1, r2a.reply_he);
+  // Policy changed 24/08 (Tomer): the bot must never hold the customer at the
+  // door waiting for a detail. It searches with what it has and asks alongside.
+  t('shows offers even with children unknown', r2a.cards.length > 0, 'cards=' + r2a.cards.length);
+  t('and still asks about children, once', (r2a.reply_he.match(/\?/g) || []).length === 1, r2a.reply_he);
   const r2b = await handleChat({
     messages: [
       { role: 'user', content: 'אנחנו 2, ינואר' },

@@ -110,6 +110,10 @@ class SkiSearch {
      of 3 ADULTS per the hotel page — total party size alone is not enough. */
   fits(unit, party, adults) {
     const occ = this.effectiveOcc(unit);
+    // Party still unknown: every unit is a candidate. The bot shows a spread
+    // and asks alongside, instead of holding the customer at the door until
+    // they fill in a number (Tomer, 24/08 — it must never get stuck waiting).
+    if (!party) return null;
     if (occ.min == null) return null; // unknown occupancy — verify with rep
     if (occ.min_adults != null && adults != null && adults < occ.min_adults) return false;
     return party >= occ.min && party <= occ.max;
@@ -336,6 +340,26 @@ class SkiSearch {
       // "תקציב חסכוני" means cheapest first, not merely a tiebreak
       (wantsBudget ? a.priceRank - b.priceRank : 0) ||
       (b.recommended - a.recommended) || a.date.localeCompare(b.date));
+
+    // With no party size, variety is the whole value of the answer: three
+    // studios tell an undecided family nothing. Spread across occupancy sizes
+    // first, then fall back to the normal ranking.
+    if (!party && candidates.length > 3) {
+      const bySize = new Map();
+      for (const c of candidates) {
+        const occ = this.effectiveOcc(c);
+        const k = occ.max || 0;
+        if (!bySize.has(k)) bySize.set(k, []);
+        bySize.get(k).push(c);
+      }
+      const spread = [], pools = [...bySize.values()];
+      let more = true;
+      while (more) {
+        more = false;
+        for (const pool of pools) if (pool.length) { spread.push(pool.shift()); more = true; }
+      }
+      candidates = spread;
+    }
 
     // hotel diversity: before capping at 8, prefer one unit per hotel in rank
     // order, then fill remaining slots with extra rooms of already-shown hotels

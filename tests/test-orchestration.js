@@ -86,19 +86,23 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
     messages: [{ role: 'user', content: 'משהו שהרג׳קס לא מכיר בכלל בבקשה תעזור' }],
     slots: {},
   });
-  t('model was attempted', callCount === 1);
+  t('model was attempted', callCount >= 1, 'calls=' + callCount);
   t('bot still replied', !!r3.reply_he);
   t('reply is a sensible question, not an error', /\?/.test(r3.reply_he), r3.reply_he);
 
-  console.log('\n[questions] blocking gaps ask; non-blocking gaps become chips');
+  console.log('\n[questions] gaps are asked ALONGSIDE offers, never instead of them');
   reset();
   const r4 = await handleChat({ messages: [{ role: 'user', content: 'אנחנו 2' }], slots: {} });
-  t('missing children/month → asks', r4.cards.length === 0 && /\?/.test(r4.reply_he));
+  // Tomer, 24/08: never hold the customer at the door. Search with what we
+  // have, ask the gap after the offers, and never ask the same thing twice.
+  t('missing children/month still shows offers', r4.cards.length > 0, 'cards=' + r4.cards.length);
+  t('and asks the gap alongside them', /[?]/.test(r4.reply_he), r4.reply_he);
   reset();
   const r5 = await handleChat({
     messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר' }], slots: {},
   });
-  t('essentials complete → offers, no interview', r5.cards.length === 3 && !/\?/.test(r5.reply_he), r5.reply_he);
+  t('essentials complete -> offers, no question at all',
+    r5.cards.length === 3 && !/[?]/.test(r5.reply_he), r5.reply_he);
   t('airport still gathered — as chips', (r5.chips || []).some(c => c.includes('חיפה')));
   t('destination gathered as chips too', (r5.chips || []).some(c => c === 'אוסטריה'));
   t('pending parameter reported', r5.pending_parameter === 'airport');

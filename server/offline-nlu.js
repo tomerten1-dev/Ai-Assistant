@@ -403,6 +403,13 @@ function parseText(text, slots) {
   }
 
   // bare answer to the adults question — digits ("2") or words ("שניים")
+  // chip taps: "4 נוסעים", "5+ נוסעים"
+  const chipParty = t.match(/(?:^|\s)(\d{1,2})\s*\+?\s*נוסעים\s*$/);
+  if (chipParty && s.adults == null) {
+    const n = +chipParty[1];
+    const kids = (s.children_ages || []).length;
+    if (n >= 1 && n <= 20) s.adults = kids && n > kids ? n - kids : n;
+  }
   if (answering === 'adults' && s.adults == null && !allAdults) {
     const bare = t.trim().match(/^(\d{1,2}|[א-ת]+)(?:\s*(?:אנשים|נוסעים|מבוגרים))?$/);
     if (bare) { const n = +bare[1] || heNum(bare[1]); if (n) s.adults = n; }
@@ -429,8 +436,11 @@ function parseText(text, slots) {
 function nextQuestion(slots, prevKey) {
   let q = null;
   const kidsInCampRange = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
-  // blocking: without these the search cannot run at all
-  if (slots.adults == null) q = { key: 'adults', blocking: true, he: 'כמה מבוגרים תהיו בחופשה?' };
+  // Nothing blocks any more. The bot searches with whatever it has and asks
+  // alongside the offers, because a customer who has to answer three questions
+  // before seeing anything is being interviewed, not helped (Tomer, 24/08).
+  // `blocking` now means only "ask this one first", never "refuse to search".
+  if (slots.adults == null) q = { key: 'adults', blocking: true, he: 'כמה תהיו בסך הכל? אדייק לפי זה' };
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
     // no_children === false means we were told there ARE children, even when
     // the count is still unknown — so ask what is missing, not what we know
