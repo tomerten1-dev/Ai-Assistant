@@ -767,6 +767,94 @@ for (const [q, want] of [
     }));
 }
 
+/* ---- the eleventh reading round ---- */
+
+// The price rule says the same sentence every time by design; the repeat
+// filter turned the third "תגיד לי מחיר" into a line about cards.
+t('the price rule is repeated as often as it is asked', () => {
+  const msgs = [{ role: 'user', content: 'זוג בפברואר' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots; msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'כמה זה עולה בשקלים?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => {
+    slots = b.slots;
+    assert.ok(/המחיר המדויק/.test(b.reply_he), b.reply_he);
+    msgs.push({ role: 'assistant', content: b.reply_he });
+    msgs.push({ role: 'user', content: 'נו תגיד לי מחיר' });
+    return handleChat({ messages: msgs, slots });
+  }).then(c => assert.ok(/המחיר המדויק/.test(c.reply_he), 'gave up on the rule: ' + c.reply_he));
+});
+
+// A party that grows mid-conversation.
+t('"מצטרפים אלינו עוד שניים" changes the party', () => {
+  const msgs = [{ role: 'user', content: 'זוג בפברואר בבולגריה' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots; msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'רגע, מצטרפים אלינו עוד שניים' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => assert.equal(b.slots.adults, 4, 'adults: ' + b.slots.adults));
+});
+
+// Two rooms in the month they asked for beat one room in another month.
+t('a big party keeps its month and takes two rooms', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו שתי משפחות, 4 מבוגרים ו-4 ילדים בני 6,8,10,13, פברואר' }], slots: {} })
+    .then(out => {
+      const splits = out.two_room_splits || [];
+      assert.ok(splits.length, 'no two-room offer');
+      for (const sp of splits) assert.ok(/-02-/.test(sp.date), 'left February: ' + sp.date);
+      assert.ok(!/הרחבתי לינואר/.test(out.reply_he), out.reply_he);
+    }));
+
+// Three cards for the same hotel and date, differing only in which two flats
+// they pair, is one offer printed three times.
+t('two-room offers are one per hotel and date', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו שתי משפחות, 4 מבוגרים ו-4 ילדים בני 6,8,10,13, פברואר' }], slots: {} })
+    .then(out => {
+      const keys = (out.two_room_splits || []).map(sp => sp.hotel + '|' + sp.date);
+      assert.equal(new Set(keys).size, keys.length, 'duplicates: ' + keys.join(', '));
+    }));
+
+// An empty message is a hello, not a search.
+t('an empty message is answered as a greeting', () =>
+  handleChat({ messages: [{ role: 'user', content: '   ' }], slots: {} })
+    .then(out => assert.equal(out.cards.length, 0, 'showed ' + out.cards.length + ' cards')));
+
+// "אחי מה יש לכם לפברואר לזוג?" says the party and the month while matching
+// the help entry; asking for both again is not listening.
+t('a request that already says everything is not asked to start over', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אחי מה יש לכם לפברואר לזוג משהו שווה?' }], slots: {} })
+    .then(out => {
+      assert.ok(!/הכי קל להתחיל/.test(out.reply_he), out.reply_he);
+      assert.equal(out.slots.adults, 2);
+      assert.equal(out.slots.month, 2);
+    }));
+
+// A budget in shekels: heard, never quoted back.
+t('a budget in shekels sorts the offers without quoting a price', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש לנו עד 5000 שקל לזוג, אפשר?' }], slots: {} })
+    .then(out => {
+      assert.ok((out.slots.preferences || []).includes('תקציב'), 'budget not heard');
+      assert.ok(!/5000/.test(out.reply_he), 'quoted the number back: ' + out.reply_he);
+    }));
+
+t('"אין קבוצה מתאימה לגיל 3 ו-14" reads like a sentence', () =>
+  handleChat({ messages: [{ role: 'user', content: 'ילדים בני 3 ו-14, יש קייטנה לשניהם?' }], slots: {} })
+    .then(out => assert.ok(!/לגיל 3, 14/.test(out.reply_he), out.reply_he)));
+
+for (const [q, want] of [
+  ['אף אחד מאיתנו לא גלש אף פעם, זוג, פברואר', /מתחילים/],
+  ['יש לנו ילד בן 3, הוא יכול לגלוש?', /גיל 4|גילאי 4/],
+]) {
+  t('answered rather than deflected: ' + q.slice(0, 26), () =>
+    handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
+      assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he), 'off topic: ' + out.reply_he);
+      assert.ok(want.test(out.reply_he), out.reply_he);
+    }));
+}
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

@@ -531,6 +531,27 @@ function parseText(text, slots) {
     s.no_children = true;
   }
 
+  // A party that grows or shrinks mid-conversation: "מצטרפים אלינו עוד שניים",
+  // "בסוף אנחנו רק שלושה". Without this the offers stayed sized for the old
+  // group and nothing in the reply admitted that anything was said.
+  {
+    const WORD_N = { 'אחד': 1, 'אחת': 1, 'שניים': 2, 'שתיים': 2, 'שלושה': 3, 'שלוש': 3, 'ארבעה': 4, 'ארבע': 4 };
+    const more = t.match(/(?:מצטרפ(?:ים|ת|)|מתווספ(?:ים|ת)|מגיעים|יבואו|נוסעים) (?:אלינו )?עוד (\d{1,2}|אחד|אחת|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע)(?![א-ת])/);
+    if (more && s.adults != null) {
+      const n = WORD_N[more[1]] || +more[1];
+      if (n >= 1 && n <= 8) s.adults = Math.min(12, s.adults + n);
+    }
+  }
+
+  // A budget said in shekels or euros. The exact price is never ours to quote
+  // (red rule 3), but hearing the number and showing the affordable end of the
+  // list is not the same as quoting one.
+  if (/\d{3,5}\s*(₪|ש"ח|שקל|שח)|עד \d{3,5} (?:יורו|אירו|€)|תקציב של \d{3,5}/.test(t)
+      && !/תקציב לא מגביל|לא מגביל/.test(t)) {
+    s.price_objection = true;
+    s.preferences = [...new Set([...(s.preferences || []), 'תקציב'])];
+  }
+
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
   else if (/קי?יטנ|ליווי בעברית|מדריך לילדים|מדריכים.{0,20}ילדים/.test(t)) s.needs_hebrew_kids_club = true;
@@ -718,7 +739,8 @@ function phrase(result, slots, cards) {
 
   const campAge = note('camp_age_mismatch');
   if (campAge) {
-    const ages = (campAge.ages || []).join(', ');
+    const a = (campAge.ages || []);
+    const ages = a.length > 1 ? a.slice(0, -1).join(', ') + ' ו-' + a[a.length - 1] : a.join('');
     lines.push(ages
       ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-13, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
       : 'הקייטנות שלנו מיועדות לגילאי 4-13. הנה מה שפנוי:');
@@ -1087,7 +1109,7 @@ function guard(text) {
   // Red rule 3. This lived in deflect(), which is skipped when the message also
   // fills a slot — and "רק רוצה לדעת כמה עולה שבוע לזוג" fills one. A guard
   // that protects a rule cannot be conditional on what else the sentence did.
-  if (/כמה (זה )?עולה|מה המחיר|המחיר המדויק|מחיר מדויק|כמה יעלה|בשקלים|ביורו|תן לי מחיר/.test(t)) {
+  if (/כמה (זה )?עולה|מה המחיר|המחיר המדויק|מחיר מדויק|כמה יעלה|בשקלים|ביורו|תן לי מחיר|תגיד לי מחיר|תגידו לי מחיר|כמה כסף|מה העלות|בכמה (זה )?יוצא|כמה זה יוצא|כמה עולות/.test(t)) {
     return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
   }
   return null;

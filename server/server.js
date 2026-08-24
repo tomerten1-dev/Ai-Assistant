@@ -350,7 +350,10 @@ async function handleChat(body) {
   // above three cards that each state their own spa terms is noise, and worse,
   // it reads as a hedge right before the specific answer.
   const PER_CARD_FAQ = new Set(['spa', 'wifi']);
-  const faqSuppressed = faqHit && PER_CARD_FAQ.has(faqHit.id);
+  // "אחי מה יש לכם לפברואר לזוג?" matches the help entry and also states
+  // the party and the month. Asking them again for both is not listening.
+  const faqSuppressed = (faqHit && PER_CARD_FAQ.has(faqHit.id)) ||
+    (faqHit && faqHit.id === 'help_me' && slotsChanged(prevSlots, slots));
   // Suppressed is not the same as unanswered: without a word the customer is
   // left wondering whether the question landed. One line points at the place
   // the per-hotel answer actually is.
@@ -400,7 +403,7 @@ async function handleChat(body) {
   // with three hotels in three countries is a machine emptying its stock.
   const nothingKnown = slots.adults == null && !(slots.children_ages || []).length &&
     slots.month == null && slots.country == null && slots.destination == null;
-  if (offline.isGreeting(lastUser) && nothingKnown) {
+  if ((offline.isGreeting(lastUser) || !lastUser.trim()) && nothingKnown) {
     slots._lastQuestion = 'adults';
     return {
       open_lead_form: false,
@@ -502,8 +505,12 @@ async function handleChat(body) {
     const cardKey = cards.map(c => c.hotel + '|' + c.date).join(',');
     const sameOffers = !!cardKey && cardKey === (prevSlots._lastCards || null);
     const alreadySaid = new Set(sameOffers ? (prevSlots._lastLines || []) : []);
+    // A red-rule answer ("המחיר המדויק…") is the same sentence every time by
+    // design. Dropping it as a repeat turned the third "תגיד לי מחיר" into a
+    // line about cards — evasion where a rule was meant to speak.
+    const mustKeep = new Set((deflection || '').split(String.fromCharCode(10)).filter(Boolean));
     if (alreadySaid.size) {
-      const fresh = all.filter(l => !alreadySaid.has(l));
+      const fresh = all.filter(l => !alreadySaid.has(l) || mustKeep.has(l));
       // Everything we were about to say has already been said, above these same
       // offers. Saying it all again is worse than saying one true short thing.
       all = fresh.length ? fresh

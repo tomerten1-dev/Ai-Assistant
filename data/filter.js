@@ -199,6 +199,7 @@ class SkiSearch {
     }
 
     let candidates = this._filter(slots, party, { month: slots.month, country: slots.country, destination: slots.destination });
+    let splits = [];
 
     // Nothing near the day they named — widen to the month and say so
     if (!candidates.length && slots.exact_day) {
@@ -237,7 +238,17 @@ class SkiSearch {
       });
       if (candidates.length) relaxed.push({ type: 'nights', wanted: slots.nights_wanted });
     }
-    if (!candidates.length && slots.month != null) {
+    // A party too big for one room in the month they asked for. Two rooms in
+    // February beats one room in January: the date is usually the constraint
+    // people cannot move, and a school holiday never moves.
+    if (!candidates.length && party >= 4 && slots.month != null) {
+      const sameMonth = this._twoRoomSplits(slots, party);
+      if (sameMonth.length) {
+        splits = sameMonth;
+        relaxed.push({ type: 'two_rooms' });
+      }
+    }
+    if (!candidates.length && !splits.length && slots.month != null) {
       for (const m of adjacentMonths(+slots.month)) {
         candidates = this._filter(slots, party, { month: m, country: slots.country, destination: slots.destination });
         if (candidates.length) { relaxed.push({ type: 'month', from: +slots.month, to: m }); break; }
@@ -324,7 +335,6 @@ class SkiSearch {
       });
     }
 
-    let splits = [];
     // Two rooms in the country they ASKED for beat one room in a country they
     // did not. A group of six wanting Austria was being sent to Bulgaria while
     // two connecting rooms in Austria sat available.
@@ -444,7 +454,11 @@ class SkiSearch {
     return {
       party, notes, relaxed,
       candidates: diverse.slice(0, 8).map(c => this._present(c, slots)),
-      two_room_splits: splits.slice(0, 3),
+      // One combination per hotel and date. Three cards reading "Casa Karina,
+      // 5.2" that differ only in which two flats they pair is not three
+      // choices — it is the same offer, printed three times.
+      two_room_splits: splits.filter((sp, i, all) =>
+        all.findIndex(o => o.hotel === sp.hotel && o.date === sp.date) === i).slice(0, 3),
     };
   }
 
