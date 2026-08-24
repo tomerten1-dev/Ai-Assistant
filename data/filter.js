@@ -297,6 +297,23 @@ class SkiSearch {
     }
     if (!candidates.length && !splits.length) relaxed.push({ type: 'human_rep' });
 
+    // "יקר לי" (Tomer, 24/08): show something CHEAPER than what they were just
+    // shown and say so; if there is nothing cheaper, say plainly that these are
+    // the best prices we can offer. Anything else — repeating the same band, or
+    // quietly ignoring it — is what makes a customer leave.
+    if (slots.price_objection && candidates.length) {
+      const ceiling = slots.shown_price_min || null;
+      const cheaper = ceiling
+        ? candidates.filter(c => this.price(c.hotel).length < ceiling)
+        : [];
+      if (cheaper.length) {
+        candidates = cheaper;
+        notes.push({ type: 'cheaper_found' });
+      } else {
+        notes.push({ type: 'no_cheaper' });
+      }
+    }
+
     // What the customer could have if they bent one thing. Only worth saying
     // when they already have something — with an empty result set the
     // relaxation ladder above has already moved, and said so.
@@ -337,8 +354,10 @@ class SkiSearch {
       (b.reqScore - a.reqScore) ||
       // an explicit wish outranks "recommended" — the customer asked for it
       (b.score - a.score) ||
-      // "תקציב חסכוני" means cheapest first, not merely a tiebreak
-      (wantsBudget ? a.priceRank - b.priceRank : 0) ||
+      // "תקציב חסכוני" means cheapest first, not merely a tiebreak. After
+      // "יקר לי" it outranks everything else: saying these are our best prices
+      // and then listing a dearer one first makes the sentence a lie.
+      (slots.price_objection || wantsBudget ? a.priceRank - b.priceRank : 0) ||
       (b.recommended - a.recommended) || a.date.localeCompare(b.date));
 
     // With no party size, variety is the whole value of the answer: three

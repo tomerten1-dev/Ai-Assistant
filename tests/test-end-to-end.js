@@ -240,6 +240,55 @@ t('gaps stay reachable as chips after being asked once', () => {
   });
 });
 
+
+t('"יקר לי" produces something genuinely cheaper, and says so', () => {
+  const ask = 'זוג בלי ילדים, פברואר באוסטריה';
+  return handleChat({ messages: [{ role: 'user', content: ask }], slots: {} })
+    .then(first => {
+      const shown = Math.min(...first.cards.map(c => c.price_range.length));
+      return handleChat({
+        messages: [
+          { role: 'user', content: ask },
+          { role: 'assistant', content: first.reply_he },
+          { role: 'user', content: 'יקר לי' },
+        ],
+        slots: first.slots,
+      }).then(out => ({ shown, out }));
+    })
+    .then(({ shown, out }) => {
+      assert.ok(out.cards.length, 'no cards after the objection');
+      const now = Math.min(...out.cards.map(c => c.price_range.length));
+      assert.ok(now < shown, `not cheaper: was ${shown}, now ${now}`);
+      assert.ok(/יש גם את ההצעה הזו/.test(out.reply_he), out.reply_he);
+      // and the dearest card must not lead when we just said "cheaper"
+      assert.strictEqual(out.cards[0].price_range.length, now, 'a dearer option led the list');
+    });
+});
+
+t('with nothing cheaper left, it says so rather than reshuffling', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, פברואר בבולגריה' }], slots: {},
+  }).then(first => handleChat({
+    messages: [
+      { role: 'user', content: 'זוג בלי ילדים, פברואר בבולגריה' },
+      { role: 'assistant', content: first.reply_he },
+      { role: 'user', content: 'יקר לי' },
+    ],
+    slots: { ...first.slots, shown_price_min: 2 },   // already at the cheapest band
+  })).then(out => {
+    assert.ok(/המחירים הטובים ביותר/.test(out.reply_he), out.reply_he);
+  });
+});
+
+t('a reply ends by moving forward, not by asking', () => {
+  return handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, פברואר באוסטריה' }], slots: {},
+  }).then(out => {
+    const last = out.reply_he.trim().split(String.fromCharCode(10)).pop();
+    assert.ok(/להזמנה|נציג|אבדוק שוב/.test(last), 'ended flat: ' + last);
+  });
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

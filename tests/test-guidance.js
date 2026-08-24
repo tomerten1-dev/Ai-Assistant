@@ -99,5 +99,51 @@ t('the shipped file is valid and complete', () => {
   }
 });
 
+t('"יקר לי" is answered in the words from the file', () => {
+  const o = guidance.objection('too_expensive');
+  assert.ok(o, 'no objection handling configured');
+  assert.ok(o.match.test('קצת יקר לי'), 'trigger did not match');
+  assert.ok(o.match.test('יש משהו יותר זול?'), 'trigger did not match');
+  assert.ok(!o.match.test('זוג בפברואר'), 'triggered on an ordinary message');
+  assert.ok(o.cheaper && o.none, 'both sentences must exist');
+  assert.ok(!/\d[\d,.]*\s*(₪|יורו|€)/.test(o.cheaper + o.none), 'a price leaked into the wording');
+});
+
+t('office hours decide how a handoff is phrased', () => {
+  const sunMorning = new Date(2026, 7, 23, 10, 0);   // Sunday 10:00
+  const sunEvening = new Date(2026, 7, 23, 19, 0);   // Sunday 19:00
+  const friday3pm  = new Date(2026, 7, 28, 15, 0);   // Friday 15:00
+  const saturday   = new Date(2026, 7, 29, 12, 0);
+  assert.strictEqual(guidance.officeOpen(sunMorning), true);
+  assert.strictEqual(guidance.officeOpen(sunEvening), false);
+  assert.strictEqual(guidance.officeOpen(friday3pm), false);
+  assert.strictEqual(guidance.officeOpen(saturday), false);
+  assert.ok(/04-8557722/.test(guidance.handoffLine(sunMorning)), 'no number when open');
+  assert.ok(/סגור/.test(guidance.handoffLine(sunEvening)), 'did not say the office is closed');
+});
+
+t('the bot never implies someone will pick up out of hours', () => {
+  const out = guidance.handoffLine(new Date(2026, 7, 29, 23, 0));   // Saturday night
+  assert.ok(!/להתקשר עכשיו/.test(out), out);
+});
+
+t('who each destination suits reaches the prompt', () => {
+  assert.ok(/למי היעד הזה מתאים/.test(guidance.forAnswering('andorra')));
+  assert.ok(/מתחילים/.test(guidance.forAnswering('andorra')));
+  assert.ok(/גולשים מנוסים/.test(guidance.forAnswering('france')));
+});
+
+t('the handoff triggers reach the prompt', () => {
+  const p = guidance.forAnswering('austria');
+  assert.ok(/כיסא גלגלים/.test(p), 'accessibility trigger missing');
+  assert.ok(/הזמנה קיימת/.test(p), 'existing-booking trigger missing');
+});
+
+t('there is a closing line for both outcomes', () => {
+  assert.ok(guidance.closing('with_offers'));
+  assert.ok(guidance.closing('no_offers'));
+  assert.strictEqual(guidance.closing('nonsense'), '');
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

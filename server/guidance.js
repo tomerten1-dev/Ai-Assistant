@@ -63,10 +63,55 @@ function forAnswering(country) {
     list('תמיד', g.answer_always_he),
     list('אסור', g.answer_never_he),
     para('להדגיש ביעד הזה', emphasis),
+    para('למי היעד הזה מתאים', country && (g.suits_by_country_he || {})[country]),
+    list('תמיד להעביר לנציג', (g.handoff_he || {}).always_handoff_he),
+    para('כשאין לך תשובה ודאית', (g.handoff_he || {}).when_unknown_he),
+    para('העברה לנציג עכשיו', handoffLine()),
+    para('משפט סיום', closing('with_offers')),
     para('השארת פרטים', g.lead_he),
     g.extra_he || '',
   ].filter(Boolean);
   return blocks.length ? '\n\nהנחיות מהמנהל:\n' + blocks.join('\n') : '';
 }
 
-module.exports = { forAsking, forAnswering, load, FILE };
+// Is the office open right now? Hours come from the contact page on
+// pingwin.co.il and live in Tomer's file, so he can change them without me.
+function officeOpen(now) {
+  const h = (load().handoff_he || {}).hours;
+  if (!h) return null;                       // no hours configured — say nothing
+  const d = now || new Date();
+  const day = d.getDay();                    // 0 = Sunday
+  const win = day === 6 ? h.sat : (day === 5 ? h.fri : h.sun_thu);
+  if (!win) return false;
+  const t = d.getHours() + d.getMinutes() / 60;
+  return t >= win[0] && t < win[1];
+}
+
+// What to say when handing the customer to a person, phrased for the hour.
+function handoffLine(now) {
+  const h = load().handoff_he || {};
+  const open = officeOpen(now);
+  if (open === null) return '';
+  return open ? (h.in_hours_he || '') : (h.out_of_hours_he || '');
+}
+
+// The line the bot ends on. `kind` is 'with_offers' | 'no_offers' | 'after_question'.
+function closing(kind) {
+  const c = load().closing_he || {};
+  return c[kind + '_he'] || '';
+}
+
+// Objection handling, read straight out of Tomer's file so the wording is his.
+// Returns {match: RegExp, cheaper: string, none: string} or null.
+function objection(kind) {
+  const o = ((load().objections_he || {})[kind]) || null;
+  if (!o || !(o.match_he || []).length) return null;
+  const esc = (x) => String(x).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return {
+    match: new RegExp(o.match_he.map(esc).join('|')),
+    cheaper: o.if_cheaper_exists_he || '',
+    none: o.if_none_cheaper_he || '',
+  };
+}
+
+module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, load, FILE };

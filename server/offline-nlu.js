@@ -288,7 +288,10 @@ function parseText(text, slots) {
 
   // --- Sabbath observance: a hard constraint, not a preference. Saturday
   // departures must disappear entirely rather than be ranked lower.
-  if (/שומר[יי]? שבת|שומרים שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|שבת שלום|כשר/.test(t)) {
+  // NOT כשר: asking whether the food is kosher says nothing about flying on
+  // Saturday, and inferring it silently removed every Saturday departure from
+  // a customer who had only asked about a meal.
+  if (/שומר[יי]? שבת|שומרים שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|שבת שלום/.test(t)) {
     s.no_saturday_flights = true;
   }
 
@@ -368,6 +371,17 @@ function parseText(text, slots) {
     s.off_commitment_destination = label;
     s.off_commitment_country = country;
     break;
+  }
+
+  // --- "יקר לי". Tomer, 24/08: show a cheaper one and say so; if there is
+  // nothing cheaper, say plainly that these are the best prices we can offer.
+  // The trigger words and both sentences live in config/guidance.json.
+  {
+    const obj = guidance.objection('too_expensive');
+    if (obj && obj.match.test(t)) {
+      s.price_objection = true;
+      s.preferences = [...new Set([...(s.preferences || []), 'תקציב'])];
+    }
   }
 
   // --- kids club (גם האיות "קיטנה")
@@ -567,7 +581,7 @@ function phrase(result, slots, cards) {
     if (r.type === 'camp_location') {
       lines.push('ביעד שביקשתם אין שבוע שבו פועלת קבוצת הגיל של הילד. הנה יעדים שבהם היא כן פועלת:');
     }
-    if (r.type === 'human_rep') lines.push('לא מצאתי התאמה במערכת — נציג אנושי ישמח לעזור: 04-8557722.');
+    if (r.type === 'human_rep') lines.push(noMatchAnswer());
   }
   // Offline, or when the model's wording is rejected, these still must not
   // vanish — the template says them plainly rather than well.
@@ -575,6 +589,11 @@ function phrase(result, slots, cards) {
   if (cards.length && heard.length) {
     lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');
   }
+
+  // The answer to "יקר לי", in Tomer's own words from config/guidance.json.
+  const obj = guidance.objection('too_expensive');
+  if (obj && note('cheaper_found')) lines.push(obj.cheaper);
+  if (obj && note('no_cheaper')) lines.push(obj.none);
 
   // What one bend would open up. Said once, for the single best trade — a list
   // of alternatives is a menu, and a menu is not advice.
@@ -728,6 +747,8 @@ function cardFacts(c, asked, open) {
 // Before this, anything with a question mark and no ski vocabulary in it got
 // "אני כאן בעיקר להתאמת חופשות סקי" — i.e. a customer asking about
 // cancellation or kosher food was told that is not our subject.
+const guidance = require('./guidance.js');
+
 const FAQ = (() => {
   const raw = JSON.parse(require('fs').readFileSync(
     require('path').join(__dirname, '..', 'config', 'faq.json'), 'utf8'));
@@ -750,6 +771,20 @@ function faq(text) {
 // Questions that deserve a real answer rather than another round of offers:
 // asking for someone else's booking, or for an exact price. Silence here reads
 // as evasion; these say plainly what the bot can and cannot do (red rules 2-3).
+// When the bot genuinely has no answer, it says so and offers a person —
+// phrased for the hour, so it never implies someone will pick up at 23:00.
+// Nothing matched — which is different from not knowing the answer. Says so,
+// and offers a person in words that fit the hour.
+function noMatchAnswer() {
+  const h = (guidance.load().handoff_he || {});
+  return [h.when_no_match_he, guidance.handoffLine()].filter(Boolean).join(' ');
+}
+
+function unknownAnswer() {
+  const h = (guidance.load().handoff_he || {});
+  return [h.when_unknown_he, guidance.handoffLine()].filter(Boolean).join(' ');
+}
+
 function deflect(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   // "מספר ההזמנה" with the definite article was walking straight past this
@@ -800,4 +835,6 @@ function deflect(text) {
 }
 
 module.exports = {
-  faq, parseText, nextQuestion, phrase, deflect };
+  faq,
+  unknownAnswer,
+  noMatchAnswer, parseText, nextQuestion, phrase, deflect };

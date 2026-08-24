@@ -277,5 +277,11 @@ console.log('\n— never ask what the customer just told us —');
   else { fail++; console.log('  ✗ asked about children anyway: ' + q.he); }
 }
 
+console.log('\n— kosher food is not a Sabbath constraint —');
+check('asking about kosher food does not ban Saturday flights', null, 'יש אוכל כשר?', { no_saturday_flights: null });
+check('nor does a kosher kitchen', null, 'יש מטבח כשר במלון?', { no_saturday_flights: null });
+check('but saying you keep Shabbat does', null, 'אנחנו שומרי שבת', { no_saturday_flights: true });
+check('and so does asking not to fly on Saturday', null, 'לא טסים בשבת', { no_saturday_flights: true });
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -42,6 +42,7 @@ const EMPTY_SLOTS = {
   flexible_dates: null, country: null, destination: null,
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
+  price_objection: false, shown_price_min: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [],
 };
@@ -78,6 +79,8 @@ function toSearchSlots(slots) {
     month: any(slots.month),
     country: any(slots.country),
     departure_airport: any(slots.departure_airport),
+    price_objection: !!slots.price_objection,
+    shown_price_min: slots.shown_price_min || null,
     off_commitment_destination: slots.off_commitment_destination || null,
     off_commitment_country: slots.off_commitment_country || null,
     no_saturday_flights: !!slots.no_saturday_flights,
@@ -359,6 +362,13 @@ async function handleChat(body) {
   // ---- deterministic search (no AI, ever) ----
   const result = engine.search(toSearchSlots(slots));
   const cards = presentCards(result, slots);
+  // Remember the cheapest band actually put in front of the customer, so that
+  // "יקר לי" on the next turn can be answered with something genuinely cheaper
+  // rather than a reshuffle of the same prices.
+  if (cards.length) {
+    slots.shown_price_min = Math.min(...cards.map(c => (c.price_range || '').length));
+  }
+  slots.price_objection = false;   // handled this turn; do not stick
 
   // ---- phrasing is templated, not generated ----
   // This halves the token bill, and it is also the strongest safety property
@@ -367,7 +377,7 @@ async function handleChat(body) {
   // comes from the workbook or from pingwin.co.il.
   const templated = offline.phrase(result, slots, cards) ||
     (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
-      'לא מצאתי התאמה מדויקת — נציג ישמח לעזור: 04-8557722');
+      offline.noMatchAnswer());
   // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
   // sees the offers the deterministic filter already chose, so it cannot
   // invent one; and anything it returns must survive validate() or we ship
@@ -396,7 +406,16 @@ async function handleChat(body) {
   return {
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
-    reply_he: [preamble, intro, tailQuestion].filter(Boolean).join('\n'),
+    // The closing line goes last of all — after the question, so the reply ends
+    // by moving forward rather than by asking. Skipped when the wording already
+    // contains it, which happens when the model followed the same guidance.
+    reply_he: (() => {
+      const parts = [preamble, intro, tailQuestion].filter(Boolean);
+      const close = guidance.closing(cards.length ? 'with_offers' : 'no_offers');
+      const said = parts.join(String.fromCharCode(10));
+      if (close && !said.includes(close.slice(0, 18))) parts.push(close);
+      return parts.join(String.fromCharCode(10));
+    })(),
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
