@@ -496,6 +496,13 @@ async function handleChat(body) {
   }
   const sayingSlots = { ...slots, notes_from_customer: freshNotes, _notes_said: [] };
 
+  // The off-commitment explanation is deterministic and printed verbatim: asked
+  // for Italy, the model rewrote the paragraph in its own words and the reason
+  // — limited flight and hotel places, and that a rep can check other dates —
+  // vanished from the reply.
+  const offCommLine = offline.offCommitmentLine(result, slots);
+  if (offCommLine) preamble = [preamble, offCommLine].filter(Boolean).join(String.fromCharCode(10));
+
   const templated = offline.phrase(result, sayingSlots, cards) ||
     (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
       offline.noMatchAnswer());

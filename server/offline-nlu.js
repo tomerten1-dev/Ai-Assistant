@@ -715,6 +715,25 @@ function fmtDay(iso) {
   return `${d.getUTCDate()}.${d.getUTCMonth() + 1}`;
 }
 
+// A destination pingwin sells but holds no commitments for. Deterministic, and
+// printed verbatim — see the note inside phrase().
+function offCommitmentLine(result, slots) {
+  const offComm = (result.notes || []).find(n => n.type === 'destination_off_commitment');
+  if (!offComm) return null;
+  // wording lives in config/off-commitment.json so Tomer can edit it without
+  // touching code. Never the word "התחייבויות" — that is internal jargon and
+  // reads as a refusal; explain the real constraint (seats) instead.
+  const cfg = OFF_COMMITMENT_COPY;
+  const tpl = (cfg.constraint_by_country || {})[offComm.country] || cfg.constraint_default;
+  const dates = (offComm.open_dates || []).map(fmtDay);
+  return [
+    tpl.replace('{resort}', offComm.name),
+    dates.length ? cfg.with_dates_he.replace('{dates}', dates.join(', '))
+      : (slots.month == null || slots.month === 'any' ? cfg.no_dates_no_month_he : cfg.no_dates_he),
+    cfg.caveat_he,
+  ].join(' ');
+}
+
 function phrase(result, slots, cards) {
   let lines = [];
   const note = ty => (result.notes || []).find(n => n.type === ty);
@@ -722,21 +741,11 @@ function phrase(result, slots, cards) {
   // a resort we sell but hold no commitments for: never say "unavailable",
   // never quote availability we don't have — say what it depends on and route
   // it to a rep, while still showing what IS on commitment
+  // The line itself is printed by the server, above anything the model writes:
+  // asked for Italy, the model rewrote the paragraph in its own words and the
+  // explanation — why Italy is limited, and that a rep can check dates —
+  // vanished. Facts of this weight are not the model's to rephrase.
   const offComm = note('destination_off_commitment');
-  if (offComm) {
-    // wording lives in config/off-commitment.json so Tomer can edit it without
-    // touching code. Never the word "התחייבויות" — that is internal jargon and
-    // reads as a refusal; explain the real constraint (seats) instead.
-    const cfg = OFF_COMMITMENT_COPY;
-    const tpl = (cfg.constraint_by_country || {})[offComm.country] || cfg.constraint_default;
-    const dates = (offComm.open_dates || []).map(fmtDay);
-    lines.push([
-      tpl.replace('{resort}', offComm.name),
-      dates.length ? cfg.with_dates_he.replace('{dates}', dates.join(', ')) : cfg.no_dates_he,
-      cfg.caveat_he,
-      cfg.meanwhile_he,
-    ].join(' '));
-  }
 
   // NOTE: the out-of-season line is printed by the server preamble. Repeating
   // it here said the same sentence twice, two words apart.
@@ -831,7 +840,11 @@ function phrase(result, slots, cards) {
   // conversation, and repeating "אעביר את זה לנציג" about the same sentence
   // every turn is how a bot sounds like it is not listening.
   const heard = (slots.notes_from_customer || []).filter(Boolean)
-    .filter(n => !(slots._notes_said || []).includes(n));
+    .filter(n => !(slots._notes_said || []).includes(n))
+    // not a restatement of the request in the third person, and not the
+    // destination the line above has just answered about
+    .filter(n => !/^ ?(הלקוח|הלקוחה|הם |הוא ביקש|היא ביקשה)/.test(n))
+    .filter(n => !(offComm && n.includes(offComm.name)));
   if (cards.length && heard.length) {
     lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');
   }
@@ -1286,6 +1299,7 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  offCommitmentLine,
   canonicalDestination,
   notUnderstood,
   isFarewell,
