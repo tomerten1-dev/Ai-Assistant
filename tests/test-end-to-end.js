@@ -12,6 +12,7 @@ process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
 
 const assert = require('assert');
+const offline = require('../server/offline-nlu.js');
 const { handleChat } = require('../server/server.js');
 const resorts = require('../data/resorts.json');
 
@@ -918,6 +919,63 @@ for (const [q, want] of [
       assert.ok(want.test(out.reply_he), out.reply_he);
     }));
 }
+
+/* ---- the thirteenth round: the model path, which production uses ---- */
+
+// Tomer, 24/08: "שלחתי סתם אותיות והוא הציע לי חנוכה".
+t('gibberish is answered as gibberish, not with three hotels', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מיע' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'showed ' + out.cards.length + ' cards');
+      assert.ok(/לא בטוח שהבנתי/.test(out.reply_he), out.reply_he);
+    }));
+
+t('a real short request is still understood', () => Promise.all([
+  handleChat({ messages: [{ role: 'user', content: 'זוג' }], slots: {} }),
+  handleChat({ messages: [{ role: 'user', content: 'שלום שלום' }], slots: {} }),
+]).then(([couple, hello]) => {
+  assert.ok(couple.cards.length, 'a couple got nothing');
+  assert.ok(/היי/.test(hello.reply_he), 'a doubled greeting puzzled it: ' + hello.reply_he);
+}));
+
+// The slot model answers in the customer's language; the inventory does not.
+t('a resort name in Hebrew is mapped to the one the inventory uses', () => {
+  assert.equal(offline.canonicalDestination('בנסקו'), 'Bansko');
+  assert.equal(offline.canonicalDestination('Bansko'), 'Bansko');
+  assert.equal(offline.canonicalDestination('בורובץ'), 'Borovets');
+  assert.equal(offline.canonicalDestination('משהו שלא קיים'), null);
+});
+
+// "אין יחידה אחת שמתאימה לכל ההרכב" was printed twice.
+t('a relaxation is announced once, however it was reached', () =>
+  handleChat({ messages: [{ role: 'user', content: 'משפחה של 5 מחיפה, ילדים בני 4, 8 ו-12, סוף פברואר' }], slots: {} })
+    .then(out => {
+      const lines = out.reply_he.split(String.fromCharCode(10)).filter(Boolean);
+      assert.equal(new Set(lines).size, lines.length, 'repeated a line: ' + out.reply_he);
+    }));
+
+// Twelve people were told both "we can combine two rooms" and "a group this
+// size is built by hand". Only the second is true.
+t('a group of twelve is not offered a two-room split', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו 12 אנשים, 6 זוגות, פברואר, אפשר?' }], slots: {} })
+    .then(out => {
+      assert.equal((out.two_room_splits || []).length, 0, 'offered a split for twelve');
+      assert.ok(!/לשלב שני חדרים/.test(out.reply_he), out.reply_he);
+    }));
+
+// Every item the customer mentioned was re-answered on every later turn.
+t('a note is addressed once, not on every turn afterwards', () => {
+  const msgs = [{ role: 'user', content: 'זוג בפברואר בבולגריה, חוגגים יום נישואין' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots;
+    msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'ומה עם הספא?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => {
+    assert.ok(!/יום נישואין/.test(b.reply_he), 'said it again: ' + b.reply_he);
+  });
+});
 
 (async () => {
   for (const [name, fn] of results) {

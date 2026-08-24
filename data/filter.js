@@ -137,7 +137,7 @@ class SkiSearch {
   search(slots) {
     const party = (slots.adults || 0) + (slots.children_ages || []).length;
     const notes = [];   // machine-readable notes Claude may phrase
-    const relaxed = []; // which constraints were relaxed, in order
+    let relaxed = []; // which constraints were relaxed, in order
 
     // France-February insight (spec 3.4): explain, don't return empty
     if (+slots.month === 2 && slots.country === 'france' &&
@@ -343,6 +343,13 @@ class SkiSearch {
       if (splits.length) relaxed.push({ type: 'two_rooms' });
     }
     if (!candidates.length && !splits.length && (slots.country || slots.destination)) {
+      // Before widening: is the Sabbath the only thing in the way? Saying so is
+      // worth more to a Sabbath-observing family than a list of other countries.
+      if (slots.no_saturday_flights) {
+        const sat = this._filter({ ...slots, no_saturday_flights: false }, party,
+          { month: slots.month, country: slots.country, destination: slots.destination });
+        if (sat.length) notes.push({ type: 'saturday_only', country: slots.country || slots.destination });
+      }
       candidates = this._filter(slots, party, { month: slots.month, country: null, destination: null });
       if (candidates.length) relaxed.push({ type: 'location' });
     }
@@ -358,6 +365,10 @@ class SkiSearch {
       splits = this._twoRoomSplits(slots, party);
       if (splits.length) relaxed.push({ type: 'two_rooms' });
     }
+    // Nine and up is a group booking (see the phrasing layer). Offering two
+    // rooms for twelve people alongside that is a contradiction, and the
+    // two-room offer is the false half.
+    if (party >= 9) { splits = []; relaxed = relaxed.filter(r => r.type !== 'two_rooms'); }
     if (!candidates.length && !splits.length) relaxed.push({ type: 'human_rep' });
 
     // "יקר לי" (Tomer, 24/08): show something CHEAPER than what they were just
@@ -452,7 +463,11 @@ class SkiSearch {
     for (const c of candidates) if (!diverse.includes(c)) diverse.push(c);
 
     return {
-      party, notes, relaxed,
+      party, notes,
+      // one note per kind of relaxation: the ladder can reach the two-room rung
+      // by more than one road, and the customer read the same sentence twice
+      relaxed: relaxed.filter((r, i, all) =>
+        r.type !== 'two_rooms' || all.findIndex(o => o.type === 'two_rooms') === i),
       candidates: diverse.slice(0, 8).map(c => this._present(c, slots)),
       // One combination per hotel and date. Three cards reading "Casa Karina,
       // 5.2" that differ only in which two flats they pair is not three

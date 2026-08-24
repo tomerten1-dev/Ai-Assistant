@@ -147,14 +147,14 @@ async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
   return parseModelJSON(raw);
 }
 
-async function phraseWithModel({ slots, cards, result, fallback }) {
+async function phraseWithModel({ slots, cards, result, fallback, lastReply, answered }) {
   if (aiMode() === 'offline') return fallback;
   // Nothing to phrase: the turn is a question or a no-match, and the template
   // for those is careful, short and already right. Paying to reword it would
   // buy nothing and risks softening a "no" that must stay clear.
   if (!cards.length) return fallback;
   try {
-    const payload = phrasing.buildPayload({ slots, cards, result, fallback });
+    const payload = phrasing.buildPayload({ slots, cards, result, fallback, lastReply, answered });
     const system = phrasing.PHRASE_PROMPT + guidance.forAnswering(cards[0] && cards[0].country);
     // 900, not 320: on a reasoning model max_completion_tokens covers the
     // thinking too, and a 320 cap produced an empty reply that then failed
@@ -254,7 +254,21 @@ async function handleChat(body) {
         // union the preference lists rather than letting the model's replace
         // the regex layer's: "סאונה וג'קוזי" was read as ספא locally, and a
         // model reply that omitted it was silently dropping the request
-        const merged = { ...slots, ...parsed.slots };
+        // Only what the model actually FOUND may override the regex layer. It
+        // returns null for anything it did not see, and a spread let those
+        // nulls erase real answers — "בבנסקו" became no destination at all,
+        // and the customer was shown France.
+        const found = Object.fromEntries(Object.entries(parsed.slots)
+          .filter(([, v]) => v !== null && v !== undefined &&
+            !(Array.isArray(v) && v.length === 0)));
+        // and a resort name it wrote in Hebrew is mapped to the one the
+        // inventory uses, or dropped — never searched for as written
+        if (found.destination) {
+          found.destination = offline.canonicalDestination(found.destination) ||
+            slots.destination || null;
+          if (!found.destination) delete found.destination;
+        }
+        const merged = { ...slots, ...found };
         merged.preferences = [...new Set([
           ...(slots.preferences || []), ...(parsed.slots.preferences || []),
         ])];
@@ -412,6 +426,21 @@ async function handleChat(body) {
       notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
     };
   }
+  // Gibberish, before the customer has told us anything. It used to run a
+  // search on an empty request and answer "מיע" with three hotels.
+  const puzzled = nothingKnown && !offline.faq(lastUser) && !offline.deflect(lastUser) &&
+    !offline.guard(lastUser) && !offline.isGreeting(lastUser) && !slotsChanged(prevSlots, slots)
+    ? offline.notUnderstood(lastUser) : null;
+  if (puzzled) {
+    slots._lastQuestion = 'adults';
+    return {
+      open_lead_form: false, reply_he: puzzled, model_used: false,
+      pending_parameter: 'adults', slots, cards: [], two_room_splits: [],
+      notes: [], relaxed: [],
+      chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
+      chip_to_pref: CHIP_TO_PREF,
+    };
+  }
   if ((offline.isGreeting(lastUser) || !lastUser.trim()) && nothingKnown) {
     slots._lastQuestion = 'adults';
     return {
@@ -451,7 +480,22 @@ async function handleChat(body) {
   // in the system: the model never sees the inventory, so it cannot invent a
   // hotel, a date, a price or an availability claim. Every word on a card
   // comes from the workbook or from pingwin.co.il.
-  const templated = offline.phrase(result, slots, cards) ||
+  // Everything the customer mentioned accumulates in notes_from_customer, and
+  // both the template and the model are required to address each item. Passing
+  // the whole list every turn made a question answered four turns ago get
+  // answered again, and again. Only the unaddressed ones are passed on.
+  let freshNotes = (slots.notes_from_customer || [])
+    .filter(n => !(prevSlots._notes_said || []).includes(n));
+  // The model is required to address every note. When this same turn already
+  // carries a standing answer, the note it would apologise about is usually the
+  // very question that was just answered — and the reply contradicted itself.
+  if (faqHit || deflection) {
+    const before = new Set(prevSlots.notes_from_customer || []);
+    freshNotes = freshNotes.filter(n => before.has(n));
+  }
+  const sayingSlots = { ...slots, notes_from_customer: freshNotes, _notes_said: [] };
+
+  const templated = offline.phrase(result, sayingSlots, cards) ||
     (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
       offline.noMatchAnswer());
   // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
@@ -459,7 +503,17 @@ async function handleChat(body) {
   // invent one; and anything it returns must survive validate() or we ship
   // the template unchanged. The template is therefore the floor, never a
   // regression.
-  const intro = await phraseWithModel({ slots, cards, result, fallback: templated });
+  const lastReply = [...messages].reverse().find(m => m.role === 'assistant');
+  // A direct answer to a direct question — a price rule, a booking decision, a
+  // refusal — is complete on its own. Letting the model add three sentences of
+  // card facts under it turned "ניקח את הראשון" into a lecture.
+  const intro = deflection ? templated : await phraseWithModel({
+    slots: sayingSlots, cards, result, fallback: templated,
+    lastReply: lastReply ? lastReply.content : null,
+    answered: preamble || null,
+  });
+  slots._notes_said = [...new Set([...(prevSlots._notes_said || []),
+    ...(slots.notes_from_customer || [])])].slice(-20);
 
   // still-unknown matching parameters ride along as one-tap chips, so the
   // customer completes the picture by choosing rather than by being asked

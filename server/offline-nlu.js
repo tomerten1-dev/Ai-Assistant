@@ -795,7 +795,11 @@ function phrase(result, slots, cards) {
   }
   // Offline, or when the model's wording is rejected, these still must not
   // vanish — the template says them plainly rather than well.
-  const heard = (slots.notes_from_customer || []).filter(Boolean);
+  // Only what has NOT been addressed yet. The list accumulates across the
+  // conversation, and repeating "אעביר את זה לנציג" about the same sentence
+  // every turn is how a bot sounds like it is not listening.
+  const heard = (slots.notes_from_customer || []).filter(Boolean)
+    .filter(n => !(slots._notes_said || []).includes(n));
   if (cards.length && heard.length) {
     lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');
   }
@@ -1038,6 +1042,34 @@ function unknownHotel(text, known) {
     'וזו הסיבה שמה שמופיע כאן באמת פנוי. אשמח להציע מלון דומה באותו יעד.';
 }
 
+// The slot model answers in the customer's language: it returned "בנסקו" where
+// the inventory says "Bansko", and a resort we sell became a resort we do not
+// have. Anything it hands back goes through the same map the regex layer uses,
+// and a name that cannot be resolved is dropped rather than searched for.
+function canonicalDestination(name) {
+  const t = String(name || '').trim();
+  if (!t) return null;
+  for (const [, canon] of DESTS.map(d => [d[0], d[1]])) {
+    if (canon.toLowerCase() === t.toLowerCase()) return canon;
+  }
+  for (const [re, canon] of DESTS) if (re.test(' ' + t + ' ')) return canon;
+  return null;
+}
+
+// A typo, a cat on the keyboard, a test — one short token that means nothing.
+// Tomer, 24/08: "שלחתי סתם אותיות והוא הציע לי חנוכה". Three hotels in answer
+// to "מיע" is worse than admitting we did not understand.
+const COURTESY = /^ ?(תודה|תודה רבה|אוקיי|אוקי|ok|בסדר|סבבה|מעולה|יופי|אשמח|כן|לא|נחמד)[\s!.?]*$/i;
+function notUnderstood(text) {
+  const t = String(text || '').trim();
+  // Up to two short tokens. Longer than that and the off-topic line is the
+  // better answer: a real sentence we cannot use is not the same as noise.
+  const tokens = t.split(/\s+/);
+  if (!t || tokens.length > 2 || t.length > 14) return null;
+  if (/\d/.test(t) || COURTESY.test(t)) return null;
+  return 'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.';
+}
+
 // A person leaving: "לא רוצה כלום, סתם בדקתי", "תודה, ביי". Three more hotels
 // on the way out is exactly what makes a chat feel like a machine.
 const FAREWELL = /לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
@@ -1050,7 +1082,9 @@ const FAREWELL_HE = 'אין בעיה בכלל. אם בהמשך תרצו לבדו
 // emptying its stock; a first turn is for saying hello and asking one thing.
 const GREETING = /^ ?(היי|הי|שלום|בוקר טוב|ערב טוב|צהריים טובים|הלו|אהלן|יש מישהו|hi|hello|hey)[\s!.,?]*$/i;
 function isGreeting(text) {
-  return GREETING.test(String(text || '').trim());
+  const t = String(text || '').trim();
+  // "שלום שלום" is a greeting said twice, not a puzzle
+  return t.split(/\s+/).every(w => GREETING.test(w));
 }
 
 // Standing answers to the questions customers actually ask (config/faq.json).
@@ -1221,6 +1255,8 @@ function deflect(text) {
 module.exports = {
   faq,
   guard,
+  canonicalDestination,
+  notUnderstood,
   isFarewell,
   FAREWELL_HE,
   unknownHotel,
