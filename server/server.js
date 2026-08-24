@@ -441,7 +441,17 @@ async function handleChat(body) {
     const close = closedBefore ? '' : guidance.closing(anyOffer ? 'with_offers' : 'no_offers');
     const said = parts.join(String.fromCharCode(10));
     if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
-    return parts.join(String.fromCharCode(10));
+    // A last trim on the assembled reply. phrase() caps its own lines, but a
+    // FAQ answer, a question and a closing arrive from here — a kosher-keeping
+    // family asking about camps got six paragraphs. The softer lines go first.
+    const SOFT = /נפתחות|לקחתי בחשבון|אני כאן אם תרצו/;
+    let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
+    while (all.length > 5) {
+      const drop = all.findIndex(l => SOFT.test(l));
+      if (drop < 0) break;
+      all.splice(drop, 1);
+    }
+    return all.join(String.fromCharCode(10));
   })();
 
   // One line per turn. Every defect in this project was found by a person

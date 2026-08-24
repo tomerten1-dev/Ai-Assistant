@@ -219,6 +219,8 @@ function parseText(text, slots) {
   let hm = t.match(/(\d{1,2}|[א-ת]+)\s*הורים/);
   if (hm) { const n = +hm[1] || heNum(hm[1]); if (n) s.adults = n; }
   else if (/ההורים|הורים/.test(t) && s.adults == null) s.adults = 2;
+  // "סבא וסבתא עם שני נכדים" — two adults, said without the word מבוגרים
+  else if (/סבא ו?סבתא|סבתא ו?סבא/.test(t) && s.adults == null) s.adults = 2;
   // "2+2" — the standard Israeli shorthand for two adults and two children
   if (s.adults == null && !/מבוגר|ילד|גיל|בני/.test(t)) {
     const pp = t.match(/(?:^|[^\d])(\d)\s*\+\s*(\d)(?![\d])/);
@@ -276,7 +278,7 @@ function parseText(text, slots) {
   // NOTE: JS \b doesn't work with Hebrew letters, so boundaries are explicit.
   if (s.adults == null) {
     const people = [];
-    for (const m2 of t.matchAll(/(?:^|[^א-ת])(?:ו|ש|וש|כש)?(אני|אחי|אחותי|אשתי|בעלי|בן זוגי|בת זוגי|אמא שלי|אבא שלי|חבר שלי|חברה שלי)(?![א-ת])/g)) people.push(m2[1]);
+    for (const m2 of t.matchAll(/(?:^|[^א-ת])(?:ו|ש|וש|כש)?(אני|אחי|אחותי|אשתי|בעלי|בן זוגי|בת זוגי|אמא שלי|אבא שלי|חבר שלי|חברה שלי|סבא|סבתא)(?![א-ת])/g)) people.push(m2[1]);
     const uniq = new Set(people);
     if (uniq.has('אני') && uniq.size >= 2) s.adults = uniq.size;
   }
@@ -377,7 +379,9 @@ function parseText(text, slots) {
 
   // --- trip length: "לשבוע" is a requirement, not a wish. A 3-night weekend
   // shown to someone who asked for a week is the wrong product.
-  if (/לשבוע|שבוע שלם|7 לילות|שבועיים/.test(t)) s.nights_wanted = 7;
+  // "סופ״ש" is a real product (Bansko, Friday to Wednesday), not off topic
+  if (/סופ.?ש|סוף שבוע|סופשבוע|סופ שבוע|רק לכמה ימים|אין לנו שבוע/.test(t)) s.nights_wanted = 3;
+  else if (/לשבוע|שבוע שלם|7 לילות|שבועיים/.test(t)) s.nights_wanted = 7;
   else {
     const nm = t.match(/(\d{1,2})\s*לילות/);
     if (nm) s.nights_wanted = +nm[1];
@@ -533,7 +537,16 @@ function parseText(text, slots) {
 
   // --- preferences (only if mentioned!)
   const prefs = new Set(s.preferences || []);
-  for (const [re, v] of PREFS) if (re.test(t)) prefs.add(v);
+  // "תקציב לא מגביל" is the OPPOSITE of a budget constraint. Matching the bare
+  // word inverted exactly the customer it mattered most to: the one who said
+  // money was no object was sorted cheapest-first and shown our cheapest rooms.
+  const budgetIsOpen = /תקציב לא מגביל|תקציב לא משנה|המחיר לא משנה|מחיר לא משנה|לא מגבילים תקציב|בלי הגבלת תקציב|כסף לא בעיה|לא אכפת לנו מהמחיר/.test(t);
+  for (const [re, v] of PREFS) {
+    if (!re.test(t)) continue;
+    if (v === 'תקציב' && budgetIsOpen) continue;
+    prefs.add(v);
+  }
+  if (budgetIsOpen) prefs.delete('תקציב');
   s.preferences = [...prefs];
 
   return s;
@@ -977,6 +990,12 @@ function guard(text) {
   if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|פרטיו של לקוח|מי תפס/.test(t)) {
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
   }
+  // Red rule 3. This lived in deflect(), which is skipped when the message also
+  // fills a slot — and "רק רוצה לדעת כמה עולה שבוע לזוג" fills one. A guard
+  // that protects a rule cannot be conditional on what else the sentence did.
+  if (/כמה (זה )?עולה|מה המחיר|המחיר המדויק|מחיר מדויק|כמה יעלה|בשקלים|ביורו|תן לי מחיר/.test(t)) {
+    return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
+  }
   return null;
 }
 
@@ -993,7 +1012,8 @@ function deflect(text) {
   }
   // Common follow-ups that were being answered by silently re-showing the same
   // three cards — which reads as a bot that did not listen.
-  if (/כמה לילות|כמה ימים|משך|כמה זמן/.test(t)) {
+  // not "כמה זמן הטיסה" — that is a different question with its own answer
+  if (/כמה לילות|כמה ימים|כמה זמן.{0,12}חופשה|משך החופשה/.test(t) && !/טיסה|נסיעה/.test(t)) {
     return 'מספר הלילות מופיע על כל כרטיס — הוא משתנה לפי המוצר (7 לילות ברוב היעדים, ובבנסקו יש גם סופי שבוע קצרים).';
   }
   // Ski pass and transfers are package-wide rules we know, so answer them
@@ -1033,7 +1053,7 @@ function deflect(text) {
   if (/כלב|חתול|חיית מחמד|בעל ?חיים/.test(t)) {
     return 'מדיניות בעלי חיים נקבעת על ידי המלון וחברת התעופה ומשתנה ביניהם. ' + handoffTail();
   }
-  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת/.test(t)) {
+  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת|קח את|ניקח את|בוא ניקח|נלך על|אני בוחר|אנחנו בוחרים|זה נראה לי|מתאים לנו/.test(t)) {
     return 'מצוין. לחצו "המשך להזמנה" בכרטיס שבחרתם כדי לראות את המחיר המדויק, או "תחזרו אליי" ונציג יסגור איתכם — ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.';
   }
   if (/הכי משתלם|הכי זול|מתי זול|איפה זול|הכי כדאי מבחינת מחיר/.test(t)) {
