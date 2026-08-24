@@ -16,12 +16,17 @@ let callCount = 0;
 // Two different jobs now go to the model: understanding the message, and
 // wording the reply. They are counted separately, because the token policy is
 // about understanding — wording only happens when there are offers to word.
-let slotCalls = 0, phraseCalls = 0;
+// A third job joined them (24/08): choosing WHICH approved answer a question
+// deserves. It is counted apart, because it is not understanding and not
+// wording — and because it must not fire on a bare "כן".
+let slotCalls = 0, phraseCalls = 0, routeCalls = 0;
 require.cache[claudePath].exports = {
   ...real,
   callClaude: async ({ system }) => {
     callCount++;
-    if (/מנסח|נציג של פינגווין/.test(system || '')) phraseCalls++; else slotCalls++;
+    if (/מנתב שאלות/.test(system || '')) routeCalls++;
+    else if (/מנסח|נציג של פינגווין/.test(system || '')) phraseCalls++;
+    else slotCalls++;
     if (!scripted.length) throw new Error('stub exhausted');
     return scripted.shift();
   },
@@ -34,7 +39,7 @@ function t(name, cond, detail) {
   if (cond) { pass++; console.log('  ✓', name); }
   else { fail++; console.log('  ✗', name, detail ? '— ' + detail : ''); }
 }
-const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; };
+const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; routeCalls = 0; };
 
 (async () => {
   // Policy changed 24/08 (Tomer): the model reads every real message, because
@@ -59,6 +64,7 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
   // phrasing of the offers they produce, never a second look at the message.
   // Each of these is understood for free; the calls counted here are the
   t('cheap turns never pay to be understood', slotCalls === 0, 'slot calls=' + slotCalls);
+  t('and they are not routed either', routeCalls === 0, 'route calls=' + routeCalls);
 
   console.log('\n[tokens] only an unrecognised phrasing escalates to the model');
   reset(JSON.stringify({

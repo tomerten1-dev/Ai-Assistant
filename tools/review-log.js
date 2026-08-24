@@ -13,6 +13,15 @@ const day = !dayArg || dayArg === 'today' ? null : dayArg;
 const filter = filterArg && filterArg !== 'all' ? filterArg : null;
 
 const rows = log.read(day, filter);
+// A one-line headline before the conversations: how many turns we could not
+// use at all, and which layer answered the rest. This is the number to watch.
+if (rows.length) {
+  const miss = rows.filter(r => r.signals.not_understood).length;
+  const by = {};
+  for (const r of rows) { const k = r.signals.answered_by || '—'; by[k] = (by[k] || 0) + 1; }
+  console.log(`${rows.length} תורות · ${miss} לא הובנו · ` +
+    Object.entries(by).map(([k, v]) => `${k}:${v}`).join(' '));
+}
 if (!rows.length) {
   console.log('אין שיחות ביום הזה (' + log.file(day ? new Date(day) : new Date()) + ')');
   process.exit(0);
@@ -25,7 +34,10 @@ for (const r of rows) {
   byConv.get(r.cid).push(r);
 }
 
-const worth = (r) => r.signals.dead_end || r.signals.deferred || r.signals.objection;
+// not_understood first: a turn where the bot understood nothing is the most
+// useful line in the log, because a real customer wrote it.
+const worth = (r) => r.signals.not_understood || r.signals.dead_end ||
+  r.signals.deferred || r.signals.objection;
 let shown = 0;
 
 for (const [cid, turns] of byConv) {

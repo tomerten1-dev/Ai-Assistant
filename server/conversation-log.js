@@ -31,7 +31,7 @@ function file(d) {
 // Turns a reply into the handful of flags worth filtering on later. The point
 // is to be able to ask "show me every conversation that ended with no offers"
 // without reading all of them.
-function signals({ cards, result, slots, reply }) {
+function signals({ cards, result, slots, reply, notUnderstood, answeredBy }) {
   const relaxed = (result && result.relaxed || []).map(r => r.type);
   const notes = (result && result.notes || []).map(n => n.type);
   return {
@@ -46,6 +46,14 @@ function signals({ cards, result, slots, reply }) {
     // read from the notes, not the slot: the slot is cleared once handled
     objection: notes.includes('cheaper_found') || notes.includes('no_cheaper'),
     widened: relaxed.length > 0,
+    // Nothing understood and nothing answered: the customer said something we
+    // could not use, and got the off-topic line. Every defect Tomer found by
+    // chatting looked like this from the inside, so it is worth a flag of its
+    // own — a real conversation is a better bug report than any persona I write.
+    not_understood: !!notUnderstood,
+    // which layer answered, so we can see whether the semantic router is
+    // carrying questions the patterns miss
+    answered_by: answeredBy || null,
   };
 }
 
@@ -79,7 +87,8 @@ function tidySlots(slots) {
   return out;
 }
 
-function logTurn({ conversationId, userText, reply, cards, result, slots, modelUsed, ms }) {
+function logTurn({ conversationId, userText, reply, cards, result, slots, modelUsed, ms,
+  notUnderstood, answeredBy }) {
   append({
     at: new Date().toISOString(),
     cid: conversationId,
@@ -87,7 +96,7 @@ function logTurn({ conversationId, userText, reply, cards, result, slots, modelU
     bot: reply,
     hotels: cards.map(c => `${c.hotel} ${c.date}`),
     slots: tidySlots(slots),
-    signals: signals({ cards, result, slots, reply }),
+    signals: signals({ cards, result, slots, reply, notUnderstood, answeredBy }),
     model: !!modelUsed,
     ms,
   });

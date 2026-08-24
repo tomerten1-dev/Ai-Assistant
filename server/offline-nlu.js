@@ -1143,11 +1143,17 @@ const guidance = require('./guidance.js');
 const FAQ = (() => {
   const raw = JSON.parse(require('fs').readFileSync(
     require('path').join(__dirname, '..', 'config', 'faq.json'), 'utf8'));
-  return raw.entries.map(e => ({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he }));
+  return raw.entries.map(e => ({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match }));
 })();
 
 // Order matters: the file lists the more specific patterns first, and the
 // first match wins. Returns {id, he} so callers can log which answer fired.
+// The approved answers, for the semantic router in server/answer-router.js.
+// Same list the regex layer uses — one source, two ways of reaching it.
+function faqEntries() {
+  return FAQ.map(e => ({ id: e.id, answer_he: e.he, match: e.match }));
+}
+
 function faq(text) {
   // Hebrew keyboards produce ׳ and ״ (geresh/gershayim) where the patterns
   // use ' and " — "צ׳ק אין" must match "צ'ק אין"
@@ -1301,6 +1307,7 @@ function deflect(text) {
 
 module.exports = {
   faq,
+  faqEntries,
   guard,
   offCommitmentLine,
   canonicalDestination,

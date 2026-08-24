@@ -15,6 +15,7 @@ const { SLOT_PROMPT: SLOT_PROMPT_LEAN } = require('./prompt-slots.js');
 const offline = require('./offline-nlu.js');
 const phrasing = require('./prompt-phrase.js');
 const guidance = require('./guidance.js');
+const router = require('./answer-router.js');
 const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
@@ -146,6 +147,31 @@ async function fillSlotsWithModel(messages, prevSlots, questionsAsked) {
     ? await callOpenAI({ system, messages: payload, maxTokens: 400 })
     : await callClaude({ system, messages: payload, maxTokens: 400 });
   return parseModelJSON(raw);
+}
+
+// Which standing answer applies (server/answer-router.js). One small call, and
+// only when the free regex layer missed. Cached, because customers ask the
+// same twenty questions and a repeat should cost nothing.
+const ROUTE_CACHE = new Map();
+async function routeToAnswer(text) {
+  if (aiMode() === 'offline') return null;
+  const entries = offline.faqEntries();
+  if (!entries.length) return null;
+  const key = text.trim().slice(0, 200);
+  if (ROUTE_CACHE.has(key)) return ROUTE_CACHE.get(key);
+  let hit = null;
+  try {
+    const system = router.buildPrompt(entries);
+    const raw = aiMode() === 'openai'
+      ? await callOpenAI({ system, messages: [{ role: 'user', content: key }], maxTokens: 600 })
+      : await callClaude({ system, messages: [{ role: 'user', content: key }], maxTokens: 600 });
+    hit = router.pick(raw, entries);
+  } catch (e) {
+    console.error('answer router failed:', e.message);   // never breaks a turn
+  }
+  if (ROUTE_CACHE.size > 500) ROUTE_CACHE.clear();
+  ROUTE_CACHE.set(key, hit);
+  return hit;
 }
 
 async function phraseWithModel({ slots, cards, result, fallback, lastReply, answered }) {
@@ -303,7 +329,20 @@ async function handleChat(body) {
   // (config/faq.json). It is on topic by definition, so it also switches the
   // off-topic line off — telling someone that cancellation terms are "not my
   // subject" was the most expensive sentence this bot could say.
-  const faqHit = offline.faq(lastUser);
+  let faqHit = offline.faq(lastUser);
+  // The regex found nothing. That is usually not "we have no answer" — it is
+  // "the customer said it differently", which was the single largest source of
+  // defects in this project. The model picks WHICH approved answer applies; it
+  // never writes one, and its whole output is an id from a closed list.
+  // Only for something that looks like a question. "ינואר", "כן", "4" and
+  // "חשוב לי ספא" are answers to us, not questions to route — paying to route
+  // them would be the token policy thrown away for nothing.
+  const looksLikeQuestion = /[?]/.test(lastUser) ||
+    /^\s*(מה|מי|מתי|איפה|איך|כמה|האם|יש |אפשר|צריך|למה|אם )/.test(lastUser) ||
+    (!slotsChanged(prevSlots, slots) && lastUser.trim().length > 8);
+  if (!faqHit && looksLikeQuestion && !offline.guard(lastUser) && !offline.deflect(lastUser)) {
+    faqHit = await routeToAnswer(lastUser);
+  }
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
     !faqHit && !offline.deflect(lastUser) && !offline.wantsMore(lastUser) &&
     /\?|איך|מה |למה|מי /.test(lastUser) &&
@@ -606,6 +645,10 @@ async function handleChat(body) {
     conversationId: body.conversationId || slots._cid,
     userText: lastUser, reply: replyText, cards, result, slots,
     modelUsed, ms: Date.now() - startedAt,
+    // a turn we could not use is a bug report written by a real customer
+    notUnderstood: offTopic && !deflection && !faqHit,
+    answeredBy: guarded ? 'guard' : deflection ? 'deflect'
+      : faqHit ? (faqHit.routed ? 'router' : 'faq') : null,
   });
 
   // A request to be called back opens the form, on the offer they were looking
