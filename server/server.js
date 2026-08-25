@@ -838,7 +838,15 @@ async function handleChat(body) {
       }
       if (bits.length) contrast = bits.join('; ') + '. מה מהם חשוב לכם יותר?';
     }
-    const parts = [preamble, intro, contrast, ...coverage, tailQuestion].filter(Boolean);
+    // Anyone asking about money hears where the price lives. Saying nothing
+    // was obedience to half a rule: we may not quote a number, and we may
+    // always say that the exact one is on the booking screen.
+    const MONEY_Q = /זול|יקר|תקציב|מחיר|כמה עולה|משתלם|לקרוע את הכיס|לאדם|כסף/;
+    const priceLine = cards.length && MONEY_Q.test(lastUser) &&
+      !/מסך ההזמנה|המחיר המדויק/.test([preamble, intro].filter(Boolean).join(' '))
+      ? 'טווח המחיר מסומן על כל הצעה, והמחיר המדויק לתאריך ולחדר שלכם מופיע במסך ההזמנה — נציג מאשר אותו סופית.'
+      : null;
+    const parts = [preamble, intro, contrast, priceLine, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
     // a bot sounds like a bot; a person says it when it is worth saying.
     // two-room splits are offers too — they render as their own cards in
@@ -858,7 +866,7 @@ async function handleChat(body) {
     // the single commonest complaint in the golden set. It is dropped only
     // after every coaching line is gone and the reply is still over the cap.
     const SOFT1 = /נפתחות|אני כאן אם תרצו/;
-    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות|בטווח המחיר הנמוך מבין/;
+    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות|בטווח המחיר הנמוך מבין|טווח המחיר מסומן/;
     let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     while (all.length > 5) {
       const drop = all.findIndex(l => SOFT1.test(l));

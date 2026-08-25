@@ -26,7 +26,10 @@ const N = +(process.argv[2] || 0) || GOLDEN.cases.length;
   // eight cases in flight at once: a case is bot-call + judge-call, fully
   // independent of its neighbours, and running them in series made every
   // measurement a 25-minute wait
-  const CONCURRENCY = 8;
+  // 8 in flight x (1 bot + 3 judges) burst past the rate limit and 25 calls
+  // failed mid-run, which degrades the very replies being judged. 4 is the
+  // most that stays under it.
+  const CONCURRENCY = 4;
   const runOne = async (c) => {
     let out;
     try {

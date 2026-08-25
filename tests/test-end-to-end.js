@@ -1368,6 +1368,20 @@ t('ski lessons for children are not "activities off the slopes"', () =>
   handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 5 ו7 בפברואר, חשוב גן סקי לילדים' }], slots: {} })
     .then(out => assert.ok(!/פעילויות לילדים מחוץ לסקי/.test(out.reply_he), out.reply_he)));
 
+// Red rule 3 has two halves: never quote a number, and always say where the
+// exact one is. We were obeying only the first, and every value question in
+// the exam ended with "never said the price would be checked".
+t('a money question hears where the price lives', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי מחפש חופשת סקי הכי זולה שאפשר לזוג בינואר 2027' }], slots: {} })
+    .then(out => {
+      assert.ok(/מסך ההזמנה|המחיר המדויק/.test(out.reply_he), out.reply_he);
+      assert.ok(!/\d{3,}/.test(out.reply_he.replace(/20\d\d/g, '')), 'quoted a number');
+    }));
+
+t('a request with no money in it gets no price sermon', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר בבולגריה' }], slots: {} })
+    .then(out => assert.ok(!/טווח המחיר מסומן/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
