@@ -805,7 +805,27 @@ async function handleChat(body) {
       }
       if (applied.length) coverage.push(applied.join('; ') + '.');
     }
-    const parts = [preamble, intro, ...coverage, tailQuestion].filter(Boolean);
+    // "מה יותר משתלם?" deserves something to act on. Red rule 6 forbids
+    // naming a winner (a reverted attempt cost 16 points on the fixed exam),
+    // so this states the DIFFERENCE between the offers and leaves the choice
+    // where it belongs.
+    let contrast = null;
+    if (cards.length > 1 && VALUE_Q.test(lastUser)) {
+      const bands = cards.map(c => (c.price_range || '').length);
+      const lo = Math.min(...bands), hi = Math.max(...bands);
+      const bits = [];
+      if (lo < hi) {
+        const cheap = cards.filter((c, i) => bands[i] === lo).map(c => c.hotel);
+        bits.push(`בטווח המחיר הנמוך מבין המוצגות: ${cheap.join(' ו')}`);
+      }
+      const wanted = (slots.preferences || []).filter(p => p !== 'תקציב');
+      for (const w of wanted.slice(0, 1)) {
+        const has = cards.filter(c => (c.tags || []).includes(w)).map(c => c.hotel);
+        if (has.length && has.length < cards.length) bits.push(`מסומנות ל${w}: ${has.join(' ו')}`);
+      }
+      if (bits.length) contrast = bits.join('; ') + '. מה מהם חשוב לכם יותר?';
+    }
+    const parts = [preamble, intro, contrast, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
     // a bot sounds like a bot; a person says it when it is worth saying.
     // two-room splits are offers too — they render as their own cards in
@@ -825,7 +845,7 @@ async function handleChat(body) {
     // the single commonest complaint in the golden set. It is dropped only
     // after every coaching line is gone and the reply is still over the cap.
     const SOFT1 = /נפתחות|אני כאן אם תרצו/;
-    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות/;
+    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות|בטווח המחיר הנמוך מבין/;
     let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     while (all.length > 5) {
       const drop = all.findIndex(l => SOFT1.test(l));
