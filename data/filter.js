@@ -288,12 +288,20 @@ class SkiSearch {
         relaxed.push({ type: 'two_rooms' });
       }
     }
-    // "דצמבר או ינואר": the second month the customer named comes before any
-    // month they did not.
-    if (!candidates.length && slots.month_alt) {
-      candidates = this._filter(slots, party,
+    // "דצמבר או ינואר" means either — both months are shown side by side,
+    // like a destination comparison, not one month plus a permission question.
+    if (slots.month_alt) {
+      const alt = this._filter(slots, party,
         { month: slots.month_alt, country: slots.country, destination: slots.destination });
-      if (candidates.length) relaxed.push({ type: 'month', from: +slots.month, to: +slots.month_alt });
+      if (candidates.length && alt.length) {
+        const mixed = [];
+        for (let i = 0; i < 3; i++) { if (candidates[i]) mixed.push(candidates[i]); if (alt[i]) mixed.push(alt[i]); }
+        candidates = mixed;
+        notes.push({ type: 'both_months' });
+      } else if (!candidates.length && alt.length) {
+        candidates = alt;
+        relaxed.push({ type: 'month', from: +slots.month, to: +slots.month_alt });
+      }
     }
     if (!candidates.length && !splits.length && slots.month != null) {
       for (const m of adjacentMonths(+slots.month)) {

@@ -65,7 +65,7 @@ const PREFS = [
   [/שקט|רגוע|לא רועש/, 'שקט'],
   [/מתחיל|לא גלשנו|פעם ראשונה|ללמוד לגלוש/, 'מתחילים'],
   [/זול|תקציב|חסכוני|משתלם|לא יקר|שלא יהיה יקר|יקר מדי|לקרוע את הכיס|במחיר נמוך|מחיר שפוי/, 'תקציב'],
-  [/עיירה|אטרקציות|בילויים|דברים לעשות/, 'עיירה תוססת'],
+  [/עיירה|אטרקציות|בילויים|דברים לעשות|אווירה טובה|אווירה/, 'עיירה תוססת'],
   [/הכל כלול/, 'הכל כלול'],
   [/משפח|ילדים קטנים/, 'משפחות'],
 ];
@@ -224,7 +224,12 @@ function parseText(text, slots) {
   // "שני זוגות" is four people, not two
   let pm = t.match(/(\d{1,2}|[א-ת]+)\s*זוגות/);
   if (pm) { const n = +pm[1] || heNum(pm[1]); if (n) s.adults = n * 2; }
-  else if (/זוג(?!ל|ות)/.test(t) && (s.adults == null || correcting)) s.adults = 2;
+  else if (/זוג(?!ל|ות)/.test(t) && (s.adults == null || correcting)) {
+    s.adults = 2;
+    // "אנחנו זוג" means two, no children — unless children are named, which
+    // the children parser handles and overrides
+    if (!(s.children_ages || []).length && !/ילד|קטנ|תינוק|נכד/.test(t)) s.no_children = s.no_children ?? true;
+  }
   // "שני הורים" / "ההורים" — parents are adults
   let hm = t.match(/(\d{1,2}|[א-ת]+)\s*הורים/);
   if (hm) { const n = +hm[1] || heNum(hm[1]); if (n) s.adults = n; }
@@ -776,6 +781,19 @@ function fmtDay(iso) {
 // The comparison verdict: which of the two named places actually has room.
 // Deterministic and printed verbatim — the model kept rewriting "באוסטריה לא
 // מצאתי" into something friendlier and wrong.
+// "ציינתם דצמבר או ינואר — הצגתי משניהם." Verbatim, like the comparison
+// verdict — the model kept absorbing it into nothing.
+function bothMonthsLine(result, slots, hasCards) {
+  if (!slots.month_alt || !hasCards) return null;
+  if (!MONTH_HE[slots.month] || !MONTH_HE[slots.month_alt]) return null;
+  const a = MONTH_HE[slots.month], b = MONTH_HE[slots.month_alt];
+  if ((result.notes || []).some(n => n.type === 'both_months')) {
+    return `ציינתם ${a} או ${b} — הצגתי משניהם.`;
+  }
+  if ((result.relaxed || []).some(r => r.type === 'month')) return null;
+  return `ציינתם ${a} או ${b} — הצגתי מ${a}; ב${b} לא מצאתי בתנאים האלה.`;
+}
+
 function comparingLine(result, slots) {
   const cmp = (result.notes || []).find(n => n.type === 'comparing');
   if (!cmp) return null;
@@ -817,7 +835,7 @@ function relaxationLines(result) {
     if (r.type === 'location') {
       const sat = (result.notes || []).some(n => n.type === 'saturday_only');
       out.push(sat
-        ? 'ביעד שביקשתם כל היציאות בחודש הזה יוצאות בשבת, ולכן הצגתי יעדים אחרים:'
+        ? 'ביעד שביקשתם כל היציאות בחודש הזה יוצאות בשבת, ולכן הצגתי יעדים אחרים — כל מה שמוצג כאן יוצא בלי טיסה בשבת:'
         : 'לא מצאתי ביעד שביקשתם, אז הנה אופציות פנויות ביעדים אחרים:');
     }
     if (r.type === 'two_rooms') out.push('אין יחידה אחת שמתאימה לכל ההרכב — אבל אפשר לשלב שני חדרים באותו מלון:');
@@ -870,24 +888,6 @@ function phrase(result, slots, cards) {
 
   if (slots.wrong_year) {
     lines.push(`אנחנו מוכרים כרגע את עונת חורף 2026/27 — דצמבר 2026 עד סוף מרץ 2027. הנה מה שפנוי בעונה הזו:`);
-  }
-
-  const cmp = null && note('comparing');
-  if (cmp) {
-    const empty = (cmp.places || []).filter(p => !p.found)
-      .map(p => ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' }[p.country]) || p.destination).filter(Boolean);
-    const nPlaces = (cmp.places || []).length;
-    const fromAll = nPlaces > 2 ? 'מכל היעדים שציינתם' : 'משני היעדים שציינתם';
-    lines.push(empty.length
-      ? `הצגתי הצעות ${fromAll}; ב${empty.join(' וב')} לא מצאתי מקום פנוי בתנאים האלה.`
-      : `הצגתי הצעות ${fromAll}, כדי שתוכלו להשוות.`);
-  }
-
-  // both months were heard; the offers start from the first
-  if (slots.month_alt && cards.length && MONTH_HE[slots.month] && MONTH_HE[slots.month_alt] &&
-      !(result.relaxed || []).some(r => r.type === 'month')) {
-    const a = MONTH_HE[slots.month], b = MONTH_HE[slots.month_alt];
-    lines.push(`ציינתם ${a} או ${b} — התחלתי מ${a}. תגידו אם להציג גם את ${b}.`);
   }
 
   const campAge = note('camp_age_mismatch');
@@ -1229,7 +1229,8 @@ const ASK_LEXICON = [
   [/מלון נוח|נוח למבוגרים|בלי הרבה מדרגות/, 'מלון נוח'],
   [/בריכה מחוממת|בריכת שחייה/, 'בריכה'],
   [/ללכת ברגל|הליכה למסלול|בלי שאטל/, 'מרחק הליכה מהמסלולים'],
-  [/סקי אין|ski.?in.?ski.?out|ממש על המסלול|יציאה מהמלון למסלול/i, 'סקי אין-סקי אאוט (מלון על המסלול)'],
+  [/סקי אין|ski.?in.?ski.?out|על המסלול|יציאה מהמלון למסלול/i, 'סקי אין-סקי אאוט (מלון על המסלול)'],
+  [/מסעד|אוכל טוב באזור|שף/, 'מסעדות טובות באזור'],
 ];
 
 // a note that names a REQUIREMENT (from the lexicon above), as opposed to a
@@ -1515,6 +1516,7 @@ module.exports = {
   isPause,
   PAUSE_HE,
   comparingLine,
+  bothMonthsLine,
   isRequirementNote,
   socialLine,
   unknownResort,

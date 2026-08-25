@@ -662,8 +662,9 @@ async function handleChat(body) {
   // the comparison verdict rides in the same verbatim channel — the model kept
   // rewriting "באוסטריה לא מצאתי" into something friendlier and wrong
   const cmpLine = offline.comparingLine(result, slots);
-  const fixed = [offCommLine, cmpLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
-  slots._fixed_said = [...saidFixed, ...[offCommLine, cmpLine, ...widened].filter(Boolean)].slice(-8);
+  const monthsLine = offline.bothMonthsLine(result, slots, cards.length > 0);
+  const fixed = [offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
+  slots._fixed_said = [...saidFixed, ...[offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));
 
   const templated = offline.phrase(result, sayingSlots, cards) ||
@@ -795,8 +796,10 @@ async function handleChat(body) {
     const mustKeep = new Set([
       ...(deflection || '').split(String.fromCharCode(10)).filter(Boolean),
       // an FAQ answer matched THIS turn is a direct answer to a direct
-      // question — repeating it beats "הפרטים המלאים על הכרטיס"
-      ...(faqHit && !faqSuppressed ? faqHit.he.split(String.fromCharCode(10)) : []),
+      // question — unless it is the SAME question as last turn, in which case
+      // repeating the paragraph verbatim is the annoyance, not the answer
+      ...(faqHit && !faqSuppressed && faqHit.id !== prevSlots._lastFaqId
+        ? faqHit.he.split(String.fromCharCode(10)) : []),
       ...(faqSuppressed ? [PER_CARD_POINTER[faqHit.id]].filter(Boolean) : []),
     ]);
     if (alreadySaid.size) {
@@ -835,6 +838,7 @@ async function handleChat(body) {
 
   // A request to be called back opens the form, on the offer they were looking
   // at if there is one. Telling someone where to find a button is not service.
+  slots._lastFaqId = faqHit ? faqHit.id : null;
   const askForDetails = offline.wantsCallback(lastUser);
 
   return {
