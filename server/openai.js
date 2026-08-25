@@ -23,15 +23,21 @@ function model() { return process.env.OPENAI_MODEL || DEFAULT_MODEL; }
 // `json` is on by default because slot filling wants a parseable object. The
 // phrasing call wants prose, and JSON mode would make it wrap a sentence in a
 // object for no reason and no benefit.
-async function callOpenAI({ system, messages, maxTokens = 400, json = true }) {
+// `model` (optional) overrides the default for THIS call. The slot filler and
+// the answer router read Hebrew and pick from lists — the cheap tier is right
+// for them. The phrasing call writes the sentence the customer actually reads,
+// and OPENAI_PHRASE_MODEL lets that one job ride a better model without
+// paying for it everywhere else.
+async function callOpenAI({ system, messages, maxTokens = 400, json = true, model: modelOverride }) {
   const key = process.env.OPENAI_API_KEY;
   if (!key || key.includes('xxxx')) {
     const err = new Error('missing_api_key');
     err.friendly = 'חסר מפתח OPENAI_API_KEY בקובץ .env בשרת.';
     throw err;
   }
+  const chosen = modelOverride || model();
   const body = {
-    model: model(),
+    model: chosen,
     max_completion_tokens: maxTokens,
     messages: [{ role: 'system', content: system }, ...messages],
   };
@@ -53,19 +59,19 @@ async function callOpenAI({ system, messages, maxTokens = 400, json = true }) {
     throw err;
   }
   const data = await res.json();
-  track(data.usage);
+  track(data.usage, chosen);
   return (data.choices && data.choices[0] && data.choices[0].message.content) || '';
 }
 
-function track(usage) {
+function track(usage, usedModel) {
   if (!usage) return;
-  const p = PRICES[model()] || PRICES[DEFAULT_MODEL];
+  const p = PRICES[usedModel || model()] || PRICES[DEFAULT_MODEL];
   const inTok = usage.prompt_tokens || 0;
   const outTok = usage.completion_tokens || 0;
   spend.calls++; spend.input += inTok; spend.output += outTok;
   spend.usd += (inTok / 1e6) * p.in + (outTok / 1e6) * p.out;
   console.log(
-    `[openai] ${model()} in=${inTok} out=${outTok} | ` +
+    `[openai] ${usedModel || model()} in=${inTok} out=${outTok} | ` +
     `total: ${spend.calls} calls, $${spend.usd.toFixed(4)} (~${(spend.usd * 3.7).toFixed(2)}₪)`
   );
 }

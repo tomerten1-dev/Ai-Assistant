@@ -189,7 +189,8 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
     // auditor still caught the occasional empty at 900, so there is headroom
     // here — an empty reply costs the same as a full one.
     const raw = aiMode() === 'openai'
-      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200, json: false })
+      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200, json: false,
+          model: process.env.OPENAI_PHRASE_MODEL || undefined })
       : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200 });
     let text = String(raw || '').trim();
     // Whole sentences it already said last turn, dropped. "ההצעות נראות פנויות,
