@@ -351,7 +351,9 @@ async function handleChat(body) {
   // (config/faq.json). It is on topic by definition, so it also switches the
   // off-topic line off — telling someone that cancellation terms are "not my
   // subject" was the most expensive sentence this bot could say.
-  let faqHit = offline.faq(lastUser);
+  // faqMulti: each question segment matched on its own, so a message that
+  // asks two known things gets both answers with no model involved
+  let faqHit = offline.faqMulti(lastUser);
   // The regex found nothing. That is usually not "we have no answer" — it is
   // "the customer said it differently", which was the single largest source of
   // defects in this project. The model picks WHICH approved answer applies; it
@@ -368,6 +370,17 @@ async function handleChat(body) {
     lastUser.trim().length > 60;
   if (!faqHit && looksLikeQuestion && !offline.guard(lastUser) && !offline.deflect(lastUser)) {
     faqHit = await routeToAnswer(lastUser);
+  }
+  // "יש חניה במלון? ומה עם ביטוח?" — the regex caught the insurance and the
+  // parking question fell on the floor. When the message plainly asks more
+  // than one thing, the router runs anyway and the second answer rides along.
+  const multiPart = (lastUser.match(/\?/g) || []).length >= 2 ||
+    /ומה (עם|לגבי|בקשר)|וגם מה|ושאלה נוספת|ועוד שאלה/.test(lastUser);
+  if (faqHit && !faqHit.routed && multiPart && (faqHit.all || []).length < 2 &&
+      !offline.guard(lastUser)) {
+    const routed = await routeToAnswer(lastUser);
+    const extra = routed && (routed.all || []).find(a => a.id !== faqHit.id);
+    if (extra) faqHit = { ...faqHit, he: faqHit.he + String.fromCharCode(10) + extra.he };
   }
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
     !faqHit && !offline.deflect(lastUser) && !offline.wantsMore(lastUser) &&
@@ -421,7 +434,7 @@ async function handleChat(body) {
   // The red-rule guard runs unconditionally — not gated on the FAQ, not gated
   // on whether the message also filled a slot.
   const guarded = offline.guard(lastUser) ||
-    offline.unknownHotel(lastUser);
+    offline.unknownHotel(lastUser) || offline.unknownResort(lastUser);
   const deflection = guarded || (faqHit ? null
     : (slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser)));
   // deflect() guards the red rules (no customer names, no exact prices) so it
@@ -444,6 +457,10 @@ async function handleChat(body) {
     wifi: 'תנאי האינטרנט שונים בין המלונות — מה שחל על כל אחד מהם כתוב על ההצעה שלו.',
   };
   let preamble = [
+    // the human word before business: a returning customer, a compliment.
+    // Correct offers with no acknowledgement read as a machine that did not
+    // hear the nice thing that was just said to it.
+    offline.socialLine(lastUser),
     deflection,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     !deflection && faqSuppressed ? PER_CARD_POINTER[faqHit.id] : null,

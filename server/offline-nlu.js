@@ -1162,6 +1162,20 @@ function notUnderstood(text) {
   return 'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.';
 }
 
+// The human word that comes before business. "טסנו איתכם שנה שעברה והיה
+// ממש טוב" was answered with three cards and a question — correct, and cold.
+// One warm line first; the offers still follow.
+function socialLine(text) {
+  const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  const returning = /טסנו איתכם|היינו איתכם|נסענו איתכם|הזמנו אצלכם|היינו אצלכם|לקוחות שלכם|פעם שעברה איתכם|שוב איתכם/.test(t);
+  const praise = /היה (ממש |מאוד |פשוט )?(טוב|מעולה|כיף|מושלם|מדהים|נהדר)|נהנינו|היה חלום|אהבנו|מרוצים מכם|שירות מעולה|אתם אלופים/.test(t);
+  if (returning && praise) return 'איזה כיף לשמוע שנהניתם — נשמח לארח אתכם שוב.';
+  if (returning) return 'ברוכים השבים! נשמח לתפור לכם גם את החופשה הבאה.';
+  if (praise) return 'תודה על המילים החמות!';
+  if (/מתרגשים|חוגגים|יום הולדת|יום נישואין|ירח דבש|הצעת נישואין/.test(t)) return null; // celebration has its own answer
+  return null;
+}
+
 // A person leaving: "לא רוצה כלום, סתם בדקתי", "תודה, ביי". Three more hotels
 // on the way out is exactly what makes a chat feel like a machine.
 const FAREWELL = /תפסיק לשלוח|תפסיקו לשלוח|די עם ההצעות|עזוב אותי|תפסיק להציע|לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
@@ -1169,6 +1183,18 @@ function isFarewell(text) {
   return FAREWELL.test(String(text || '').trim());
 }
 const FAREWELL_HE = 'אין בעיה בכלל. אם בהמשך תרצו לבדוק — אני כאן, ואפשר גם להתקשר ל-04-8557722. חורף נעים!';
+
+// A resort a customer knows from elsewhere and we do not sell this season.
+// "מתלבטים בין בנסקו לזולדן" used to be answered about Bansko alone, as if
+// the other half of the question had not been said.
+const FOREIGN_RESORTS = /(זולדן|סולדן|צרמט|קיצביהל|קיצבוהל|ואל גרדנה|ולגרדנה|ליווינ[יי]ו|ליבינ[יי]ו|סנט אנטון|סט אנטון|בורמיו|קורטינה|שאמוני|s[oö]lden|zermatt|kitzb\w*|livigno|st\.? ?anton|chamonix|cortina|bormio)/i;
+function unknownResort(text) {
+  const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  const m = t.match(FOREIGN_RESORTS);
+  if (!m) return null;
+  return `את ${m[1].trim()} אנחנו לא מוכרים העונה — אני מציג רק יעדים שיש לנו בהם מקומות בפועל: ` +
+    'בולגריה, אוסטריה, צרפת ואנדורה. אשמח להציע אתר דומה מתוכם.';
+}
 
 // "היי" alone. Answering it with three arbitrary offers reads as a machine
 // emptying its stock; a first turn is for saying hello and asking one thing.
@@ -1197,6 +1223,23 @@ const FAQ = (() => {
 // Same list the regex layer uses — one source, two ways of reaching it.
 function faqEntries() {
   return FAQ.map(e => ({ id: e.id, answer_he: e.he, match: e.match }));
+}
+
+// Two questions in one message, both of which the patterns know. Free and
+// deterministic: each question segment is matched on its own, so "יש חניה?
+// ומה עם ביטוח?" gets both answers without a model call. The model router
+// remains the fallback for phrasings the patterns do not know at all.
+function faqMulti(text) {
+  const segs = String(text || '').split(/[?!\n]+/).map(x => x.trim()).filter(Boolean);
+  const hits = [];
+  for (const seg of segs) {
+    const h = faq(seg);
+    if (h && !hits.some(x => x.id === h.id)) hits.push(h);
+    if (hits.length === 2) break;
+  }
+  if (!hits.length) return null;
+  return { id: hits[0].id, he: hits.map(h => h.he).join(String.fromCharCode(10)),
+    all: hits.map(h => ({ id: h.id, he: h.he })) };
 }
 
 function faq(text) {
@@ -1359,7 +1402,10 @@ function deflect(text) {
 
 module.exports = {
   faq,
+  faqMulti,
   faqEntries,
+  socialLine,
+  unknownResort,
   relaxationLines,
   guard,
   offCommitmentLine,

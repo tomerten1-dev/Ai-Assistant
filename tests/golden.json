@@ -1,0 +1,635 @@
+{
+ "_comment": "כל הודעת לקוח שהבודק אי-פעם פסל את התשובה עליה. קבוצה קבועה: הציון עליה זז רק כשהבוט משתנה. tests/test-golden.js מריץ אותה. סבבי audit חדשים מוסיפים לכאן את הכישלונות שלהם.",
+ "cases": [
+  {
+   "kind": "openai",
+   "msg": "היי אנחנו זוג עם 2 ילדים קטנים בני 4 ו7, רוצים חופשת סקי ראשונה בדצמבר 2026",
+   "first_failure": "gpt-5.6-luna in=196 out=130 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1204 out=251 | total: 2 calls, $0.0007 (~0.00₪)\n[openai] gpt-5.6-luna in=1795 out=306 | total: 3 calls, $0.0015 (~0.01₪)\n[openai] gpt-5.6-luna in=451 out=122 | total: 4 calls, $0.0017 (~0.01₪)\n[openai] gpt-5.6-luna in=1524 out=282 | total: 5 calls, $0.0023 (~0.01₪)\n[openai] gpt-5.6-luna in=2027 out=517 | total: 6 calls, $0.0034 (~0.01₪)\n[openai] gpt-5.6-luna in=652 out=113 | total: 7 calls, $0.0036 (~0.01₪)\n.[openai] gpt-5.6-luna in=191 out=136 | total: 8 calls, $0.0038 (~0.01₪)\n[openai] gpt-5.6-luna in=1192 out=152 | total: 9 calls, $0.0043 (~0.02₪)\n[openai] gpt-5.6-luna in=1978 out=270 | total: 10 calls, $0.0050 (~0.02₪)\n[openai] gpt-5.6-luna in=437 out=239 | total: 11 calls, $0.0054 (~0.02₪)\n[openai] gpt-5.6-luna in=1538 out=236 | total: 12 calls, $0.0059 (~0.02₪)\n[openai] gpt-5.6-luna in=3643 out=69 | total: 13 calls, $0.0068 (~0.02₪)\n[openai] gpt-5.6-luna in=2142 out=418 | total: 14 calls, $0.0077 (~0.03₪)\n[openai] gpt-5.6-luna in=498 out=313 | total: 15 calls, $0.0082 (~0.03₪)\n.[openai] gpt-5.6-luna in=194 out=151 | total: 16 calls, $0.0084 (~0.03₪)\n[openai] gpt-5.6-luna in=1191 out=264 | total: 17 calls, $0.0089 (~0.03₪)\n[openai] gpt-5.6-luna in=1917 out=240 | total: 18 calls, $0.0096 (~0.04₪)\n[openai] gpt-5.6-luna in=416 out=208 | total: 19 calls, $0.0099 (~0.04₪)\n[openai] gpt-5.6-luna in=1482 out=307 | total: 20 calls, $0.0106 (~0.04₪)\n[openai] gpt-5.6-luna in=2075 out=414 | total: 21 calls, $0.0115 (~0.04₪)\n[openai] gpt-5.6-luna in=523 out=224 | total: 22 calls, $0.0119 (~0.04₪)\n.[openai] gpt-5.6-luna in=194 out=107 | total: 23 calls, $0.0121 (~0.04₪)\n[openai] gpt-5.6-luna in=1203 out=333 | total: 24 calls, $0.0127 (~0.05₪)\n[openai] gpt-5.6-luna in=2030 out=578 | total: 25 calls, $0.0138 (~0.05₪)\n[openai] gpt-5.6-luna in=474 out=114 | total: 26 calls, $0.0140 (~0.05₪)\n[openai] gpt-5.6-luna in=1599 out=329 | total: 27 calls, $0.0147 (~0.05₪)\n[openai] gpt-5.6-luna in=3636 out=11 | total: 28 calls, $0.0155 (~0.06₪)\n[openai] gpt-5.6-luna in=2223 out=608 | total: 29 calls, $0.0167 (~0.06₪)\n[openai] gpt-5.6-luna in=551 out=289 | total: 30 calls, $0.0171 (~0.06₪)\n.[openai] gpt-5.6-luna in=195 out=111 | total: 31 calls, $0.0173 (~0.06₪)\n[openai] gpt-5.6-luna in=1195 out=211 | total: 32 calls, $0.0178 (~0.07₪)\n[openai] gpt-5.6-luna in=1908 out=215 | total: 33 calls, $0.0184 (~0.07₪)\n[openai] gpt-5.6-luna in=432 out=194 | total: 34 calls, $0.0187 (~0.07₪)\n[openai] gpt-5.6-luna in=1568 out=394 | total: 35 calls, $0.0195 (~0.07₪)\n[openai] gpt-5.6-luna in=2174 out=900 | total: 36 calls, $0.0210 (~0.08₪)\nphrasing rejected (empty): \n[openai] gpt-5.6-luna in=641 out=152 | total: 37 calls, $0.0213 (~0.08₪)\n.[openai] gpt-5.6-luna in=197 out=109 | total: 38 calls, $0.0215 (~0.08₪)\n[openai] gpt-5.6-luna in=1202 out=228 | total: 39 calls, $0.0220 (~0.08₪)\n[openai] gpt-5.6-luna in=1971 out=518 | total: 40 calls, $0.0230 (~0.09₪)\n[openai] gpt-5.6-luna in=505 out=213 | total: 41 calls, $0.0234 (~0.09₪)\n[openai] gpt-5.6-luna in=1729 out=274 | total: 42 calls, $0.0241 (~0.09₪)\n[openai] gpt-5.6-luna in=3630 out=64 | total: 43 calls, $0.0249 (~0.09₪)\n[openai] gpt-5.6-luna in=2089 out=414 | total: 44 calls, $0.0258 (~0.10₪)\n[openai] gpt-5.6-luna in=530 out=63 | total: 45 calls, $0.0260 (~0.10₪)\n.[openai] gpt-5.6-luna in=198 out=115 | total: 46 calls, $0.0262 (~0.10₪)\n[openai] gpt-5.6-luna in=1193 out=252 | total: 47 calls, $0.0267 (~0.10₪)\n[openai] gpt-5.6-luna in=1931 out=424 | total: 48 calls, $0.0276 (~0.10₪)\n[openai] gpt-5.6-luna in=448 out=360 | total: 49 calls, $0.0281 (~0.10₪)\n[openai] gpt-5.6-luna in=1576 out=229 | total: 50 calls, $0.0287 (~0.11₪)\n[openai] gpt-5.6-luna in=2113 out=505 | total: 51 calls, $0.0297 (~0.11₪)\n[openai] gpt-5.6-luna in=516 out=168 | total: 52 calls, $0.0300 (~0.11₪)\n.[openai] gpt-5.6-luna in=197 out=119 | total: 53 calls, $0.0302 (~0.11₪)\n[openai] gpt-5.6-luna in=1199 out=180 | total: 54 calls, $0.0307 (~0.11₪)\n[openai] gpt-5.6-luna in=3641 out=32 | total: 55 calls, $0.0314 (~0.12₪)\n[openai] gpt-5.6-luna in=1957 out=614 | total: 56 calls, $0.0326 (~0.12₪)\n[openai] gpt-5.6-luna in=484 out=229 | total: 57 calls, $0.0329 (~0.12₪)\n[openai] gpt-5.6-luna in=1707 out=302 | total: 58 calls, $0.0336 (~0.12₪)\n[openai] gpt-5.6-luna in=2353 out=582 | total: 59 calls, $0.0348 (~0.13₪)\n[openai] gpt-5.6-luna in=544 out=181 | total: 60 calls, $0.0351 (~0.13₪)\n.[openai] gpt-5.6-luna in=198 out=152 | total: 61 calls, $0.0354 (~0.13₪)\n[openai] gpt-5.6-luna in=1194 out=199 | total: 62 calls, $0.0358 (~0.13₪)\n[openai] gpt-5.6-luna in=1956 out=411 | total: 63 calls, $0.0367 (~0.14₪)\n[openai] gpt-5.6-luna in=451 out=232 | total: 64 calls, $0.0371 (~0.14₪)\n[openai] gpt-5.6-luna in=1587 out=400 | total: 65 calls, $0.0379 (~0.14₪)\n[openai] gpt-5.6-luna in=1979 out=469 | total: 66 calls, $0.0388 (~0.14₪)\n[openai] gpt-5.6-luna in=520 out=189 | total: 67 calls, $0.0392 (~0.14₪)\n.[openai] gpt-5.6-luna in=198 out=125 | total: 68 calls, $0.0394 (~0.15₪)\n[openai] gpt-5.6-luna in=1191 out=180 | total: 69 calls, $0.0398 (~0.15₪)\n[openai] gpt-5.6-luna in=1900 out=372 | total: 70 calls, $0.0406 (~0.15₪)\n[openai] gpt-5.6-luna in=449 out=246 | total: 71 calls, $0.0410 (~0.15₪)\n[openai] gpt-5.6-luna in=1569 out=279 | total: 72 calls, $0.0417 (~0.15₪)\n[openai] gpt-5.6-luna in=2026 out=584 | total: 73 calls, $0.0428 (~0.16₪)\n[openai] gpt-5.6-luna in=516 out=159 | total: 74 calls, $0.0431 (~0.16₪)\n.\n\n====================================================================\n[משפחה עם ילדים קטנים]  התשובה מתייחסת להצעה או להצעות שלא הוצגו כלל, ולכן היא מנותקת מההקשר ואף מרמזת על זמינות ללא בסיס."
+  },
+  {
+   "kind": "משפחה עם ילדים קטנים",
+   "msg": "חשוב לנו שיהיה מקום עם בית ספר לסקי לילדים ושלא יהיה מסובך להגיע מהשדה",
+   "first_failure": "התשובה מפרטת על בית הספר לסקי אך אינה מתייחסת כלל למידת הנוחות של ההגעה מהשדה."
+  },
+  {
+   "kind": "זוג",
+   "msg": "היי, אנחנו זוג שמחפש חופשת סקי ראשונה בדצמבר",
+   "first_failure": "התשובה מציעה חופשות בינואר במקום לענות על הבקשה לחופשה בדצמבר, ואף קובעת ללא בסיס שנראה שהן פנויות."
+  },
+  {
+   "kind": "זוג",
+   "msg": "חשוב לנו מלון קרוב למסלולים ושלא יהיה יקר מדי יש משהו בבולגריה או אנדורה?",
+   "first_failure": "התשובה מתייחסת רק לבולגריה ואינה מספקת מידע או תשובה לגבי האפשרות באנדורה שהלקוח שאל עליה."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "היי אני מחפש חופשת סקי לבד בדצמבר או ינואר",
+   "first_failure": "התשובה מניחה שקיימות שלוש הצעות ואף טוענת שהן פנויות כרגע, בלי שהלקוח קיבל או סיפק פרטים שמבססים זאת."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "יש משהו באוסטריה או בולגריה שלא יקר מדי כולל חדר ליחיד?",
+   "first_failure": "התשובה אינה מציגה אילו אפשרויות באוסטריה או בבולגריה זמינות ומה עלותן לנוסע יחיד, ולכן לא עונה בפועל על בקשת הלקוח."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "היי אנחנו 6 חברים רוצים סקי בדצמבר או ינואר משהו עם חיי לילה אבל לא לקרוע את הכיס",
+   "first_failure": "התשובה שגויה כי טענה שהלקוח לא ציין חודש, אף שהוא ציין במפורש דצמבר או ינואר, ולא הציגה הצעות קונקרטיות."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "יש לכם הצעות לבולגריה או אנדורה כולל טיסות ומלון?",
+   "first_failure": "התשובה אינה מציגה הצעות קונקרטיות או מאשרת שיש חבילות זמינות, ומוסיפה באופן מבלבל העדפות שלא הופיעו בבקשה הנוכחית."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "שלום, רוצים לבדוק חופשת סקי עם 3 נכדים בחנוכה או ינואר",
+   "first_failure": "התשובה טוענת שהוצגו הצעות וזמינות, אך בפועל אינה מציגה אף הצעה או מידע רלוונטי ומותירה את הלקוח בלי מענה לשאלתו."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "אנחנו סבא וסבתא ולא גולשים, חשוב שיהיה מלון נוח ופעילויות לילדים וגם שיעורי סקי בעברית אם יש",
+   "first_failure": "התשובה לא מציגה מלונות נוחים או פעילויות לילדים, ובנוסף טוענת שתציג מה פנוי אך אינה מציגה אף אפשרות."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי אנחנו שומרי שבת וכשרות יש מלון עם אוכל כשר או לפחות אפשרות למטבחון באזור הסקי?",
+   "first_failure": "התשובה מבלבלת ולא מספקת מידע ממשי על מלון כשר או מטבחון, למרות שהיא מצהירה שיש הצעות פנויות ואז לא מציגה אותן, ואף כוללת את המילה הלא קשורה \"Baebele\"."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "היי מחפש חופשת סקי הכי זולה שיש לדצמבר או ינואר",
+   "first_failure": "התשובה אינה מציגה הצעה קונקרטית או מידע שמסייע למצוא את החופשה הזולה ביותר, וניסוחה לגבי \"נימוקים של כל הצעה\" מבלבל ולא תקין."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "לא חייב מלון מפואר העיקר שיהיה קרוב למסלולים ועם טיסות במחיר סביר",
+   "first_failure": "התשובה חוזרת על המשפט \"ההצעות נראות פנויות בשלב זה, ונציג יאשר סופית\" שכבר הופיע בתשובה הקודמת."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "מחפשים חופשת סקי ברמה הכי גבוהה שיש, לא להתפשר על המלון והלוגיסטיקה",
+   "first_failure": "התשובה מתייחסת ל'הצעות שנבחרו' ולהרכבי נוסעים שסומנו, אף שהלקוח לא ציין שנשלחו הצעות או מסר הרכב נוסעים, ולכן היא מנותקת מההקשר."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "עדיפות לסקי אין סקי אאוט, ספא טוב והעברות פרטיות לזוג בסוף ינואר",
+   "first_failure": "התשובה אינה מתייחסת להעדפת הסקי אין/סקי אאוט ולהעברות הפרטיות, שהן חלק מרכזי מבקשת הלקוח."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מתלבטים בין בנסקו אנדורה או אוסטריה לסקי ראשון שלנו 😅",
+   "first_failure": "התשובה אינה משווה או מתייחסת באופן ענייני לבנסקו, אנדורה ואוסטריה, ובנוסף טוענת שנראה שהאפשרויות פנויות בלי בסיס ברור."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "חשוב לנו שיהיה גם קצת אפרה סקי ולא לקרוע את הכיס מה הכי משתלם בדצמבר",
+   "first_failure": "התשובה מבלבלת וסותרת את עצמה: היא מציינת שההצעות מתאימות ל־5 נוסעים אך שוב מבקשת לדעת כמה נוסעים יש, וגם אינה מספקת מענה ממשי לשאלת האפרה־סקי והמחיר המשתלם בדצמבר."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "היי זה שוב אנחנו מהחופשה בבנסקו שנה שעברה 😅",
+   "first_failure": "התשובה אינה מתייחסת לברכה של הלקוח ומציגה ללא הקשר אפשרויות ספציפיות של מספר נוסעים ומשך חופשה, כאילו כבר רוכזו עבורו."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "רוצים לסגור משהו דומה לדצמבר הקרוב, יש כבר תאריכים ומחירים?",
+   "first_failure": "התשובה לא מספקת את התאריכים או המחירים שביקש הלקוח, ואינה מפנה אותו בבירור לנציג לקבלת המידע."
+  },
+  {
+   "kind": "openai",
+   "msg": "היי, מחפשים חופשת סקי לזוג בדצמבר או ינואר",
+   "first_failure": "gpt-5.6-luna in=196 out=100 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1203 out=279 | total: 2 calls, $0.0007 (~0.00₪)\n[openai] gpt-5.6-luna in=2212 out=615 | total: 3 calls, $0.0019 (~0.01₪)\n[openai] gpt-5.6-luna in=651 out=529 | total: 4 calls, $0.0027 (~0.01₪)\n[openai] gpt-5.6-luna in=1671 out=167 | total: 5 calls, $0.0032 (~0.01₪)\n[openai] gpt-5.6-luna in=3627 out=13 | total: 6 calls, $0.0040 (~0.01₪)\n[openai] gpt-5.6-luna in=2312 out=630 | total: 7 calls, $0.0052 (~0.02₪)\n[openai] gpt-5.6-luna in=803 out=600 | total: 8 calls, $0.0061 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=113 | total: 9 calls, $0.0062 (~0.02₪)\n[openai] gpt-5.6-luna in=1193 out=255 | total: 10 calls, $0.0068 (~0.03₪)\n[openai] gpt-5.6-luna in=2119 out=332 | total: 11 calls, $0.0076 (~0.03₪)\n[openai] gpt-5.6-luna in=609 out=215 | total: 12 calls, $0.0080 (~0.03₪)\n[openai] gpt-5.6-luna in=1552 out=227 | total: 13 calls, $0.0086 (~0.03₪)\n[openai] gpt-5.6-luna in=2383 out=374 | total: 14 calls, $0.0095 (~0.04₪)\n[openai] gpt-5.6-luna in=786 out=231 | total: 15 calls, $0.0099 (~0.04₪)\n.[openai] gpt-5.6-luna in=194 out=81 | total: 16 calls, $0.0101 (~0.04₪)\n[openai] gpt-5.6-luna in=1191 out=336 | total: 17 calls, $0.0107 (~0.04₪)\n[openai] gpt-5.6-luna in=2128 out=415 | total: 18 calls, $0.0116 (~0.04₪)\n[openai] gpt-5.6-luna in=602 out=181 | total: 19 calls, $0.0120 (~0.04₪)\n[openai] gpt-5.6-luna in=1521 out=235 | total: 20 calls, $0.0125 (~0.05₪)\n[openai] gpt-5.6-luna in=3630 out=14 | total: 21 calls, $0.0133 (~0.05₪)\n[openai] gpt-5.6-luna in=2286 out=345 | total: 22 calls, $0.0142 (~0.05₪)\n[openai] gpt-5.6-luna in=703 out=133 | total: 23 calls, $0.0145 (~0.05₪)\n.[openai] gpt-5.6-luna in=194 out=117 | total: 24 calls, $0.0146 (~0.05₪)\n[openai] gpt-5.6-luna in=1192 out=334 | total: 25 calls, $0.0153 (~0.06₪)\n[openai] gpt-5.6-luna in=2122 out=422 | total: 26 calls, $0.0162 (~0.06₪)\n[openai] gpt-5.6-luna in=604 out=316 | total: 27 calls, $0.0167 (~0.06₪)\n[openai] gpt-5.6-luna in=1535 out=208 | total: 28 calls, $0.0173 (~0.06₪)\n[openai] gpt-5.6-luna in=3644 out=11 | total: 29 calls, $0.0180 (~0.07₪)\n[openai] gpt-5.6-luna in=2341 out=586 | total: 30 calls, $0.0192 (~0.07₪)\n[openai] gpt-5.6-luna in=668 out=345 | total: 31 calls, $0.0197 (~0.07₪)\n.[openai] gpt-5.6-luna in=195 out=121 | total: 32 calls, $0.0199 (~0.07₪)\n[openai] gpt-5.6-luna in=1208 out=292 | total: 33 calls, $0.0205 (~0.08₪)\n[openai] gpt-5.6-luna in=2171 out=509 | total: 34 calls, $0.0215 (~0.08₪)\n[openai] gpt-5.6-luna in=601 out=224 | total: 35 calls, $0.0219 (~0.08₪)\n[openai] gpt-5.6-luna in=1567 out=336 | total: 36 calls, $0.0227 (~0.08₪)\n[openai] gpt-5.6-luna in=2478 out=242 | total: 37 calls, $0.0234 (~0.09₪)\n[openai] gpt-5.6-luna in=830 out=277 | total: 38 calls, $0.0239 (~0.09₪)\n.[openai] gpt-5.6-luna in=197 out=107 | total: 39 calls, $0.0241 (~0.09₪)\n[openai] gpt-5.6-luna in=1200 out=191 | total: 40 calls, $0.0246 (~0.09₪)\n[openai] gpt-5.6-luna in=2182 out=594 | total: 41 calls, $0.0257 (~0.10₪)\n[openai] gpt-5.6-luna in=684 out=216 | total: 42 calls, $0.0261 (~0.10₪)\n[openai] gpt-5.6-luna in=1748 out=264 | total: 43 calls, $0.0268 (~0.10₪)\n[openai] gpt-5.6-luna in=2409 out=900 | total: 44 calls, $0.0283 (~0.10₪)\nphrasing rejected (empty): \n[openai] gpt-5.6-luna in=778 out=198 | total: 45 calls, $0.0287 (~0.11₪)\n.[openai] gpt-5.6-luna in=198 out=110 | total: 46 calls, $0.0289 (~0.11₪)\n[openai] gpt-5.6-luna in=1194 out=261 | total: 47 calls, $0.0295 (~0.11₪)\n[openai] gpt-5.6-luna in=2066 out=900 | total: 48 calls, $0.0310 (~0.11₪)\nphrasing rejected (empty): \n[openai] gpt-5.6-luna in=552 out=138 | total: 49 calls, $0.0312 (~0.12₪)\n[openai] gpt-5.6-luna in=1519 out=364 | total: 50 calls, $0.0320 (~0.12₪)\n[openai] gpt-5.6-luna in=2250 out=611 | total: 51 calls, $0.0332 (~0.12₪)\n[openai] gpt-5.6-luna in=668 out=351 | total: 52 calls, $0.0337 (~0.12₪)\n.[openai] gpt-5.6-luna in=197 out=96 | total: 53 calls, $0.0339 (~0.13₪)\n[openai] gpt-5.6-luna in=1205 out=195 | total: 54 calls, $0.0343 (~0.13₪)\n[openai] gpt-5.6-luna in=2247 out=523 | total: 55 calls, $0.0354 (~0.13₪)\n[openai] gpt-5.6-luna in=628 out=224 | total: 56 calls, $0.0358 (~0.13₪)\n[openai] gpt-5.6-luna in=1659 out=307 | total: 57 calls, $0.0365 (~0.14₪)\n[openai] gpt-5.6-luna in=2454 out=633 | total: 58 calls, $0.0378 (~0.14₪)\n[openai] gpt-5.6-luna in=837 out=600 | total: 59 calls, $0.0386 (~0.14₪)\n.[openai] gpt-5.6-luna in=198 out=100 | total: 60 calls, $0.0388 (~0.14₪)\n[openai] gpt-5.6-luna in=1195 out=388 | total: 61 calls, $0.0395 (~0.15₪)\n[openai] gpt-5.6-luna in=2148 out=507 | total: 62 calls, $0.0406 (~0.15₪)\n[openai] gpt-5.6-luna in=644 out=290 | total: 63 calls, $0.0410 (~0.15₪)\n[openai] gpt-5.6-luna in=1655 out=400 | total: 64 calls, $0.0418 (~0.15₪)\n[openai] gpt-5.6-luna in=3630 out=152 | total: 65 calls, $0.0427 (~0.16₪)\n[openai] gpt-5.6-luna in=2431 out=479 | total: 66 calls, $0.0438 (~0.16₪)\n[openai] gpt-5.6-luna in=845 out=248 | total: 67 calls, $0.0443 (~0.16₪)\n.[openai] gpt-5.6-luna in=198 out=118 | total: 68 calls, $0.0445 (~0.16₪)\n[openai] gpt-5.6-luna in=1209 out=400 | total: 69 calls, $0.0452 (~0.17₪)\n[openai] gpt-5.6-luna in=2043 out=421 | total: 70 calls, $0.0461 (~0.17₪)\n[openai] gpt-5.6-luna in=617 out=183 | total: 71 calls, $0.0464 (~0.17₪)\n.\n\n====================================================================\n[זוג]  התשובה מדברת על האפשרויות בגוף שלישי במקום לפנות ישירות ללקוח, בניסוח כגון \"שלוש האפשרויות מתאימות לשני מבוגרים\"."
+  },
+  {
+   "kind": "זוג",
+   "msg": "עדיף אתר עם מסלולים למתחילים ומלון קרוב לרכבל יש משהו טוב בבולגריה או אוסטריה?",
+   "first_failure": "התשובה טוענת שהאפשרויות נראות פנויות, ובכך מציגה זמינות שאינה מאומתת."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "היי רוצה לבדוק חופשת סקי לבד בדצמבר או ינואר",
+   "first_failure": "התשובה שגויה בכך שהיא טוענת שלא הוגדר חודש, אף שהלקוח ביקש במפורש לבדוק חופשה בדצמבר או בינואר, ומציגה רק אפשרויות בינואר."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "היי אנחנו 6 חברים רוצים לסגור סקי בדצמבר או ינואר",
+   "first_failure": "התשובה מציגה אפשרויות כזמינות ומתאימות לקבוצה, אף שלא ניתן להבטיח זמינות לפני אישור נציג."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "שלום, אנחנו סבא וסבתא עם 3 נכדים ורוצים חופשת סקי בדצמבר, עדיף בולגריה או אנדורה",
+   "first_failure": "התשובה מתייחסת לאפשרויות לזוג ולחופשה בינואר במקום להרכב של סבא, סבתא ושלושה נכדים ולחופשה בדצמבר."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "הילדים בני 6 9 ו12, חשוב שיהיה מלון נוח ושיעורי סקי בעברית אם יש",
+   "first_failure": "לא התייחסה לשאלה אם המלון נוח, ובמקום זאת כתבה שההצעות מתאימות למשפחה."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי אנחנו שומרי שבת וכשרות, יש מלון עם אוכל כשר או בית חב״ד קרוב?",
+   "first_failure": "התשובה מדברת על ההצעות ומתארת שהן מתאימות לקבוצות של 2–4 נוסעים, במקום להתמקד במענה לשאלת הכשרות ובית חב״ד."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "לא משנה לי ממש היעד רק שיהיה כולל טיסות ומלון ושלא יעבור 3500 לאדם",
+   "first_failure": "התשובה מתייחסת להצעות עצמן ומציינת ש-Belambra מתאימה להרכב של חמישה נוסעים, אף שהלקוח לא מסר מספר נוסעים בשיחה."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "מחפש חופשת סקי ברמה הכי גבוהה שיש בדצמבר, מלון 5 כוכבים ממש על המסלול וספא טוב",
+   "first_failure": "התשובה מציינת ששתי האפשרויות נראות פנויות, ובכך מבטיחה או מרמזת על זמינות למרות שנציג טרם אישר אותה."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מתלבטים בין בנסקו לאנדורה לסוף ינואר, זוג עם ילד בן 10",
+   "first_failure": "הבוט הניח ללא בסיס תאריך מדויק ומשך שלושה לילות, במקום לברר את סוף ינואר ואת משך החופשה, וגם התמקד רק בבנסקו בלי להשוות או להתייחס לאנדורה."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מה יותר משתלם וגם שיהיה אתר נוח למתחילים?",
+   "first_failure": "התשובה אינה משווה באופן ברור מה משתלם יותר ואיזה אתר נוח למתחילים, ואף מציגה בביטחון שהאפשרויות מתאימות במיוחד למתחילים בלי להסביר או לבסס זאת."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "היי טסנו איתכם שנה שעברה לבנסקו והיה ממש טוב רוצים לסגור שוב לדצמבר 2026 הפעם אולי יעד אחר באוסטריה",
+   "first_failure": "התשובה מניחה ללא בסיס שמדובר בחמישה נוסעים ומציינת שהאפשרויות נראות פנויות, אף שהלקוח לא מסר מספר נוסעים ולא ניתן לאשר זמינות."
+  },
+  {
+   "kind": "openai",
+   "msg": "היי מחפשים חופשת סקי למשפחה עם 2 ילדים קטנים בדצמבר, מקום שמתאים למתחילים ושיש בו משהו לילדים כמו הדרכה או גן סקי",
+   "first_failure": "gpt-5.6-luna in=196 out=116 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1216 out=357 | total: 2 calls, $0.0009 (~0.00₪)\n[openai] gpt-5.6-luna in=2206 out=608 | total: 3 calls, $0.0020 (~0.01₪)\n[openai] gpt-5.6-luna in=634 out=315 | total: 4 calls, $0.0025 (~0.01₪)\n.[openai] gpt-5.6-luna in=191 out=96 | total: 5 calls, $0.0027 (~0.01₪)\nslot model failed: fetch failed \nanswer router failed: fetch failed\nphrasing model failed: fetch failed\n.(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n\n\n====================================================================\n[משפחה עם ילדים קטנים]  התשובה טוענת שנראה שיש זמינות לתאריך מסוים, אף שאין לכך אישור במידע שסופק, וגם אינה מאשרת שהאתרים מתאימים למתחילים."
+  },
+  {
+   "kind": "openai",
+   "msg": "היי אנחנו זוג עם 2 ילדים קטנים בני 4 ו7 ורוצים חופשת סקי ראשונה בדצמבר",
+   "first_failure": "gpt-5.6-luna in=196 out=108 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1201 out=183 | total: 2 calls, $0.0006 (~0.00₪)\n[openai] gpt-5.6-luna in=2071 out=523 | total: 3 calls, $0.0017 (~0.01₪)\n[openai] gpt-5.6-luna in=561 out=433 | total: 4 calls, $0.0023 (~0.01₪)\n[openai] gpt-5.6-luna in=1521 out=400 | total: 5 calls, $0.0031 (~0.01₪)\n[openai] gpt-5.6-luna in=2371 out=442 | total: 6 calls, $0.0041 (~0.02₪)\n[openai] gpt-5.6-luna in=714 out=492 | total: 7 calls, $0.0048 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=118 | total: 8 calls, $0.0050 (~0.02₪)\n[openai] gpt-5.6-luna in=1201 out=211 | total: 9 calls, $0.0055 (~0.02₪)\n[openai] gpt-5.6-luna in=2310 out=600 | total: 10 calls, $0.0067 (~0.02₪)\n[openai] gpt-5.6-luna in=673 out=543 | total: 11 calls, $0.0075 (~0.03₪)\n[openai] gpt-5.6-luna in=1667 out=207 | total: 12 calls, $0.0080 (~0.03₪)\n[openai] gpt-5.6-luna in=3628 out=11 | total: 13 calls, $0.0088 (~0.03₪)\n[openai] gpt-5.6-luna in=2424 out=645 | total: 14 calls, $0.0100 (~0.04₪)\n[openai] gpt-5.6-luna in=783 out=403 | total: 15 calls, $0.0107 (~0.04₪)\n.[openai] gpt-5.6-luna in=194 out=82 | total: 16 calls, $0.0108 (~0.04₪)\n[openai] gpt-5.6-luna in=1193 out=217 | total: 17 calls, $0.0113 (~0.04₪)\n[openai] gpt-5.6-luna in=2193 out=368 | total: 18 calls, $0.0122 (~0.05₪)\n[openai] gpt-5.6-luna in=583 out=529 | total: 19 calls, $0.0130 (~0.05₪)\n[openai] gpt-5.6-luna in=1491 out=351 | total: 20 calls, $0.0137 (~0.05₪)\n[openai] gpt-5.6-luna in=2412 out=602 | total: 21 calls, $0.0149 (~0.06₪)\n[openai] gpt-5.6-luna in=761 out=388 | total: 22 calls, $0.0155 (~0.06₪)\n.[openai] gpt-5.6-luna in=194 out=140 | total: 23 calls, $0.0157 (~0.06₪)\n[openai] gpt-5.6-luna in=1202 out=216 | total: 24 calls, $0.0162 (~0.06₪)\n[openai] gpt-5.6-luna in=2300 out=453 | total: 25 calls, $0.0172 (~0.06₪)\n[openai] gpt-5.6-luna in=607 out=313 | total: 26 calls, $0.0177 (~0.07₪)\n[openai] gpt-5.6-luna in=1554 out=242 | total: 27 calls, $0.0183 (~0.07₪)\n[openai] gpt-5.6-luna in=3639 out=11 | total: 28 calls, $0.0190 (~0.07₪)\n[openai] gpt-5.6-luna in=2431 out=598 | total: 29 calls, $0.0202 (~0.07₪)\n[openai] gpt-5.6-luna in=679 out=206 | total: 30 calls, $0.0206 (~0.08₪)\n.[openai] gpt-5.6-luna in=195 out=125 | total: 31 calls, $0.0208 (~0.08₪)\n[openai] gpt-5.6-luna in=1205 out=212 | total: 32 calls, $0.0213 (~0.08₪)\n[openai] gpt-5.6-luna in=2269 out=584 | total: 33 calls, $0.0225 (~0.08₪)\n[openai] gpt-5.6-luna in=622 out=264 | total: 34 calls, $0.0229 (~0.08₪)\n[openai] gpt-5.6-luna in=1597 out=204 | total: 35 calls, $0.0235 (~0.09₪)\n[openai] gpt-5.6-luna in=2419 out=643 | total: 36 calls, $0.0247 (~0.09₪)\n[openai] gpt-5.6-luna in=735 out=529 | total: 37 calls, $0.0255 (~0.09₪)\n.[openai] gpt-5.6-luna in=197 out=109 | total: 38 calls, $0.0257 (~0.10₪)\n[openai] gpt-5.6-luna in=1196 out=160 | total: 39 calls, $0.0261 (~0.10₪)\n[openai] gpt-5.6-luna in=2275 out=610 | total: 40 calls, $0.0273 (~0.10₪)\n[openai] gpt-5.6-luna in=686 out=181 | total: 41 calls, $0.0277 (~0.10₪)\n[openai] gpt-5.6-luna in=1720 out=218 | total: 42 calls, $0.0283 (~0.10₪)\n[openai] gpt-5.6-luna in=2447 out=598 | total: 43 calls, $0.0295 (~0.11₪)\n[openai] gpt-5.6-luna in=770 out=114 | total: 44 calls, $0.0298 (~0.11₪)\n.[openai] gpt-5.6-luna in=198 out=98 | total: 45 calls, $0.0299 (~0.11₪)\n[openai] gpt-5.6-luna in=1195 out=174 | total: 46 calls, $0.0304 (~0.11₪)\n[openai] gpt-5.6-luna in=2212 out=622 | total: 47 calls, $0.0316 (~0.12₪)\n[openai] gpt-5.6-luna in=639 out=581 | total: 48 calls, $0.0324 (~0.12₪)\n[openai] gpt-5.6-luna in=1600 out=184 | total: 49 calls, $0.0329 (~0.12₪)\n[openai] gpt-5.6-luna in=2414 out=398 | total: 50 calls, $0.0339 (~0.13₪)\n[openai] gpt-5.6-luna in=702 out=301 | total: 51 calls, $0.0344 (~0.13₪)\n.[openai] gpt-5.6-luna in=197 out=138 | total: 52 calls, $0.0346 (~0.13₪)\n[openai] gpt-5.6-luna in=1198 out=225 | total: 53 calls, $0.0351 (~0.13₪)\n[openai] gpt-5.6-luna in=2309 out=1108 | total: 54 calls, $0.0369 (~0.14₪)\n[openai] gpt-5.6-luna in=753 out=243 | total: 55 calls, $0.0373 (~0.14₪)\n[openai] gpt-5.6-luna in=1904 out=400 | total: 56 calls, $0.0382 (~0.14₪)\n[openai] gpt-5.6-luna in=2718 out=503 | total: 57 calls, $0.0393 (~0.15₪)\n[openai] gpt-5.6-luna in=939 out=582 | total: 58 calls, $0.0402 (~0.15₪)\n.[openai] gpt-5.6-luna in=198 out=104 | total: 59 calls, $0.0404 (~0.15₪)\n[openai] gpt-5.6-luna in=1196 out=257 | total: 60 calls, $0.0409 (~0.15₪)\n[openai] gpt-5.6-luna in=2151 out=623 | total: 61 calls, $0.0421 (~0.16₪)\n[openai] gpt-5.6-luna in=625 out=258 | total: 62 calls, $0.0425 (~0.16₪)\n[openai] gpt-5.6-luna in=1672 out=400 | total: 63 calls, $0.0434 (~0.16₪)\n[openai] gpt-5.6-luna in=3635 out=77 | total: 64 calls, $0.0442 (~0.16₪)\n[openai] gpt-5.6-luna in=2452 out=608 | total: 65 calls, $0.0454 (~0.17₪)\n[openai] gpt-5.6-luna in=813 out=351 | total: 66 calls, $0.0460 (~0.17₪)\n.[openai] gpt-5.6-luna in=198 out=104 | total: 67 calls, $0.0461 (~0.17₪)\n[openai] gpt-5.6-luna in=1203 out=171 | total: 68 calls, $0.0466 (~0.17₪)\n[openai] gpt-5.6-luna in=519 out=104 | total: 69 calls, $0.0468 (~0.17₪)\n[openai] gpt-5.6-luna in=1461 out=263 | total: 70 calls, $0.0474 (~0.18₪)\n[openai] gpt-5.6-luna in=3636 out=64 | total: 71 calls, $0.0482 (~0.18₪)\n[openai] gpt-5.6-luna in=2324 out=612 | total: 72 calls, $0.0494 (~0.18₪)\n[openai] gpt-5.6-luna in=684 out=417 | total: 73 calls, $0.0501 (~0.19₪)\n.[openai] gpt-5.6-luna in=200 out=101 | total: 74 calls, $0.0502 (~0.19₪)\n[openai] gpt-5.6-luna in=1203 out=288 | total: 75 calls, $0.0508 (~0.19₪)\n[openai] gpt-5.6-luna in=2269 out=601 | total: 76 calls, $0.0520 (~0.19₪)\n[openai] gpt-5.6-luna in=641 out=580 | total: 77 calls, $0.0528 (~0.20₪)\n[openai] gpt-5.6-luna in=1681 out=241 | total: 78 calls, $0.0534 (~0.20₪)\n[openai] gpt-5.6-luna in=3633 out=39 | total: 79 calls, $0.0542 (~0.20₪)\n[openai] gpt-5.6-luna in=2432 out=583 | total: 80 calls, $0.0554 (~0.20₪)\n[openai] gpt-5.6-luna in=765 out=150 | total: 81 calls, $0.0557 (~0.21₪)\n.[openai] gpt-5.6-luna in=202 out=79 | total: 82 calls, $0.0559 (~0.21₪)\n[openai] gpt-5.6-luna in=1199 out=227 | total: 83 calls, $0.0564 (~0.21₪)\n[openai] gpt-5.6-luna in=2245 out=607 | total: 84 calls, $0.0576 (~0.21₪)\n[openai] gpt-5.6-luna in=709 out=48 | total: 85 calls, $0.0578 (~0.21₪)\n.[openai] gpt-5.6-luna in=199 out=91 | total: 86 calls, $0.0579 (~0.21₪)\n[openai] gpt-5.6-luna in=1196 out=265 | total: 87 calls, $0.0585 (~0.22₪)\n[openai] gpt-5.6-luna in=3638 out=323 | total: 88 calls, $0.0596 (~0.22₪)\n[openai] gpt-5.6-luna in=2364 out=539 | total: 89 calls, $0.0607 (~0.22₪)\n[openai] gpt-5.6-luna in=734 out=529 | total: 90 calls, $0.0615 (~0.23₪)\n[openai] gpt-5.6-luna in=1812 out=373 | total: 91 calls, $0.0623 (~0.23₪)\n[openai] gpt-5.6-luna in=3633 out=103 | total: 92 calls, $0.0631 (~0.23₪)\n[openai] gpt-5.6-luna in=2594 out=514 | total: 93 calls, $0.0643 (~0.24₪)\n[openai] gpt-5.6-luna in=778 out=175 | total: 94 calls, $0.0646 (~0.24₪)\n.[openai] gpt-5.6-luna in=197 out=85 | total: 95 calls, $0.0648 (~0.24₪)\n[openai] gpt-5.6-luna in=1187 out=141 | total: 96 calls, $0.0652 (~0.24₪)\n[openai] gpt-5.6-luna in=3629 out=14 | total: 97 calls, $0.0659 (~0.24₪)\n[openai] gpt-5.6-luna in=2247 out=582 | total: 98 calls, $0.0671 (~0.25₪)\n[openai] gpt-5.6-luna in=651 out=218 | total: 99 calls, $0.0675 (~0.25₪)\n.\n\n====================================================================\n[משפחה עם ילדים קטנים]  התשובה מניחה ללא בסיס שהחופשה היא בדצמבר 2026 ומציגה מלון וזמינות ספציפיים, אף שהלקוח לא ציין שנה ולא נמסר מידע שמאמת זאת."
+  },
+  {
+   "kind": "משפחה עם ילדים קטנים",
+   "msg": "חשוב לנו מלון קרוב למסלולים וגן ילדים יש משהו מתאים בבולגריה או אנדורה",
+   "first_failure": "התשובה אינה מתייחסת לדרישה החשובה לגן ילדים, אלא רק מציינת התאמה למשפחות וקרבה למסלולים."
+  },
+  {
+   "kind": "זוג",
+   "msg": "היי אנחנו זוג ורוצים חופשת סקי בדצמבר, עדיף מקום עם אווירה טובה ולא יקר מדי",
+   "first_failure": "התשובה כוללת שמות מקומות באנגלית כמו Les Arcs, Avoriaz ו-Mayrhofen שאינם שמות מלונות ואינם בעברית."
+  },
+  {
+   "kind": "זוג",
+   "msg": "יש לכם משהו בבולגריה או אנדורה?",
+   "first_failure": "התשובה חוזרת על קביעת הזמינות מהתשובה הקודמת ואף מציגה את המלונות כזמינים לכאורה, למרות שנאסר להבטיח זמינות."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "עדיפות לאוסטריה או צרפת ושלא יצא מחיר מוגזם על חדר לבד",
+   "first_failure": "ביקש שוב מה חשוב ללקוח אף שהלקוח כבר ציין העדפה לאוסטריה או צרפת ורגישות למחיר לחדר יחיד, ואף הציג את האפשרויות בצרפת כפחות תואמות למרות שצרפת הוגדרה כהעדפה."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "אנחנו 6 חברים מחפשים סקי בינואר, עדיף מקום עם חיי לילה אבל שלא יהיה יקר מדי",
+   "first_failure": "התשובה טוענת שהאפשרויות נראות פנויות כרגע, כלומר מציגה זמינות בלי מידע מאומת."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "יש משהו בבולגריה או אנדורה עם טיסות ומלון קרוב למעליות?",
+   "first_failure": "התשובה אינה עונה אם קיימות אפשרויות בבולגריה או באנדורה עם טיסות ומלון קרוב למעליות, ומציינת פרטים לא מבוססים על שישה מבוגרים."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "שלום, אנחנו רוצים חופשת סקי עם שני נכדים בני 8 ו-11 בדצמבר, משהו רגוע ומתאים למתחילים",
+   "first_failure": "הלקוח ביקש חופשה בדצמבר, אך התשובה מציגה אפשרויות בינואר ולא מתייחסת לפער הזה."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי אנחנו זוג שומרי שבת וכשרות ומחפשים סקי בדצמבר 2026",
+   "first_failure": "התשובה מתייחסת לאפשרויות בינואר 2027 במקום לבקשה לחופשת סקי בדצמבר 2026, ואף מדברת על ההצעות במקום לתת מענה ממוקד לבקשת הלקוח."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "חשוב לנו מלון עם אוכל כשר או לפחות אפשרות לאוכל כשר ושיהיה במרחק הליכה מבית כנסת בשבת",
+   "first_failure": "התשובה אינה מתייחסת לבקשה לאוכל כשר או למרחק הליכה מבית כנסת בשבת, ובמקום זאת מציגה יתרונות כלליים של המלונות."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "היי מחפש חופשת סקי הכי זולה שאפשר לזוג בינואר 2027",
+   "first_failure": "התשובה אינה מציינת איזו מהאפשרויות היא הזולה ביותר או מסבירה שאין בידה מידע להשוואת מחירים, ולכן לא עונה ישירות על בקשת הלקוח לחופשה הכי זולה."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "לא חייב מלון מפואר רק שיהיה קרוב לאתר וישאר בתקציב נמוך",
+   "first_failure": "התשובה חוזרת על המידע שכבר נמסר בתשובה הקודמת לגבי Casa Karina ו־Vihren, במקום להתייחס באופן חדש להעדפה שהמלון יהיה פשוט וזול אך קרוב לאתר."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "מחפשים חופשת סקי ממש ברמה גבוהה בדצמבר, עדיפות לאוסטריה או צרפת",
+   "first_failure": "התשובה מציגה אפשרויות לינואר במקום לחופשה בדצמבר שביקש הלקוח, ואף כוללת כתיבה באנגלית של שם היעד."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "מלון 5 כוכבים ski in ski out עם ספא והעברות פרטיות, לא משהו המוני. יש לכם הצעות טובות?",
+   "first_failure": "התשובה אינה מתייחסת לדרישות המרכזיות של מלון חמישה כוכבים, העברות פרטיות ואווירה לא המונית, ומציגה רק התאמה חלקית לספא ולקרבה למסלולים."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מתלבטים בין בורובץ לאוסטריה לחופשת סקי בדצמבר עם שני ילדים",
+   "first_failure": "התשובה אינה מתייחסת להתלבטות בין בורובץ לאוסטריה, אלא מדברת על הצעות בצרפת ומציגה אותן במקום לספק מענה רלוונטי או להפנות באופן ברור לנציג."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מה יותר משתלם מבחינת מלון קרוב למסלולים והשכרת ציוד?",
+   "first_failure": "התשובה חוזרת על כך שהאפשרויות בצרפת, שכבר נאמר בתשובה הקודמת, ואינה משווה בפועל איזו אפשרות קרובה יותר למסלולים או משתלמת יותר בהשכרת ציוד."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "הפעם זוג עם ילד בן 10, יש משהו דומה אבל קצת יותר נוח?",
+   "first_failure": "התשובה מדברת על האפשרויות והסיבה לבחירתן במקום להסביר ללקוח מה הופך אותן לנוחות יותר, בניסוח שמנותק מעט מהבקשה."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "באמת מאכזב, שילמנו על מלון במרחק הליכה מהמעליות ובפועל צריך שאטל כל בוקר",
+   "first_failure": "התשובה מתעלמת מתלונת הלקוח ומעבירה את השיחה להצעות חלופיות במקום לטפל בפער בין ההבטחה למלון במרחק הליכה לבין הצורך בשאטל."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "זה ממש לא מה שהובטח לנו ואני מצפה שתמצאו לזה פתרון",
+   "first_failure": "התשובה חוזרת על מידע שכבר נאמר על סידור האפשרויות והקרבה למסלולים, ומדברת על ההצעות במקום להתמקד בפתרון לתלונת הלקוח."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "היי, אפשר לשנות אחרי ההזמנה את שם אחד הנוסעים? יש טעות באות אחת בדרכון",
+   "first_failure": "התשובה אינה עונה על השאלה לגבי שינוי שם לאחר ההזמנה, ובמקום זאת מציעה חופשות ושואלת כמה נוסעים יהיו."
+  },
+  {
+   "kind": "לקוח שכותב קצר מאוד",
+   "msg": "היי יש סקי בבולגריה בדצמבר?",
+   "first_failure": "התשובה מדברת על חופשות בבנסקו בדצמבר, אך ההצעות שמוצגות ללקוח הן כולן בינואר 2027 ולכן אינה עונה בפועל על שאלתו."
+  },
+  {
+   "kind": "openai",
+   "msg": "היי אנחנו זוג עם 2 ילדים קטנים בני 4 ו7 רוצים חופשת סקי בדצמבר",
+   "first_failure": "gpt-5.6-luna in=196 out=120 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1198 out=122 | total: 2 calls, $0.0006 (~0.00₪)\n[openai] gpt-5.6-luna in=2089 out=456 | total: 3 calls, $0.0015 (~0.01₪)\n[openai] gpt-5.6-luna in=571 out=460 | total: 4 calls, $0.0022 (~0.01₪)\n[openai] gpt-5.6-luna in=1525 out=189 | total: 5 calls, $0.0027 (~0.01₪)\n[openai] gpt-5.6-luna in=2277 out=495 | total: 6 calls, $0.0038 (~0.01₪)\n[openai] gpt-5.6-luna in=672 out=190 | total: 7 calls, $0.0041 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=112 | total: 8 calls, $0.0043 (~0.02₪)\n[openai] gpt-5.6-luna in=1206 out=221 | total: 9 calls, $0.0048 (~0.02₪)\n[openai] gpt-5.6-luna in=2364 out=595 | total: 10 calls, $0.0060 (~0.02₪)\n[openai] gpt-5.6-luna in=631 out=455 | total: 11 calls, $0.0067 (~0.02₪)\n[openai] gpt-5.6-luna in=1582 out=308 | total: 12 calls, $0.0074 (~0.03₪)\n[openai] gpt-5.6-luna in=2530 out=594 | total: 13 calls, $0.0086 (~0.03₪)\n[openai] gpt-5.6-luna in=807 out=217 | total: 14 calls, $0.0090 (~0.03₪)\n.[openai] gpt-5.6-luna in=194 out=103 | total: 15 calls, $0.0092 (~0.03₪)\n[openai] gpt-5.6-luna in=1206 out=400 | total: 16 calls, $0.0099 (~0.04₪)\n[openai] gpt-5.6-luna in=3648 out=14 | total: 17 calls, $0.0106 (~0.04₪)\n[openai] gpt-5.6-luna in=2336 out=508 | total: 18 calls, $0.0117 (~0.04₪)\n[openai] gpt-5.6-luna in=701 out=392 | total: 19 calls, $0.0123 (~0.05₪)\n.[openai] gpt-5.6-luna in=194 out=88 | total: 20 calls, $0.0125 (~0.05₪)\n[openai] gpt-5.6-luna in=1192 out=183 | total: 21 calls, $0.0129 (~0.05₪)\n[openai] gpt-5.6-luna in=2269 out=604 | total: 22 calls, $0.0141 (~0.05₪)\n[openai] gpt-5.6-luna in=642 out=416 | total: 23 calls, $0.0147 (~0.05₪)\n[openai] gpt-5.6-luna in=1605 out=245 | total: 24 calls, $0.0153 (~0.06₪)\n[openai] gpt-5.6-luna in=3636 out=70 | total: 25 calls, $0.0162 (~0.06₪)\n[openai] gpt-5.6-luna in=2515 out=584 | total: 26 calls, $0.0174 (~0.06₪)\n[openai] gpt-5.6-luna in=708 out=182 | total: 27 calls, $0.0177 (~0.07₪)\n.[openai] gpt-5.6-luna in=195 out=120 | total: 28 calls, $0.0179 (~0.07₪)\n[openai] gpt-5.6-luna in=1200 out=273 | total: 29 calls, $0.0185 (~0.07₪)\n[openai] gpt-5.6-luna in=2238 out=578 | total: 30 calls, $0.0196 (~0.07₪)\n[openai] gpt-5.6-luna in=629 out=233 | total: 31 calls, $0.0200 (~0.07₪)\n[openai] gpt-5.6-luna in=1620 out=400 | total: 32 calls, $0.0208 (~0.08₪)\n[openai] gpt-5.6-luna in=2601 out=563 | total: 33 calls, $0.0220 (~0.08₪)\n[openai] gpt-5.6-luna in=868 out=260 | total: 34 calls, $0.0225 (~0.08₪)\n.[openai] gpt-5.6-luna in=197 out=111 | total: 35 calls, $0.0227 (~0.08₪)\n[openai] gpt-5.6-luna in=1204 out=202 | total: 36 calls, $0.0232 (~0.09₪)\n[openai] gpt-5.6-luna in=2302 out=542 | total: 37 calls, $0.0243 (~0.09₪)\n[openai] gpt-5.6-luna in=680 out=227 | total: 38 calls, $0.0247 (~0.09₪)\n[openai] gpt-5.6-luna in=1757 out=400 | total: 39 calls, $0.0255 (~0.09₪)\n[openai] gpt-5.6-luna in=2470 out=416 | total: 40 calls, $0.0265 (~0.10₪)\n[openai] gpt-5.6-luna in=772 out=279 | total: 41 calls, $0.0270 (~0.10₪)\n.[openai] gpt-5.6-luna in=198 out=99 | total: 42 calls, $0.0272 (~0.10₪)\n[openai] gpt-5.6-luna in=1200 out=400 | total: 43 calls, $0.0279 (~0.10₪)\n[openai] gpt-5.6-luna in=2174 out=584 | total: 44 calls, $0.0290 (~0.11₪)\n[openai] gpt-5.6-luna in=628 out=284 | total: 45 calls, $0.0295 (~0.11₪)\n[openai] gpt-5.6-luna in=1612 out=400 | total: 46 calls, $0.0303 (~0.11₪)\n[openai] gpt-5.6-luna in=3632 out=34 | total: 47 calls, $0.0310 (~0.11₪)\n[openai] gpt-5.6-luna in=2310 out=589 | total: 48 calls, $0.0322 (~0.12₪)\n[openai] gpt-5.6-luna in=684 out=457 | total: 49 calls, $0.0329 (~0.12₪)\n.[openai] gpt-5.6-luna in=197 out=108 | total: 50 calls, $0.0331 (~0.12₪)\n[openai] gpt-5.6-luna in=1207 out=288 | total: 51 calls, $0.0337 (~0.12₪)\n[openai] gpt-5.6-luna in=2370 out=600 | total: 52 calls, $0.0348 (~0.13₪)\n[openai] gpt-5.6-luna in=621 out=281 | total: 53 calls, $0.0353 (~0.13₪)\n[openai] gpt-5.6-luna in=1651 out=326 | total: 54 calls, $0.0360 (~0.13₪)\n[openai] gpt-5.6-luna in=2437 out=581 | total: 55 calls, $0.0372 (~0.14₪)\n[openai] gpt-5.6-luna in=664 out=170 | total: 56 calls, $0.0376 (~0.14₪)\n.[openai] gpt-5.6-luna in=198 out=105 | total: 57 calls, $0.0377 (~0.14₪)\n[openai] gpt-5.6-luna in=1197 out=168 | total: 58 calls, $0.0382 (~0.14₪)\n[openai] gpt-5.6-luna in=2254 out=619 | total: 59 calls, $0.0394 (~0.15₪)\n[openai] gpt-5.6-luna in=651 out=130 | total: 60 calls, $0.0396 (~0.15₪)\n[openai] gpt-5.6-luna in=1665 out=266 | total: 61 calls, $0.0403 (~0.15₪)\n[openai] gpt-5.6-luna in=2512 out=545 | total: 62 calls, $0.0414 (~0.15₪)\n[openai] gpt-5.6-luna in=763 out=509 | total: 63 calls, $0.0422 (~0.16₪)\n.[openai] gpt-5.6-luna in=198 out=94 | total: 64 calls, $0.0424 (~0.16₪)\n[openai] gpt-5.6-luna in=1216 out=400 | total: 65 calls, $0.0431 (~0.16₪)\n[openai] gpt-5.6-luna in=3658 out=47 | total: 66 calls, $0.0439 (~0.16₪)\n[openai] gpt-5.6-luna in=2249 out=386 | total: 67 calls, $0.0448 (~0.17₪)\n[openai] gpt-5.6-luna in=628 out=224 | total: 68 calls, $0.0452 (~0.17₪)\n.[openai] gpt-5.6-luna in=200 out=91 | total: 69 calls, $0.0453 (~0.17₪)\n[openai] gpt-5.6-luna in=1194 out=180 | total: 70 calls, $0.0458 (~0.17₪)\n[openai] gpt-5.6-luna in=3636 out=65 | total: 71 calls, $0.0466 (~0.17₪)\n[openai] gpt-5.6-luna in=2266 out=608 | total: 72 calls, $0.0478 (~0.18₪)\n[openai] gpt-5.6-luna in=639 out=132 | total: 73 calls, $0.0481 (~0.18₪)\n[openai] gpt-5.6-luna in=1661 out=279 | total: 74 calls, $0.0487 (~0.18₪)\n[openai] gpt-5.6-luna in=3638 out=60 | total: 75 calls, $0.0495 (~0.18₪)\n[openai] gpt-5.6-luna in=2415 out=638 | total: 76 calls, $0.0508 (~0.19₪)\n[openai] gpt-5.6-luna in=756 out=182 | total: 77 calls, $0.0511 (~0.19₪)\n.[openai] gpt-5.6-luna in=202 out=125 | total: 78 calls, $0.0513 (~0.19₪)\n[openai] gpt-5.6-luna in=1206 out=391 | total: 79 calls, $0.0520 (~0.19₪)\n[openai] gpt-5.6-luna in=616 out=95 | total: 80 calls, $0.0523 (~0.19₪)\n[openai] gpt-5.6-luna in=1635 out=268 | total: 81 calls, $0.0529 (~0.20₪)\n[openai] gpt-5.6-luna in=3635 out=48 | total: 82 calls, $0.0537 (~0.20₪)\n[openai] gpt-5.6-luna in=2344 out=237 | total: 83 calls, $0.0545 (~0.20₪)\n[openai] gpt-5.6-luna in=648 out=11 | total: 84 calls, $0.0546 (~0.20₪)\n.[openai] gpt-5.6-luna in=199 out=86 | total: 85 calls, $0.0548 (~0.20₪)\n[openai] gpt-5.6-luna in=1198 out=167 | total: 86 calls, $0.0552 (~0.20₪)\n[openai] gpt-5.6-luna in=3640 out=13 | total: 87 calls, $0.0559 (~0.21₪)\n[openai] gpt-5.6-luna in=2437 out=565 | total: 88 calls, $0.0571 (~0.21₪)\n[openai] gpt-5.6-luna in=722 out=409 | total: 89 calls, $0.0577 (~0.21₪)\n[openai] gpt-5.6-luna in=1777 out=272 | total: 90 calls, $0.0584 (~0.22₪)\n[openai] gpt-5.6-luna in=2627 out=598 | total: 91 calls, $0.0597 (~0.22₪)\n[openai] gpt-5.6-luna in=840 out=529 | total: 92 calls, $0.0605 (~0.22₪)\n.[openai] gpt-5.6-luna in=197 out=84 | total: 93 calls, $0.0606 (~0.22₪)\n[openai] gpt-5.6-luna in=1187 out=142 | total: 94 calls, $0.0610 (~0.23₪)\n[openai] gpt-5.6-luna in=3629 out=14 | total: 95 calls, $0.0618 (~0.23₪)\n[openai] gpt-5.6-luna in=2305 out=590 | total: 96 calls, $0.0629 (~0.23₪)\n[openai] gpt-5.6-luna in=682 out=495 | total: 97 calls, $0.0637 (~0.24₪)\n.\n\n====================================================================\n[משפחה עם ילדים קטנים]  התשובה כוללת את המילה הלועזית \"allotment\", שאינה עברית תקינה ואינה שם המלון."
+  },
+  {
+   "kind": "משפחה עם ילדים קטנים",
+   "msg": "חשוב לנו מלון קרוב למסלולים ושיהיה גם משהו לילדים שלא גולשים כל היום",
+   "first_failure": "לא התייחסה כלל לבקשה למלון קרוב למסלולים, וגם לא סיפקה מידע קונקרטי על פעילויות לילדים שאינם גולשים."
+  },
+  {
+   "kind": "זוג",
+   "msg": "היי, אנחנו זוג שמחפש חופשת סקי בדצמבר 2026, עדיף אתר עם אווירה טובה ולא יקר מדי",
+   "first_failure": "התשובה טוענת שהאפשרויות מתאימות לשבעה לילות בהתאם להעדפת הלקוח, אף שהלקוח לא ציין העדפה כזו."
+  },
+  {
+   "kind": "זוג",
+   "msg": "יש לכם משהו בבולגריה או אוסטריה כולל טיסות ומלון?",
+   "first_failure": "התשובה חוזרת על המשפט \"לא מצאתי בדיוק בדצמבר, אז הרחבתי לינואר\" שכבר הופיע בתשובה הקודמת."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "היי אני רוצה חופשת סקי לבד בינואר, יש משהו שלא יוצא יקר מדי? עדיף בולגריה או אנדורה",
+   "first_failure": "התשובה טוענת שהמלונות ביעדים אחרים פנויות או נראות פנויות, ובכך מבטיחה זמינות שאינה מאומתת."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "רוצים מקום עם חיי לילה טובים ולא משהו יקר מדי יש לכם הצעות?",
+   "first_failure": "התשובה חוזרת על המשפט מהתשובה הקודמת שלפיו האפשרויות נראות פנויות ונציג יאשר את הזמינות."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "שלום, אנחנו סבא וסבתא עם 3 נכדים ורוצים חופשת סקי בדצמבר או ינואר",
+   "first_failure": "התשובה מתייחסת לחופשה לשני מבוגרים בלבד ומתעלמת משלושת הנכדים, ולכן אינה עונה להרכב שהלקוח ציין."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי אנחנו שומרי שבת וכשרות, יש בכלל מלון עם אוכל כשר או בית חב״ד ליד באתרי הסקי?",
+   "first_failure": "התשובה כוללת התייחסות מיותרת להצעות שנבחרו ואינה עונה באופן ממוקד על קיומו של אוכל כשר או בית חב״ד ליד אתרי הסקי."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "מחפשים דצמבר 2026 למשפחה של 4",
+   "first_failure": "התשובה קובעת ששלושת המלונות נראים פנויים, ובכך מציגה זמינות אף שזו טרם אושרה."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "היי מחפש חופשת סקי הכי זולה בדצמבר או ינואר לא משנה לי כל כך היעד",
+   "first_failure": "התשובה כוללת את המילה הלועזית \"allotment\", שאינה שם מלון ואינה עברית תקינה."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "יש משהו כולל טיסות ומלון עד 3500 לאדם?",
+   "first_failure": "התשובה לא מבהירה אם האפשרויות כוללות טיסות ולא עונה האם הן עומדות בתקציב של עד 3,500 ש״ח לאדם, אלא רק מפנה לבדיקה כללית."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "אנחנו מתלבטים בין בנסקו לאנדורה לחופשת סקי בפברואר 2027",
+   "first_failure": "התשובה טוענת שכל האפשרויות נראות פנויות, ובכך מציגה זמינות בלי בסיס ומבטיחה אותה למעשה."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "זוג עם ילדה בת 12, חשוב שיהיה גם מה לעשות בערב ולא רק סקי אבל שלא יצא יקר מדי",
+   "first_failure": "התשובה סותרת את עצמה: היא טוענת שלא נמצאו אפשרויות ביעד המבוקש, אך מיד מציגה את GRAND PAS שנמצא באנדורה, היעד שביקשו."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "הזמנתי לפני שבוע ועדיין אף אחד לא חזר אליי עם אישור סופי",
+   "first_failure": "התשובה סטתה משאלת הלקוח על אישור ההזמנה, הציגה הצעות לא רלוונטיות ושאלה על מספר הנוסעים במקום להתמקד בבדיקת הסטטוס."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "אם זה לא סגור באמת תגידו לי עכשיו כי המחירים רק עולים וזה ממש לא רציני",
+   "first_failure": "התשובה מוסיפה מידע מיותר על ההצעות במקום להתמקד בבקשת הלקוח, בניסוח האסור של 'ההצעות שנבחרו'."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "היי ביצעתי הזמנה לחופשת סקי ורציתי לדעת איפה אני רואה את מספר ההזמנה והסטטוס שלה",
+   "first_failure": "התשובה לא עונה היכן ניתן לראות את מספר ההזמנה והסטטוס, ובמקום זאת מציגה הצעות זמינות ושואלת שאלה שאינה רלוונטית."
+  },
+  {
+   "kind": "openai",
+   "msg": "יש אופציה לחדר ליחיד בלי תוספת מטורפת ואולי להצטרף לקבוצה?",
+   "first_failure": "gpt-5.6-luna in=196 out=110 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1209 out=308 | total: 2 calls, $0.0008 (~0.00₪)\n[openai] gpt-5.6-luna in=2389 out=547 | total: 3 calls, $0.0019 (~0.01₪)\n[openai] gpt-5.6-luna in=961 out=399 | total: 4 calls, $0.0026 (~0.01₪)\n[openai] gpt-5.6-luna in=2015 out=271 | total: 5 calls, $0.0033 (~0.01₪)\n[openai] gpt-5.6-luna in=3683 out=127 | total: 6 calls, $0.0042 (~0.02₪)\n[openai] gpt-5.6-luna in=2576 out=621 | total: 7 calls, $0.0055 (~0.02₪)\n[openai] gpt-5.6-luna in=1083 out=511 | total: 8 calls, $0.0063 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=110 | total: 9 calls, $0.0065 (~0.02₪)\n[openai] gpt-5.6-luna in=1210 out=210 | total: 10 calls, $0.0070 (~0.03₪)\n[openai] gpt-5.6-luna in=3704 out=36 | total: 11 calls, $0.0077 (~0.03₪)\n[openai] gpt-5.6-luna in=2342 out=324 | total: 12 calls, $0.0086 (~0.03₪)\n[openai] gpt-5.6-luna in=803 out=205 | total: 13 calls, $0.0090 (~0.03₪)\n.[openai] gpt-5.6-luna in=194 out=129 | total: 14 calls, $0.0092 (~0.03₪)\n[openai] gpt-5.6-luna in=1194 out=276 | total: 15 calls, $0.0098 (~0.04₪)\n[openai] gpt-5.6-luna in=2260 out=576 | total: 16 calls, $0.0109 (~0.04₪)\n[openai] gpt-5.6-luna in=742 out=450 | total: 17 calls, $0.0116 (~0.04₪)\n[openai] gpt-5.6-luna in=1545 out=394 | total: 18 calls, $0.0124 (~0.05₪)\n[openai] gpt-5.6-luna in=2389 out=569 | total: 19 calls, $0.0135 (~0.05₪)\n[openai] gpt-5.6-luna in=844 out=169 | total: 20 calls, $0.0139 (~0.05₪)\n.[openai] gpt-5.6-luna in=194 out=108 | total: 21 calls, $0.0141 (~0.05₪)\n[openai] gpt-5.6-luna in=1192 out=353 | total: 22 calls, $0.0147 (~0.05₪)\n[openai] gpt-5.6-luna in=2289 out=371 | total: 23 calls, $0.0156 (~0.06₪)\n[openai] gpt-5.6-luna in=774 out=281 | total: 24 calls, $0.0161 (~0.06₪)\n[openai] gpt-5.6-luna in=1607 out=357 | total: 25 calls, $0.0169 (~0.06₪)\n[openai] gpt-5.6-luna in=3693 out=13 | total: 26 calls, $0.0176 (~0.07₪)\n[openai] gpt-5.6-luna in=878 out=428 | total: 27 calls, $0.0183 (~0.07₪)\n.[openai] gpt-5.6-luna in=195 out=137 | total: 28 calls, $0.0185 (~0.07₪)\n[openai] gpt-5.6-luna in=1215 out=267 | total: 29 calls, $0.0191 (~0.07₪)\n[openai] gpt-5.6-luna in=2235 out=599 | total: 30 calls, $0.0203 (~0.07₪)\n[openai] gpt-5.6-luna in=774 out=112 | total: 31 calls, $0.0206 (~0.08₪)\n[openai] gpt-5.6-luna in=1637 out=323 | total: 32 calls, $0.0213 (~0.08₪)\n[openai] gpt-5.6-luna in=2390 out=437 | total: 33 calls, $0.0223 (~0.08₪)\n[openai] gpt-5.6-luna in=944 out=140 | total: 34 calls, $0.0226 (~0.08₪)\n.[openai] gpt-5.6-luna in=197 out=114 | total: 35 calls, $0.0228 (~0.08₪)\n[openai] gpt-5.6-luna in=1210 out=245 | total: 36 calls, $0.0233 (~0.09₪)\n[openai] gpt-5.6-luna in=2331 out=615 | total: 37 calls, $0.0245 (~0.09₪)\n[openai] gpt-5.6-luna in=891 out=331 | total: 38 calls, $0.0251 (~0.09₪)\n[openai] gpt-5.6-luna in=1874 out=266 | total: 39 calls, $0.0258 (~0.10₪)\n[openai] gpt-5.6-luna in=3684 out=54 | total: 40 calls, $0.0266 (~0.10₪)\n[openai] gpt-5.6-luna in=2519 out=509 | total: 41 calls, $0.0277 (~0.10₪)\n[openai] gpt-5.6-luna in=925 out=117 | total: 42 calls, $0.0281 (~0.10₪)\n.[openai] gpt-5.6-luna in=198 out=102 | total: 43 calls, $0.0282 (~0.10₪)\n[openai] gpt-5.6-luna in=1191 out=173 | total: 44 calls, $0.0287 (~0.11₪)\n[openai] gpt-5.6-luna in=2268 out=583 | total: 45 calls, $0.0298 (~0.11₪)\n[openai] gpt-5.6-luna in=793 out=467 | total: 46 calls, $0.0305 (~0.11₪)\n[openai] gpt-5.6-luna in=1620 out=191 | total: 47 calls, $0.0311 (~0.12₪)\n[openai] gpt-5.6-luna in=2498 out=501 | total: 48 calls, $0.0322 (~0.12₪)\n[openai] gpt-5.6-luna in=862 out=238 | total: 49 calls, $0.0327 (~0.12₪)\n.[openai] gpt-5.6-luna in=197 out=134 | total: 50 calls, $0.0329 (~0.12₪)\n[openai] gpt-5.6-luna in=1200 out=304 | total: 51 calls, $0.0335 (~0.12₪)\n[openai] gpt-5.6-luna in=2260 out=610 | total: 52 calls, $0.0346 (~0.13₪)\n[openai] gpt-5.6-luna in=777 out=235 | total: 53 calls, $0.0351 (~0.13₪)\n[openai] gpt-5.6-luna in=1673 out=393 | total: 54 calls, $0.0359 (~0.13₪)\n[openai] gpt-5.6-luna in=2549 out=632 | total: 55 calls, $0.0372 (~0.14₪)\n[openai] gpt-5.6-luna in=883 out=452 | total: 56 calls, $0.0379 (~0.14₪)\n.[openai] gpt-5.6-luna in=198 out=112 | total: 57 calls, $0.0380 (~0.14₪)\n[openai] gpt-5.6-luna in=1197 out=190 | total: 58 calls, $0.0385 (~0.14₪)\n[openai] gpt-5.6-luna in=2262 out=625 | total: 59 calls, $0.0397 (~0.15₪)\n[openai] gpt-5.6-luna in=805 out=252 | total: 60 calls, $0.0402 (~0.15₪)\n[openai] gpt-5.6-luna in=1657 out=400 | total: 61 calls, $0.0410 (~0.15₪)\n[openai] gpt-5.6-luna in=3694 out=84 | total: 62 calls, $0.0418 (~0.15₪)\n[openai] gpt-5.6-luna in=2651 out=643 | total: 63 calls, $0.0431 (~0.16₪)\n[openai] gpt-5.6-luna in=1054 out=265 | total: 64 calls, $0.0437 (~0.16₪)\n.[openai] gpt-5.6-luna in=198 out=90 | total: 65 calls, $0.0438 (~0.16₪)\n[openai] gpt-5.6-luna in=1192 out=244 | total: 66 calls, $0.0443 (~0.16₪)\n[openai] gpt-5.6-luna in=2278 out=521 | total: 67 calls, $0.0454 (~0.17₪)\n[openai] gpt-5.6-luna in=749 out=243 | total: 68 calls, $0.0459 (~0.17₪)\n[openai] gpt-5.6-luna in=1578 out=254 | total: 69 calls, $0.0465 (~0.17₪)\n[openai] gpt-5.6-luna in=2144 out=561 | total: 70 calls, $0.0476 (~0.18₪)\n[openai] gpt-5.6-luna in=742 out=201 | total: 71 calls, $0.0480 (~0.18₪)\n.[openai] gpt-5.6-luna in=200 out=122 | total: 72 calls, $0.0482 (~0.18₪)\n[openai] gpt-5.6-luna in=1196 out=171 | total: 73 calls, $0.0486 (~0.18₪)\n[openai] gpt-5.6-luna in=2297 out=588 | total: 74 calls, $0.0498 (~0.18₪)\n[openai] gpt-5.6-luna in=839 out=152 | total: 75 calls, $0.0501 (~0.19₪)\n[openai] gpt-5.6-luna in=1774 out=328 | total: 76 calls, $0.0509 (~0.19₪)\n[openai] gpt-5.6-luna in=916 out=211 | total: 77 calls, $0.0513 (~0.19₪)\n.[openai] gpt-5.6-luna in=202 out=141 | total: 78 calls, $0.0515 (~0.19₪)\n[openai] gpt-5.6-luna in=1200 out=245 | total: 79 calls, $0.0520 (~0.19₪)\n[openai] gpt-5.6-luna in=759 out=80 | total: 80 calls, $0.0523 (~0.19₪)\n[openai] gpt-5.6-luna in=1599 out=258 | total: 81 calls, $0.0529 (~0.20₪)\n[openai] gpt-5.6-luna in=2354 out=563 | total: 82 calls, $0.0541 (~0.20₪)\n[openai] gpt-5.6-luna in=848 out=208 | total: 83 calls, $0.0545 (~0.20₪)\n.[openai] gpt-5.6-luna in=199 out=109 | total: 84 calls, $0.0547 (~0.20₪)\n[openai] gpt-5.6-luna in=1198 out=253 | total: 85 calls, $0.0552 (~0.20₪)\n[openai] gpt-5.6-luna in=3692 out=126 | total: 86 calls, $0.0561 (~0.21₪)\n[openai] gpt-5.6-luna in=2530 out=619 | total: 87 calls, $0.0573 (~0.21₪)\n[openai] gpt-5.6-luna in=978 out=600 | total: 88 calls, $0.0583 (~0.22₪)\n[openai] gpt-5.6-luna in=1998 out=290 | total: 89 calls, $0.0590 (~0.22₪)\n[openai] gpt-5.6-luna in=3686 out=99 | total: 90 calls, $0.0599 (~0.22₪)\n[openai] gpt-5.6-luna in=2654 out=531 | total: 91 calls, $0.0610 (~0.23₪)\n[openai] gpt-5.6-luna in=1056 out=141 | total: 92 calls, $0.0614 (~0.23₪)\n.[openai] gpt-5.6-luna in=197 out=84 | total: 93 calls, $0.0615 (~0.23₪)\n[openai] gpt-5.6-luna in=1195 out=174 | total: 94 calls, $0.0620 (~0.23₪)\n[openai] gpt-5.6-luna in=3689 out=11 | total: 95 calls, $0.0627 (~0.23₪)\n[openai] gpt-5.6-luna in=2284 out=596 | total: 96 calls, $0.0639 (~0.24₪)\n[openai] gpt-5.6-luna in=782 out=253 | total: 97 calls, $0.0644 (~0.24₪)\n.[openai] gpt-5.6-luna in=203 out=361 | total: 98 calls, $0.0649 (~0.24₪)\n[openai] gpt-5.6-luna in=1433 out=400 | total: 99 calls, $0.0656 (~0.24₪)\n[openai] gpt-5.6-luna in=1012 out=288 | total: 100 calls, $0.0662 (~0.24₪)\n.[openai] gpt-5.6-luna in=199 out=103 | total: 101 calls, $0.0663 (~0.25₪)\n[openai] gpt-5.6-luna in=1193 out=229 | total: 102 calls, $0.0668 (~0.25₪)\n[openai] gpt-5.6-luna in=2273 out=578 | total: 103 calls, $0.0680 (~0.25₪)\n[openai] gpt-5.6-luna in=749 out=234 | total: 104 calls, $0.0684 (~0.25₪)\n[openai] gpt-5.6-luna in=1574 out=323 | total: 105 calls, $0.0691 (~0.26₪)\n[openai] gpt-5.6-luna in=2373 out=604 | total: 106 calls, $0.0703 (~0.26₪)\n[openai] gpt-5.6-luna in=862 out=558 | total: 107 calls, $0.0712 (~0.26₪)\n.\n\n====================================================================\n[נוסע יחיד]  התשובה מתייחסת לתוספת עבור נוסע יחיד אך אינה עונה על שאלת הלקוח לגבי אפשרות להצטרף לקבוצה."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "חשוב לנו חיי לילה ושלא יהיה יקר מדי יש משהו טוב בבולגריה או אנדורה?",
+   "first_failure": "הבוט ביקש מהלקוח לפרט מה חשוב לו, אף שהלקוח כבר ציין במפורש שחיי לילה ומחיר נמוך הם העדיפויות שלו."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "אנחנו סבא וסבתא עם 3 נכדים בגילאים 6 9 ו12 רוצים חופשת סקי בדצמבר אבל שלא יהיה מסובך מדי מבחינת העברות",
+   "first_failure": "התשובה מציעה מלונות אך אינה מתייחסת לבקשה המרכזית לגבי פשטות ההעברות."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "חשוב לנו מלון נוח עם חדרים קרובים ואפשרות לשיעורי סקי לילדים וגם לנו קצת אם נסתדר 😅",
+   "first_failure": "התשובה מפרטת על קבוצות ההדרכה אך אינה מתייחסת לבקשה למלון נוח עם חדרים קרובים, וגם אינה מבהירה אם קיימים שיעורים מתאימים להורים."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי אנחנו שומרי שבת וכשרות, יש אצלכם חבילה בדצמבר עם מלון שיש בו אוכל כשר או בית חב״ד קרוב?",
+   "first_failure": "התשובה מדברת על ההצעות וההתאמה שלהן במקום להתמקד בשאלת הכשרות ובית חב״ד, ואף מפנה להצעות בינואר שאינן המועד שהתבקש."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "אנחנו מתלבטים בין בנסקו לאנדורה לסוף ינואר, זוג עם ילד בן 10",
+   "first_failure": "התשובה כותבת על ההצעות בגוף שלישי, ובפרט מציינת ש\"שלוש האפשרויות מתאימות להרכב\" במקום לדבר ישירות עם הלקוח."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "חשוב לנו שיהיה גם אתר טוב למתחילים וגם קצת אווירה בערב, מה יותר משתלם בסוף?",
+   "first_failure": "התשובה אינה משווה בין האפשרויות לפי אתר למתחילים, אווירה בערב וכדאיות, אלא חוזרת להצגת הצעות ומבקשת שוב העדפות שהלקוח כבר ציין."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "באמת מאכזב כל פעם שאני שואל על תאריכים המחיר קופץ או שאין מקום",
+   "first_failure": "התשובה אינה מתייחסת לתלונה על קפיצת המחירים או היעדר המקום, ובמקום זאת מציגה אפשרויות ומבקשת מספר נוסעים ללא קשר ישיר להקשר."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "כבר שבוע אני מנסה לסגור חופשת סקי ולא מצליח לקבל מכם תשובה ברורה",
+   "first_failure": "התשובה חוזרת על מה שכבר נאמר בתשובה הקודמת לגבי אפשרויות שנראות פנויות ואישור סופי של נציג, בלי לספק מענה ברור יותר לתלונת הלקוח."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "היי הזמנתי חבילת סקי ואני לא מצליח להיכנס לאזור האישי עם מספר ההזמנה",
+   "first_failure": "התשובה לא עונה על הבעיה בכניסה לאזור האישי עם מספר ההזמנה ובמקום זאת מציגה הצעות סקי ושואלת על מספר נוסעים."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "זה אמור להיפתח רק אחרי שהמקדמה נקלטת או שיש בעיה באתר?",
+   "first_failure": "התשובה כוללת פירוט על התאמת האפשרויות במקום להתמקד בשאלת הלקוח, ואף מציינת שהבחירה תלויה במספר הנוסעים."
+  },
+  {
+   "kind": "לקוח ששואל על הילדים והקייטנה",
+   "msg": "זה כולל ציוד והסעה מהמלון או שצריך לסדר בנפרד",
+   "first_failure": "התשובה לא עונה אם הציוד וההסעה כלולים או שיש לסדרם בנפרד, וחוזרת על תיאור האפשרויות שכבר נאמר."
+  },
+  {
+   "kind": "לקוח שמשנה את דעתו באמצע",
+   "msg": "רגע בעצם עדיף אוסטריה ואם יש משהו לא יקר מדי בסוף פברואר",
+   "first_failure": "חזרה על משפט שכבר נאמר בתשובה הקודמת לגבי זמינות והאישור הסופי של הנציג."
+  },
+  {
+   "kind": "openai",
+   "msg": "היי אנחנו זוג עם 2 ילדים קטנים בני 4 ו7 רוצים חופשת סקי פעם ראשונה בדצמבר",
+   "first_failure": "gpt-5.6-luna in=196 out=114 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1201 out=282 | total: 2 calls, $0.0008 (~0.00₪)\n[openai] gpt-5.6-luna in=2102 out=443 | total: 3 calls, $0.0017 (~0.01₪)\n[openai] gpt-5.6-luna in=711 out=453 | total: 4 calls, $0.0024 (~0.01₪)\n[openai] gpt-5.6-luna in=1507 out=321 | total: 5 calls, $0.0031 (~0.01₪)\n[openai] gpt-5.6-luna in=2278 out=474 | total: 6 calls, $0.0041 (~0.02₪)\n[openai] gpt-5.6-luna in=730 out=171 | total: 7 calls, $0.0045 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=96 | total: 8 calls, $0.0046 (~0.02₪)\n[openai] gpt-5.6-luna in=1213 out=195 | total: 9 calls, $0.0051 (~0.02₪)\n[openai] gpt-5.6-luna in=3707 out=11 | total: 10 calls, $0.0058 (~0.02₪)\n[openai] gpt-5.6-luna in=2405 out=495 | total: 11 calls, $0.0069 (~0.03₪)\n[openai] gpt-5.6-luna in=812 out=404 | total: 12 calls, $0.0076 (~0.03₪)\n.[openai] gpt-5.6-luna in=194 out=137 | total: 13 calls, $0.0078 (~0.03₪)\n[openai] gpt-5.6-luna in=1200 out=168 | total: 14 calls, $0.0082 (~0.03₪)\n[openai] gpt-5.6-luna in=3694 out=14 | total: 15 calls, $0.0090 (~0.03₪)\n[openai] gpt-5.6-luna in=2316 out=569 | total: 16 calls, $0.0101 (~0.04₪)\n[openai] gpt-5.6-luna in=833 out=224 | total: 17 calls, $0.0105 (~0.04₪)\n[openai] gpt-5.6-luna in=1690 out=190 | total: 18 calls, $0.0111 (~0.04₪)\n[openai] gpt-5.6-luna in=855 out=109 | total: 19 calls, $0.0114 (~0.04₪)\n.[openai] gpt-5.6-luna in=194 out=117 | total: 20 calls, $0.0116 (~0.04₪)\n[openai] gpt-5.6-luna in=1192 out=359 | total: 21 calls, $0.0123 (~0.05₪)\n[openai] gpt-5.6-luna in=2243 out=523 | total: 22 calls, $0.0133 (~0.05₪)\n[openai] gpt-5.6-luna in=772 out=124 | total: 23 calls, $0.0136 (~0.05₪)\n[openai] gpt-5.6-luna in=1575 out=279 | total: 24 calls, $0.0143 (~0.05₪)\n[openai] gpt-5.6-luna in=2462 out=560 | total: 25 calls, $0.0155 (~0.06₪)\n[openai] gpt-5.6-luna in=871 out=529 | total: 26 calls, $0.0163 (~0.06₪)\n.[openai] gpt-5.6-luna in=195 out=156 | total: 27 calls, $0.0165 (~0.06₪)\n[openai] gpt-5.6-luna in=1218 out=219 | total: 28 calls, $0.0170 (~0.06₪)\n[openai] gpt-5.6-luna in=2216 out=492 | total: 29 calls, $0.0180 (~0.07₪)\n[openai] gpt-5.6-luna in=780 out=306 | total: 30 calls, $0.0186 (~0.07₪)\n[openai] gpt-5.6-luna in=1619 out=303 | total: 31 calls, $0.0192 (~0.07₪)\n[openai] gpt-5.6-luna in=2702 out=478 | total: 32 calls, $0.0204 (~0.08₪)\n[openai] gpt-5.6-luna in=1072 out=292 | total: 33 calls, $0.0209 (~0.08₪)\n.[openai] gpt-5.6-luna in=197 out=94 | total: 34 calls, $0.0211 (~0.08₪)\n[openai] gpt-5.6-luna in=1201 out=258 | total: 35 calls, $0.0216 (~0.08₪)\n[openai] gpt-5.6-luna in=2331 out=491 | total: 36 calls, $0.0227 (~0.08₪)\n[openai] gpt-5.6-luna in=855 out=406 | total: 37 calls, $0.0233 (~0.09₪)\n[openai] gpt-5.6-luna in=1795 out=216 | total: 38 calls, $0.0240 (~0.09₪)\n[openai] gpt-5.6-luna in=3684 out=62 | total: 39 calls, $0.0248 (~0.09₪)\n[openai] gpt-5.6-luna in=2492 out=432 | total: 40 calls, $0.0258 (~0.10₪)\n[openai] gpt-5.6-luna in=891 out=83 | total: 41 calls, $0.0261 (~0.10₪)\n.[openai] gpt-5.6-luna in=198 out=104 | total: 42 calls, $0.0262 (~0.10₪)\n[openai] gpt-5.6-luna in=1191 out=194 | total: 43 calls, $0.0267 (~0.10₪)\n[openai] gpt-5.6-luna in=2268 out=609 | total: 44 calls, $0.0279 (~0.10₪)\n[openai] gpt-5.6-luna in=775 out=202 | total: 45 calls, $0.0283 (~0.10₪)\n[openai] gpt-5.6-luna in=1581 out=234 | total: 46 calls, $0.0289 (~0.11₪)\n[openai] gpt-5.6-luna in=2470 out=592 | total: 47 calls, $0.0301 (~0.11₪)\n[openai] gpt-5.6-luna in=847 out=362 | total: 48 calls, $0.0307 (~0.11₪)\n.[openai] gpt-5.6-luna in=197 out=119 | total: 49 calls, $0.0309 (~0.11₪)\n[openai] gpt-5.6-luna in=1203 out=327 | total: 50 calls, $0.0315 (~0.12₪)\n[openai] gpt-5.6-luna in=2400 out=630 | total: 51 calls, $0.0327 (~0.12₪)\n[openai] gpt-5.6-luna in=916 out=365 | total: 52 calls, $0.0334 (~0.12₪)\n[openai] gpt-5.6-luna in=1927 out=400 | total: 53 calls, $0.0342 (~0.13₪)\n[openai] gpt-5.6-luna in=2765 out=590 | total: 54 calls, $0.0355 (~0.13₪)\n[openai] gpt-5.6-luna in=1000 out=260 | total: 55 calls, $0.0360 (~0.13₪)\n.[openai] gpt-5.6-luna in=198 out=134 | total: 56 calls, $0.0362 (~0.13₪)\n[openai] gpt-5.6-luna in=1207 out=268 | total: 57 calls, $0.0368 (~0.14₪)\n[openai] gpt-5.6-luna in=3701 out=95 | total: 58 calls, $0.0376 (~0.14₪)\n[openai] gpt-5.6-luna in=2285 out=609 | total: 59 calls, $0.0388 (~0.14₪)\n[openai] gpt-5.6-luna in=901 out=140 | total: 60 calls, $0.0391 (~0.14₪)\n[openai] gpt-5.6-luna in=1970 out=400 | total: 61 calls, $0.0400 (~0.15₪)\n[openai] gpt-5.6-luna in=890 out=281 | total: 62 calls, $0.0405 (~0.15₪)\n.[openai] gpt-5.6-luna in=198 out=134 | total: 63 calls, $0.0407 (~0.15₪)\n[openai] gpt-5.6-luna in=1192 out=222 | total: 64 calls, $0.0412 (~0.15₪)\n[openai] gpt-5.6-luna in=2302 out=565 | total: 65 calls, $0.0424 (~0.16₪)\n[openai] gpt-5.6-luna in=796 out=115 | total: 66 calls, $0.0427 (~0.16₪)\n[openai] gpt-5.6-luna in=1702 out=400 | total: 67 calls, $0.0435 (~0.16₪)\n[openai] gpt-5.6-luna in=2387 out=574 | total: 68 calls, $0.0447 (~0.17₪)\n[openai] gpt-5.6-luna in=867 out=205 | total: 69 calls, $0.0451 (~0.17₪)\n.[openai] gpt-5.6-luna in=200 out=91 | total: 70 calls, $0.0452 (~0.17₪)\n[openai] gpt-5.6-luna in=1199 out=267 | total: 71 calls, $0.0458 (~0.17₪)\n[openai] gpt-5.6-luna in=2324 out=487 | total: 72 calls, $0.0468 (~0.17₪)\n[openai] gpt-5.6-luna in=785 out=437 | total: 73 calls, $0.0475 (~0.18₪)\n[openai] gpt-5.6-luna in=1651 out=290 | total: 74 calls, $0.0482 (~0.18₪)\n[openai] gpt-5.6-luna in=3681 out=34 | total: 75 calls, $0.0490 (~0.18₪)\n[openai] gpt-5.6-luna in=869 out=367 | total: 76 calls, $0.0496 (~0.18₪)\n.[openai] gpt-5.6-luna in=202 out=73 | total: 77 calls, $0.0497 (~0.18₪)\n[openai] gpt-5.6-luna in=1201 out=205 | total: 78 calls, $0.0502 (~0.19₪)\n[openai] gpt-5.6-luna in=765 out=108 | total: 79 calls, $0.0505 (~0.19₪)\n.[openai] gpt-5.6-luna in=199 out=92 | total: 80 calls, $0.0506 (~0.19₪)\n[openai] gpt-5.6-luna in=1194 out=183 | total: 81 calls, $0.0511 (~0.19₪)\n[openai] gpt-5.6-luna in=3688 out=97 | total: 82 calls, $0.0519 (~0.19₪)\n[openai] gpt-5.6-luna in=2375 out=620 | total: 83 calls, $0.0532 (~0.20₪)\n[openai] gpt-5.6-luna in=811 out=529 | total: 84 calls, $0.0540 (~0.20₪)\n[openai] gpt-5.6-luna in=1689 out=206 | total: 85 calls, $0.0545 (~0.20₪)\n[openai] gpt-5.6-luna in=3690 out=13 | total: 86 calls, $0.0553 (~0.20₪)\n[openai] gpt-5.6-luna in=951 out=426 | total: 87 calls, $0.0560 (~0.21₪)\n.[openai] gpt-5.6-luna in=197 out=115 | total: 88 calls, $0.0562 (~0.21₪)\n[openai] gpt-5.6-luna in=1185 out=151 | total: 89 calls, $0.0566 (~0.21₪)\n[openai] gpt-5.6-luna in=3679 out=56 | total: 90 calls, $0.0574 (~0.21₪)\n[openai] gpt-5.6-luna in=2264 out=597 | total: 91 calls, $0.0586 (~0.22₪)\n[openai] gpt-5.6-luna in=781 out=480 | total: 92 calls, $0.0593 (~0.22₪)\n.[openai] gpt-5.6-luna in=203 out=342 | total: 93 calls, $0.0598 (~0.22₪)\n[openai] gpt-5.6-luna in=1323 out=400 | total: 94 calls, $0.0605 (~0.22₪)\n[openai] gpt-5.6-luna in=2519 out=1141 | total: 95 calls, $0.0624 (~0.23₪)\n[openai] gpt-5.6-luna in=1037 out=450 | total: 96 calls, $0.0631 (~0.23₪)\n[openai] gpt-5.6-luna in=2120 out=400 | total: 97 calls, $0.0640 (~0.24₪)\n[openai] gpt-5.6-luna in=1105 out=164 | total: 98 calls, $0.0644 (~0.24₪)\n.[openai] gpt-5.6-luna in=199 out=97 | total: 99 calls, $0.0646 (~0.24₪)\n[openai] gpt-5.6-luna in=1191 out=143 | total: 100 calls, $0.0650 (~0.24₪)\n[openai] gpt-5.6-luna in=2248 out=660 | total: 101 calls, $0.0663 (~0.25₪)\n[openai] gpt-5.6-luna in=747 out=190 | total: 102 calls, $0.0666 (~0.25₪)\n[openai] gpt-5.6-luna in=1533 out=219 | total: 103 calls, $0.0672 (~0.25₪)\n[openai] gpt-5.6-luna in=721 out=11 | total: 104 calls, $0.0674 (~0.25₪)\n.\n\n====================================================================\n[משפחה עם ילדים קטנים]  התשובה מתייחסת להצעה יחידה אך מסיימת בלשון רבים \"אם אחת מהן\", ולכן אינה עקבית ומבלבלת."
+  },
+  {
+   "kind": "משפחה עם ילדים קטנים",
+   "msg": "חשוב לנו מלון קרוב למסלולים ושיהיה משהו לילדים ולא נסיעות ארוכות מהשדה",
+   "first_failure": "התשובה אינה מתייחסת לבקשות לגבי קרבה למסלולים, פעילויות לילדים ומשך הנסיעה מהשדה, אלא רק מאשרת שהמידע הועבר לבדיקה."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "היי, מחפש חופשת סקי לבד בינואר 2027, יש משהו שלא קורע את הכיס?",
+   "first_failure": "התשובה מדברת על \"ההצעות\" במקום לפנות ישירות ללקוח, בניסוח האסור \"ההצעות מתאימות לינואר ולמטייל יחיד\"."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "חשוב לי חדר ליחיד ואם אפשר קבוצה עם ישראלים כי פחות בא לי להיות לבד כל הטיול",
+   "first_failure": "התשובה אינה מתייחסת לבקשה לחדר ליחיד או להצטרפות לקבוצה עם ישראלים, אלא רק מציעה גמישות בתאריך."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "היי אנחנו 6 חברים מחפשים סקי בדצמבר או ינואר",
+   "first_failure": "התשובה מדברת על ההצעות בגוף שלישי במקום לפנות ישירות ללקוח, ואף מציגה אותן כמתאימות להרכב של שישה מבוגרים."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "יש לכם משהו בבולגריה או אנדורה עם שיעורי סקי בעברית ואם אפשר גם חדרים קרובים אלינו",
+   "first_failure": "התשובה לא מתייחסת לבקשה לחדרים קרובים זה לזה."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "לא חייב מלון מפואר אפשר גם חדר פשוט העיקר שיהיה קרוב למסלול ובתקציב נמוך",
+   "first_failure": "התשובה מדברת על ההצעות באופן כללי במקום לענות ישירות ללקוח, ואף קובעת שהן מתאימות בזכות מחיר נוח וקרבה למסלולים בלי לספק מידע ודאי על כך."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "מחפש חופשת סקי ברמה הכי גבוהה שיש, מלון 5 כוכבים על המסלול באוסטריה או צרפת",
+   "first_failure": "התשובה אינה מתייחסת לדרישה המרכזית לחופשה ברמה הגבוהה ביותר ולמלון 5 כוכבים על המסלול, ואינה מבהירה אם המלונות שהוצגו עומדים בכך."
+  },
+  {
+   "kind": "לקוח שרוצה יוקרה",
+   "msg": "עדיפות לסוויטה, ספא והעברות פרטיות משדה התעופה בדצמבר",
+   "first_failure": "התשובה לא מתייחסת כלל לבקשה להעברות פרטיות משדה התעופה וחוזרת על השאלה «כמה תהיו» שכבר נשאלה בתשובה הקודמת."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מתלבטים בין בנסקו לאוסטריה לחופשת סקי בדצמבר, יש הבדל ממש גדול ברמת האתרים והמחיר?",
+   "first_failure": "התשובה אינה משווה בין בנסקו לאוסטריה כפי שנשאל, ומפנה במקום זאת לחלופות בצרפת וביעדים אחרים."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "היי טסנו איתכם לבנסקו לפני שנתיים והיה מעולה 🙂",
+   "first_failure": "התשובה אינה מגיבה להודעת הלקוח, אלא מניחה שביקש הצעות ליעד אחר ומציגה אפשרויות ללא הקשר."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "רוצים לסגור שוב סקי בדצמבר, הפעם יעד קצת יותר מפנק יש לכם משהו טוב לזוג?",
+   "first_failure": "התשובה שגויה כי היא מייחסת להרכב הלקוח ילד אף שהוא ביקש חופשה לזוג, ואינה מתייחסת לבקשה ליעד מפנק יותר."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "באמת מאכזב, אמרתם שהמלון קרוב למסלולים ובפועל צריך הסעה כל בוקר",
+   "first_failure": "התשובה אינה מתייחסת כראוי לתלונה על הצורך בהסעה, אלא מצדיקה את ההצעות בכך שהן מצוינות כקרובות למסלולים ומדברת על ההצעות במקום להכיר בפער או להבהיר שאין לה מידע."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "אם הייתי יודע את זה מראש לא הייתי סוגר איתכם בכלל",
+   "first_failure": "התשובה חוזרת על המשפט \"הנציג יאשר סופית\" שכבר נאמר בתשובה הקודמת, ומוסיפה הצעות חדשות באופן מנותק מתלונת הלקוח."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "היי, אם אני מזמין עכשיו ומשלם מקדמה אפשר אחר כך לשנות את השם של אחד הנוסעים?",
+   "first_failure": "התשובה לא עונה על השאלה האם ניתן לשנות שם של נוסע לאחר ההזמנה, ובמקום זאת מציגה הצעות ושואלת על מספר הנוסעים."
+  },
+  {
+   "kind": "לקוח שכותב קצר מאוד",
+   "msg": "היי יש סקי בדצמבר לזוג?",
+   "first_failure": "התשובה סותרת את הכרטיסים שהוצגו: היא מציינת שרק שתי אפשרויות הן בבלמברה, אף שכל שלוש האפשרויות הן מלונות Belambra."
+  },
+  {
+   "kind": "לקוח שכותב הודעה ארוכה עם הרבה פרטים",
+   "msg": "היי, אנחנו 6 אנשים, שלושה זוגות, רוצים חופשת סקי בדצמבר 2026, עדיפות לשבוע של 13 או 20 בדצמבר אבל די גמישים בתאריכים. כולנו גולשים ברמה בינונית חוץ מאחד שמתחיל בפעם הראשונה, אז חשוב שיהיה אתר עם מסלולים נוחים ושיעורים בעברית או באנגלית. מחפשים 7 לילות כולל טיסות, העברות, מלון קרוב יחסית למעליות וחצי פנסיון אם אפשר. עדיפות לאוסטריה או צרפת אבל אם בולגריה יוצאת משמעותית יותר זולה נשמח לשמוע גם על זה",
+   "first_failure": "התשובה מציעה ומדגישה תאריכים בינואר 2027 במקום להתייחס לבקשה לחופשה בדצמבר 2026, בלי להסביר שאין זמינות בתאריכים המבוקשים."
+  },
+  {
+   "kind": "לקוח שכותב הודעה ארוכה עם הרבה פרטים",
+   "msg": "התקציב הוא בערך 1,500 עד 1,800 אירו לאדם כולל סקי פס וציוד, לא כולל ארוחות צהריים. חשוב לנו שיהיו שני חדרים זוגיים ועוד חדר זוגי אחד, ולא דירה משותפת. יש לנו מזוודות וכנראה גם שני זוגות סקי שנביא מהארץ, אז תבדקו גם מה העלות של ציוד ספורט בטיסה ואם עדיף לשכור שם. נשמח לקבל כמה אפשרויות עם פירוט של מה בדיוק כלול ובאיזה אתר מדובר",
+   "first_failure": "התשובה אינה מפרטת את מה שכלול בכל אפשרות או את עלות הטסת ציוד הסקי מול השכרה, וגם מציעה שני חדרים במקום שלושה חדרים זוגיים שביקש הלקוח."
+  },
+  {
+   "kind": "openai",
+   "msg": "חשוב לנו שיהיה מלון קרוב למסלולים ושיהיה משהו לילדים אם אפשר",
+   "first_failure": "gpt-5.6-luna in=196 out=106 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1207 out=205 | total: 2 calls, $0.0007 (~0.00₪)\n[openai] gpt-5.6-luna in=3755 out=88 | total: 3 calls, $0.0015 (~0.01₪)\n[openai] gpt-5.6-luna in=2394 out=1141 | total: 4 calls, $0.0034 (~0.01₪)\n[openai] gpt-5.6-luna in=886 out=317 | total: 5 calls, $0.0039 (~0.01₪)\n[openai] gpt-5.6-luna in=1830 out=244 | total: 6 calls, $0.0046 (~0.02₪)\n[openai] gpt-5.6-luna in=2593 out=575 | total: 7 calls, $0.0058 (~0.02₪)\n[openai] gpt-5.6-luna in=942 out=493 | total: 8 calls, $0.0066 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=77 | total: 9 calls, $0.0067 (~0.02₪)\n[openai] gpt-5.6-luna in=1205 out=143 | total: 10 calls, $0.0071 (~0.03₪)\n[openai] gpt-5.6-luna in=2364 out=596 | total: 11 calls, $0.0083 (~0.03₪)\n[openai] gpt-5.6-luna in=847 out=377 | total: 12 calls, $0.0089 (~0.03₪)\n.[openai] gpt-5.6-luna in=194 out=104 | total: 13 calls, $0.0091 (~0.03₪)\n[openai] gpt-5.6-luna in=1191 out=257 | total: 14 calls, $0.0096 (~0.04₪)\n[openai] gpt-5.6-luna in=2273 out=583 | total: 15 calls, $0.0108 (~0.04₪)\n[openai] gpt-5.6-luna in=773 out=268 | total: 16 calls, $0.0113 (~0.04₪)\n[openai] gpt-5.6-luna in=1611 out=199 | total: 17 calls, $0.0118 (~0.04₪)\n[openai] gpt-5.6-luna in=2425 out=600 | total: 18 calls, $0.0130 (~0.05₪)\n[openai] gpt-5.6-luna in=902 out=144 | total: 19 calls, $0.0134 (~0.05₪)\n.[openai] gpt-5.6-luna in=194 out=114 | total: 20 calls, $0.0136 (~0.05₪)\n[openai] gpt-5.6-luna in=1192 out=145 | total: 21 calls, $0.0140 (~0.05₪)\n[openai] gpt-5.6-luna in=2269 out=587 | total: 22 calls, $0.0151 (~0.06₪)\n[openai] gpt-5.6-luna in=778 out=298 | total: 23 calls, $0.0156 (~0.06₪)\n[openai] gpt-5.6-luna in=1602 out=223 | total: 24 calls, $0.0162 (~0.06₪)\n[openai] gpt-5.6-luna in=3751 out=62 | total: 25 calls, $0.0170 (~0.06₪)\n[openai] gpt-5.6-luna in=2473 out=380 | total: 26 calls, $0.0180 (~0.07₪)\n[openai] gpt-5.6-luna in=836 out=212 | total: 27 calls, $0.0184 (~0.07₪)\n.[openai] gpt-5.6-luna in=195 out=139 | total: 28 calls, $0.0186 (~0.07₪)\n[openai] gpt-5.6-luna in=1204 out=177 | total: 29 calls, $0.0191 (~0.07₪)\n[openai] gpt-5.6-luna in=3752 out=28 | total: 30 calls, $0.0199 (~0.07₪)\n[openai] gpt-5.6-luna in=2165 out=592 | total: 31 calls, $0.0210 (~0.08₪)\n[openai] gpt-5.6-luna in=756 out=239 | total: 32 calls, $0.0214 (~0.08₪)\n[openai] gpt-5.6-luna in=1582 out=336 | total: 33 calls, $0.0222 (~0.08₪)\n[openai] gpt-5.6-luna in=2409 out=447 | total: 34 calls, $0.0232 (~0.09₪)\n[openai] gpt-5.6-luna in=963 out=556 | total: 35 calls, $0.0240 (~0.09₪)\n.[openai] gpt-5.6-luna in=197 out=92 | total: 36 calls, $0.0242 (~0.09₪)\n[openai] gpt-5.6-luna in=1198 out=187 | total: 37 calls, $0.0247 (~0.09₪)\n[openai] gpt-5.6-luna in=2302 out=596 | total: 38 calls, $0.0258 (~0.10₪)\n[openai] gpt-5.6-luna in=841 out=201 | total: 39 calls, $0.0262 (~0.10₪)\n[openai] gpt-5.6-luna in=1781 out=238 | total: 40 calls, $0.0269 (~0.10₪)\n[openai] gpt-5.6-luna in=2496 out=569 | total: 41 calls, $0.0281 (~0.10₪)\n[openai] gpt-5.6-luna in=876 out=136 | total: 42 calls, $0.0284 (~0.11₪)\n.[openai] gpt-5.6-luna in=198 out=95 | total: 43 calls, $0.0286 (~0.11₪)\n[openai] gpt-5.6-luna in=1191 out=220 | total: 44 calls, $0.0291 (~0.11₪)\n[openai] gpt-5.6-luna in=2262 out=616 | total: 45 calls, $0.0303 (~0.11₪)\n[openai] gpt-5.6-luna in=793 out=303 | total: 46 calls, $0.0308 (~0.11₪)\n[openai] gpt-5.6-luna in=1646 out=400 | total: 47 calls, $0.0316 (~0.12₪)\n[openai] gpt-5.6-luna in=3747 out=11 | total: 48 calls, $0.0323 (~0.12₪)\n[openai] gpt-5.6-luna in=2419 out=590 | total: 49 calls, $0.0335 (~0.12₪)\n[openai] gpt-5.6-luna in=880 out=482 | total: 50 calls, $0.0343 (~0.13₪)\n.[openai] gpt-5.6-luna in=197 out=102 | total: 51 calls, $0.0345 (~0.13₪)\n[openai] gpt-5.6-luna in=1193 out=190 | total: 52 calls, $0.0349 (~0.13₪)\n[openai] gpt-5.6-luna in=2293 out=600 | total: 53 calls, $0.0361 (~0.13₪)\n[openai] gpt-5.6-luna in=776 out=529 | total: 54 calls, $0.0369 (~0.14₪)\n[openai] gpt-5.6-luna in=1610 out=346 | total: 55 calls, $0.0376 (~0.14₪)\n[openai] gpt-5.6-luna in=3747 out=32 | total: 56 calls, $0.0384 (~0.14₪)\n[openai] gpt-5.6-luna in=2702 out=666 | total: 57 calls, $0.0398 (~0.15₪)\n[openai] gpt-5.6-luna in=911 out=406 | total: 58 calls, $0.0404 (~0.15₪)\n.[openai] gpt-5.6-luna in=198 out=103 | total: 59 calls, $0.0406 (~0.15₪)\n[openai] gpt-5.6-luna in=1191 out=303 | total: 60 calls, $0.0412 (~0.15₪)\n[openai] gpt-5.6-luna in=2298 out=586 | total: 61 calls, $0.0423 (~0.16₪)\n[openai] gpt-5.6-luna in=758 out=164 | total: 62 calls, $0.0427 (~0.16₪)\n[openai] gpt-5.6-luna in=1605 out=275 | total: 63 calls, $0.0433 (~0.16₪)\n[openai] gpt-5.6-luna in=2507 out=591 | total: 64 calls, $0.0446 (~0.16₪)\n[openai] gpt-5.6-luna in=930 out=348 | total: 65 calls, $0.0452 (~0.17₪)\n.[openai] gpt-5.6-luna in=198 out=101 | total: 66 calls, $0.0453 (~0.17₪)\n[openai] gpt-5.6-luna in=1191 out=205 | total: 67 calls, $0.0458 (~0.17₪)\n[openai] gpt-5.6-luna in=2279 out=572 | total: 68 calls, $0.0470 (~0.17₪)\n[openai] gpt-5.6-luna in=742 out=145 | total: 69 calls, $0.0473 (~0.17₪)\n[openai] gpt-5.6-luna in=1575 out=400 | total: 70 calls, $0.0481 (~0.18₪)\n[openai] gpt-5.6-luna in=2325 out=402 | total: 71 calls, $0.0490 (~0.18₪)\n[openai] gpt-5.6-luna in=850 out=574 | total: 72 calls, $0.0499 (~0.18₪)\n.[openai] gpt-5.6-luna in=200 out=102 | total: 73 calls, $0.0500 (~0.19₪)\n[openai] gpt-5.6-luna in=1196 out=273 | total: 74 calls, $0.0506 (~0.19₪)\n[openai] gpt-5.6-luna in=3744 out=58 | total: 75 calls, $0.0514 (~0.19₪)\n[openai] gpt-5.6-luna in=803 out=266 | total: 76 calls, $0.0519 (~0.19₪)\n[openai] gpt-5.6-luna in=1686 out=384 | total: 77 calls, $0.0527 (~0.19₪)\n[openai] gpt-5.6-luna in=3743 out=70 | total: 78 calls, $0.0535 (~0.20₪)\n[openai] gpt-5.6-luna in=2366 out=593 | total: 79 calls, $0.0547 (~0.20₪)\n[openai] gpt-5.6-luna in=915 out=141 | total: 80 calls, $0.0551 (~0.20₪)\n.[openai] gpt-5.6-luna in=202 out=99 | total: 81 calls, $0.0552 (~0.20₪)\n[openai] gpt-5.6-luna in=1192 out=170 | total: 82 calls, $0.0557 (~0.21₪)\n[openai] gpt-5.6-luna in=815 out=99 | total: 83 calls, $0.0560 (~0.21₪)\n[openai] gpt-5.6-luna in=1697 out=229 | total: 84 calls, $0.0566 (~0.21₪)\n[openai] gpt-5.6-luna in=3730 out=49 | total: 85 calls, $0.0574 (~0.21₪)\n[openai] gpt-5.6-luna in=2400 out=869 | total: 86 calls, $0.0589 (~0.22₪)\n[openai] gpt-5.6-luna in=861 out=212 | total: 87 calls, $0.0593 (~0.22₪)\n.[openai] gpt-5.6-luna in=199 out=153 | total: 88 calls, $0.0595 (~0.22₪)\n[openai] gpt-5.6-luna in=1189 out=202 | total: 89 calls, $0.0600 (~0.22₪)\n[openai] gpt-5.6-luna in=3737 out=100 | total: 90 calls, $0.0609 (~0.23₪)\n[openai] gpt-5.6-luna in=2361 out=583 | total: 91 calls, $0.0621 (~0.23₪)\n[openai] gpt-5.6-luna in=749 out=302 | total: 92 calls, $0.0626 (~0.23₪)\n[openai] gpt-5.6-luna in=1552 out=234 | total: 93 calls, $0.0632 (~0.23₪)\n[openai] gpt-5.6-luna in=3743 out=36 | total: 94 calls, $0.0640 (~0.24₪)\n[openai] gpt-5.6-luna in=895 out=529 | total: 95 calls, $0.0648 (~0.24₪)\n.[openai] gpt-5.6-luna in=197 out=93 | total: 96 calls, $0.0649 (~0.24₪)\n[openai] gpt-5.6-luna in=1188 out=163 | total: 97 calls, $0.0654 (~0.24₪)\n[openai] gpt-5.6-luna in=3736 out=190 | total: 98 calls, $0.0663 (~0.25₪)\n[openai] gpt-5.6-luna in=2336 out=574 | total: 99 calls, $0.0675 (~0.25₪)\n[openai] gpt-5.6-luna in=847 out=579 | total: 100 calls, $0.0684 (~0.25₪)\n.[openai] gpt-5.6-luna in=203 out=316 | total: 101 calls, $0.0688 (~0.25₪)\nslot model failed: openai_400 {\n  \"error\": {\n    \"message\": \"Could not finish the message because max_tokens or model output limit was reached. Please try again with higher max_tokens.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": null\n  }\n}\n[openai] gpt-5.6-luna in=2506 out=467 | total: 102 calls, $0.0698 (~0.26₪)\n[openai] gpt-5.6-luna in=983 out=576 | total: 103 calls, $0.0707 (~0.26₪)\n.[openai] gpt-5.6-luna in=199 out=106 | total: 104 calls, $0.0709 (~0.26₪)\n[openai] gpt-5.6-luna in=1195 out=148 | total: 105 calls, $0.0713 (~0.26₪)\n[openai] gpt-5.6-luna in=2248 out=494 | total: 106 calls, $0.0723 (~0.27₪)\n[openai] gpt-5.6-luna in=749 out=354 | total: 107 calls, $0.0729 (~0.27₪)\n[openai] gpt-5.6-luna in=1557 out=217 | total: 108 calls, $0.0735 (~0.27₪)\n[openai] gpt-5.6-luna in=725 out=79 | total: 109 calls, $0.0737 (~0.27₪)\n.[openai] gpt-5.6-luna in=200 out=200 | total: 110 calls, $0.0740 (~0.27₪)\n[openai] gpt-5.6-luna in=1206 out=292 | total: 111 calls, $0.0746 (~0.28₪)\n[openai] gpt-5.6-luna in=3754 out=45 | total: 112 calls, $0.0754 (~0.28₪)\n[openai] gpt-5.6-luna in=2362 out=926 | total: 113 calls, $0.0770 (~0.28₪)\n[openai] gpt-5.6-luna in=913 out=349 | total: 114 calls, $0.0776 (~0.29₪)\n.[openai] gpt-5.6-luna in=201 out=153 | total: 115 calls, $0.0778 (~0.29₪)\n[openai] gpt-5.6-luna in=1218 out=210 | total: 116 calls, $0.0783 (~0.29₪)\n[openai] gpt-5.6-luna in=3766 out=37 | total: 117 calls, $0.0791 (~0.29₪)\n[openai] gpt-5.6-luna in=2285 out=608 | total: 118 calls, $0.0803 (~0.30₪)\n[openai] gpt-5.6-luna in=819 out=401 | total: 119 calls, $0.0809 (~0.30₪)\n.\n\n====================================================================\n[משפחה עם ילדים קטנים]  התשובה אינה מתייחסת לבקשה למלון קרוב למסלולים, אלא רק למספר המבוגרים ולבדיקת קייטנה לילדים."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "יש אפשרות לחדר ליחיד ולהצטרף לקבוצה באתר?",
+   "first_failure": "התשובה מסבירה את עלות החדר ליחיד אך אינה עונה אם ניתן להצטרף לקבוצה דרך האתר."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "אנחנו 6 חברים רוצים חופשת סקי בדצמבר 2026",
+   "first_failure": "התשובה מדברת על ההצעות בגוף שלישי במקום לפנות ישירות ללקוח, בניסוח \"שלוש האפשרויות מתאימות לשישה מבוגרים\"."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "מחפשים משהו עם חיי לילה טובים ולא יקר מדי, יש לכם הצעות לבולגריה או אנדורה?",
+   "first_failure": "התשובה חוזרת כמעט מילה במילה על המשפט מהתשובה הקודמת: \"נראות פנויות, ונציג יאשר סופית\"."
+  },
+  {
+   "kind": "סבים עם נכדים",
+   "msg": "חשוב לנו מלון נוח קרוב למסלולים ושיהיה בית ספר לסקי לילדים וגם פעילויות אם הם מתעייפים",
+   "first_failure": "לא ענתה באופן ברור על בקשת הפעילויות לילדים במקרה שיתעייפו מהסקי."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי אנחנו שומרי שבת וכשרות, יש במלון אוכל כשר או בית חבד קרוב?",
+   "first_failure": "התשובה כתבה על ההצעות ועל כך שהן מתאימות להעדפות שסומנו, במקום להתמקד בשאלת הכשרות ובית חב״ד."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "וגם חשוב שנוכל להגיע רגלית למסלולים בשבת",
+   "first_failure": "התשובה לא מתייחסת לבקשה להגיע רגלית למסלולים בשבת, ובמקום זאת חוזרת לבקשת פרטי הרכב ולפרטי התאריך והשהייה."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "זוג מתחילים 4 לילות יש משהו בבולגריה כולל ציוד שלא יעבור 2500 לאדם",
+   "first_failure": "התשובה לא מתייחסת לבקשה המרכזית לחופשה הכוללת ציוד, ולכן אינה עונה במלואה על שאלת הלקוח."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "מתלבטים בין בנסקו לזולדן לחופשת סקי בינואר",
+   "first_failure": "התשובה מתייחסת רק לבנסקו ואינה עונה להתלבטות בין בנסקו לזולדן."
+  },
+  {
+   "kind": "לקוח שמתלבט בין יעדים",
+   "msg": "אנחנו 4 חברים ברמות שונות חשוב שיהיה גם אפרה סקי אבל שלא יצא מחיר מטורף מה עדיף",
+   "first_failure": "התשובה סותרת את עצמה: היא אומרת שלא תדרג מלון, אך מיד לאחר מכן קובעת ש־Casa Karina מתאימה במיוחד ומעדיפה אותה."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "היי טסנו איתכם לבנסקו שנה שעברה והיה מעולה",
+   "first_failure": "התשובה אינה מגיבה לשיתוף החיובי של הלקוח ומניחה שהוא ביקש הצעות, תוך מעבר מנותק להצגת אפשרויות ושאלת המשך."
+  },
+  {
+   "kind": "לקוח שכבר טס איתנו",
+   "msg": "רוצים לסגור שוב לסקי בדצמבר הקרוב 4 אנשים יש משהו טוב לתאריכים 10-14?",
+   "first_failure": "התשובה חוזרת על המידע שכבר נאמר בתשובה הקודמת לגבי התאמת האפשרויות להרכב ולמשך השהייה, במקום להתמקד בתאריכים החלופיים."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "זה כבר פעם שלישית שאני מבקש הצעה וכל פעם חוזרים אליי אחרי יום עם מחיר אחר",
+   "first_failure": "במקום להתמקד בתלונה על שינויי המחיר ולהעביר אותה לנציג, התשובה עוברת להצעות אחרות ומבקשת את מספר הנוסעים."
+  },
+  {
+   "kind": "לקוח כועס או מאוכזב",
+   "msg": "אם אין לכם באמת מקום לסקי בדצמבר תגידו מראש ולא תמרחו אותי ככה",
+   "first_failure": "התשובה חוזרת מילה במילה על הפסקה הראשונה שנאמרה בתשובה הקודמת."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "היי אני מנסה להוסיף מזוודה להזמנה באתר וזה לא נותן לי",
+   "first_failure": "התשובה אינה עונה על הבעיה בהוספת מזוודה ומסיטה את השיחה לציוד ספורט ולהצעות חופשה לא רלוונטיות."
+  },
+  {
+   "kind": "לקוח ששואל שאלה טכנית על ההזמנה",
+   "msg": "אפשר לעשות את זה דרככם?",
+   "first_failure": "התשובה סוטה מהשאלה ומדברת על ההצעות ועל גדלי החדרים במקום לענות ישירות אם ניתן לבצע זאת דרככם."
+  },
+  {
+   "kind": "לקוח שכותב קצר מאוד",
+   "msg": "היי יש לכם סקי בבולגריה בדצמבר?",
+   "first_failure": "התשובה מבלבלת ומדברת על אופן בחירת האפשרויות במקום לענות ישירות על חופשת הסקי בבולגריה בדצמבר, ואף מפנה להצעות בינואר ללא הסבר ברור."
+  },
+  {
+   "kind": "לקוח שכותב הודעה ארוכה עם הרבה פרטים",
+   "msg": "היי, אנחנו 6 אנשים שרוצים לסגור חופשת סקי לדצמבר 2026, עדיפות לשבוע של 13 או 20 בדצמבר אבל אנחנו קצת גמישים. 4 מבוגרים ושני ילדים בני 9 ו-12, כולנו מתחילים חוץ מאחד שמגליש כבר כמה שנים. חשוב לנו מלון קרוב למסלולים או לפחות שאטל נוח, חדרים נפרדים ולא דירה משותפת, כולל טיסות, העברות, סקי פס וציוד. נשמח גם לשיעורים לילדים בעברית או באנגלית. מבחינת יעד אנחנו פתוחים לבולגריה, אוסטריה, צרפת או אנדורה, רק שלא יהיה אתר קטן מדי ושיהיו מסלולים קלים למתחילים. תקציב בערך 2,500–3,000 יורו לאדם, ואם יש משהו טוב יותר במחיר קצת גבוה יותר אפשר לשמוע. יש אפשרות להצעה מסודרת עם כמה אופציות?",
+   "first_failure": "התשובה מציגה את האפשרויות במקום להסביר ישירות ללקוח מה כל הצעה כוללת, ואינה מתייחסת לטיסות, העברות, ציוד וחדרים נפרדים."
+  },
+  {
+   "kind": "openai",
+   "msg": "היי, אנחנו זוג ומחפשים חופשת סקי ראשונה בדצמבר או ינואר",
+   "first_failure": "gpt-5.6-luna in=196 out=112 | total: 1 calls, $0.0002 (~0.00₪)\n[openai] gpt-5.6-luna in=1218 out=282 | total: 2 calls, $0.0008 (~0.00₪)\n[openai] gpt-5.6-luna in=3766 out=53 | total: 3 calls, $0.0016 (~0.01₪)\n[openai] gpt-5.6-luna in=2136 out=449 | total: 4 calls, $0.0025 (~0.01₪)\n[openai] gpt-5.6-luna in=743 out=313 | total: 5 calls, $0.0031 (~0.01₪)\n[openai] gpt-5.6-luna in=1573 out=248 | total: 6 calls, $0.0037 (~0.01₪)\n[openai] gpt-5.6-luna in=3738 out=52 | total: 7 calls, $0.0045 (~0.02₪)\n[openai] gpt-5.6-luna in=2468 out=608 | total: 8 calls, $0.0057 (~0.02₪)\n[openai] gpt-5.6-luna in=918 out=529 | total: 9 calls, $0.0065 (~0.02₪)\n.[openai] gpt-5.6-luna in=191 out=147 | total: 10 calls, $0.0067 (~0.02₪)\n[openai] gpt-5.6-luna in=1196 out=322 | total: 11 calls, $0.0074 (~0.03₪)\n[openai] gpt-5.6-luna in=2309 out=612 | total: 12 calls, $0.0086 (~0.03₪)\n[openai] gpt-5.6-luna in=812 out=502 | total: 13 calls, $0.0093 (~0.03₪)\n[openai] gpt-5.6-luna in=1692 out=195 | total: 14 calls, $0.0099 (~0.04₪)\n[openai] gpt-5.6-luna in=3743 out=140 | total: 15 calls, $0.0108 (~0.04₪)\n[openai] gpt-5.6-luna in=2564 out=411 | total: 16 calls, $0.0118 (~0.04₪)\n[openai] gpt-5.6-luna in=930 out=227 | total: 17 calls, $0.0123 (~0.05₪)\n.[openai] gpt-5.6-luna in=194 out=112 | total: 18 calls, $0.0125 (~0.05₪)\n[openai] gpt-5.6-luna in=1188 out=168 | total: 19 calls, $0.0129 (~0.05₪)\n[openai] gpt-5.6-luna in=2273 out=416 | total: 20 calls, $0.0138 (~0.05₪)\nphrasing rejected (writes about the offers, not to the customer): האפשרויות מתאימות למבוגר יחיד, וכוללות בין היתר מועדוני הכל כלול בטין ולה דו אלפ וכן אפשרות במאיירהופן למי שמעדיף עיירה תוססת וספא. נראה פנוי, ונציג יאשר סופית.\n[openai] gpt-5.6-luna in=723 out=255 | total: 21 calls, $0.0143 (~0.05₪)\n[openai] gpt-5.6-luna in=1480 out=199 | total: 22 calls, $0.0148 (~0.05₪)\n[openai] gpt-5.6-luna in=3733 out=74 | total: 23 calls, $0.0157 (~0.06₪)\n[openai] gpt-5.6-luna in=2429 out=436 | total: 24 calls, $0.0167 (~0.06₪)\n[openai] gpt-5.6-luna in=832 out=380 | total: 25 calls, $0.0173 (~0.06₪)\n.[openai] gpt-5.6-luna in=194 out=129 | total: 26 calls, $0.0175 (~0.06₪)\n[openai] gpt-5.6-luna in=1195 out=297 | total: 27 calls, $0.0181 (~0.07₪)\n[openai] gpt-5.6-luna in=2266 out=305 | total: 28 calls, $0.0189 (~0.07₪)\n[openai] gpt-5.6-luna in=756 out=520 | total: 29 calls, $0.0197 (~0.07₪)\n[openai] gpt-5.6-luna in=1555 out=285 | total: 30 calls, $0.0203 (~0.08₪)\n[openai] gpt-5.6-luna in=867 out=261 | total: 31 calls, $0.0208 (~0.08₪)\n.[openai] gpt-5.6-luna in=195 out=131 | total: 32 calls, $0.0210 (~0.08₪)\n[openai] gpt-5.6-luna in=1198 out=208 | total: 33 calls, $0.0215 (~0.08₪)\n[openai] gpt-5.6-luna in=3746 out=44 | total: 34 calls, $0.0223 (~0.08₪)\n[openai] gpt-5.6-luna in=2309 out=431 | total: 35 calls, $0.0233 (~0.09₪)\n[openai] gpt-5.6-luna in=808 out=300 | total: 36 calls, $0.0238 (~0.09₪)\n[openai] gpt-5.6-luna in=1680 out=319 | total: 37 calls, $0.0245 (~0.09₪)\n[openai] gpt-5.6-luna in=3741 out=72 | total: 38 calls, $0.0254 (~0.09₪)\n[openai] gpt-5.6-luna in=2486 out=558 | total: 39 calls, $0.0265 (~0.10₪)\n[openai] gpt-5.6-luna in=838 out=73 | total: 40 calls, $0.0268 (~0.10₪)\n.[openai] gpt-5.6-luna in=197 out=105 | total: 41 calls, $0.0270 (~0.10₪)\n[openai] gpt-5.6-luna in=1213 out=219 | total: 42 calls, $0.0275 (~0.10₪)\n[openai] gpt-5.6-luna in=2331 out=477 | total: 43 calls, $0.0285 (~0.11₪)\n[openai] gpt-5.6-luna in=849 out=278 | total: 44 calls, $0.0290 (~0.11₪)\n[openai] gpt-5.6-luna in=1792 out=365 | total: 45 calls, $0.0298 (~0.11₪)\n[openai] gpt-5.6-luna in=2473 out=596 | total: 46 calls, $0.0310 (~0.11₪)\n[openai] gpt-5.6-luna in=898 out=321 | total: 47 calls, $0.0316 (~0.12₪)\n.[openai] gpt-5.6-luna in=198 out=105 | total: 48 calls, $0.0317 (~0.12₪)\n[openai] gpt-5.6-luna in=1191 out=288 | total: 49 calls, $0.0323 (~0.12₪)\n[openai] gpt-5.6-luna in=2262 out=602 | total: 50 calls, $0.0335 (~0.12₪)\n[openai] gpt-5.6-luna in=776 out=170 | total: 51 calls, $0.0339 (~0.13₪)\n[openai] gpt-5.6-luna in=1608 out=317 | total: 52 calls, $0.0346 (~0.13₪)\n[openai] gpt-5.6-luna in=2390 out=497 | total: 53 calls, $0.0356 (~0.13₪)\n[openai] gpt-5.6-luna in=850 out=414 | total: 54 calls, $0.0363 (~0.13₪)\n.[openai] gpt-5.6-luna in=197 out=136 | total: 55 calls, $0.0365 (~0.14₪)\n[openai] gpt-5.6-luna in=1205 out=210 | total: 56 calls, $0.0370 (~0.14₪)\n[openai] gpt-5.6-luna in=3753 out=11 | total: 57 calls, $0.0378 (~0.14₪)\n[openai] gpt-5.6-luna in=2250 out=502 | total: 58 calls, $0.0388 (~0.14₪)\n[openai] gpt-5.6-luna in=754 out=182 | total: 59 calls, $0.0392 (~0.14₪)\n[openai] gpt-5.6-luna in=1622 out=245 | total: 60 calls, $0.0398 (~0.15₪)\nphrasing model failed: fetch failed\n.(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n(generator failed: fetch failed)\n\n\n====================================================================\n[זוג]  שאלה שוב אם מעדיפים דצמבר או ינואר, אף שהלקוח כבר ציין שהוא פתוח לשני החודשים, ובנוסף הוצגו רק אפשרויות לינואר."
+  },
+  {
+   "kind": "זוג",
+   "msg": "חשוב לנו מלון קרוב למסלולים ושלא יהיה יקר מדי יש משהו מומלץ?",
+   "first_failure": "הבוט ביקש מהלקוח לומר שקרבה למסלול חשובה, אף שהלקוח כבר ציין זאת במפורש."
+  },
+  {
+   "kind": "נוסע יחיד",
+   "msg": "יש משהו טוב ולא יקר מדי למתחילים?",
+   "first_failure": "התשובה מתמקדת בהסבר מטא על בחירת ההצעות ובטענה שהן במסגרת תקציב שהלקוח לא הגדיר, במקום לדבר אליו ישירות ולהציג את האפשרויות הרלוונטיות."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "היי אנחנו 8 חברים מחפשים חופשת סקי בדצמבר או ינואר",
+   "first_failure": "התשובה מציגה גם מועדים במרץ שאינם תואמים לבקשת הלקוח לדצמבר או ינואר, ואינה מציינת במפורש שאין הצעה לדצמבר."
+  },
+  {
+   "kind": "קבוצת חברים",
+   "msg": "חשוב לנו שיהיה גם אפרה סקי וחיי לילה אבל לא משהו יקר בטירוף יש לכם הצעות לבולגריה או אוסטריה?",
+   "first_failure": "התשובה לא מציעה אפשרויות קונקרטיות לבולגריה או אוסטריה, ומבקשת שוב מהלקוח לפרט מה חשוב לו למרות שכבר ציין אפרה סקי, חיי לילה ומחיר סביר."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "היי, יש לכם חבילות סקי בדצמבר שמתאימות לשומרי שבת? חשוב לנו מלון עם אוכל כשר או לפחות אפשרות לאוכל כשר בסביבה",
+   "first_failure": "התשובה לא מספקת מענה ממשי לבקשה לחבילות בדצמבר המתאימות לשומרי שבת עם אפשרות לאוכל כשר, ומפנה להצעות בינואר שאינן רלוונטיות לשאלה."
+  },
+  {
+   "kind": "שומרי שבת או כשרות",
+   "msg": "וגם שיהיה בית כנסת קרוב כי אנחנו נוסעים עם ילדים",
+   "first_failure": "התשובה חוזרת על המידע שכבר נאמר לגבי התאמת המלונות למשפחות, במקום להתמקד בבקשה לבית כנסת קרוב."
+  },
+  {
+   "kind": "לקוח עם תקציב מוגבל",
+   "msg": "2 אנשים כולל טיסות ומלון יש משהו בבולגריה עד 3000 לאדם בערך",
+   "first_failure": "התשובה מדברת על האפשרויות בגוף שלישי במקום לפנות ישירות ללקוח, וגם חוזרת על כך שהן נראות פנויות ושנציג יאשר סופית."
+  }
+ ]
+}

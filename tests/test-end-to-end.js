@@ -1130,6 +1130,30 @@ for (const [q, want] of [
     }));
 }
 
+/* ---- round 19: the three families the auditor kept finding ---- */
+
+// A returning customer's warmth got three cards and a question — correct, cold.
+t('a returning customer is welcomed before business', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי טסנו איתכם שנה שעברה לבנסקו והיה ממש טוב, רוצים שוב לדצמבר' }], slots: {} })
+    .then(out => assert.ok(/כיף לשמוע|ברוכים השבים/.test(out.reply_he), out.reply_he)));
+
+t('a plain request gets no social preamble', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר בבולגריה' }], slots: {} })
+    .then(out => assert.ok(!/ברוכים השבים|כיף לשמוע/.test(out.reply_he), out.reply_he)));
+
+// "מתלבטים בין בנסקו לזולדן" was answered about Bansko alone.
+t('a resort we do not sell is named as such', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מתלבטים בין בנסקו לזולדן לזוג בפברואר' }], slots: {} })
+    .then(out => assert.ok(/את זולדן אנחנו לא מוכרים/.test(out.reply_he), out.reply_he)));
+
+// Two questions in one message — only one used to get answered.
+t('a two-question message gets both answers', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש חניה במלון? ומה עם ביטוח?' }], slots: {} })
+    .then(out => {
+      assert.ok(/ביטוח/.test(out.reply_he), 'insurance missing: ' + out.reply_he);
+      assert.ok(/רכב פרטי|שאטלים/.test(out.reply_he), 'parking missing: ' + out.reply_he);
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

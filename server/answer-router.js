@@ -41,25 +41,39 @@ function buildPrompt(entries) {
 - אם ההודעה אינה שאלה אלא בקשה לחופשה ("זוג בפברואר", "משפחה של 4 לבולגריה") — החזר null.
 - אם השאלה אינה קשורה לאף תשובה ברשימה — החזר null. עדיף null מאשר תשובה שלא עונה.
 - אם הלקוח שואל כמה משהו עולה במספרים — החזר null.
+- אם ההודעה מכילה יותר משאלה אחת — החזר עד שני מזהים, לפי סדר השאלות.
 - שאלה יכולה להיות מנוסחת בכל דרך, כולל שגיאות כתיב, סלנג, אנגלית או משפט ארוך.
 
 התשובות המאושרות:
 ${entries.map(topicLine).join('\n')}
 
-החזר JSON בלבד: {"id": "<מזהה מהרשימה>"} או {"id": null}`;
+החזר JSON בלבד: {"ids": ["<מזהה>"]} או {"ids": ["<מזהה>", "<מזהה>"]} או {"ids": []}`;
 }
 
 // The model's answer is a key into our own data or it is nothing. Anything we
 // do not recognise becomes null rather than a guess.
 function pick(raw, entries) {
-  let id = null;
+  let ids = [];
   try {
     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    id = parsed && parsed.id;
+    // the old single-id shape still parses — a cached reply must not break
+    ids = Array.isArray(parsed && parsed.ids) ? parsed.ids
+      : (parsed && parsed.id ? [parsed.id] : []);
   } catch (e) { return null; }
-  if (!id || typeof id !== 'string') return null;
-  const hit = entries.find(e => e.id === id);
-  return hit ? { id: hit.id, he: hit.answer_he, routed: true } : null;
+  const hits = [];
+  for (const id of ids.slice(0, 2)) {
+    const hit = entries.find(e => e.id === id);
+    if (hit && !hits.some(h => h.id === hit.id)) hits.push(hit);
+  }
+  if (!hits.length) return null;
+  // the first answer leads; a second, when the customer asked two things,
+  // rides directly under it
+  return {
+    id: hits[0].id,
+    he: hits.map(h => h.answer_he).join(String.fromCharCode(10)),
+    routed: true,
+    all: hits.map(h => ({ id: h.id, he: h.answer_he })),
+  };
 }
 
 module.exports = { buildPrompt, pick, topicLine };

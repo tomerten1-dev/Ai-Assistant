@@ -20,19 +20,7 @@ const { loadEnv } = require('../server/env.js');
 loadEnv();
 process.env.CHAT_LOG = 'off';
 const { handleChat } = require('../server/server.js');
-const { callOpenAI: rawCall } = require('../server/openai.js');
-
-// A round is ~200 calls over several minutes, so a single dropped connection
-// used to throw away the whole run. One retry, then give up on that line only.
-async function callOpenAI(args) {
-  for (let attempt = 0; ; attempt++) {
-    try { return await rawCall(args); }
-    catch (e) {
-      if (attempt >= 2) throw e;
-      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
-    }
-  }
-}
+const { judge, callOpenAI } = require('./_judge.js');
 
 const WANTED = +(process.argv[2] || 40);
 
@@ -59,31 +47,6 @@ const GEN_PROMPT = `אתה כותב הודעות של לקוחות ישראלי�
 
 החזר JSON: {"messages": ["...", "..."]}`;
 
-const JUDGE_PROMPT = `אתה בודק איכות של צ'אט מכירות של סוכנות סקי ישראלית (פינגווין).
-קיבלת הודעה של לקוח ואת התשובה של הבוט. שפוט את התשובה בלבד.
-
-פסול את התשובה אם מתקיים אחד מאלה:
-- לא ענתה על מה שהלקוח שאל, או ענתה על משהו אחר
-- אמרה "אני כאן בעיקר להתאמת חופשות סקי" לשאלה שקשורה לחופשת סקי
-- סתרה את עצמה, או חזרה על משפט שכבר נאמר בתשובה הקודמת
-- ביקשה מידע שהלקוח כבר נתן
-- נשמעת מבולבלת, מנותקת מההקשר, או לא מנוסחת בעברית תקינה
-- נקבה במחיר במספרים, הבטיחה זמינות, או חשפה פרטי לקוח אחר
-- ענתה בביטחון על משהו שנשמע כמו ניחוש
-- כתבה על ההצעות במקום לדבר עם הלקוח: "ההצעות מתאימות להרכבים של 5, 3 ו-6 נוסעים", "בהתאם לנימוקים של כל הצעה"
-- הכילה מילה או תו שאינם עברית תקינה ואינם שם מלון
-
-אשר את התשובה אם היא ענתה לעניין, או אמרה בכנות שאין לה את המידע והפנתה לנציג.
-
-זה לא פגם — אלה כללים מחייבים של העסק, ואסור לפסול תשובה בגללם:
-- "נראה פנוי" / "נציג יאשר סופית" — הבוט לעולם אינו מבטיח זמינות. זו הדרך הנכונה לנסח.
-- אין מחירים במספרים, רק טווח סמלי. הפניית שאלת מחיר לנציג היא התשובה הנכונה.
-- הבוט מציג רק מלונות שיש עליהם מלאי בפועל, ולכן לפעמים אין מה להציע ביעד או בחודש שהתבקש.
-- שמות מלונות באנגלית הם השמות הרשמיים ומותרים; שמות יישובים צריכים להיות בעברית.
-
-החזר JSON בלבד:
-{"ok": true} או {"ok": false, "why": "<משפט אחד בעברית: מה בדיוק לא בסדר>"}`;
-
 async function generate(kind, i) {
   const raw = await callOpenAI({
     system: GEN_PROMPT,
@@ -94,23 +57,6 @@ async function generate(kind, i) {
     const p = JSON.parse(raw);
     return (p.messages || []).filter(m => typeof m === 'string' && m.trim()).slice(0, 3);
   } catch (e) { return []; }
-}
-
-async function judge(userText, reply, prevReply, cards) {
-  const raw = await callOpenAI({
-    system: JUDGE_PROMPT,
-    messages: [{ role: 'user', content: JSON.stringify({
-      הודעת_הלקוח: userText,
-      תשובת_הבוט: reply,
-      התשובה_הקודמת_של_הבוט: prevReply || null,
-      // the customer SEES these as cards under the text; without them the judge
-      // marks "claimed offers and showed none" on a turn that showed three
-      הכרטיסים_שהלקוח_רואה_מתחת_לתשובה: (cards || []).map(c =>
-        `${c.hotel}, ${c.resort || ''} ${c.country_he || ''}, ${c.date}, ${c.nights} לילות`),
-    }) }],
-    maxTokens: 600,
-  });
-  try { return JSON.parse(raw); } catch (e) { return { ok: true }; }
 }
 
 (async () => {
