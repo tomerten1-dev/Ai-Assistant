@@ -222,11 +222,11 @@ function parseText(text, slots) {
     if (!(s.children_ages || []).length && !s.children_count) {
       s.no_children = true; s.children_ages = [];
     }
+  }
   // "חדר ליחיד", "חדר סינגל" — one traveller, said through the room
   if (/חדר ליחיד|לנוסע יחיד|חדר סינגל|אני יחיד/.test(t) && s.adults == null) s.adults = 1;
   if (s.adults === 1 && !(s.notes_from_customer || []).includes('חופשה לנוסע יחיד')) {
     s.notes_from_customer = [...(s.notes_from_customer || []), 'חופשה לנוסע יחיד'];
-  }
   }
   // "שני זוגות" is four people, not two
   let pm = t.match(/(\d{1,2}|[א-ת]+)\s*זוגות/);
