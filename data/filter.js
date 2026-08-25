@@ -709,7 +709,8 @@ class SkiSearch {
     }
     // "רק אוסטריה" is not a preference we may bargain with. Offering to drop
     // the country right after the customer said "only" reads as not listening.
-    if ((slots.country || slots.destination) && !slots.country_fixed) {
+    if ((slots.country || slots.destination) && !slots.country_fixed &&
+        !(slots.compare || []).length) {
       const n = count({ country: null, destination: null });
       if (n > currentCount) out.push({ drop: 'country', gain: n - currentCount, total: n });
     }

@@ -1181,6 +1181,17 @@ t('requirements we cannot filter on are read back', () =>
       assert.ok(notes.some(n => /פעילויות לילדים/.test(n)), 'activities not heard');
     }));
 
+t('three destinations compared are announced as all of them', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מתלבטים בין בנסקו אנדורה או אוסטריה לסקי ראשון שלנו' }], slots: {} })
+    .then(out => {
+      assert.ok(/מכל היעדים שציינתם/.test(out.reply_he), out.reply_he);
+      assert.ok(!/תשקלו גם יעדים אחרים/.test(out.reply_he), 'offered MORE countries mid-comparison');
+    }));
+
+t('"כולל טיסות ומלון?" reaches the what-is-included answer', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש לכם הצעות לבולגריה או אנדורה כולל טיסות ומלון?' }], slots: {} })
+    .then(out => assert.ok(/טיסות הלוך ושוב|כלולות טיסות/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

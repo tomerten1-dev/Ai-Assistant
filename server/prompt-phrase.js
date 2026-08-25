@@ -139,6 +139,11 @@ function validate(text, { cards, fallback }) {
   // Latin letters that are not the name of something we showed. The model
   // emitted the word "Baebele" mid-sentence to a customer; nothing caught it,
   // because every other check is about what the words MEAN.
+  // any letter from a script that is neither Hebrew nor Latin is never a
+  // hotel name we sell — the model once emitted an Armenian word mid-sentence
+  if (/[Ͱ-ϿЀ-ӿ԰-֏؀-ۿ一-鿿぀-ヿ가-힯]/.test(t)) {
+    return { ok: false, why: 'foreign script' };
+  }
   {
     const allowed = new Set();
     for (const c of cards) {
