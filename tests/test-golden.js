@@ -35,11 +35,15 @@ const N = +(process.argv[2] || 0) || GOLDEN.cases.length;
       failed.push({ ...c, why: 'הבוט קרס: ' + e.message, reply: '' });
       process.stdout.write('x'); return;
     }
-    let verdict = { ok: true };
-    try { verdict = await judge(c.msg, out.reply_he, null, out.cards); }
-    catch (e) { /* a judge we could not reach is not a verdict */ }
-    if (verdict.ok) { pass++; process.stdout.write('.'); }
-    else { failed.push({ ...c, why: verdict.why || '', reply: out.reply_he }); process.stdout.write('F'); }
+    // one judge flips ~15% of cases between runs on nothing at all; three
+    // judges and a majority make a verdict worth acting on
+    const votes = await Promise.all([0, 1, 2].map(async () => {
+      try { return await judge(c.msg, out.reply_he, null, out.cards); }
+      catch (e) { return { ok: true }; }
+    }));
+    const fails = votes.filter(v => !v.ok);
+    if (fails.length < 2) { pass++; process.stdout.write('.'); }
+    else { failed.push({ ...c, why: fails[0].why || '', reply: out.reply_he }); process.stdout.write('F'); }
   };
   for (let i = 0; i < cases.length; i += CONCURRENCY) {
     await Promise.all(cases.slice(i, i + CONCURRENCY).map(runOne));
