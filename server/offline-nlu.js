@@ -235,6 +235,16 @@ function parseText(text, slots) {
   // and the grandparents were not, so every offer was sized for two people
   // short of the family.
   else if (/נכד|נכדה|נכדים|נכדות/.test(t) && s.adults == null) s.adults = 2;
+  // "עם 3 נכדים" — grandchildren are children; without ages we still know how
+  // many seats they take. A party of five was being offered rooms for two.
+  {
+    const g = t.match(/(\d{1,2}|שני|שתי|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש)\s*נכד(?:ים|ות)?(?![א-ת])/);
+    if (g && !(s.children_ages || []).length && s.children_count == null) {
+      const n = +g[1] || heNum(g[1]);
+      if (n >= 1 && n <= 8) { s.children_count = n; s.no_children = false; }
+    }
+  }
+
   // "2+2" — the standard Israeli shorthand for two adults and two children
   if (s.adults == null && !/מבוגר/.test(t)) {
     const pp = t.match(/(?:^|[^\d])(\d)\s*\+\s*(\d)(?![\d])/);
@@ -1201,6 +1211,7 @@ const ASK_LEXICON = [
   [/מלון נוח|נוח למבוגרים|בלי הרבה מדרגות/, 'מלון נוח'],
   [/בריכה מחוממת|בריכת שחייה/, 'בריכה'],
   [/ללכת ברגל|הליכה למסלול|בלי שאטל/, 'מרחק הליכה מהמסלולים'],
+  [/סקי אין|ski.?in.?ski.?out|ממש על המסלול|יציאה מהמלון למסלול/i, 'סקי אין-סקי אאוט (מלון על המסלול)'],
 ];
 
 // a note that names a REQUIREMENT (from the lexicon above), as opposed to a
@@ -1215,7 +1226,7 @@ function isRequirementNote(note) {
 // One warm line first; the offers still follow.
 function socialLine(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  const returning = /טסנו איתכם|היינו איתכם|נסענו איתכם|הזמנו אצלכם|היינו אצלכם|לקוחות שלכם|פעם שעברה איתכם|שוב איתכם/.test(t);
+  const returning = /טסנו איתכם|היינו איתכם|נסענו איתכם|הזמנו אצלכם|היינו אצלכם|לקוחות שלכם|פעם שעברה איתכם|שוב איתכם|זה שוב אנחנו|זו שוב אני|מהחופשה .{0,25}שנה שעברה|חוזרים אליכם/.test(t);
   const praise = /היה (ממש |מאוד |פשוט )?(טוב|מעולה|כיף|מושלם|מדהים|נהדר)|נהנינו|היה חלום|אהבנו|מרוצים מכם|שירות מעולה|אתם אלופים/.test(t);
   if (returning && praise) return 'איזה כיף לשמוע שנהניתם — נשמח לארח אתכם שוב.';
   if (returning) return 'ברוכים השבים! נשמח לתפור לכם גם את החופשה הבאה.';

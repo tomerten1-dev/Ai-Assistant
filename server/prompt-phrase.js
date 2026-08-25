@@ -80,7 +80,12 @@ function buildPayload({ slots, cards, result, fallback, lastReply, answered }) {
     בקשת_הלקוח: {
       מבוגרים: slots.adults,
       גילאי_ילדים: slots.children_ages,
-      חודש: slots.month,
+      חודש: ({ 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מרץ', any: 'גמיש' })[slots.month] || slots.month,
+      // A comparison holds MORE than the one country the slot keeps — telling
+      // the model only about Bulgaria made it call Mayrhofen "outside the
+      // destination you asked for" to a customer who asked Austria-or-Bulgaria.
+      משווים_בין: (slots.compare || []).map(p =>
+        ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[p.country] || p.destination) || undefined,
       // A destination we sell but hold nothing for is still a destination the
       // customer named. Leaving it out made the model write "מאחר שלא ציינתם
       // יעד" to someone who had just said Italy.
@@ -127,7 +132,7 @@ function validate(text, { cards, fallback }) {
   // Writing ABOUT the offers instead of to the customer. Three audit rounds in
   // a row flagged the same handful of constructions, all of them lifted
   // straight out of our own JSON field names.
-  if (/ההצעות (נבחרו|מתאימות|הוצגו|שנבחרו)|האפשרויות (נבחרו|מתאימות)|להרכב(ים)? של|שסומנו|נימוק|בהתאם לנימוקים|ההצעה נבחרה/.test(t)) {
+  if (/ההצעות (נבחרו|מתאימות|הוצגו|שנבחרו|שמוצגות)|האפשרויות (נבחרו|מתאימות|שמוצגות|שנמצאו|שנבחרו)|להרכב(ים)? של|שסומנו|נימוק|בהתאם לנימוקים|ההצעה נבחרה|הסינון בוצע/.test(t)) {
     return { ok: false, why: 'writes about the offers, not to the customer' };
   }
 

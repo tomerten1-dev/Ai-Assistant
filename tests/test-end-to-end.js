@@ -1192,6 +1192,29 @@ t('"כולל טיסות ומלון?" reaches the what-is-included answer', () =>
   handleChat({ messages: [{ role: 'user', content: 'יש לכם הצעות לבולגריה או אנדורה כולל טיסות ומלון?' }], slots: {} })
     .then(out => assert.ok(/טיסות הלוך ושוב|כלולות טיסות/.test(out.reply_he), out.reply_he)));
 
+/* ---- round 22: what the terra experiment exposed ---- */
+
+// "עם 3 נכדים" was a party of two: unaged children took no seats.
+t('grandchildren without ages still take seats', () =>
+  handleChat({ messages: [{ role: 'user', content: 'שלום, אנחנו סבא וסבתא עם 3 נכדים ורוצים חופשת סקי בדצמבר' }], slots: {} })
+    .then(out => {
+      assert.equal(out.slots.adults, 2);
+      assert.equal(out.slots.children_count, 3);
+      for (const c of out.cards) {
+        assert.ok(!c.occ || c.occ.max == null || c.occ.max >= 5,
+          c.hotel + ' fits only ' + (c.occ && c.occ.max));
+      }
+    }));
+
+t('"זה שוב אנחנו מהחופשה שנה שעברה" is recognised as a returning customer', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי זה שוב אנחנו מהחופשה בבנסקו שנה שעברה' }], slots: {} })
+    .then(out => assert.ok(/ברוכים השבים|כיף לשמוע/.test(out.reply_he), out.reply_he)));
+
+t('ski-in ski-out is read back as a requirement', () =>
+  handleChat({ messages: [{ role: 'user', content: 'רוצה מלון סקי אין סקי אאוט, זוג בפברואר' }], slots: {} })
+    .then(out => assert.ok((out.slots.notes_from_customer || []).some(n => /סקי אין/.test(n)),
+      JSON.stringify(out.slots.notes_from_customer))));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

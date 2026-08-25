@@ -135,7 +135,11 @@ class SkiSearch {
   // slots: {adults, children_ages, month, flexible_dates, country, destination,
   //         needs_hebrew_kids_club, preferences}
   search(slots) {
-    const party = (slots.adults || 0) + (slots.children_ages || []).length;
+    // children whose ages we do not know yet still take seats: "עם 3 נכדים"
+    // was a party of two by this arithmetic, and five people were offered
+    // rooms for three
+    const party = (slots.adults || 0) +
+      Math.max((slots.children_ages || []).length, slots.children_count || 0);
     const notes = [];   // machine-readable notes Claude may phrase
     let relaxed = []; // which constraints were relaxed, in order
 
@@ -634,7 +638,8 @@ class SkiSearch {
      Returns the number of DISTINCT answers that would lead to different
      results. 1 or 0 means the question is not worth asking. */
   questionValue(key, slots) {
-    const party = (slots.adults || 0) + (slots.children_ages || []).length;
+    const party = (slots.adults || 0) +
+      Math.max((slots.children_ages || []).length, slots.children_count || 0);
     if (!party) return 2;                      // nothing known yet — must ask
     // The constraint under test must be LIFTED before counting, or the answer
     // is circular: filtering to January and then asking how many months are
@@ -777,7 +782,7 @@ class SkiSearch {
     // page (never inferred). Party-aware: a "DBL 2-4" is a different physical
     // room for a couple than for a family of four.
     const party = (slots && slots.adults != null)
-      ? slots.adults + ((slots.children_ages || []).length)
+      ? slots.adults + Math.max((slots.children_ages || []).length, slots.children_count || 0)
       : null;
     const facts = roomFacts(c.room, info.rooms, party);
     // "separate beds" is the single most common hard requirement (couples who
