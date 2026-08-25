@@ -722,6 +722,8 @@ function parseText(text, slots) {
   // must not be recorded as one
   const tPrefs = t.replace(/(?:לא|בלי|אין צורך ב|לא חייב)[^,.!?]{0,35}?(זול|הכי זולה|תקציב|ספא|בריכה|חיי לילה|אפרה)/g, ' ');
   const prefs = new Set(s.preferences || []);
+  // "מה יותר משתלם" IS a budget preference stated as a question
+  if (/מה יותר משתלם|מה הכי משתלם|איפה יוצא הכי זול|מה כדאי יותר/.test(t)) prefs.add('תקציב');
   // "תקציב לא מגביל" is the OPPOSITE of a budget constraint. Matching the bare
   // word inverted exactly the customer it mattered most to: the one who said
   // money was no object was sorted cheapest-first and shown our cheapest rooms.

@@ -406,6 +406,14 @@ async function handleChat(body) {
     const extra = routed && (routed.all || []).find(a => a.id !== faqHit.id);
     if (extra) faqHit = { ...faqHit, he: faqHit.he + String.fromCharCode(10) + extra.he };
   }
+  // "מה יותר משתלם מבחינת קרבה למסלולים?" is a request to SORT and explain,
+  // not a request for the definition of slope distance. The FAQ that happens
+  // to mention the topic steps aside; the offers answer.
+  const VALUE_Q = /מה יותר משתלם|מה הכי משתלם|מה עדיף מבחינת|מה כדאי יותר|איפה יוצא הכי/;
+  const FACTUAL = new Set(['cancellation', 'deposit', 'installments', 'insurance',
+    'my_booking', 'complaint', 'passport', 'visa', 'whats_included', 'camp_price']);
+  if (faqHit && VALUE_Q.test(lastUser) && !FACTUAL.has(faqHit.id)) faqHit = null;
+
   // A customer already comparing two named destinations sees them side by
   // side; printing the four-country lecture on top ("מתפזרת ליעדים שלא
   // הוזכרו") answers a question they did not ask.
@@ -782,6 +790,20 @@ async function handleChat(body) {
       const unheard = (sayingSlots.notes_from_customer || [])
         .filter(Boolean).filter(n => !mentions(n));
       if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(', ') + ' — נציג יבדוק ויאשר.');
+      // constraints that live in slots, not in the preference list: they were
+      // applied to the search and the customer never heard so
+      const applied = [];
+      if (slots.no_saturday_flights && !/שבת/.test(saidSoFar)) {
+        applied.push('סיננתי יציאות בשבת — כל מה שמוצג יוצא בימים אחרים');
+      }
+      if (slots.needs_hebrew_kids_club && !/קייטנ|קבוצת 4-6/.test(saidSoFar)) {
+        applied.push('הצגתי רק שבועות שבהם הקייטנה בעברית פועלת');
+      }
+      if (slots.departure_airport && slots.departure_airport !== 'any' &&
+          !/חיפה|נתב/.test(saidSoFar)) {
+        applied.push('סיננתי לפי שדה היציאה שביקשתם');
+      }
+      if (applied.length) coverage.push(applied.join('; ') + '.');
     }
     const parts = [preamble, intro, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
@@ -803,7 +825,7 @@ async function handleChat(body) {
     // the single commonest complaint in the golden set. It is dropped only
     // after every coaching line is gone and the reply is still over the cap.
     const SOFT1 = /נפתחות|אני כאן אם תרצו/;
-    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או/;
+    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות/;
     let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     while (all.length > 5) {
       const drop = all.findIndex(l => SOFT1.test(l));

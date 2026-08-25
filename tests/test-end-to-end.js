@@ -1323,6 +1323,31 @@ t('a comparison blocked by the month keeps both destinations', () =>
         'one country only: ' + out.cards.map(c => c.country).join(','));
     }));
 
+/* ---- round 36: value questions, and constraints the customer never heard ---- */
+
+// "מה יותר משתלם מבחינת X" was intercepted by whichever FAQ mentioned X and
+// answered with a definition instead of offers.
+t('a value question gets sorted offers, not a definition', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מה יותר משתלם מבחינת מלון קרוב למסלולים והשכרת ציוד?' }], slots: {} })
+    .then(out => {
+      assert.ok(out.cards.length, 'no offers');
+      assert.ok(/סידרתי לפי מה שביקשתם/.test(out.reply_he), out.reply_he);
+      assert.ok(!/המרחק מהמעלית מופיע על כל הצעה/.test(out.reply_he), 'gave the definition: ' + out.reply_he);
+    }));
+
+// A Sabbath-observing family had their kosher question answered and never
+// heard that Saturday departures had been filtered out for them.
+t('a filtered Sabbath is said out loud', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי אנחנו זוג שומרי שבת וכשרות ומחפשים סקי בדצמבר 2026' }], slots: {} })
+    .then(out => {
+      assert.ok(/כשרות/.test(out.reply_he), 'kosher missing');
+      assert.ok(/שבת/.test(out.reply_he), 'the Sabbath filter was never mentioned: ' + out.reply_he);
+    }));
+
+t('a filtered camp week is said out loud', () =>
+  handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 6 ו9 בפברואר, צריך קייטנה בעברית' }], slots: {} })
+    .then(out => assert.ok(/קייטנ/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
