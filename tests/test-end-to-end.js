@@ -1294,6 +1294,17 @@ t('"טעות בשם" reaches the booking answer, not passport law', () =>
   handleChat({ messages: [{ role: 'user', content: 'היי הזמנתי חופשת סקי ויש לי טעות קטנה בשם באנגלית אפשר לתקן?' }], slots: {} })
     .then(out => assert.ok(/מערכת ההזמנות/.test(out.reply_he) && !/בתוקף לפחות חצי שנה/.test(out.reply_he), out.reply_he)));
 
+// THE COVERAGE GUARANTEE: anything heard this turn that the final text does
+// not somehow mention is appended deterministically, where no model can drop
+// it. This was the largest source of "חסר" rejections.
+t('every stated requirement gets a word in the final reply', () =>
+  handleChat({ messages: [{ role: 'user', content: 'חשוב לנו ספא, קרוב למסלולים, וגם בית חב"ד, זוג בפברואר' }], slots: {} })
+    .then(out => {
+      for (const need of ['ספא', 'מסלול', 'חב"ד']) {
+        assert.ok(out.reply_he.includes(need), need + ' vanished: ' + out.reply_he);
+      }
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

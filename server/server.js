@@ -711,7 +711,37 @@ async function handleChat(body) {
   }
 
   const replyText = (() => {
-    const parts = [preamble, intro, tailQuestion].filter(Boolean);
+    // THE COVERAGE GUARANTEE. The ack lines used to live inside the template,
+    // and whenever the model's wording passed validation the template — acks
+    // included — was replaced whole. That is where most "חסר" rejections came
+    // from: the model mentioned two of three stated requirements and the third
+    // vanished. Now the check runs on the final text: anything heard this turn
+    // that the reply does not somehow mention is appended deterministically,
+    // where no model can drop it.
+    const saidSoFar = [preamble, intro].filter(Boolean).join(' ');
+    // covered = the label itself appears, or at least half its distinctive
+    // words do ("קרבה למסלולים" covers "קרוב למסלולים"; the word מלון alone
+    // covers nothing)
+    const mentions = (label) => {
+      if (saidSoFar.includes(label)) return true;
+      const words = String(label).split(/[\s\-()]+/)
+        .filter(w => w.length >= 3 && !['או', 'עם', 'בלי', 'מלון', 'חדר'].includes(w));
+      if (!words.length) return saidSoFar.includes(label);
+      const hits = words.filter(w =>
+        saidSoFar.includes(w) || saidSoFar.includes(w.replace(/^[לבמהו]/, ''))).length;
+      return hits >= Math.max(1, Math.ceil(words.length / 2));
+    };
+    const coverage = [];
+    if (cards.length) {
+      const newPrefs = (slots.preferences || [])
+        .filter(p => !(prevSlots.preferences || []).includes(p))
+        .filter(p => !mentions(p));
+      if (newPrefs.length) coverage.push('לקחתי בחשבון: ' + newPrefs.join(' · ') + '.');
+      const unheard = (sayingSlots.notes_from_customer || [])
+        .filter(Boolean).filter(n => !mentions(n));
+      if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(' · ') + ' — נציג יבדוק ויאשר מול המלון.');
+    }
+    const parts = [preamble, intro, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
     // a bot sounds like a bot; a person says it when it is worth saying.
     // two-room splits are offers too — they render as their own cards in
