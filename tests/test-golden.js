@@ -23,19 +23,26 @@ const N = +(process.argv[2] || 0) || GOLDEN.cases.length;
 (async () => {
   const cases = GOLDEN.cases.slice(0, N);
   let pass = 0; const failed = [];
-  for (const c of cases) {
+  // eight cases in flight at once: a case is bot-call + judge-call, fully
+  // independent of its neighbours, and running them in series made every
+  // measurement a 25-minute wait
+  const CONCURRENCY = 8;
+  const runOne = async (c) => {
     let out;
     try {
       out = await handleChat({ messages: [{ role: 'user', content: c.msg }], slots: {} });
     } catch (e) {
       failed.push({ ...c, why: 'הבוט קרס: ' + e.message, reply: '' });
-      process.stdout.write('x'); continue;
+      process.stdout.write('x'); return;
     }
     let verdict = { ok: true };
     try { verdict = await judge(c.msg, out.reply_he, null, out.cards); }
     catch (e) { /* a judge we could not reach is not a verdict */ }
     if (verdict.ok) { pass++; process.stdout.write('.'); }
     else { failed.push({ ...c, why: verdict.why || '', reply: out.reply_he }); process.stdout.write('F'); }
+  };
+  for (let i = 0; i < cases.length; i += CONCURRENCY) {
+    await Promise.all(cases.slice(i, i + CONCURRENCY).map(runOne));
   }
   console.log('\n');
   for (const f of failed) {
