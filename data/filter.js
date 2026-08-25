@@ -406,7 +406,15 @@ class SkiSearch {
         if (sat.length) notes.push({ type: 'saturday_only', country: slots.country || slots.destination });
       }
       candidates = this._filter(slots, party, { month: slots.month, country: null, destination: null });
-      if (candidates.length) relaxed.push({ type: 'location' });
+      if (candidates.length) {
+        // if the widened list still holds the wanted country, "לא מצאתי ביעד
+        // שביקשתם" is simply false — some secondary constraint (a price
+        // ceiling, a room shape) blocked the narrow query, not the country
+        const stillWanted = candidates.some(c =>
+          (slots.country && c.country === slots.country) ||
+          (slots.destination && c.resort === slots.destination));
+        if (!stillWanted) relaxed.push({ type: 'location' });
+      }
     }
     // any party that no single unit can hold may still fit in two rooms —
     // not just large groups (e.g. a family of 4 where only 2-3 studios exist)

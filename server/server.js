@@ -319,6 +319,13 @@ async function handleChat(body) {
         // a concrete month the regex layer already parsed ("דצמבר או ינואר"
         // became "any או ינואר" in front of a customer)
         if (found.month === 'any' && typeof slots.month === 'number') delete found.month;
+        // "טסנו איתכם לפני שנתיים" is two years AGO, not a two-year-old.
+        // Children arriving only from the model, in a message with no child
+        // word in it, are an invention.
+        if (found.children_ages && !(slots.children_ages || []).length &&
+            !/ילד|בן |בת |בני |בנות |תינוק|נכד|קטנ/.test(lastUser)) {
+          delete found.children_ages;
+        }
         if (found.destination) {
           found.destination = offline.canonicalDestination(found.destination) ||
             slots.destination || null;
@@ -813,9 +820,11 @@ async function handleChat(body) {
       // reflects what the customer asked for instead of pointing at the cards
       const focus = [...(slots.preferences || [])].slice(0, 2);
       all = fresh.length ? fresh
-        : [focus.length
-          ? `אלה ההצעות שעונות הכי טוב על ${focus.join(' ו')} מתוך מה שפנוי כרגע. רוצים שאבדוק חודש או יעד אחר?`
-          : 'אלה ההצעות הפתוחות כרגע בתנאים שלכם. רוצים שאבדוק חודש או יעד אחר?'];
+        : !cards.length
+          ? ['לא מצאתי משהו חדש להציע בתנאים האלה. רוצים שאבדוק חודש, יעד או הרכב אחר?']
+          : [focus.length
+            ? `אלה ההצעות שעונות הכי טוב על ${focus.join(' ו')} מתוך מה שפנוי כרגע. רוצים שאבדוק חודש או יעד אחר?`
+            : 'אלה ההצעות הפתוחות כרגע בתנאים שלכם. רוצים שאבדוק חודש או יעד אחר?'];
     }
     slots._lastCards = cardKey;
     // The memory accumulates while the offers stand still: suppressing a line
