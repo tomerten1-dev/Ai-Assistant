@@ -684,8 +684,16 @@ async function handleChat(body) {
   const saidFixed = new Set(prevSlots._fixed_said || []);
   // the comparison verdict rides in the same verbatim channel — the model kept
   // rewriting "באוסטריה לא מצאתי" into something friendlier and wrong
-  const cmpLine = offline.comparingLine(result, slots);
+  let cmpLine = offline.comparingLine(result, slots);
   const monthsLine = offline.bothMonthsLine(result, slots, cards.length > 0);
+  // "בבולגריה יש אפשרויות פנויות" + "בבולגריה אין יציאות בדצמבר" in the same
+  // reply is a contradiction the customer has to untangle. When both fire, the
+  // comparison keeps only the half the month line does not carry.
+  if (cmpLine && widened.some(l => /אין לי יציאות פנויות/.test(l))) {
+    cmpLine = /לא מצאתי בתנאים האלה/.test(cmpLine)
+      ? cmpLine.replace(/^.*?;\s*/, 'הצגתי משני היעדים שציינתם; ')
+      : 'הצגתי הצעות משני היעדים שציינתם, כדי שתוכלו להשוות.';
+  }
   const fixed = [offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
   slots._fixed_said = [...saidFixed, ...[offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));

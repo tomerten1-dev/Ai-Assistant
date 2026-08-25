@@ -633,6 +633,10 @@ function parseText(text, slots) {
       && !/תקציב לא מגביל|לא מגביל/.test(t)) {
     s.price_objection = true;
     s.preferences = [...new Set([...(s.preferences || []), 'תקציב'])];
+    // a stated ceiling deserves an explicit word: we sort for it, we never
+    // quote a price, and a rep confirms the number
+    s.notes_from_customer = [...new Set([...(s.notes_from_customer || []),
+      'תקציב מוגדר לאדם — נציג יאשר מול המחיר המדויק'])];
   }
 
   // "תאומים בני 5 ועוד ילד בן 9" — two fives, not one. The party was one seat
