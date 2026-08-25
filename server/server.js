@@ -450,7 +450,8 @@ async function handleChat(body) {
     const socialPrefix = quietSocial && !/מצטער/.test(faqHit.he)
       ? quietSocial + String.fromCharCode(10) : '';
     const replyText = socialPrefix + faqHit.he +
-      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') + ' — אתחשב בזה בהצעות, ומה שדורש בדיקה נציג יבדוק.' : '') +
+      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') +
+        (EMOTIONAL.has(faqHit.id) ? ' — אעביר לנציג שיטפל בזה.' : ' — אתחשב בזה בהצעות, ומה שדורש בדיקה נציג יבדוק.') : '') +
       (EMOTIONAL.has(faqHit.id) ? '' : String.fromCharCode(10) +
         'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית).');
     chatLog.logTurn({
@@ -662,7 +663,7 @@ async function handleChat(body) {
     /תראה|תראו|מה יש לכם|הראה לי|אפשר לראות|שלח לי אפשרויות|מה האפשרויות/.test(lastUser) ||
     // "מה יותר משתלם?" and "יש משהו עד 3500?" are requests to SEE, answered
     // with a list; holding them back to ask the month reads as stonewalling
-    /משתלם|הכי זול|עד \d{3,5}|יש משהו|יש לכם/.test(lastUser) ||
+    /משתלם|הכי זול|עד \d{3,5}|יש משהו|יש לכם|מחירים|תאריכים/.test(lastUser) ||
     !!slots.hotel || !!slots.destination;
   // and the gate opens by itself after MAX_QUESTIONS, so nobody is ever stuck
   // at the door (the rule that produced the always-search design)
@@ -674,7 +675,9 @@ async function handleChat(body) {
   // לעוגה" used to get three hotels and a redirect, and would now get only
   // "כמה תהיו?" — as if a cake recipe were a step in booking a holiday.
   const understoodSomething = slotsChanged(prevSlots, slots) || !!faqHit || !!deflection ||
-    wantsToSee || offline.isGreeting(lastUser);
+    wantsToSee || offline.isGreeting(lastUser) ||
+    (slots.notes_from_customer || []).length > (prevSlots.notes_from_customer || []).length ||
+    (slots.preferences || []).length > (prevSlots.preferences || []).length;
   if (holdingForDetails && !understoodSomething && lastUser.trim()) {
     preamble = [preamble, OFF_TOPIC_HE].filter(Boolean).join(String.fromCharCode(10));
   }
@@ -743,8 +746,11 @@ async function handleChat(body) {
       ? cmpLine.replace(/^.*?;\s*/, 'הצגתי משני היעדים שציינתם; ')
       : 'הצגתי הצעות משני היעדים שציינתם, כדי שתוכלו להשוות.';
   }
-  const fixed = [yearLine, offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
-  slots._fixed_said = [...saidFixed, ...[yearLine, offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean)].slice(-8);
+  const fixedRaw = holdingForDetails
+    ? [yearLine]                       // "הצגתי משני היעדים" over zero cards is a lie
+    : [yearLine, offCommLine, cmpLine, monthsLine, ...widened];
+  const fixed = fixedRaw.filter(Boolean).filter(l => !saidFixed.has(l));
+  slots._fixed_said = [...saidFixed, ...fixedRaw.filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));
 
   // Offers held back for now (Tomer, 25/08): the reply is the question, and
