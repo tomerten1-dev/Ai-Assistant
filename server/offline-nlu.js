@@ -215,7 +215,7 @@ function parseText(text, slots) {
   // A correction ("בעצם 4", "סליחה, 3") must override an earlier number —
   // silently keeping the first one books the wrong size room.
   const correcting = /בעצם|סליחה|טעות|תתקן|לא נכון|התכוונתי|שיניתי|בעצמנו/.test(t);
-  if (/(?:^|[^א-ת])(?:אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד)(?![א-ת])/.test(t)) {
+  if (/(?:^|[^א-ת])(?:אני לבד|לבד|רק אני|נוסע לבד|נוסעת לבד)(?![א-ת])/.test(t) && !/חדר לבד/.test(t)) {
     s.adults = 1;
     // travelling alone answers the children question too — asking it anyway
     // reads as not having listened
@@ -1024,9 +1024,9 @@ function phrase(result, slots, cards) {
     const budget = /תקציב/.test(prefs.join(' '));
     const others = prefs.filter(p => !/תקציב/.test(p));
     const bits = [];
-    if (budget) bits.push('מהזול ליקר');
+    if (budget) bits.push('החסכוניות קודם');
     if (others.length) bits.push('לפי ' + others.join(', '));
-    lines.push('סידרתי מחדש ' + bits.join(' ו') + ' (הנציג יאשר סופית):');
+    lines.push('סידרתי לפי מה שביקשתם — ' + bits.join(', ') + ' (הנציג יאשר סופית):');
   }
   // say out loud what was taken into account, then what a rep must confirm
   const applied = note('applied_requirements');
@@ -1252,7 +1252,7 @@ const ASK_LEXICON = [
   [/מטבחון|פינת בישול|קומקום בחדר|מיני בר/, 'מטבחון או פינת בישול'],
   [/חב"ד|חבד|בית כנסת|מניין/, 'בית חב"ד או בית כנסת בקרבת מקום'],
   [/גן ילדים|פעוטון|משהו לפעוטות|שמרטף/, 'מסגרת לילדים קטנים'],
-  [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי/, 'פעילויות לילדים מחוץ לסקי'],
+  [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי|משהו לילדים|שיהיה לילדים/, 'פעילויות לילדים מחוץ לסקי'],
   [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר|ממש ברמה|לא משהו המוני|רמה גבוהה|סוויטה|מפנק/, 'רמת מלון גבוהה או סוויטה'],
   [/פשוט להגיע|קל להגיע|הגעה קלה|מסובך להגיע|נסיעה קצרה מהשדה|קרוב לשדה/, 'הגעה נוחה משדה התעופה'],
   [/טיסות במחיר סביר|טיסה זולה|טיסות זולות/, 'מחיר טיסה נוח'],

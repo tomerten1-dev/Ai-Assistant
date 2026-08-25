@@ -432,10 +432,16 @@ async function handleChat(body) {
       ...(slots.preferences || [])
         .filter(pf => !(prevSlots.preferences || []).includes(pf)),
     ];
-    const replyText = faqHit.he +
-      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') + ' — נציג יבדוק את זה מול המלון.' : '') +
-      String.fromCharCode(10) +
-      'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג מה שבאמת פנוי.';
+    // an emotional turn — a complaint, a booking worry — gets its human word
+    // first and no cheery invite after; and no promise of "באמת פנוי"
+    const EMOTIONAL = new Set(['complaint', 'my_booking', 'special_needs']);
+    const quietSocial = offline.socialLine(lastUser);
+    const socialPrefix = quietSocial && !/מצטער/.test(faqHit.he)
+      ? quietSocial + String.fromCharCode(10) : '';
+    const replyText = socialPrefix + faqHit.he +
+      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') + ' — אתחשב בזה בהצעות, ומה שדורש בדיקה נציג יבדוק.' : '') +
+      (EMOTIONAL.has(faqHit.id) ? '' : String.fromCharCode(10) +
+        'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית).');
     chatLog.logTurn({
       conversationId: body.conversationId || slots._cid || (slots._cid = 'c' + Math.random().toString(36).slice(2, 10)),
       userText: lastUser, reply: replyText, cards: [], result: { notes: [], relaxed: [] },
@@ -529,11 +535,14 @@ async function handleChat(body) {
     spa: 'תנאי הספא שונים בין המלונות — מה שחל על כל אחד מהם כתוב על ההצעה שלו.',
     wifi: 'תנאי האינטרנט שונים בין המלונות — מה שחל על כל אחד מהם כתוב על ההצעה שלו.',
   };
+  // the human word before business: a returning customer, a compliment.
+  // Correct offers with no acknowledgement read as a machine that did not
+  // hear the nice thing that was just said to it. But one apology is enough —
+  // when the complaint answer opens with its own, the social line yields.
+  let social = offline.socialLine(lastUser);
+  if (social && faqHit && /מצטער/.test(social) && /מצטער/.test(faqHit.he)) social = null;
   let preamble = [
-    // the human word before business: a returning customer, a compliment.
-    // Correct offers with no acknowledgement read as a machine that did not
-    // hear the nice thing that was just said to it.
-    offline.socialLine(lastUser),
+    social,
     deflection,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     !deflection && faqSuppressed ? PER_CARD_POINTER[faqHit.id] : null,

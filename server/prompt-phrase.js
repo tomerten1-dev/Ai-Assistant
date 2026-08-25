@@ -152,7 +152,7 @@ function validate(text, { cards, fallback }) {
   {
     const allowed = new Set();
     for (const c of cards) {
-      for (const part of [c.hotel, c.resort, c.room, (c.facts_he || []).join(' ')]) {
+      for (const part of [c.hotel, c.room, (c.facts_he || []).join(' ')]) {
         for (const w of String(part || '').split(/[^A-Za-z]+/)) if (w) allowed.add(w.toLowerCase());
       }
     }
