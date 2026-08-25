@@ -341,7 +341,14 @@ function parseText(text, slots) {
   // is removed before the scan, or the first name in the sentence wins and the
   // customer is offered exactly the month they just ruled out.
   const tMonth = t.replace(/(?:^|[^א-ת])(?:ולא|לא|במקום|חוץ מ)\s*ב?(דצמבר|ינואר|פברואר|מרץ|מארס|מרס)(?![א-ת])/g, ' ');
-  for (const [re, v] of MONTHS) if (re.test(tMonth)) { s.month = v; break; }
+  // "דצמבר או ינואר" names two months and means either. Keeping the first and
+  // never mentioning the second read as ignoring half the request.
+  {
+    const found = [];
+    for (const [re, v] of MONTHS) if (re.test(tMonth)) found.push(v);
+    if (found.length) s.month = found[0];
+    s.month_alt = found.length > 1 ? found[1] : (s.month_alt ?? null);
+  }
   // a numeric date the customer wrote as "15.2" / "5/1"
   // an exact day, not just its month: "12.2.27", "5/1"
   {
@@ -608,6 +615,18 @@ function parseText(text, slots) {
     }
   }
 
+  // Requirements we can hear but cannot filter on. Without this they fell on
+  // the floor — the reply answered everything else and said nothing about the
+  // kitchenette, and the customer rightly read that as not listening.
+  {
+    const ASKS = ASK_LEXICON;
+    const notes = [...(s.notes_from_customer || [])];
+    for (const [re, label] of ASKS) {
+      if (re.test(t) && !notes.includes(label)) notes.push(label);
+    }
+    s.notes_from_customer = notes;
+  }
+
   // --- kids club (גם האיות "קיטנה")
   if (/בלי קי?יטנה|לא צריך קי?יטנה|בלי ליווי/.test(t)) s.needs_hebrew_kids_club = false;
   else if (/קי?יטנ|ליווי בעברית|מדריך לילדים|מדריכים.{0,20}ילדים/.test(t)) s.needs_hebrew_kids_club = true;
@@ -832,6 +851,13 @@ function phrase(result, slots, cards) {
     lines.push(empty.length
       ? `הצגתי משני היעדים שציינתם. ב${empty.join(' וב')} לא מצאתי מקום פנוי בתנאים האלה.`
       : 'הצגתי משני היעדים שציינתם, כדי שתוכלו להשוות.');
+  }
+
+  // both months were heard; the offers start from the first
+  if (slots.month_alt && cards.length &&
+      !(result.relaxed || []).some(r => r.type === 'month')) {
+    const a = MONTH_HE[slots.month] || slots.month, b = MONTH_HE[slots.month_alt] || slots.month_alt;
+    lines.push(`ציינתם ${a} או ${b} — התחלתי מ${a}. תגידו אם להציג גם את ${b}.`);
   }
 
   const campAge = note('camp_age_mismatch');
@@ -1162,6 +1188,26 @@ function notUnderstood(text) {
   return 'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.';
 }
 
+const ASK_LEXICON = [
+  [/מטבחון|פינת בישול|קומקום בחדר|מיני בר/, 'מטבחון או פינת בישול'],
+  [/חב"ד|חבד|בית כנסת|מניין/, 'בית חב"ד או בית כנסת בקרבת מקום'],
+  [/גן ילדים|פעוטון|משהו לפעוטות|שמרטף/, 'מסגרת לילדים קטנים'],
+  [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי/, 'פעילויות לילדים מחוץ לסקי'],
+  [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר/, 'רמת מלון גבוהה'],
+  [/פשוט להגיע|קל להגיע|הגעה קלה|לא מסובך להגיע|נסיעה קצרה מהשדה/, 'הגעה נוחה משדה התעופה'],
+  [/טיסות במחיר סביר|טיסה זולה|טיסות זולות/, 'מחיר טיסה נוח'],
+  [/מלון נוח|נוח למבוגרים|בלי הרבה מדרגות/, 'מלון נוח'],
+  [/בריכה מחוממת|בריכת שחייה/, 'בריכה'],
+  [/ללכת ברגל|הליכה למסלול|בלי שאטל/, 'מרחק הליכה מהמסלולים'],
+];
+
+// a note that names a REQUIREMENT (from the lexicon above), as opposed to a
+// question the model echoed back — requirements survive an FAQ answer in the
+// same turn, questions do not
+function isRequirementNote(note) {
+  return ASK_LEXICON.some(([, label]) => label === note);
+}
+
 // The human word that comes before business. "טסנו איתכם שנה שעברה והיה
 // ממש טוב" was answered with three cards and a question — correct, and cold.
 // One warm line first; the offers still follow.
@@ -1404,6 +1450,7 @@ module.exports = {
   faq,
   faqMulti,
   faqEntries,
+  isRequirementNote,
   socialLine,
   unknownResort,
   relaxationLines,

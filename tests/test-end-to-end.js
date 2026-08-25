@@ -1154,6 +1154,33 @@ t('a two-question message gets both answers', () =>
       assert.ok(/רכב פרטי|שאטלים/.test(out.reply_he), 'parking missing: ' + out.reply_he);
     }));
 
+/* ---- round 20: nothing the customer said falls on the floor ---- */
+
+// "או לפחות מטבחון" — a requirement stated next to a question the FAQ answers.
+t('a requirement beside an answered question still gets its word', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי אנחנו שומרי שבת וכשרות יש מלון עם אוכל כשר או לפחות אפשרות למטבחון באזור הסקי?' }], slots: {} })
+    .then(out => {
+      assert.ok(/כשרות/.test(out.reply_he), 'kosher missing: ' + out.reply_he);
+      assert.ok(/מטבחון/.test(out.reply_he), 'kitchenette dropped: ' + out.reply_he);
+    }));
+
+// "דצמבר או ינואר" — both months heard; the second is the first fallback.
+t('"דצמבר או ינואר" falls back to the second month, and says so', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו 6 חברים רוצים סקי בדצמבר או ינואר' }], slots: {} })
+    .then(out => {
+      assert.equal(out.slots.month, 12);
+      assert.equal(out.slots.month_alt, 1);
+      assert.ok(/דצמבר|ינואר/.test(out.reply_he), out.reply_he);
+    }));
+
+t('requirements we cannot filter on are read back', () =>
+  handleChat({ messages: [{ role: 'user', content: 'חשוב לנו בית חב"ד קרוב וגם פעילויות לילדים, זוג עם ילד בן 8 בפברואר' }], slots: {} })
+    .then(out => {
+      const notes = out.slots.notes_from_customer || [];
+      assert.ok(notes.some(n => /חב"ד/.test(n)), 'Chabad not heard: ' + JSON.stringify(notes));
+      assert.ok(notes.some(n => /פעילויות לילדים/.test(n)), 'activities not heard');
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

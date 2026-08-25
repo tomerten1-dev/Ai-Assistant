@@ -268,6 +268,13 @@ class SkiSearch {
         relaxed.push({ type: 'two_rooms' });
       }
     }
+    // "דצמבר או ינואר": the second month the customer named comes before any
+    // month they did not.
+    if (!candidates.length && slots.month_alt) {
+      candidates = this._filter(slots, party,
+        { month: slots.month_alt, country: slots.country, destination: slots.destination });
+      if (candidates.length) relaxed.push({ type: 'month', from: +slots.month, to: +slots.month_alt });
+    }
     if (!candidates.length && !splits.length && slots.month != null) {
       for (const m of adjacentMonths(+slots.month)) {
         candidates = this._filter(slots, party, { month: m, country: slots.country, destination: slots.destination });

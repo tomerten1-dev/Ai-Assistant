@@ -45,6 +45,7 @@ const EMPTY_SLOTS = {
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
+  month_alt: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
   wrong_year: null,
@@ -81,6 +82,7 @@ function toSearchSlots(slots) {
   return {
     ...slots,
     month: any(slots.month),
+    month_alt: slots.month_alt || null,
     country: any(slots.country),
     departure_airport: any(slots.departure_airport),
     month_part: slots.month_part || null,
@@ -575,7 +577,9 @@ async function handleChat(body) {
   // very question that was just answered — and the reply contradicted itself.
   if (faqHit || deflection) {
     const before = new Set(prevSlots.notes_from_customer || []);
-    freshNotes = freshNotes.filter(n => before.has(n));
+    // a REQUIREMENT stated in the same message ("...או לפחות מטבחון") is not
+    // the question the FAQ just answered — it still deserves its word
+    freshNotes = freshNotes.filter(n => before.has(n) || offline.isRequirementNote(n));
   }
   const sayingSlots = { ...slots, notes_from_customer: freshNotes, _notes_said: [] };
 
@@ -667,12 +671,17 @@ async function handleChat(body) {
     // A last trim on the assembled reply. phrase() caps its own lines, but a
     // FAQ answer, a question and a closing arrive from here — a kosher-keeping
     // family asking about camps got six paragraphs. The softer lines go first.
-    const SOFT = /נפתחות|לקחתי בחשבון|אני כאן אם תרצו/;
+    // "לקחתי בחשבון" is the customer's proof of being heard — trimming it was
+    // the single commonest complaint in the golden set. It is dropped only
+    // after every coaching line is gone and the reply is still over the cap.
+    const SOFT1 = /נפתחות|אני כאן אם תרצו/;
+    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או/;
     let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     while (all.length > 5) {
-      const drop = all.findIndex(l => SOFT.test(l));
-      if (drop < 0) break;
-      all.splice(drop, 1);
+      const drop = all.findIndex(l => SOFT1.test(l));
+      const drop2 = drop < 0 ? all.findIndex(l => SOFT2.test(l)) : drop;
+      if (drop2 < 0) break;
+      all.splice(drop2, 1);
     }
     // A sentence the customer already read, above the same offers, is noise
     // the second time. It was the loudest thing about a long conversation:
