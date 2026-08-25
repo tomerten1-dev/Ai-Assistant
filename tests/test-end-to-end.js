@@ -1348,6 +1348,16 @@ t('a filtered camp week is said out loud', () =>
   handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 6 ו9 בפברואר, צריך קייטנה בעברית' }], slots: {} })
     .then(out => assert.ok(/קייטנ/.test(out.reply_he), out.reply_he)));
 
+// The most repeated complaint across every measured round: the bot described
+// what it DID instead of naming which offer answers the need, and why.
+t('a "which is better" question names one offer and says why', () =>
+  handleChat({ messages: [{ role: 'user', content: 'מה יותר משתלם וגם שיהיה אתר נוח למתחילים?' }], slots: {} })
+    .then(out => {
+      assert.ok(/אם צריך לבחור אחת —/.test(out.reply_he), out.reply_he);
+      const named = out.cards.some(c => out.reply_he.includes(c.hotel));
+      assert.ok(named, 'named no hotel: ' + out.reply_he);
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
