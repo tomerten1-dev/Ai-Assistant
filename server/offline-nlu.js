@@ -944,7 +944,7 @@ function phrase(result, slots, cards) {
     .filter(n => !(slots._notes_said || []).includes(n))
     // not a restatement of the request in the third person, and not the
     // destination the line above has just answered about
-    .filter(n => !/^ ?(הלקוח|הלקוחה|הם |הוא ביקש|היא ביקשה)/.test(n))
+    .filter(n => !/^ ?(הלקוח|הלקוחה|המשפחה|הזוג|הם |הוא |היא |הנוסע)/.test(n))
     .filter(n => !(offComm && n.includes(offComm.name)));
   if (cards.length && heard.length) {
     lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');

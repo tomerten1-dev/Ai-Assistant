@@ -333,10 +333,17 @@ async function handleChat(body) {
         // floor: not filtered on, not answered, not mentioned, which is what
         // makes a bot feel like it did not listen. They accumulate, and the
         // phrasing layer is required to acknowledge them.
+        // The model narrates in the third person ("המשפחה טסה איתנו...",
+        // "הלקוח מבקש...") and we read those notes back to the customer
+        // verbatim — inventing a "משפחה" nobody mentioned. And a wish we
+        // already filter on (Sabbath) is not a note for a rep.
         merged.notes_from_customer = [...new Set([
           ...(slots.notes_from_customer || []),
           ...(parsed.slots.notes_from_customer || []),
-        ])].slice(0, 6);
+        ])]
+          .filter(n => !/^ ?(הלקוח|הלקוחה|המשפחה|הזוג|הם |הוא |היא |הנוסע)/.test(n))
+          .filter(n => !(/שבת/.test(n) && merged.no_saturday_flights))
+          .slice(0, 6);
         slots = merged;
         modelUsed = true;
         if (!parsed.ready_to_search && parsed.reply_he) replyIfNotReady = parsed.reply_he;
@@ -739,7 +746,7 @@ async function handleChat(body) {
       if (newPrefs.length) coverage.push('לקחתי בחשבון: ' + newPrefs.join(' · ') + '.');
       const unheard = (sayingSlots.notes_from_customer || [])
         .filter(Boolean).filter(n => !mentions(n));
-      if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(' · ') + ' — נציג יבדוק ויאשר מול המלון.');
+      if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(' · ') + ' — נציג יבדוק ויאשר.');
     }
     const parts = [preamble, intro, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
