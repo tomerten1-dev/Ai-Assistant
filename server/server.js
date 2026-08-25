@@ -426,8 +426,12 @@ async function handleChat(body) {
     slots._lastQuestion = 'adults';
     // requirements stated in the same breath ("או לפחות מטבחון") ride along —
     // the early return must not swallow them
-    const newNotes = (slots.notes_from_customer || [])
-      .filter(n => !(prevSlots.notes_from_customer || []).includes(n));
+    const newNotes = [
+      ...(slots.notes_from_customer || [])
+        .filter(n => !(prevSlots.notes_from_customer || []).includes(n)),
+      ...(slots.preferences || [])
+        .filter(pf => !(prevSlots.preferences || []).includes(pf)),
+    ];
     const replyText = faqHit.he +
       (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') + ' — נציג יבדוק את זה מול המלון.' : '') +
       String.fromCharCode(10) +

@@ -88,6 +88,8 @@ function parseText(text, slots) {
   // same word to a reader and two different strings to a regex.
   const t = ' ' + text
     .replace(/[\u0591-\u05C7]/g, '')
+    .replace(/[\u05F4\u201C\u201D]/g, '"')
+    .replace(/[\u05F3\u2018\u2019]/g, "'")
     .replace(/([א-ת])[-–—]([א-ת])/g, '$1 $2')
     .replace(/[!?.,]{2,}/g, ' ')
     .replace(/\s+/g, ' ').trim() + ' ';
@@ -220,6 +222,8 @@ function parseText(text, slots) {
     if (!(s.children_ages || []).length && !s.children_count) {
       s.no_children = true; s.children_ages = [];
     }
+  // "חדר ליחיד", "חדר סינגל" — one traveller, said through the room
+  if (/חדר ליחיד|לנוסע יחיד|חדר סינגל|אני יחיד/.test(t) && s.adults == null) s.adults = 1;
   if (s.adults === 1 && !(s.notes_from_customer || []).includes('חופשה לנוסע יחיד')) {
     s.notes_from_customer = [...(s.notes_from_customer || []), 'חופשה לנוסע יחיד'];
   }
@@ -816,7 +820,7 @@ function comparingLine(result, slots) {
   const fromAll = nPlaces > 2 ? 'מכל היעדים שציינתם' : 'משני היעדים שציינתם';
   if (!empty.length) return `הצגתי הצעות ${fromAll}, כדי שתוכלו להשוות.`;
   // one side empty: claiming "from both" while one is empty contradicts itself
-  return `ב${full.join(' וב')} מצאתי מקום פנוי; ב${empty.join(' וב')} לא מצאתי בתנאים האלה.`;
+  return `ב${full.join(' וב')} יש אפשרויות שנראות פנויות; ב${empty.join(' וב')} לא מצאתי בתנאים האלה.`;
 }
 
 // A destination pingwin sells but holds no commitments for. Deterministic, and
@@ -847,7 +851,12 @@ function relaxationLines(result, slots) {
     if (r.type === 'month') {
       // "יש סקי בבולגריה בדצמבר?" deserves a yes/no with the place named, not
       // a generic "לא מצאתי בדיוק"
-      const place = slots && (slots.destination ||
+      const DEST_HE2 = { 'Bansko': 'בנסקו', 'Borovets': 'בורובץ', 'Tignes': 'טיניי',
+        'Les 2 Alpes': 'לה דוז אלפ', 'Val Thorens': 'ואל טורנס', 'Avoriaz': 'אבוריאז',
+        'Les Arcs': 'לה ארק', 'Flaine Grand Massif': 'פליין גרנד מסיף', "Alpe d'Huez": "אלפ ד'הואז",
+        'Montgenevre': "מונז'נבר", 'Les Menuires': 'לה מנואר', 'Soldeu': 'סולדו',
+        'Pas de la Casa': 'פאס דה לה קאסה', 'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל' };
+      const place = slots && ((slots.destination && (DEST_HE2[slots.destination] || null)) ||
         ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[slots.country]) || null;
       out.push(place
         ? `ב${place} אין לי יציאות פנויות ב${MONTH_HE[r.from] || r.from}; הקרוב ביותר — ${MONTH_HE[r.to] || r.to}:`
@@ -1272,7 +1281,7 @@ function socialLine(text) {
   const returning = /טסנו איתכם|היינו איתכם|נסענו איתכם|הזמנו אצלכם|היינו אצלכם|לקוחות שלכם|פעם שעברה איתכם|שוב איתכם|זה שוב אנחנו|זו שוב אני|מהחופשה .{0,25}שנה שעברה|חוזרים אליכם/.test(t);
   const praise = /היה (ממש |מאוד |פשוט )?(טוב|מעולה|כיף|מושלם|מדהים|נהדר)|נהנינו|היה חלום|אהבנו|מרוצים מכם|שירות מעולה|אתם אלופים/.test(t);
   // disappointment first: "הבטחתם לי" deserves a human word before any offer
-  if (/הבטחתם|לא מה שסוכם|התאכזב|מאוכזב|עגמת נפש|זה לא מה שאמרתם|למשוך אותי|תמרחו|אל תמרח|תגידו פשוט|די לחפור/.test(t)) {
+  if (/הבטחתם|לא מה שסוכם|התאכזב|מאוכזב|עגמת נפש|זה לא מה שאמרתם|למשוך אותי|תמרחו|אל תמרח|תגידו פשוט|די לחפור|אף אחד לא חזר|לא מצליח לקבל|המחיר קופץ|כל פעם ש.{0,20}(אין|קופץ)|באמת מאכזב/.test(t)) {
     return 'מצטער לשמוע, ואני לוקח את זה ברצינות — אעביר את זה לנציג שיטפל בכם אישית.';
   }
   if (returning && praise) return 'איזה כיף לשמוע שנהניתם — נשמח לארח אתכם שוב.';
@@ -1518,7 +1527,8 @@ function deflect(text) {
   if (/כלב|חתול|חיית מחמד|בעל ?חיים/.test(t)) {
     return 'מדיניות בעלי חיים נקבעת על ידי המלון וחברת התעופה ומשתנה ביניהם. ' + handoffTail();
   }
-  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת|קח את|ניקח את|בוא ניקח|נלך על|אני בוחר|אנחנו בוחרים|זה נראה לי|מתאים לנו/.test(t)) {
+  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת|קח את|ניקח את|בוא ניקח|נלך על|אני בוחר|אנחנו בוחרים|זה נראה לי|מתאים לנו/.test(t)
+      && !/לא מצליח|לא מצליחה|מנסה כבר|כבר שבוע|אף אחד לא|בעיה/.test(t)) {
     return 'מצוין. לחצו "המשך להזמנה" בכרטיס שבחרתם כדי לראות את המחיר המדויק, או "תחזרו אליי" ונציג יסגור איתכם — ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.';
   }
   if (/הכי משתלם|הכי זול|מתי זול|איפה זול|הכי כדאי מבחינת מחיר/.test(t)) {
