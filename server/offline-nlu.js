@@ -1359,6 +1359,14 @@ function guard(text) {
     }
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
   }
+  // Our cost price and commission are internal, full stop. The phrasing model
+  // once answered "נציג יעביר לכם את עלות החדר לסוכן ואת העמלה" — a promise to
+  // leak the margin, invented from thin air. This runs before any model sees
+  // the message.
+  if (/כמה (באמת )?עולה לכם|העלות שלכם|עלות החדר לכם|העמלה|כמה אתם מרוויחים|מחיר עלות|כמה אתם לוקחים לעצמכם|הרווח שלכם/.test(t)) {
+    return 'מחירי העלות והתנאים המסחריים שלנו מול המלונות הם מידע פנימי שאני לא חושף. המחיר שרלוונטי לכם הוא המחיר בהצעה — והוא כולל את מה שכתוב עליה.';
+  }
+
   // Red rule 10. An attempt to replace the instructions is answered plainly and
   // once. Ignoring it and answering the rest of the sentence leaves the
   // customer thinking it might work on the next try.

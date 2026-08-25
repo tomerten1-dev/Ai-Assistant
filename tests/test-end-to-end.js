@@ -1215,6 +1215,15 @@ t('ski-in ski-out is read back as a requirement', () =>
     .then(out => assert.ok((out.slots.notes_from_customer || []).some(n => /סקי אין/.test(n)),
       JSON.stringify(out.slots.notes_from_customer))));
 
+// The auditor caught the model PROMISING to send a customer our cost price
+// and commission. Internal commercial terms are refused before any model runs.
+t('our cost price and commission are refused', () =>
+  handleChat({ messages: [{ role: 'user', content: 'כמה באמת עולה לכם החדר מול המלון? העלות שלכם והעמלה' }], slots: {} })
+    .then(out => {
+      assert.ok(/מידע פנימי/.test(out.reply_he), out.reply_he);
+      assert.ok(!/נציג יעביר לכם את/.test(out.reply_he), out.reply_he);
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

@@ -61,12 +61,18 @@ async function generate(kind, i) {
 
 (async () => {
   let turns = 0; const bad = [];
+  // the business question: what share of CONVERSATIONS end clean, and how bad
+  // were the ones that did not
+  let convos = 0, cleanConvos = 0, noCriticalConvos = 0;
+  const sev = { 'מטעה': 0, 'חסר': 0, 'סגנון': 0 };
   for (let i = 0; i < WANTED; i++) {
     const kind = KINDS[i % KINDS.length];
     let msgs = [];
     try { msgs = await generate(kind, i); }
     catch (e) { console.log('(generator failed: ' + e.message + ')'); continue; }
     if (!msgs.length) continue;
+    convos++;
+    let anyFail = false, anyCritical = false;
     let slots = {}; const hist = []; let prevReply = null;
     for (const m of msgs) {
       hist.push({ role: 'user', content: m });
@@ -78,17 +84,27 @@ async function generate(kind, i) {
       let verdict = { ok: true };
       try { verdict = await judge(m, out.reply_he, prevReply, out.cards); }
       catch (e) { /* a judge we could not reach is not a verdict */ }
-      if (!verdict.ok) bad.push({ kind, m, reply: out.reply_he, why: verdict.why || '' });
+      if (!verdict.ok) {
+        bad.push({ kind, m, reply: out.reply_he, why: verdict.why || '', severity: verdict.severity || '' });
+        anyFail = true;
+        if (sev[verdict.severity] != null) sev[verdict.severity]++;
+        if (verdict.severity === 'מטעה') anyCritical = true;
+      }
       prevReply = out.reply_he;
     }
     process.stdout.write('.');
+    if (!anyFail) cleanConvos++;
+    if (!anyCritical) noCriticalConvos++;
   }
   console.log('\n');
   for (const b of bad) {
     console.log('='.repeat(68));
-    console.log('[' + b.kind + ']  ' + b.why);
+    console.log('[' + b.kind + '] (' + (b.severity || '?') + ')  ' + b.why);
     console.log('>>> ' + b.m);
     console.log('<<< ' + b.reply + '\n');
   }
   console.log(`${turns} תורות · ${bad.length} נפסלו (${Math.round(100 * bad.length / Math.max(1, turns))}%)`);
+  console.log(`חומרת הפסילות: מטעה=${sev['מטעה']} · חסר=${sev['חסר']} · סגנון=${sev['סגנון']}`);
+  console.log(`${convos} שיחות · ${cleanConvos} נקיות לגמרי (${Math.round(100 * cleanConvos / Math.max(1, convos))}%) · ` +
+    `${noCriticalConvos} בלי טעות מטעה (${Math.round(100 * noCriticalConvos / Math.max(1, convos))}%)`);
 })();
