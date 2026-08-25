@@ -389,6 +389,13 @@ async function handleChat(body) {
     const extra = routed && (routed.all || []).find(a => a.id !== faqHit.id);
     if (extra) faqHit = { ...faqHit, he: faqHit.he + String.fromCharCode(10) + extra.he };
   }
+  // A customer already comparing two named destinations sees them side by
+  // side; printing the four-country lecture on top ("מתפזרת ליעדים שלא
+  // הוזכרו") answers a question they did not ask.
+  if (faqHit && faqHit.id === 'compare_countries' && (slots.compare || []).length) {
+    faqHit = null;
+  }
+
   // A pure policy question from someone who has told us nothing — cancellation
   // terms, deposits, insurance — used to be answered correctly and then buried
   // under three arbitrary hotels and "כמה נוסעים תהיו?". The judge called the
@@ -400,7 +407,13 @@ async function handleChat(body) {
   if (faqHit && nothingKnownYet && !slotsChanged(prevSlots, slots) &&
       !PER_CARD_IDS.has(faqHit.id) && !offline.guard(lastUser)) {
     slots._lastQuestion = 'adults';
-    const replyText = faqHit.he + String.fromCharCode(10) +
+    // requirements stated in the same breath ("או לפחות מטבחון") ride along —
+    // the early return must not swallow them
+    const newNotes = (slots.notes_from_customer || [])
+      .filter(n => !(prevSlots.notes_from_customer || []).includes(n));
+    const replyText = faqHit.he +
+      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(' · ') + ' — נציג יבדוק את זה מול המלון.' : '') +
+      String.fromCharCode(10) +
       'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג מה שבאמת פנוי.';
     chatLog.logTurn({
       conversationId: body.conversationId || slots._cid || (slots._cid = 'c' + Math.random().toString(36).slice(2, 10)),
@@ -740,8 +753,13 @@ async function handleChat(body) {
       const fresh = all.filter(l => !alreadySaid.has(l) || mustKeep.has(l));
       // Everything we were about to say has already been said, above these same
       // offers. Saying it all again is worse than saying one true short thing.
+      // and when everything was already said, the one line we allow ourselves
+      // reflects what the customer asked for instead of pointing at the cards
+      const focus = [...(slots.preferences || [])].slice(0, 2);
       all = fresh.length ? fresh
-        : ['הפרטים המלאים של כל הצעה מופיעים על הכרטיס שלה. תגידו לי מה חשוב לכם ואדייק.'];
+        : [focus.length
+          ? `אלה ההצעות שעונות הכי טוב על ${focus.join(' ו')} מתוך מה שפנוי כרגע. רוצים שאבדוק חודש או יעד אחר?`
+          : 'אלה ההצעות הפתוחות כרגע בתנאים שלכם. רוצים שאבדוק חודש או יעד אחר?'];
     }
     slots._lastCards = cardKey;
     // The memory accumulates while the offers stand still: suppressing a line
