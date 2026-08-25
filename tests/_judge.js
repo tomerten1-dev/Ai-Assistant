@@ -63,7 +63,9 @@ async function judge(userText, reply, prevReply, cards) {
     }) }],
     maxTokens: 600,
   });
-  try { return JSON.parse(raw); } catch (e) { return { ok: true }; }
+  // an unparseable verdict is not a pass — see the 100% that an out-of-credit
+  // run produced when this returned ok:true
+  try { return JSON.parse(raw); } catch (e) { return { unreachable: true }; }
 }
 
 module.exports = { judge, callOpenAI, JUDGE_PROMPT };
