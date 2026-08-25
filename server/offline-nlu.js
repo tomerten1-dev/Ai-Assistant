@@ -1231,6 +1231,9 @@ const ASK_LEXICON = [
   [/ללכת ברגל|הליכה למסלול|בלי שאטל/, 'מרחק הליכה מהמסלולים'],
   [/סקי אין|ski.?in.?ski.?out|על המסלול|יציאה מהמלון למסלול/i, 'סקי אין-סקי אאוט (מלון על המסלול)'],
   [/מסעד|אוכל טוב באזור|שף/, 'מסעדות טובות באזור'],
+  [/מסלולים קלים|מסלולים ירוקים|מסלולים למתחילים/, 'מסלולים קלים'],
+  [/מעלית בשבת|מעלית שבת/, 'מעלית שבת במלון'],
+  [/מזוודה|כבודה כלולה|טרולי/, 'מזוודה בטיסה'],
 ];
 
 // a note that names a REQUIREMENT (from the lexicon above), as opposed to a
@@ -1327,12 +1330,15 @@ function faqMulti(text) {
     if (h && !hits.some(x => x.id === h.id)) hits.push(h);
     if (hits.length === 2) break;
   }
-  // a run-on sentence names two known topics with no punctuation between
-  // them; the whole-text scan picks up the second one the segments missed
-  if (hits.length === 1) {
+  // a run-on sentence names several known topics with no punctuation between
+  // them; the whole-text scan picks up what the segments missed, to a cap of
+  // three answers per reply
+  if (hits.length < 3) {
+    const whole = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
     for (const e of FAQ) {
-      if (e.id === hits[0].id) continue;
-      if (e.re.test(' ' + String(text || '').replace(/\s+/g, ' ') + ' ')) { hits.push({ id: e.id, he: e.he }); break; }
+      if (hits.length >= 3) break;
+      if (hits.some(h => h.id === e.id)) continue;
+      if (e.re.test(whole)) hits.push({ id: e.id, he: e.he });
     }
   }
   if (!hits.length) return null;
