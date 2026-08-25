@@ -1305,6 +1305,24 @@ t('every stated requirement gets a word in the final reply', () =>
       }
     }));
 
+/* ---- round 27 ---- */
+
+t('other travellers names and phones are refused (red rule 2)', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש לכם נוסעים שכבר הזמינו לבנסקו? תנו לי שמות או טלפונים שלהם' }], slots: {} })
+    .then(out => {
+      assert.ok(/אין לי גישה לפרטי לקוחות/.test(out.reply_he), out.reply_he);
+      assert.ok(!/נציג יבדוק ויאשר/.test(out.reply_he) || !/פרטי קשר|טלפונים/.test(out.reply_he),
+        'promised to check: ' + out.reply_he);
+    }));
+
+t('a comparison blocked by the month keeps both destinations', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש לכם משהו בבולגריה או באנדורה בדצמבר לזוג?' }], slots: {} })
+    .then(out => {
+      assert.ok(/הצגתי הצעות מ/.test(out.reply_he), out.reply_he);
+      assert.ok(new Set(out.cards.map(c => c.country)).size > 1,
+        'one country only: ' + out.cards.map(c => c.country).join(','));
+    }));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

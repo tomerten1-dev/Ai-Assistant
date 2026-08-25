@@ -342,6 +342,9 @@ async function handleChat(body) {
           ...(parsed.slots.notes_from_customer || []),
         ])]
           .filter(n => !/^ ?(הלקוח|הלקוחה|המשפחה|הזוג|הם |הוא |היא |הנוסע)/.test(n))
+          // a request for other customers' details is refused by the guard —
+          // it must never resurface as a note promising a rep will "check"
+          .filter(n => !/פרטי קשר|טלפונים של|שמות של|נוסעים אחרים|לקוחות אחרים/.test(n))
           .filter(n => !(/שבת/.test(n) && merged.no_saturday_flights))
           .slice(0, 6);
         slots = merged;

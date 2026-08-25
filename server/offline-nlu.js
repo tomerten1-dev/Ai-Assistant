@@ -1390,7 +1390,7 @@ function guard(text) {
   // their OWN booking is not a red rule — "לא מצליח להיכנס לאזור האישי עם
   // מספר ההזמנה" belongs to the my-booking answer, not to this refusal
   if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי/.test(t)) { /* fall through */ }
-  else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות/.test(t)) {
+  else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות|שמות או טלפונים|טלפונים של (נוסעים|לקוחות|אנשים)|פרטי קשר של (נוסעים|לקוחות)|להתחבר לנוסעים|נוסעים שכבר הזמינו|מי עוד הזמין|מי נוסע איתנו/.test(t)) {
     // Their OWN booking is a different question with a different answer: we
     // still show nothing, but "אין לי גישה לפרטי לקוחות אחרים" reads as an
     // accusation when someone is asking about the holiday they just bought.
