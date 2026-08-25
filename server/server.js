@@ -644,6 +644,40 @@ async function handleChat(body) {
   const more = offline.wantsMore(lastUser);
   const seenBefore = new Set(prevSlots._shown || []);
   let cards = presentCards(result, slots, more ? seenBefore : null);
+
+  // Tomer, 25/08: ask two or three questions FIRST, then show offers — unless
+  // we already know enough. Showing three hotels after every message, before
+  // the party size or the month is known, is a catalogue, not a salesperson:
+  // the offers cannot be right yet, and the customer learns to ignore them.
+  //
+  // "Enough" is the party plus a when. Everything else (country, board, spa)
+  // only sorts what we found; those two decide WHICH rooms even fit.
+  const partyKnown = slots.adults != null ||
+    (slots.children_ages || []).length > 0 || slots.children_count != null;
+  const whenKnown = slots.month != null || slots.exact_day != null || !!slots.flexible_dates;
+  const knowsEnough = partyKnown && whenKnown;
+  // an explicit "show me" overrides the gate — they asked to see, not to be
+  // interviewed; so does a hotel or resort named outright, and "יש עוד?"
+  const wantsToSee = more || offline.wantsMore(lastUser) ||
+    /תראה|תראו|מה יש לכם|הראה לי|אפשר לראות|שלח לי אפשרויות|מה האפשרויות/.test(lastUser) ||
+    // "מה יותר משתלם?" and "יש משהו עד 3500?" are requests to SEE, answered
+    // with a list; holding them back to ask the month reads as stonewalling
+    /משתלם|הכי זול|עד \d{3,5}|יש משהו|יש לכם/.test(lastUser) ||
+    !!slots.hotel || !!slots.destination;
+  // and the gate opens by itself after MAX_QUESTIONS, so nobody is ever stuck
+  // at the door (the rule that produced the always-search design)
+  const askedEnough = questionsAsked >= MAX_QUESTIONS;
+  const holdingForDetails = !knowsEnough && !wantsToSee && !askedEnough &&
+    !!tailQuestion && cards.length > 0;
+  if (holdingForDetails) cards = [];
+  // Holding the offers back must not swallow the off-topic line: "תן לי מתכון
+  // לעוגה" used to get three hotels and a redirect, and would now get only
+  // "כמה תהיו?" — as if a cake recipe were a step in booking a holiday.
+  const understoodSomething = slotsChanged(prevSlots, slots) || !!faqHit || !!deflection ||
+    wantsToSee || offline.isGreeting(lastUser);
+  if (holdingForDetails && !understoodSomething && lastUser.trim()) {
+    preamble = [preamble, OFF_TOPIC_HE].filter(Boolean).join(String.fromCharCode(10));
+  }
   let exhausted = false;
   if (more && !cards.length) {
     cards = presentCards(result, slots);      // start over rather than show nothing
@@ -697,6 +731,10 @@ async function handleChat(body) {
   // rewriting "באוסטריה לא מצאתי" into something friendlier and wrong
   let cmpLine = offline.comparingLine(result, slots);
   const monthsLine = offline.bothMonthsLine(result, slots, cards.length > 0);
+  // "אפשר בדצמבר 2025?" — a fact about their request, true whether or not we
+  // are showing offers this turn
+  const yearLine = slots.wrong_year
+    ? 'אנחנו מוכרים כרגע את עונת חורף 2026/27 — דצמבר 2026 עד סוף מרץ 2027.' : null;
   // "בבולגריה יש אפשרויות פנויות" + "בבולגריה אין יציאות בדצמבר" in the same
   // reply is a contradiction the customer has to untangle. When both fire, the
   // comparison keeps only the half the month line does not carry.
@@ -705,13 +743,17 @@ async function handleChat(body) {
       ? cmpLine.replace(/^.*?;\s*/, 'הצגתי משני היעדים שציינתם; ')
       : 'הצגתי הצעות משני היעדים שציינתם, כדי שתוכלו להשוות.';
   }
-  const fixed = [offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
-  slots._fixed_said = [...saidFixed, ...[offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean)].slice(-8);
+  const fixed = [yearLine, offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
+  slots._fixed_said = [...saidFixed, ...[yearLine, offCommLine, cmpLine, monthsLine, ...widened].filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));
 
-  const templated = offline.phrase(result, sayingSlots, cards) ||
-    (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
-      offline.noMatchAnswer());
+  // Offers held back for now (Tomer, 25/08): the reply is the question, and
+  // nothing that describes a list the customer cannot see — and certainly not
+  // "לא מצאתי התאמה", which would be a lie about a search that did find some.
+  const templated = holdingForDetails ? '' :
+    (offline.phrase(result, sayingSlots, cards) ||
+      (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
+        offline.noMatchAnswer()));
   // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
   // sees the offers the deterministic filter already chose, so it cannot
   // invent one; and anything it returns must survive validate() or we ship
@@ -728,7 +770,7 @@ async function handleChat(body) {
     'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human']);
   const answeredOnly = !!faqHit &&
     (!slotsChanged(prevSlots, slots) || NO_PARAGRAPH_AFTER.has(faqHit.id));
-  const intro = (deflection || answeredOnly) ? templated : await phraseWithModel({
+  const intro = (deflection || answeredOnly || holdingForDetails) ? templated : await phraseWithModel({
     slots: sayingSlots, cards, result, fallback: templated,
     lastReply: lastReply ? lastReply.content : null,
     answered: preamble || null,
@@ -785,7 +827,7 @@ async function handleChat(body) {
       return hits >= Math.max(1, Math.ceil(words.length / 2));
     };
     const coverage = [];
-    if (cards.length) {
+    if (cards.length || holdingForDetails) {
       const newPrefs = (slots.preferences || [])
         .filter(p => !(prevSlots.preferences || []).includes(p))
         .filter(p => !mentions(p));
@@ -855,7 +897,9 @@ async function handleChat(body) {
     // "אם אחת מהן" above a single card reads as a machine that did not look at
     // its own answer.
     const oneOnly = cards.length === 1 && !(result.two_room_splits || []).length;
-    const close = closedBefore ? ''
+    // "אפשר לשנות תאריך ואבדוק שוב" is the no-offers closing; while we are
+    // deliberately holding offers back to ask a question, it is nonsense.
+    const close = (closedBefore || holdingForDetails) ? ''
       : guidance.closing(anyOffer ? (oneOnly ? 'with_one_offer' : 'with_offers') : 'no_offers');
     const said = parts.join(String.fromCharCode(10));
     if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }

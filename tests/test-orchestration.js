@@ -96,13 +96,16 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
   t('bot still replied', !!r3.reply_he);
   t('reply is a sensible question, not an error', /\?/.test(r3.reply_he), r3.reply_he);
 
-  console.log('\n[questions] gaps are asked ALONGSIDE offers, never instead of them');
+  console.log('\n[questions] two or three questions FIRST, then the offers');
   reset();
   const r4 = await handleChat({ messages: [{ role: 'user', content: 'אנחנו 2' }], slots: {} });
   // Tomer, 24/08: never hold the customer at the door. Search with what we
   // have, ask the gap after the offers, and never ask the same thing twice.
-  t('missing children/month still shows offers', r4.cards.length > 0, 'cards=' + r4.cards.length);
-  t('and asks the gap alongside them', /[?]/.test(r4.reply_he), r4.reply_he);
+  // Policy changed 25/08 (Tomer): "אני רוצה שהוא ישאל 2/3 שאלות ואז יתן את
+  // האופציות". Party AND when decide which rooms even fit; with only a party
+  // size the offers cannot be right yet.
+  t('a party size alone holds the offers back', r4.cards.length === 0, 'cards=' + r4.cards.length);
+  t('and asks for what is missing', /[?]/.test(r4.reply_he), r4.reply_he);
   reset();
   const r5 = await handleChat({
     messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר' }], slots: {},

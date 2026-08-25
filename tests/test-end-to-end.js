@@ -198,18 +198,14 @@ t('a tradeoff is never suggested for the Sabbath', () => {
 });
 
 
-t('a vague first message still gets offers, not an interview', () => {
-  // Tomer, 24/08: "שלא יהיה חייב להשיג פרטים ויתקע"
-  return handleChat({
-    messages: [{ role: 'user', content: 'אני רוצה לנסוע לסקי' }], slots: {},
-  }).then(out => {
-    assert.ok(out.cards.length > 0, 'held the customer at the door: ' + out.reply_he);
-    assert.ok(/\?/.test(out.reply_he), 'showed offers but asked nothing at all');
-    // and the spread should not be three identical room sizes
-    const sizes = new Set(out.cards.map(c => c.occ && c.occ.max));
-    assert.ok(sizes.size > 1, 'no variety with an unknown party: ' + JSON.stringify([...sizes]));
-  });
-});
+// Policy changed 25/08 (Tomer): "ישאל 2/3 שאלות ואז יתן את האופציות". A vague
+// first message is still not an interview — it gets ONE question, not three.
+t('a vague first message gets one question, not an interview', () =>
+  handleChat({ messages: [{ role: 'user', content: 'רוצה לנסוע לסקי' }], slots: {} })
+    .then(out => {
+      const questions = (out.reply_he.match(/\?/g) || []).length;
+      assert.ok(questions <= 1, 'asked ' + questions + ' questions: ' + out.reply_he);
+    }));
 
 t('the same question is never asked twice', () => {
   const turns = ['אני רוצה לנסוע לסקי', 'פברואר', 'באוסטריה'];
@@ -934,7 +930,9 @@ t('a real short request is still understood', () => Promise.all([
   handleChat({ messages: [{ role: 'user', content: 'זוג' }], slots: {} }),
   handleChat({ messages: [{ role: 'user', content: 'שלום שלום' }], slots: {} }),
 ]).then(([couple, hello]) => {
-  assert.ok(couple.cards.length, 'a couple got nothing');
+  // 25/08: a party size alone is not enough to show offers — but it IS
+  // understood, and that is what this pins
+  assert.equal(couple.slots.adults, 2, 'a couple was not understood');
   assert.ok(/היי/.test(hello.reply_he), 'a doubled greeting puzzled it: ' + hello.reply_he);
 }));
 
@@ -1381,6 +1379,31 @@ t('a money question hears where the price lives', () =>
 t('a request with no money in it gets no price sermon', () =>
   handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר בבולגריה' }], slots: {} })
     .then(out => assert.ok(!/טווח המחיר מסומן/.test(out.reply_he), out.reply_he)));
+
+/* ---- 25/08: ask two or three questions first, then show the offers ---- */
+
+t('a party size alone holds the offers and asks when', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו זוג' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'showed offers before knowing when');
+      assert.ok(/מתי|חודש/.test(out.reply_he), out.reply_he);
+    }));
+
+t('party plus month is enough — offers appear', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} })
+    .then(out => assert.ok(out.cards.length, 'held offers although it knew enough')));
+
+t('an explicit "show me" overrides the gate', () =>
+  handleChat({ messages: [{ role: 'user', content: 'תראה לי מה יש' }], slots: {} })
+    .then(out => assert.ok(out.cards.length, 'refused to show when asked to show')));
+
+t('a named resort is enough to show', () =>
+  handleChat({ messages: [{ role: 'user', content: 'רוצה סקי בבנסקו' }], slots: {} })
+    .then(out => assert.ok(out.cards.length, out.reply_he)));
+
+t('holding the offers does not swallow the off-topic line', () =>
+  handleChat({ messages: [{ role: 'user', content: 'תן לי מתכון לעוגה' }], slots: {} })
+    .then(out => assert.ok(/אני כאן בעיקר להתאמת/.test(out.reply_he), out.reply_he)));
 
 (async () => {
   for (const [name, fn] of results) {
