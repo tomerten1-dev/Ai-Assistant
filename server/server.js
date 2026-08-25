@@ -492,8 +492,11 @@ async function handleChat(body) {
   // prices, flight times) — tests/test-faq.js pins that.
   // The red-rule guard runs unconditionally — not gated on the FAQ, not gated
   // on whether the message also filled a slot.
-  const guarded = offline.guard(lastUser) ||
+  let guarded = offline.guard(lastUser) ||
     offline.unknownHotel(lastUser) || offline.unknownResort(lastUser);
+  // the same refusal twice running is right to repeat — and reads better as a
+  // person repeating themselves on purpose
+  if (guarded && guarded === prevSlots._lastGuard) guarded = 'כאמור — ' + guarded;
   const deflection = guarded || (faqHit ? null
     : (slotsChanged(prevSlots, slots) ? null : offline.deflect(lastUser)));
   // deflect() guards the red rules (no customer names, no exact prices) so it
@@ -839,6 +842,7 @@ async function handleChat(body) {
   // A request to be called back opens the form, on the offer they were looking
   // at if there is one. Telling someone where to find a button is not service.
   slots._lastFaqId = faqHit ? faqHit.id : null;
+  slots._lastGuard = guarded || null;
   const askForDetails = offline.wantsCallback(lastUser);
 
   return {

@@ -49,7 +49,7 @@ const PHRASE_PROMPT = `אתה נציג של פינגווין, סוכנות חו�
 const RESORT_HE = {
   'Bansko': 'בנסקו', 'Borovets': 'בורובץ',
   'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל',
-  'Val Thorens': 'ואל טורנס', 'Tignes': 'טין', 'Les 2 Alpes': 'לה דו אלפ',
+  'Val Thorens': 'ואל טורנס', 'Tignes': 'טיניי', 'Les 2 Alpes': 'לה דו אלפ',
   'Avoriaz': 'אבוריאז', 'Les Arcs': 'לז ארק', 'Les Menuires': 'לה מנואר',
   'Flaine Grand Massif': 'פליין גראנד מסיף', "Alpe d'Huez": "אלפ ד'ואז",
   'Montgenevre': 'מונז׳נבר', 'Oz en Oisans': 'עוז אן אואזן',
