@@ -349,6 +349,9 @@ async function handleChat(body) {
           ...(parsed.slots.notes_from_customer || []),
         ])]
           .filter(n => !/^ ?(הלקוח|הלקוחה|המשפחה|הזוג|הם |הוא |היא |הנוסע)/.test(n))
+          // "חשוב להם", "מבקשים ש...", "מעוניינים ב..." — the model narrating
+          // the customer in the third person, read back to their face
+          .filter(n => !/חשוב להם|מבקשים|מעוניינים|רוצים ש|מחפשים ש/.test(n))
           // a request for other customers' details is refused by the guard —
           // it must never resurface as a note promising a rep will "check"
           .filter(n => !/פרטי קשר|טלפונים של|שמות של|נוסעים אחרים|לקוחות אחרים/.test(n))
@@ -788,8 +791,18 @@ async function handleChat(body) {
         .filter(p => !mentions(p));
       if (newPrefs.length) coverage.push('לקחתי בחשבון: ' + newPrefs.join(', ') + '.');
       const unheard = (sayingSlots.notes_from_customer || [])
-        .filter(Boolean).filter(n => !mentions(n));
-      if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(', ') + ' — נציג יבדוק ויאשר.');
+        .filter(Boolean)
+        // a stated number is never "covered" by the word תקציב elsewhere
+        .filter(n => /תקציב לאדם/.test(n) ? true : !mentions(n));
+      // a stated per-person ceiling gets the plain answer to the question it
+      // asked: we sort for it, we never quote a price, a rep confirms
+      const ceiling = unheard.filter(n => /תקציב לאדם/.test(n));
+      const rest = unheard.filter(n => !/תקציב לאדם/.test(n));
+      if (ceiling.length) {
+        coverage.push('לגבי התקציב לאדם שציינתם — סידרתי מהמשתלמות קודם, ' +
+          'ואת המחיר המדויק מול המספר הזה נציג יאשר.');
+      }
+      if (rest.length) coverage.push('רשמתי לפניי: ' + rest.join(', ') + ' — נציג יבדוק ויאשר.');
       // constraints that live in slots, not in the preference list: they were
       // applied to the search and the customer never heard so
       const applied = [];

@@ -636,7 +636,7 @@ function parseText(text, slots) {
     // a stated ceiling deserves an explicit word: we sort for it, we never
     // quote a price, and a rep confirms the number
     s.notes_from_customer = [...new Set([...(s.notes_from_customer || []),
-      'תקציב מוגדר לאדם — נציג יאשר מול המחיר המדויק'])];
+      'תקציב לאדם שציינתם'])];
   }
 
   // "תאומים בני 5 ועוד ילד בן 9" — two fives, not one. The party was one seat
@@ -1261,7 +1261,8 @@ const ASK_LEXICON = [
   [/מטבחון|פינת בישול|קומקום בחדר|מיני בר/, 'מטבחון או פינת בישול'],
   [/חב"ד|חבד|בית כנסת|מניין/, 'בית חב"ד או בית כנסת בקרבת מקום'],
   [/גן ילדים|פעוטון|משהו לפעוטות|שמרטף/, 'מסגרת לילדים קטנים'],
-  [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי|משהו לילדים|שיהיה לילדים/, 'פעילויות לילדים מחוץ לסקי'],
+  [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי/, 'פעילויות לילדים מחוץ לסקי'],
+  [/הדרכה לילדים|גן סקי|שיעורי סקי לילדים|בית ספר לסקי לילדים|ללמד את הילדים/, 'הדרכה לילדים'],
   [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר|ממש ברמה|לא משהו המוני|רמה גבוהה|סוויטה|מפנק/, 'רמת מלון גבוהה או סוויטה'],
   [/פשוט להגיע|קל להגיע|הגעה קלה|מסובך להגיע|נסיעה קצרה מהשדה|קרוב לשדה/, 'הגעה נוחה משדה התעופה'],
   [/טיסות במחיר סביר|טיסה זולה|טיסות זולות/, 'מחיר טיסה נוח'],
@@ -1279,6 +1280,9 @@ const ASK_LEXICON = [
 // question the model echoed back — requirements survive an FAQ answer in the
 // same turn, questions do not
 function isRequirementNote(note) {
+  // a stated per-person ceiling is a requirement like any other — it was being
+  // filtered out of the reply whenever the same message also hit an FAQ
+  if (/תקציב לאדם/.test(note)) return true;
   return ASK_LEXICON.some(([, label]) => label === note);
 }
 
@@ -1372,6 +1376,12 @@ function faqMulti(text) {
   // a run-on sentence names several known topics with no punctuation between
   // them; the whole-text scan picks up what the segments missed, to a cap of
   // three answers per reply
+  // a booking question that merely mentions a passport is not a passport
+  // question; the six-months paragraph beside it reads as a non-sequitur
+  if (hits.some(h => h.id === 'my_booking')) {
+    return { id: 'my_booking', he: hits.find(h => h.id === 'my_booking').he,
+      all: [hits.find(h => h.id === 'my_booking')] };
+  }
   if (hits.length < 3) {
     const whole = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
     for (const e of FAQ) {

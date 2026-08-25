@@ -1348,6 +1348,26 @@ t('a filtered camp week is said out loud', () =>
   handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 6 ו9 בפברואר, צריך קייטנה בעברית' }], slots: {} })
     .then(out => assert.ok(/קייטנ/.test(out.reply_he), out.reply_he)));
 
+/* ---- round 38 ---- */
+
+t('a stated per-person ceiling gets the plain answer', () =>
+  handleChat({ messages: [{ role: 'user', content: 'לא משנה לי היעד, העיקר שלא יעבור 3500 לאדם' }], slots: {} })
+    .then(out => {
+      assert.ok(/התקציב לאדם שציינתם/.test(out.reply_he), out.reply_he);
+      assert.ok(!/3500/.test(out.reply_he), 'quoted the number back');
+    }));
+
+t('a booking question mentioning a passport is not a passport lecture', () =>
+  handleChat({ messages: [{ role: 'user', content: 'אפשר לשנות אחרי ההזמנה את שם אחד הנוסעים? יש טעות באות אחת בדרכון' }], slots: {} })
+    .then(out => {
+      assert.ok(/מערכת ההזמנות/.test(out.reply_he), out.reply_he);
+      assert.ok(!/חצי שנה/.test(out.reply_he), 'passport validity lecture: ' + out.reply_he);
+    }));
+
+t('ski lessons for children are not "activities off the slopes"', () =>
+  handleChat({ messages: [{ role: 'user', content: 'משפחה 2+2 בני 5 ו7 בפברואר, חשוב גן סקי לילדים' }], slots: {} })
+    .then(out => assert.ok(!/פעילויות לילדים מחוץ לסקי/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
