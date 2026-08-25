@@ -1265,6 +1265,35 @@ t('a single traveller hears they join a group', () =>
   handleChat({ messages: [{ role: 'user', content: 'יש משהו משתלם ליחיד?' }], slots: {} })
     .then(out => assert.ok(/קבוצות ההדרכה/.test(out.reply_he), out.reply_he)));
 
+/* ---- rounds 25-26 ---- */
+
+t('"לא מחפש את הכי זולה" is not a budget preference', () =>
+  handleChat({ messages: [{ role: 'user', content: 'לא מחפש את האופציה הכי זולה אלא משהו מפנק ושקט, זוג בפברואר' }], slots: {} })
+    .then(out => {
+      assert.ok(!(out.slots.preferences || []).includes('תקציב'), JSON.stringify(out.slots.preferences));
+      assert.ok((out.slots.notes_from_customer || []).some(n => /רמת מלון/.test(n)), 'luxury not heard');
+    }));
+
+t('"עזבו רגע, צריך לבדוק עם אשתי" gets a pause, not more offers', () =>
+  handleChat({ messages: [{ role: 'user', content: 'עזבו רגע אני צריך לבדוק עם אשתי איזה תאריכים מתאימים' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'kept selling');
+      assert.ok(/קחו את הזמן/.test(out.reply_he), out.reply_he);
+    }));
+
+t('their own booking number is not the other-customers refusal', () =>
+  handleChat({ messages: [{ role: 'user', content: 'הזמנתי ולא מצליח להיכנס לאזור האישי עם מספר ההזמנה' }], slots: {} })
+    .then(out => assert.ok(/אין לי גישה למערכת ההזמנות/.test(out.reply_he) &&
+      !/לקוחות אחרים/.test(out.reply_he), out.reply_he)));
+
+t('the comparison verdict survives the model verbatim', () =>
+  handleChat({ messages: [{ role: 'user', content: 'חשוב לנו חיי לילה, יש משהו בבולגריה או אוסטריה בפברואר?' }], slots: {} })
+    .then(out => assert.ok(/הצגתי הצעות מ/.test(out.reply_he), out.reply_he)));
+
+t('"טעות בשם" reaches the booking answer, not passport law', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי הזמנתי חופשת סקי ויש לי טעות קטנה בשם באנגלית אפשר לתקן?' }], slots: {} })
+    .then(out => assert.ok(/מערכת ההזמנות/.test(out.reply_he) && !/בתוקף לפחות חצי שנה/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

@@ -551,6 +551,13 @@ async function handleChat(body) {
   // with three hotels in three countries is a machine emptying its stock.
   const nothingKnown = slots.adults == null && !(slots.children_ages || []).length &&
     slots.month == null && slots.country == null && slots.destination == null;
+  if (offline.isPause(lastUser)) {
+    return {
+      open_lead_form: false, reply_he: offline.PAUSE_HE, model_used: false,
+      pending_parameter: null, slots, cards: [], two_room_splits: [],
+      notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
+    };
+  }
   if (offline.isFarewell(lastUser)) {
     return {
       open_lead_form: false, reply_he: offline.FAREWELL_HE, model_used: false,
@@ -642,8 +649,11 @@ async function handleChat(body) {
   // ...but said once. A customer who has already read "לא מצאתי בדיוק בדצמבר,
   // אז הרחבתי לינואר" does not need it again on the next turn; they know.
   const saidFixed = new Set(prevSlots._fixed_said || []);
-  const fixed = [offCommLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
-  slots._fixed_said = [...saidFixed, ...[offCommLine, ...widened].filter(Boolean)].slice(-8);
+  // the comparison verdict rides in the same verbatim channel — the model kept
+  // rewriting "באוסטריה לא מצאתי" into something friendlier and wrong
+  const cmpLine = offline.comparingLine(result, slots);
+  const fixed = [offCommLine, cmpLine, ...widened].filter(Boolean).filter(l => !saidFixed.has(l));
+  slots._fixed_said = [...saidFixed, ...[offCommLine, cmpLine, ...widened].filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));
 
   const templated = offline.phrase(result, sayingSlots, cards) ||

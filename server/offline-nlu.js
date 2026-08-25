@@ -693,13 +693,16 @@ function parseText(text, slots) {
   }
 
   // --- preferences (only if mentioned!)
+  // "לא מחפש את הכי זולה", "בלי ספא" — a preference someone just ruled out
+  // must not be recorded as one
+  const tPrefs = t.replace(/(?:לא|בלי|אין צורך ב|לא חייב)[^,.!?]{0,35}?(זול|הכי זולה|תקציב|ספא|בריכה|חיי לילה|אפרה)/g, ' ');
   const prefs = new Set(s.preferences || []);
   // "תקציב לא מגביל" is the OPPOSITE of a budget constraint. Matching the bare
   // word inverted exactly the customer it mattered most to: the one who said
   // money was no object was sorted cheapest-first and shown our cheapest rooms.
   const budgetIsOpen = /תקציב לא מגביל|תקציב לא משנה|המחיר לא משנה|מחיר לא משנה|לא מגבילים תקציב|בלי הגבלת תקציב|כסף לא בעיה|לא אכפת לנו מהמחיר/.test(t);
   for (const [re, v] of PREFS) {
-    if (!re.test(t)) continue;
+    if (!re.test(tPrefs)) continue;
     if (v === 'תקציב' && budgetIsOpen) continue;
     prefs.add(v);
   }
@@ -768,6 +771,21 @@ const MONTH_HE = { 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מ�
 function fmtDay(iso) {
   const d = new Date(iso + 'T00:00:00Z');
   return `${d.getUTCDate()}.${d.getUTCMonth() + 1}`;
+}
+
+// The comparison verdict: which of the two named places actually has room.
+// Deterministic and printed verbatim — the model kept rewriting "באוסטריה לא
+// מצאתי" into something friendlier and wrong.
+function comparingLine(result, slots) {
+  const cmp = (result.notes || []).find(n => n.type === 'comparing');
+  if (!cmp) return null;
+  const he = p => ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[p.country] || p.destination;
+  const empty = (cmp.places || []).filter(p => !p.found).map(he).filter(Boolean);
+  const nPlaces = (cmp.places || []).length;
+  const fromAll = nPlaces > 2 ? 'מכל היעדים שציינתם' : 'משני היעדים שציינתם';
+  return empty.length
+    ? `הצגתי הצעות ${fromAll}; ב${empty.join(' וב')} לא מצאתי מקום פנוי בתנאים האלה.`
+    : `הצגתי הצעות ${fromAll}, כדי שתוכלו להשוות.`;
 }
 
 // A destination pingwin sells but holds no commitments for. Deterministic, and
@@ -854,7 +872,7 @@ function phrase(result, slots, cards) {
     lines.push(`אנחנו מוכרים כרגע את עונת חורף 2026/27 — דצמבר 2026 עד סוף מרץ 2027. הנה מה שפנוי בעונה הזו:`);
   }
 
-  const cmp = note('comparing');
+  const cmp = null && note('comparing');
   if (cmp) {
     const empty = (cmp.places || []).filter(p => !p.found)
       .map(p => ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' }[p.country]) || p.destination).filter(Boolean);
@@ -1205,8 +1223,8 @@ const ASK_LEXICON = [
   [/חב"ד|חבד|בית כנסת|מניין/, 'בית חב"ד או בית כנסת בקרבת מקום'],
   [/גן ילדים|פעוטון|משהו לפעוטות|שמרטף/, 'מסגרת לילדים קטנים'],
   [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי/, 'פעילויות לילדים מחוץ לסקי'],
-  [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר|ממש ברמה|לא משהו המוני|רמה גבוהה|סוויטה/, 'רמת מלון גבוהה או סוויטה'],
-  [/פשוט להגיע|קל להגיע|הגעה קלה|לא מסובך להגיע|נסיעה קצרה מהשדה/, 'הגעה נוחה משדה התעופה'],
+  [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר|ממש ברמה|לא משהו המוני|רמה גבוהה|סוויטה|מפנק/, 'רמת מלון גבוהה או סוויטה'],
+  [/פשוט להגיע|קל להגיע|הגעה קלה|מסובך להגיע|נסיעה קצרה מהשדה|קרוב לשדה/, 'הגעה נוחה משדה התעופה'],
   [/טיסות במחיר סביר|טיסה זולה|טיסות זולות/, 'מחיר טיסה נוח'],
   [/מלון נוח|נוח למבוגרים|בלי הרבה מדרגות/, 'מלון נוח'],
   [/בריכה מחוממת|בריכת שחייה/, 'בריכה'],
@@ -1241,6 +1259,14 @@ function socialLine(text) {
 
 // A person leaving: "לא רוצה כלום, סתם בדקתי", "תודה, ביי". Three more hotels
 // on the way out is exactly what makes a chat feel like a machine.
+// "אני צריך לבדוק עם אשתי" — a pause. Pushing more offers at someone who
+// asked for a moment reads as a pushy salesman.
+const PAUSE = /עזבו? רגע|צריך לבדוק עם|צריכה לבדוק עם|אחשוב על זה|נחשוב על זה|תנו לי לחשוב|אחזור אליכם|נחזור אליכם בהמשך|נדבר על זה בבית/;
+function isPause(text) {
+  return PAUSE.test(String(text || ''));
+}
+const PAUSE_HE = 'בכיף, קחו את הזמן — ההצעות לא בורחות ואני כאן כשתחזרו. ואם נוח יותר, השאירו שם וטלפון ונציג יחזור אליכם מתי שתבחרו.';
+
 const FAREWELL = /תפסיק לשלוח|תפסיקו לשלוח|די עם ההצעות|עזוב אותי|תפסיק להציע|לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
 function isFarewell(text) {
   return FAREWELL.test(String(text || '').trim());
@@ -1361,7 +1387,10 @@ function handoffTail() {
 
 function guard(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות/.test(t)) {
+  // their OWN booking is not a red rule — "לא מצליח להיכנס לאזור האישי עם
+  // מספר ההזמנה" belongs to the my-booking answer, not to this refusal
+  if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי/.test(t)) { /* fall through */ }
+  else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות/.test(t)) {
     // Their OWN booking is a different question with a different answer: we
     // still show nothing, but "אין לי גישה לפרטי לקוחות אחרים" reads as an
     // accusation when someone is asking about the holiday they just bought.
@@ -1483,6 +1512,9 @@ module.exports = {
   faq,
   faqMulti,
   faqEntries,
+  isPause,
+  PAUSE_HE,
+  comparingLine,
   isRequirementNote,
   socialLine,
   unknownResort,
