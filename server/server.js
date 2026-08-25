@@ -409,7 +409,7 @@ async function handleChat(body) {
   // "מה יותר משתלם מבחינת קרבה למסלולים?" is a request to SORT and explain,
   // not a request for the definition of slope distance. The FAQ that happens
   // to mention the topic steps aside; the offers answer.
-  const VALUE_Q = /מה יותר משתלם|מה הכי משתלם|מה עדיף מבחינת|מה כדאי יותר|איפה יוצא הכי/;
+  const VALUE_Q = /מה יותר משתלם|מה הכי משתלם|מה עדיף מבחינת|מה כדאי יותר|איפה יוצא הכי|משתלם בסוף|מה משתלם|איזה.{0,15}משתלם/;
   const FACTUAL = new Set(['cancellation', 'deposit', 'installments', 'insurance',
     'my_booking', 'complaint', 'passport', 'visa', 'whats_included', 'camp_price']);
   if (faqHit && VALUE_Q.test(lastUser) && !FACTUAL.has(faqHit.id)) faqHit = null;

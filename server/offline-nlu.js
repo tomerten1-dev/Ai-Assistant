@@ -753,7 +753,10 @@ function nextQuestion(slots, prevKey) {
   // alongside the offers, because a customer who has to answer three questions
   // before seeing anything is being interviewed, not helped (Tomer, 24/08).
   // `blocking` now means only "ask this one first", never "refuse to search".
-  if (slots.adults == null) q = { key: 'adults', blocking: true, he: 'כמה תהיו בסך הכל? אדייק לפי זה' };
+  // someone who said they travel alone has answered this already
+  if (slots.adults == null && !(slots.notes_from_customer || []).some(n => /נוסע יחיד/.test(n))) {
+    q = { key: 'adults', blocking: true, he: 'כמה תהיו בסך הכל? אדייק לפי זה' };
+  }
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
     // no_children === false means we were told there ARE children, even when
     // the count is still unknown — so ask what is missing, not what we know
@@ -1488,6 +1491,14 @@ function deflect(text) {
   if (/למה דווקא|למה אלה|למה בחרת|על סמך מה|איך בחרת|למה הצעת/.test(t)) {
     return 'בחרתי לפי מה שאמרתם: גודל החבורה, החודש, היעד ומה שציינתם שחשוב לכם. ' +
       'על כל הצעה כתוב למטה למה היא מתאימה. אם משהו לא מדויק — תגידו לי מה לשנות.';
+  }
+
+  // "אם זה לא סגור באמת תגידו לי" — a customer who wants to know whether what
+  // they are looking at is firm. The honest answer is the whole architecture.
+  if (/לא סגור באמת|זה סגור\?|באמת פנוי|זה ודאי|תגידו לי עכשיו|לא רציני/.test(t)) {
+    return 'אני מציג רק מה שרשום אצלנו כפנוי בפועל — לא פרסום. מה שאני לא יכול הוא לשריין: ' +
+      'ההזמנה נסגרת מול נציג, והוא זה שמאשר סופית מול המלון והטיסה. ' +
+      'אם חשוב לכם לנעול תאריך, השאירו שם וטלפון ונציג יחזור אליכם מהר.';
   }
 
   // "זה לא עונה לי" — a refusal without a reason. Asking what to change beats
