@@ -429,7 +429,7 @@ async function handleChat(body) {
     const newNotes = (slots.notes_from_customer || [])
       .filter(n => !(prevSlots.notes_from_customer || []).includes(n));
     const replyText = faqHit.he +
-      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(' · ') + ' — נציג יבדוק את זה מול המלון.' : '') +
+      (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') + ' — נציג יבדוק את זה מול המלון.' : '') +
       String.fromCharCode(10) +
       'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג מה שבאמת פנוי.';
     chatLog.logTurn({
@@ -665,7 +665,7 @@ async function handleChat(body) {
   // rooms instead of one — is the most important sentence in the reply, and the
   // model kept paraphrasing it into nothing. Asked for December, shown January,
   // and not a word about the gap: three separate audit rounds.
-  const widened = offline.relaxationLines(result);
+  const widened = offline.relaxationLines(result, slots);
   // ...but said once. A customer who has already read "לא מצאתי בדיוק בדצמבר,
   // אז הרחבתי לינואר" does not need it again on the next turn; they know.
   const saidFixed = new Set(prevSlots._fixed_said || []);
@@ -757,10 +757,10 @@ async function handleChat(body) {
       const newPrefs = (slots.preferences || [])
         .filter(p => !(prevSlots.preferences || []).includes(p))
         .filter(p => !mentions(p));
-      if (newPrefs.length) coverage.push('לקחתי בחשבון: ' + newPrefs.join(' · ') + '.');
+      if (newPrefs.length) coverage.push('לקחתי בחשבון: ' + newPrefs.join(', ') + '.');
       const unheard = (sayingSlots.notes_from_customer || [])
         .filter(Boolean).filter(n => !mentions(n));
-      if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(' · ') + ' — נציג יבדוק ויאשר.');
+      if (unheard.length) coverage.push('רשמתי לפניי: ' + unheard.join(', ') + ' — נציג יבדוק ויאשר.');
     }
     const parts = [preamble, intro, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how

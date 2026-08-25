@@ -1083,11 +1083,11 @@ t('"הרחבתי לינואר" is said once, not on every turn after', () => {
   let slots = {};
   return handleChat({ messages: msgs, slots }).then(a => {
     slots = a.slots;
-    assert.ok(/הרחבתי/.test(a.reply_he), 'never said it: ' + a.reply_he);
+    assert.ok(/הרחבתי|הקרוב ביותר/.test(a.reply_he), 'never said it: ' + a.reply_he);
     msgs.push({ role: 'assistant', content: a.reply_he });
     msgs.push({ role: 'user', content: 'ומה עם ספא?' });
     return handleChat({ messages: msgs, slots });
-  }).then(b => assert.ok(!/הרחבתי/.test(b.reply_he), 'said it again: ' + b.reply_he));
+  }).then(b => assert.ok(!/הרחבתי|הקרוב ביותר —/.test(b.reply_he), 'said it again: ' + b.reply_he));
 });
 
 // A customer asking about their own booking was told we do not share other

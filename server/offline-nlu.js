@@ -220,6 +220,9 @@ function parseText(text, slots) {
     if (!(s.children_ages || []).length && !s.children_count) {
       s.no_children = true; s.children_ages = [];
     }
+  if (s.adults === 1 && !(s.notes_from_customer || []).includes('חופשה לנוסע יחיד')) {
+    s.notes_from_customer = [...(s.notes_from_customer || []), 'חופשה לנוסע יחיד'];
+  }
   }
   // "שני זוגות" is four people, not two
   let pm = t.match(/(\d{1,2}|[א-ת]+)\s*זוגות/);
@@ -269,6 +272,15 @@ function parseText(text, slots) {
   // it sent a group of four to be asked "כמה מבוגרים?" they had just answered.
   // Word numbers count too ("שני חברים"). "בנים"/"בנות" are left out on
   // purpose — they usually mean children.
+  // "משפחה של 4" is the Israeli 2+2 until told otherwise — assuming four
+  // ADULTS put "ארבעה מבוגרים" in front of a family
+  {
+    const fam = t.match(/משפחה של (\d{1,2})(?![\d])/);
+    if (fam && s.adults == null && !(s.children_ages || []).length && !/מבוגר/.test(t)) {
+      const total = +fam[1];
+      if (total >= 3 && total <= 8) { s.adults = 2; s.children_count = total - 2; s.no_children = false; }
+    }
+  }
   m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2}|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה)(?![א-ת])/) ||
       t.match(/(\d{1,2}|[א-ת]+)\s*(?:אנשים|נוסעים|אורחים|חברים|חברות|בחורים|בחורות|גברים|נשים)(?![א-ת])/);
   if (m) {
@@ -613,7 +625,7 @@ function parseText(text, slots) {
   // A budget said in shekels or euros. The exact price is never ours to quote
   // (red rule 3), but hearing the number and showing the affordable end of the
   // list is not the same as quoting one.
-  if (/\d{3,5}\s*(₪|ש"ח|שקל|שח)|עד \d{3,5} (?:יורו|אירו|€)|תקציב של \d{3,5}/.test(t)
+  if (/\d{3,5}\s*(₪|ש"ח|שקל|שח)|עד \d{3,5} (?:יורו|אירו|€)|תקציב של \d{3,5}|\d{3,5} לאדם|עד \d{3,5}(?![\d])/.test(t)
       && !/תקציב לא מגביל|לא מגביל/.test(t)) {
     s.price_objection = true;
     s.preferences = [...new Set([...(s.preferences || []), 'תקציב'])];
@@ -799,11 +811,12 @@ function comparingLine(result, slots) {
   if (!cmp) return null;
   const he = p => ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[p.country] || p.destination;
   const empty = (cmp.places || []).filter(p => !p.found).map(he).filter(Boolean);
+  const full = (cmp.places || []).filter(p => p.found).map(he).filter(Boolean);
   const nPlaces = (cmp.places || []).length;
   const fromAll = nPlaces > 2 ? 'מכל היעדים שציינתם' : 'משני היעדים שציינתם';
-  return empty.length
-    ? `הצגתי הצעות ${fromAll}; ב${empty.join(' וב')} לא מצאתי מקום פנוי בתנאים האלה.`
-    : `הצגתי הצעות ${fromAll}, כדי שתוכלו להשוות.`;
+  if (!empty.length) return `הצגתי הצעות ${fromAll}, כדי שתוכלו להשוות.`;
+  // one side empty: claiming "from both" while one is empty contradicts itself
+  return `ב${full.join(' וב')} מצאתי מקום פנוי; ב${empty.join(' וב')} לא מצאתי בתנאים האלה.`;
 }
 
 // A destination pingwin sells but holds no commitments for. Deterministic, and
@@ -828,10 +841,18 @@ function offCommitmentLine(result, slots) {
 // What the search had to give up on, in fixed words. Printed above anything the
 // model writes: asked for December, it showed January and said nothing about
 // the gap in three separate audit rounds.
-function relaxationLines(result) {
+function relaxationLines(result, slots) {
   const out = [];
   for (const r of result.relaxed || []) {
-    if (r.type === 'month') out.push(`לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
+    if (r.type === 'month') {
+      // "יש סקי בבולגריה בדצמבר?" deserves a yes/no with the place named, not
+      // a generic "לא מצאתי בדיוק"
+      const place = slots && (slots.destination ||
+        ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[slots.country]) || null;
+      out.push(place
+        ? `ב${place} אין לי יציאות פנויות ב${MONTH_HE[r.from] || r.from}; הקרוב ביותר — ${MONTH_HE[r.to] || r.to}:`
+        : `לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
+    }
     if (r.type === 'location') {
       const sat = (result.notes || []).some(n => n.type === 'saturday_only');
       out.push(sat
@@ -947,7 +968,7 @@ function phrase(result, slots, cards) {
     .filter(n => !/^ ?(הלקוח|הלקוחה|המשפחה|הזוג|הם |הוא |היא |הנוסע)/.test(n))
     .filter(n => !(offComm && n.includes(offComm.name)));
   if (cards.length && heard.length) {
-    lines.push('רשמתי לפניי: ' + heard.join(' · ') + '. אעביר את זה לנציג שילווה אתכם.');
+    lines.push('רשמתי לפניי: ' + heard.join(', ') + '. אעביר את זה לנציג שילווה אתכם.');
   }
 
   // Nine travellers and up is a group booking: flight seats and hotel rooms
@@ -1001,7 +1022,7 @@ function phrase(result, slots, cards) {
   // say out loud what was taken into account, then what a rep must confirm
   const applied = note('applied_requirements');
   if (cards.length && applied && applied.items.length >= 2) {
-    lines.push('לקחתי בחשבון: ' + applied.items.join(' · ') + '.');
+    lines.push('לקחתי בחשבון: ' + applied.items.join(', ') + '.');
   }
   if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
   // Requirements the customer named. Most of them now HAVE an answer, taken
@@ -1032,7 +1053,7 @@ function phrase(result, slots, cards) {
     if (matched.length) why.push('תואם למה שביקשתם: ' + matched.join(', '));
     if (c.recommended) why.push('מהמבוקשים ביותר אצלנו');
     if ((slots.preferences || []).includes('תקציב') && c.price_range.length <= 2) why.push('ידידותי לתקציב');
-    c.why_he = why.join(' · ');
+    c.why_he = why.join(', ');
   }
   // Five true sentences stacked on top of each other is not an explanation, it
   // is a wall. Keep the ones that change what the customer should DO — a
@@ -1396,7 +1417,7 @@ function guard(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   // their OWN booking is not a red rule — "לא מצליח להיכנס לאזור האישי עם
   // מספר ההזמנה" belongs to the my-booking answer, not to this refusal
-  if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי/.test(t)) { /* fall through */ }
+  if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי|ביצעתי הזמנה|איפה אני רואה|הסטטוס של/.test(t)) { /* fall through */ }
   else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות|שמות או טלפונים|טלפונים של (נוסעים|לקוחות|אנשים)|פרטי קשר של (נוסעים|לקוחות)|להתחבר לנוסעים|נוסעים שכבר הזמינו|מי עוד הזמין|מי נוסע איתנו/.test(t)) {
     // Their OWN booking is a different question with a different answer: we
     // still show nothing, but "אין לי גישה לפרטי לקוחות אחרים" reads as an
