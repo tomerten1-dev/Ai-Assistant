@@ -1224,6 +1224,47 @@ t('our cost price and commission are refused', () =>
       assert.ok(!/נציג יעביר לכם את/.test(out.reply_he), out.reply_he);
     }));
 
+/* ---- round 24: toward perfect conversations ---- */
+
+// A pure policy question from someone who told us nothing: answer, invite, stop.
+t('a policy question with nothing known gets no arbitrary hotels', () =>
+  handleChat({ messages: [{ role: 'user', content: 'היי אם אני מזמין עכשיו אפשר לבטל בלי להפסיד הכל?' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'showed ' + out.cards.length + ' cards');
+      assert.ok(/דמי הביטול/.test(out.reply_he), out.reply_he);
+      assert.ok(/כשתרצו לבדוק/.test(out.reply_he), 'no invite: ' + out.reply_he);
+    }));
+
+t('the same question WITH trip details keeps the offers', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר, מה מדיניות הביטול?' }], slots: {} })
+    .then(out => {
+      assert.ok(out.cards.length, 'no cards');
+      assert.ok(/דמי הביטול/.test(out.reply_he), out.reply_he);
+    }));
+
+// A run-on sentence naming two known topics gets both answers.
+t('a run-on sentence with two topics gets both answers', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר, חשוב שיעורי סקי לילדים וגם חדרים קרובים או מחוברים' }], slots: {} })
+    .then(out => {
+      assert.ok(/קבוצות ההדרכה|בית הספר/.test(out.reply_he), 'lessons missing: ' + out.reply_he);
+      assert.ok(/בקשה מהמלון/.test(out.reply_he), 'rooms missing: ' + out.reply_he);
+    }));
+
+// A repeated direct question keeps its direct answer.
+t('asking about insurance twice still gets the insurance answer', () => {
+  const msgs = [{ role: 'user', content: 'הביטוח כלול?' }];
+  let slots = {};
+  return handleChat({ messages: msgs, slots }).then(a => {
+    slots = a.slots; msgs.push({ role: 'assistant', content: a.reply_he });
+    msgs.push({ role: 'user', content: 'והביטוח מכסה ביטול בגלל מחלה?' });
+    return handleChat({ messages: msgs, slots });
+  }).then(b => assert.ok(/ביטוח/.test(b.reply_he) && !/הפרטים המלאים של כל הצעה/.test(b.reply_he), b.reply_he));
+});
+
+t('a single traveller hears they join a group', () =>
+  handleChat({ messages: [{ role: 'user', content: 'יש משהו משתלם ליחיד?' }], slots: {} })
+    .then(out => assert.ok(/קבוצות ההדרכה/.test(out.reply_he), out.reply_he)));
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

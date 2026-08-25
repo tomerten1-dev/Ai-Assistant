@@ -1205,7 +1205,7 @@ const ASK_LEXICON = [
   [/חב"ד|חבד|בית כנסת|מניין/, 'בית חב"ד או בית כנסת בקרבת מקום'],
   [/גן ילדים|פעוטון|משהו לפעוטות|שמרטף/, 'מסגרת לילדים קטנים'],
   [/פעילויות לילדים|מה יש לילדים|תעסוקה לילדים|שהילדים לא ישתעממו|יתעייפו מהסקי/, 'פעילויות לילדים מחוץ לסקי'],
-  [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר|ממש ברמה|לא משהו המוני|רמה גבוהה/, 'רמת מלון גבוהה'],
+  [/5 כוכבים|חמישה כוכבים|מלון יוקרתי|ברמה הכי גבוהה|דלוקס|הכי מפואר|ממש ברמה|לא משהו המוני|רמה גבוהה|סוויטה/, 'רמת מלון גבוהה או סוויטה'],
   [/פשוט להגיע|קל להגיע|הגעה קלה|לא מסובך להגיע|נסיעה קצרה מהשדה/, 'הגעה נוחה משדה התעופה'],
   [/טיסות במחיר סביר|טיסה זולה|טיסות זולות/, 'מחיר טיסה נוח'],
   [/מלון נוח|נוח למבוגרים|בלי הרבה מדרגות/, 'מלון נוח'],
@@ -1295,6 +1295,14 @@ function faqMulti(text) {
     const h = faq(seg);
     if (h && !hits.some(x => x.id === h.id)) hits.push(h);
     if (hits.length === 2) break;
+  }
+  // a run-on sentence names two known topics with no punctuation between
+  // them; the whole-text scan picks up the second one the segments missed
+  if (hits.length === 1) {
+    for (const e of FAQ) {
+      if (e.id === hits[0].id) continue;
+      if (e.re.test(' ' + String(text || '').replace(/\s+/g, ' ') + ' ')) { hits.push({ id: e.id, he: e.he }); break; }
+    }
   }
   if (!hits.length) return null;
   return { id: hits[0].id, he: hits.map(h => h.he).join(String.fromCharCode(10)),

@@ -389,6 +389,35 @@ async function handleChat(body) {
     const extra = routed && (routed.all || []).find(a => a.id !== faqHit.id);
     if (extra) faqHit = { ...faqHit, he: faqHit.he + String.fromCharCode(10) + extra.he };
   }
+  // A pure policy question from someone who has told us nothing — cancellation
+  // terms, deposits, insurance — used to be answered correctly and then buried
+  // under three arbitrary hotels and "כמה נוסעים תהיו?". The judge called the
+  // pivot confusing, and it is: answer the question, invite the search, stop.
+  const nothingKnownYet = slots.adults == null && !(slots.children_ages || []).length &&
+    slots.month == null && slots.country == null && slots.destination == null &&
+    !slots.children_count;
+  const PER_CARD_IDS = new Set(['spa', 'wifi', 'help_me']);
+  if (faqHit && nothingKnownYet && !slotsChanged(prevSlots, slots) &&
+      !PER_CARD_IDS.has(faqHit.id) && !offline.guard(lastUser)) {
+    slots._lastQuestion = 'adults';
+    const replyText = faqHit.he + String.fromCharCode(10) +
+      'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג מה שבאמת פנוי.';
+    chatLog.logTurn({
+      conversationId: body.conversationId || slots._cid || (slots._cid = 'c' + Math.random().toString(36).slice(2, 10)),
+      userText: lastUser, reply: replyText, cards: [], result: { notes: [], relaxed: [] },
+      slots, modelUsed, ms: Date.now() - startedAt,
+      notUnderstood: false, answeredBy: faqHit.routed ? 'router' : 'faq',
+    });
+    return {
+      open_lead_form: offline.wantsCallback(lastUser),
+      reply_he: replyText, model_used: modelUsed,
+      pending_parameter: 'adults', slots, cards: [], two_room_splits: [],
+      notes: [], relaxed: [],
+      chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
+      chip_to_pref: CHIP_TO_PREF,
+    };
+  }
+
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
     !faqHit && !offline.deflect(lastUser) && !offline.wantsMore(lastUser) &&
     /\?|איך|מה |למה|מי /.test(lastUser) &&
@@ -693,11 +722,18 @@ async function handleChat(body) {
     const cardKey = cards.map(c => c.hotel + '|' + c.date).join(',');
     const sameOffers = !!cardKey && cardKey === (prevSlots._lastCards || null);
     const alreadySaid = new Set(sameOffers ? (prevSlots._lastLines || []) : []);
+    // coaching lines are not content: hearing "אם תהיו גמישים בתאריך" twice in
+    // a row grates whatever the cards below are doing
+    const STOCK = /אם (תהיו גמישים|תוותרו|תשקלו)|לא מצאתי התאמה במערכת|אני כאן אם תרצו/;
+    for (const l of prevSlots._lastLines || []) if (STOCK.test(l)) alreadySaid.add(l);
     // A red-rule answer ("המחיר המדויק…") is the same sentence every time by
     // design. Dropping it as a repeat turned the third "תגיד לי מחיר" into a
     // line about cards — evasion where a rule was meant to speak.
     const mustKeep = new Set([
       ...(deflection || '').split(String.fromCharCode(10)).filter(Boolean),
+      // an FAQ answer matched THIS turn is a direct answer to a direct
+      // question — repeating it beats "הפרטים המלאים על הכרטיס"
+      ...(faqHit && !faqSuppressed ? faqHit.he.split(String.fromCharCode(10)) : []),
       ...(faqSuppressed ? [PER_CARD_POINTER[faqHit.id]].filter(Boolean) : []),
     ]);
     if (alreadySaid.size) {
