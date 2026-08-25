@@ -133,7 +133,7 @@ function validate(text, { cards, fallback }) {
   // Writing ABOUT the offers instead of to the customer. Three audit rounds in
   // a row flagged the same handful of constructions, all of them lifted
   // straight out of our own JSON field names.
-  if (/ההצעות (נבחרו|מתאימות|הוצגו|שנבחרו|שמוצגות)|האפשרויות (נבחרו|מתאימות|שמוצגות|שנמצאו|שנבחרו|שמופיעות)|להרכב(ים)? של|שסומנו|נימוק|בהתאם לנימוקים|ההצעה נבחרה|הסינון בוצע|נבחרו עבורכם|נבחרו (משום|כי|בגלל)|רוכזו (כאן|עבורכם)|האפשרויות כוללות|עשויות להתאים להרכבים|מתאימות להרכבים/.test(t)) {
+  if (/ההצעות (נבחרו|מתאימות|הוצגו|שנבחרו|שמוצגות)|האפשרויות (נבחרו|מתאימות|שמוצגות|שנמצאו|שנבחרו|שמופיעות)|להרכב(ים)? של|שסומנו|נימוק|בהתאם לנימוקים|ההצעה נבחרה|הסינון בוצע|נבחרו עבורכם|נבחרו (משום|כי|בגלל)|רוכזו (כאן|עבורכם)|מתאימות לבקשה שלכם|תואמות לבקשה|האפשרויות כוללות|עשויות להתאים להרכבים|מתאימות להרכבים/.test(t)) {
     return { ok: false, why: 'writes about the offers, not to the customer' };
   }
 
@@ -202,5 +202,4 @@ const KNOWN_HOTELS = (() => {
   } catch (e) { return []; }
 })();
 
-module.exports = {
-  RESORT_HE, PHRASE_PROMPT, buildPayload, validate, cardDigest };
+module.exports = { PHRASE_PROMPT, buildPayload, validate, cardDigest };

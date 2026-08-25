@@ -805,33 +805,7 @@ async function handleChat(body) {
       }
       if (applied.length) coverage.push(applied.join('; ') + '.');
     }
-    // Name the one that answers them best, and say why. "מה יותר משתלם?"
-    // deserves an answer, not a description of how the list was sorted; and a
-    // reply that never names a hotel reads as a machine talking about itself.
-    let pointer = null;
-    if (cards.length) {
-      const named = cards.find(c => (intro || '').includes(c.hotel));
-      // a "which is better" question is answered even when the prose already
-      // names hotels — that is the question they asked
-      if (!named || VALUE_Q.test(lastUser)) {
-        const wanted = (slots.preferences || []).filter(p => p !== 'תקציב');
-        const best = [...cards].sort((a, b) =>
-          (b.tags || []).filter(tg => wanted.includes(tg)).length -
-          (a.tags || []).filter(tg => wanted.includes(tg)).length ||
-          (a.price_range || '').length - (b.price_range || '').length)[0];
-        const hits = (best.tags || []).filter(tg => wanted.includes(tg));
-        const cheapest = cards.every(c => (best.price_range || '').length <= (c.price_range || '').length);
-        const because = [
-          hits.length ? 'מתאימה ל' + hits.join(' ול') : null,
-          cheapest && (slots.preferences || []).includes('תקציב') ? 'ובטווח המחיר הנוח מבין השלוש' : null,
-        ].filter(Boolean).join(', ');
-        const where = phrasing.RESORT_HE[best.resort] || best.resort_he || best.resort;
-        pointer = because
-          ? `אם צריך לבחור אחת — ${best.hotel} ב${where}: ${because}.`
-          : `אם צריך לבחור אחת — ${best.hotel} ב${where}.`;
-      }
-    }
-    const parts = [preamble, intro, pointer, ...coverage, tailQuestion].filter(Boolean);
+    const parts = [preamble, intro, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
     // a bot sounds like a bot; a person says it when it is worth saying.
     // two-room splits are offers too — they render as their own cards in
@@ -851,7 +825,7 @@ async function handleChat(body) {
     // the single commonest complaint in the golden set. It is dropped only
     // after every coaching line is gone and the reply is still over the cap.
     const SOFT1 = /נפתחות|אני כאן אם תרצו/;
-    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות|אם צריך לבחור אחת/;
+    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות/;
     let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     while (all.length > 5) {
       const drop = all.findIndex(l => SOFT1.test(l));
