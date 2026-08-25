@@ -315,6 +315,10 @@ async function handleChat(body) {
             !(Array.isArray(v) && v.length === 0)));
         // and a resort name it wrote in Hebrew is mapped to the one the
         // inventory uses, or dropped — never searched for as written
+        // 'any' is the model's way of saying "flexible" — it must not erase
+        // a concrete month the regex layer already parsed ("דצמבר או ינואר"
+        // became "any או ינואר" in front of a customer)
+        if (found.month === 'any' && typeof slots.month === 'number') delete found.month;
         if (found.destination) {
           found.destination = offline.canonicalDestination(found.destination) ||
             slots.destination || null;
