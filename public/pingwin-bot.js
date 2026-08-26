@@ -24,7 +24,8 @@
     zIndex: 2147483000,
     position: 'left',          // 'left' | 'right' — פינת הבועה
     whatsapp: '972526543262',  // הכפתור בכותרת: יציאה לאדם מכל מצב (data-whatsapp על התג דורס)
-    brand: 'פינגווין'
+    brand: 'פינגווין',
+    privacyUrl: 'https://www.pingwin.co.il/%D7%93%D7%A4%D7%99%D7%9D/%D7%9E%D7%93%D7%99%D7%A0%D7%99%D7%95%D7%AA+%D7%95%D7%A4%D7%A8%D7%98%D7%99%D7%95%D7%AA.html'
   };
 
   /* ============== api base — נגזר מכתובת הסקריפט עצמו ============== */
@@ -82,6 +83,9 @@
     + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf1}'
     + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
     + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
+    + '.form .consent{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:' + THEME.textLight + ';margin:10px 0 4px;line-height:1.4;cursor:pointer}'
+    + '.form .consent input{margin-top:3px;flex:none;width:16px;height:16px;accent-color:' + THEME.primaryDark + '}'
+    + '.form .consent a{color:' + THEME.primaryDark + ';text-decoration:underline}'
     + '.hdr .wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;background:#e7f6ec;color:#1b6b3a;border:1px solid #cfe9d8;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}'
     + '.hdr .wa:hover{background:#d9f0e1}'
     + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.accent + ';outline-offset:2px}'
@@ -605,8 +609,19 @@
     iPhone.type = 'tel'; iPhone.setAttribute('aria-label', 'טלפון'); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
     var go = el('button', 'btn pri', 'שלחו לנציג'); go.type = 'submit';
     var note = el('div', 'note', 'רק שם וטלפון — בלי התחייבות. ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.');
+    // consent (Tomer, q30; Privacy Protection Law amendment 13): an unticked
+    // box the customer must tick, next to a link to Pingwin's privacy policy
+    var consent = el('label', 'consent');
+    var iConsent = document.createElement('input'); iConsent.type = 'checkbox'; iConsent.id = 'pw-lead-consent'; iConsent.name = 'consent';
+    consent.htmlFor = iConsent.id;
+    consent.appendChild(iConsent);
+    var cTxt = el('span', null, 'אני מאשר/ת שפינגווין תשמור את הפרטים ותיצור איתי קשר בנוגע לפנייה זו, בהתאם ל');
+    var cLink = document.createElement('a'); cLink.href = THEME.privacyUrl; cLink.target = '_blank'; cLink.rel = 'noopener'; cLink.textContent = 'מדיניות הפרטיות';
+    cTxt.appendChild(cLink); cTxt.appendChild(document.createTextNode('.'));
+    consent.appendChild(cTxt);
     f.appendChild(lName); f.appendChild(iName);
     f.appendChild(lPhone); f.appendChild(iPhone);
+    f.appendChild(consent);
     f.appendChild(note); f.appendChild(go);
     msgs.appendChild(f); scrollDown();
     f.addEventListener('submit', function (ev) {
@@ -621,6 +636,7 @@
         return;
       }
       if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
+      if (!iConsent.checked) { note.textContent = 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'; iConsent.focus(); return; }
       go.disabled = true;
       fetchWithTimeout(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
@@ -632,6 +648,7 @@
             room: card ? card.room : null,
             party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null,
             kind: leadKind,
+            consent: { privacy: true, at: new Date().toISOString(), text: consent.textContent },
             conversation_id: state.slots ? state.slots._cid : null,
             // the rep should see what the customer asked, not only a hotel name
             transcript: state.messages.slice(-12).map(function (m) { return (m.role === 'user' ? 'לקוח: ' : 'בוט: ') + m.content; }).join('\n')
