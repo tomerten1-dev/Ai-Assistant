@@ -86,8 +86,16 @@ function verdict(rooms, x) {
     const hit = any && rooms.find(r => String(r.roomID) === String(any));
     if (hit) by.set('', hit);
   }
+  // and the manual bridge, for the names that will never look alike — it is
+  // what the server uses too, so a report that ignored it would be lying
+  if (!by.size) {
+    const manual = siteRooms.idFor(String(siteIDof(x.hotel)), '', '', x.room);
+    const hit = manual && rooms.find(r => String(r.roomID) === String(manual));
+    if (hit) { hit.manual = true; by.set('', hit); }
+  }
   return by;
 }
+const siteIDof = hotel => (resorts.hotels[hotel] || {}).siteID;
 
 async function askAbout(u) {
   const info = resorts.hotels[u.hotel];
@@ -111,12 +119,15 @@ async function askAbout(u) {
   const results = [];
   for (const x of ours) {
     const by = verdict(rooms, x);
-    results.push({ hotel: x.hotel, siteID: info.siteID, room: x.room, hit: by.size > 0 });
+    const first = [...by.values()][0];
+    results.push({ hotel: x.hotel, siteID: info.siteID, room: x.room,
+      hit: by.size > 0, manual: !!(first && first.manual) });
     if (!by.size) { lines.push(`     ${x.room}\n        → ✗ אין התאמה`); continue; }
     const ids = new Set([...by.values()].map(h => h.roomID));
     if (ids.size === 1) {
       const h = [...by.values()][0];
-      lines.push(`     ${x.room}\n        → ✓ ${h.roomID} (${h.roomName})`);
+      lines.push(`     ${x.room}\n        → ✓ ${h.roomID} (${h.roomName})` +
+        (h.manual ? '   [מיפוי ידני מ-config/room-map.json]' : ''));
     } else {
       lines.push(`     ${x.room}`);
       for (const [n, h] of by) lines.push(`        → ✓ ${n} אנשים: ${h.roomID} (${h.roomName})`);
@@ -165,8 +176,10 @@ async function pool(items, n, fn) {
   }
   const rows = [...seenRoom.entries()];
   const missed = rows.filter(([, v]) => !v);
+  const manual = rows.filter(([, v]) => v && v.manual).length;
   console.log(`סיכום: ${ok} בקשות הצליחו, ${failed} נכשלו, ` +
-    `${rows.length - missed.length} מתוך ${rows.length} חדרים זוהו אוטומטית.`);
+    `${rows.length - missed.length} מתוך ${rows.length} חדרים זוהו` +
+    (manual ? ` (${manual} מהם דרך מיפוי ידני).` : '.'));
   if (failed) console.log('בקשה שנכשלת = הקישור עדיין יעבוד, אבל בלי בחירת חדר אוטומטית.');
 
   if (missed.length) {

@@ -75,7 +75,12 @@ async function fetchRooms(siteID, from, till, deps = {}) {
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const body = await res.json();
   const rooms = body && body.rooms;
-  if (!rooms) throw new Error('no rooms in the answer');
+  // say WHAT came back instead, so one look at the log settles whether the
+  // engine has no rooms for those dates or answers in a shape we do not read
+  if (!rooms) {
+    const keys = body && typeof body === 'object' ? Object.keys(body).slice(0, 6).join(', ') : typeof body;
+    throw new Error('no rooms in the answer (the answer holds: ' + (keys || 'nothing') + ')');
+  }
   // the shape is an object keyed by id in some responses, an array in others
   const list = Array.isArray(rooms) ? rooms : Object.values(rooms);
   return list
