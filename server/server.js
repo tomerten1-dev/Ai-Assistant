@@ -699,8 +699,12 @@ async function handleChat(body) {
   const nothingKnown = slots.adults == null && !(slots.children_ages || []).length &&
     slots.month == null && slots.country == null && slots.destination == null;
   if (offline.isPause(lastUser)) {
+    // "אחשוב על זה" is the moment to offer the form — once. The research
+    // (delayed capture, after value) says this beats asking up front.
+    const nudge = !prevSlots._nudged && (prevSlots._shown || []).length > 0;
+    if (nudge) slots._nudged = true;
     return {
-      open_lead_form: false, reply_he: offline.PAUSE_HE, model_used: false,
+      open_lead_form: nudge, reply_he: offline.PAUSE_HE, model_used: false,
       pending_parameter: null, slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
     };
@@ -918,6 +922,19 @@ async function handleChat(body) {
     preamble = [preamble, 'אלה כל האפשרויות שמצאתי בתנאים האלה. אם נשנה תאריך או יעד — ייפתחו נוספות.']
       .filter(Boolean).join(String.fromCharCode(10));
   }
+  // Two turns in a row the bot could not use is a bug report from a real
+  // customer — and the point to hand over, once, rather than keep guessing.
+  const lostNow = !!(lastUser && !slotsChanged(prevSlots, slots) && !modelUsed && !faqHit && !deflection &&
+    !offline.wantsMore(lastUser) && !offline.isGreeting(lastUser) && !offline.wantsCallback(lastUser) &&
+    !(slots.preferences || []).some(p => !(prevSlots.preferences || []).includes(p)));
+  slots._lost = lostNow ? (prevSlots._lost || 0) + 1 : 0;
+  const lostNudge = lostNow && slots._lost >= 2 && !prevSlots._nudged;
+  const exhaustedNudge = exhausted && !prevSlots._nudged;
+  if (lostNudge) {
+    preamble = [preamble, 'נראה שלא הצלחתי להבין — עדיף שנציג ידבר אתכם. השאירו שם וטלפון, או כתבו לנו בוואטסאפ מהכפתור למעלה.']
+      .filter(Boolean).join(String.fromCharCode(10));
+  }
+  if (lostNudge || exhaustedNudge) slots._nudged = true;
 
   const replyText = (() => {
     // THE COVERAGE GUARANTEE. The ack lines used to live inside the template,
@@ -1094,7 +1111,7 @@ async function handleChat(body) {
   // at if there is one. Telling someone where to find a button is not service.
   slots._lastFaqId = faqHit ? faqHit.id : null;
   slots._lastGuard = guarded || null;
-  const askForDetails = offline.wantsCallback(lastUser);
+  const askForDetails = offline.wantsCallback(lastUser) || lostNudge || exhaustedNudge;
 
   return {
     open_lead_form: askForDetails,

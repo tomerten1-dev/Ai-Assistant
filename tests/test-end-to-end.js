@@ -1405,6 +1405,61 @@ t('holding the offers does not swallow the off-topic line', () =>
   handleChat({ messages: [{ role: 'user', content: 'תן לי מתכון לעוגה' }], slots: {} })
     .then(out => assert.ok(/אני כאן בעיקר להתאמת/.test(out.reply_he), out.reply_he)));
 
+// ---- lead nudges: once, after value, never twice ----
+async function convo(turns) {
+  const messages = []; let slots = {}; let out = null;
+  for (const u of turns) {
+    messages.push({ role: 'user', content: u });
+    out = await handleChat({ messages: messages.slice(), slots });
+    slots = out.slots; messages.push({ role: 'assistant', content: out.reply_he });
+  }
+  return out;
+}
+t('"אחשוב על זה" after offers opens the form once', async () => {
+  const a = await convo(['זוג בפברואר באוסטריה', 'אחשוב על זה']);
+  assert.strictEqual(a.open_lead_form, true);
+  const b = await convo(['זוג בפברואר באוסטריה', 'אחשוב על זה', 'אחשוב על זה שוב']);
+  assert.strictEqual(b.open_lead_form, false, 'nudged twice');
+});
+t('"אחשוב על זה" before any offer does not open the form', async () => {
+  const a = await convo(['אחשוב על זה']);
+  assert.strictEqual(a.open_lead_form, false);
+});
+t('two unusable turns in a row hand over once', async () => {
+  const a = await convo(['זוג בפברואר', 'בלה בלה בלה', 'קרקר פלפל']);
+  assert.strictEqual(a.open_lead_form, true);
+  assert.ok(/נציג/.test(a.reply_he));
+  const b = await convo(['זוג בפברואר', 'בלה בלה בלה', 'קרקר פלפל', 'עוד קשקוש']);
+  assert.strictEqual(b.open_lead_form, false, 'nudged twice');
+});
+t('a chip that changes the ranking is not an unusable turn', async () => {
+  const a = await convo(['זוג בפברואר', 'בלה בלה בלה', 'חשוב לי ספא']);
+  assert.strictEqual(a.open_lead_form, false);
+  assert.strictEqual(a.slots._lost, 0);
+});
+t('lead intents: an agent gets a tagged form, a job seeker gets an address', async () => {
+  const a = await convo(['אני סוכן נסיעות, יש תנאי סוכנים?']);
+  assert.strictEqual(a.open_lead_form, true); assert.strictEqual(a.lead_kind, 'agent');
+  const j = await convo(['מחפש עבודה כמדריך במועדון ילדים, מה השכר?']);
+  assert.strictEqual(j.open_lead_form, false); assert.ok(/info@pingwin/.test(j.reply_he));
+});
+t('a foreign-language message is answered in that language with the form', async () => {
+  const r = await convo(['Есть ли у вас пакеты в Банско на январь?']);
+  assert.ok(/Pingwin/.test(r.reply_he) && /[\u0400-\u04FF]/.test(r.reply_he));
+  assert.strictEqual(r.open_lead_form, true);
+});
+t('transliterated Hebrew gets a Hebrew invitation and keeps what it parsed', async () => {
+  const r = await convo(['Shalom, yesh lachem chavilot le Bansko?']);
+  assert.ok(/בעברית/.test(r.reply_he));
+  assert.strictEqual(r.slots.country, 'bulgaria');
+});
+t('the trade-off line never precedes the offers\' introduction', async () => {
+  const r = await convo(['זוג עם 2 ילדים בני 5 ו-9 בינואר באוסטריה']);
+  const lines = r.reply_he.split('\n');
+  const trade = lines.findIndex(l => /אם תשקלו|אם תהיו גמישים|אם תוותרו/.test(l));
+  if (trade >= 0) assert.ok(trade > 0, 'trade-off was the first line: ' + lines[0]);
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }

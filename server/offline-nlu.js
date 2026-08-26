@@ -1041,6 +1041,24 @@ function phrase(result, slots, cards) {
   if (obj && note('cheaper_found')) lines.push(obj.cheaper);
   if (obj && note('no_cheaper')) lines.push(obj.none);
 
+  // acknowledge an active preference, so a refine chip visibly does something
+  const prefs = slots.preferences || [];
+  if (cards.length && prefs.length && !lines.length) {
+    const budget = /תקציב/.test(prefs.join(' '));
+    const others = prefs.filter(p => !/תקציב/.test(p));
+    const bits = [];
+    if (budget) bits.push('החסכוניות קודם');
+    if (others.length) bits.push('לפי ' + others.join(', '));
+    lines.push('סידרתי לפי מה שביקשתם — ' + bits.join(', ') + ' (הנציג יאשר סופית):');
+  }
+  // say out loud what was taken into account, then what a rep must confirm
+  const applied = note('applied_requirements');
+  if (cards.length && applied && applied.items.length >= 2) {
+    lines.push('לקחתי בחשבון: ' + applied.items.join(', ') + '.');
+  }
+  if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
+  // the trade-off is advice about the offers, so it follows their introduction —
+  // it used to be the first and only sentence above three cards
   // What one bend would open up. Said once, for the single best trade — a list
   // of alternatives is a menu, and a menu is not advice.
   const trade = note('tradeoffs');
@@ -1062,22 +1080,6 @@ function phrase(result, slots, cards) {
     }
   }
 
-  // acknowledge an active preference, so a refine chip visibly does something
-  const prefs = slots.preferences || [];
-  if (cards.length && prefs.length && !lines.length) {
-    const budget = /תקציב/.test(prefs.join(' '));
-    const others = prefs.filter(p => !/תקציב/.test(p));
-    const bits = [];
-    if (budget) bits.push('החסכוניות קודם');
-    if (others.length) bits.push('לפי ' + others.join(', '));
-    lines.push('סידרתי לפי מה שביקשתם — ' + bits.join(', ') + ' (הנציג יאשר סופית):');
-  }
-  // say out loud what was taken into account, then what a rep must confirm
-  const applied = note('applied_requirements');
-  if (cards.length && applied && applied.items.length >= 2) {
-    lines.push('לקחתי בחשבון: ' + applied.items.join(', ') + '.');
-  }
-  if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
   // Requirements the customer named. Most of them now HAVE an answer, taken
   // from the hotel's own page on pingwin.co.il (data/rooms-raw.json), so the
   // bot answers instead of handing everything to a rep. Only what the page

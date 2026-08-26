@@ -22,7 +22,9 @@
     radius: '10px',
     font: "'Assistant','Rubik','Segoe UI',system-ui,sans-serif", // TODO: פונט המותג
     zIndex: 2147483000,
-    position: 'left'           // 'left' | 'right' — פינת הבועה
+    position: 'left',          // 'left' | 'right' — פינת הבועה
+    whatsapp: '972526543262',  // הכפתור בכותרת: יציאה לאדם מכל מצב (data-whatsapp על התג דורס)
+    brand: 'פינגווין'
   };
 
   /* ============== api base — נגזר מכתובת הסקריפט עצמו ============== */
@@ -32,6 +34,7 @@
   })();
   var API_BASE = (script && script.getAttribute('data-api')) ||
     (script && script.src ? new URL(script.src).origin : '') || '';
+  var WHATSAPP = (script && script.getAttribute('data-whatsapp')) || THEME.whatsapp;
 
   // a phone keyboard covers half the screen: never pop it uninvited there
   var IS_TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window);
@@ -73,11 +76,16 @@
     + '.win.max .msgs{padding:20px 24px}'
     // on a phone the window is the screen, whatever .big/.max say — those two
     // used to win on specificity and leave a lopsided box with a 32px gap
-    + '@media (max-width:480px){.win,.win.big,.win.max{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0;margin:0}}'
+    + '@media (max-width:480px){.win,.win.big,.win.max{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0;margin:0}'
+    + '.hdr .sub{display:none}.hdr .ttl{font-size:13.5px}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
     + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf1}'
     + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
     + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
+    + '.hdr .wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;background:#e7f6ec;color:#1b6b3a;border:1px solid #cfe9d8;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}'
+    + '.hdr .wa:hover{background:#d9f0e1}'
+    + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.accent + ';outline-offset:2px}'
+    + '.hdr .wa + .exp{margin-inline-start:0}'
     + '.hdr .exp{margin-inline-start:auto;font-size:16px}'
     + '.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;padding:3px 7px;border-radius:7px;line-height:1}'
@@ -234,7 +242,22 @@
   try { if (localStorage.getItem('pingwin_bot_max') === '1') setExpanded(true); } catch (e) {}
   var hX = el('button', 'x', '✕');
   hX.setAttribute('aria-label', 'סגירת הצ׳אט');
-  hdr.appendChild(hTxt); hdr.appendChild(hExp); hdr.appendChild(hX);
+  // a human is one tap away from every state — the research is unambiguous
+  // that customers who cannot find the exit stop trusting the bot
+  var hWa = null;
+  if (WHATSAPP) {
+    hWa = document.createElement('a');
+    hWa.className = 'wa'; hWa.target = '_blank'; hWa.rel = 'noopener';
+    hWa.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4c.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.5-.3z"/></svg><span>וואטסאפ</span>';
+    hWa.setAttribute('aria-label', 'המשך בוואטסאפ עם נציג');
+    hWa.addEventListener('click', function () {
+      // hand the rep the gist, not a blank chat
+      var gist = state.messages.filter(function (m) { return m.role === 'user'; }).slice(-3).map(function (m) { return m.content; }).join(' / ');
+      hWa.href = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent('שלום, הגעתי מהצ׳אט באתר. ' + (gist ? 'מה שחיפשתי: ' + gist : ''));
+    });
+    hWa.href = 'https://wa.me/' + WHATSAPP;
+  }
+  hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hExp); hdr.appendChild(hX);
 
   var msgs = el('div', 'msgs');
   msgs.setAttribute('aria-live', 'polite');
@@ -697,19 +720,31 @@
   }
 
   /* ============== events ============== */
-  var STARTERS = [
-    'זוג בפברואר',
-    'משפחה עם ילדים',
-    'מה כלול בחבילה?',
-    'מתאים למתחילים',
-  ];
+  // The first message says what this is (an AI assistant — the research shows
+  // the disclosure cuts abandonment after a mistake) and offers starters that
+  // fit the page the customer is on, not "how can I help?"
+  var PAGE = (function () {
+    var u = (location.pathname + ' ' + location.href).toLowerCase();
+    var h = decodeURIComponent(u);
+    if (/בנסקו|bansko|בולגריה|bulgaria/.test(h)) return { country: 'בולגריה' };
+    if (/אוסטריה|austria|ischgl|mayrhofen|saalbach|zillertal/.test(h)) return { country: 'אוסטריה' };
+    if (/צרפת|france|tignes|arcs|thorens|alpes|avoriaz|flaine/.test(h)) return { country: 'צרפת' };
+    if (/אנדורה|andorra|soldeu|grandvalira/.test(h)) return { country: 'אנדורה' };
+    if (/קייטנ|בעברית|hebrew/.test(h)) return { camp: true };
+    return {};
+  })();
+  var STARTERS = PAGE.country
+    ? ['משפחה עם ילדים ב' + PAGE.country, 'זוג ב' + PAGE.country + ' בפברואר', 'מה כלול בחבילה?', 'יש קייטנה בעברית ב' + PAGE.country + '?']
+    : PAGE.camp
+      ? ['ילדים בני 5 ו-9, מתי יש קייטנה?', 'מאיזה גיל הקייטנה?', 'משפחה עם ילדים בחנוכה', 'מה כלול בחבילה?']
+      : ['זוג בפברואר', 'משפחה עם ילדים', 'מה כלול בחבילה?', 'מתאים למתחילים'];
 
   function openWin() {
     state.open = true; win.classList.add('open');
     fab.setAttribute('aria-expanded', 'true');
     if (!state.booted) {
       state.booted = true;
-      addMsg('bot', 'שלום, כאן שירות התאמת החופשות של פינגווין.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת — ואציג אפשרויות פנויות מהמלאי שלנו.');
+      addMsg('bot', 'שלום, אני העוזר האוטומטי של ' + THEME.brand + ' — מציג רק חופשות שבאמת פנויות אצלנו, ונציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.');
       state.messages.push({ role: 'assistant', content: 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.' });
       addChips(STARTERS);
     }
