@@ -11,20 +11,25 @@ const sr = require('../server/site-rooms.js');
 const resorts = require('../data/resorts.json');
 const units = require('../data/availability.json').units || [];
 const live = require('../tests/fixtures/site-rooms-live.json');
+const { pageFor } = require('../config/booking-url.js');
 const quiet = process.argv.includes('--quiet');
 
-const rows = new Map();                       // hotel|room → unit
+// hotel|room|page — a hotel with a second booking page answers about the same
+// room with a different id, so the page is part of the row
+const rows = new Map();
 for (const u of units) {
-  const id = (resorts.hotels[u.hotel] || {}).siteID;
-  if (!id || !live[String(id)]) continue;
-  const k = u.hotel + '|' + u.room;
+  const info = resorts.hotels[u.hotel];
+  if (!info || !info.siteID) continue;
+  const site = String(pageFor(info, u.nights).siteID);
+  if (!live[site]) continue;
+  const k = u.hotel + '|' + u.room + '|' + site;
   if (!rows.has(k)) rows.set(k, u);
 }
 
 let hit = 0;
 const missed = [];
 for (const [, u] of rows) {
-  const siteID = resorts.hotels[u.hotel].siteID;
+  const siteID = pageFor(resorts.hotels[u.hotel], u.nights).siteID;
   const rooms = live[String(siteID)].map(([roomID, roomName]) => ({ roomID, roomName }));
   const base = { type: u.room_type, occMin: u.occ_min, occMax: u.occ_max, hotel: u.hotel };
   const lo = u.occ_min || u.occ_max || 0, hi = u.occ_max || u.occ_min || 0;

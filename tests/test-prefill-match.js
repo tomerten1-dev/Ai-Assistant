@@ -17,6 +17,7 @@ const sr = require('../server/site-rooms.js');
 const resorts = require('../data/resorts.json');
 const units = require('../data/availability.json').units || [];
 const live = require('./fixtures/site-rooms-live.json');
+const { pageFor } = require('../config/booking-url.js');
 const expected = require('./fixtures/site-rooms-expected.json');
 
 let pass = 0, fail = 0;
@@ -36,11 +37,12 @@ const browser = sandbox.module.exports;
 
 // the browser sees option elements; it only ever reads .textContent and .value
 const asOptions = pairs => pairs.map(([value, textContent]) => ({ value, textContent }));
-const askBrowser = (hotel, room, party) => {
+// the browser is already ON a page, so it is handed that page's option list
+const askBrowser = (siteID, room, party) => {
   sandbox.q = party ? { ad: String(party) } : {};
-  const siteID = String((resorts.hotels[hotel] || {}).siteID);
-  return browser.byDescription(asOptions(live[siteID] || []), room) || null;
+  return browser.byDescription(asOptions(live[String(siteID)] || []), room) || null;
 };
+const pageOf = (hotel, nights) => String(pageFor(resorts.hotels[hotel] || {}, nights).siteID);
 
 const unitFor = new Map();
 for (const u of units) if (!unitFor.has(u.hotel + '|' + u.room)) unitFor.set(u.hotel + '|' + u.room, u);
@@ -76,13 +78,18 @@ for (const [hotel, rooms] of Object.entries(expected)) {
   for (const [room, want] of Object.entries(rooms)) {
     if (room.startsWith('_')) continue;
     const u = unitFor.get(hotel + '|' + room);
-    const cases = (want && typeof want === 'object') ? Object.entries(want)
-      : [[u.occ_max || u.occ_min || null, want]];
-    for (const [party, id] of cases) {
+    const party = u.occ_max || u.occ_min || null;
+    // every (page, party) the customer can actually arrive with
+    const cases = want && want.by_nights
+      ? Object.entries(want.by_nights).map(([n, x]) => [x.siteID, party, x.room_id, n + ' לילות'])
+      : want && typeof want === 'object'
+        ? Object.entries(want.party).map(([p, id]) => [pageOf(hotel, u.nights), Number(p), id, p + ' אנשים'])
+        : [[pageOf(hotel, u.nights), party, want, '']];
+    for (const [site, p, id, label] of cases) {
       total++;
-      const got = askBrowser(hotel, room, party && Number(party));
+      const got = askBrowser(site, room, p);
       if (got) resolved++;
-      if (got && got !== id) wrong.push(`${hotel} · ${room} · ${party} אנשים → ${got}, השרת אומר ${id}`);
+      if (got && got !== id) wrong.push(`${hotel} · ${room} ${label} → ${got}, השרת אומר ${id}`);
     }
   }
 }
