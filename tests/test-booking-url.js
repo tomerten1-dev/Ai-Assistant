@@ -99,6 +99,14 @@ t('the short-stay page is never offered as a hotel of its own', () => {
   assert.ok(named.includes('Casa Karina'));
   assert.ok(cat.allPages().some(h => h.siteID === 1445), 'the page itself was lost');
 });
+t('the manual console test uses the real script, never a copy of it', () => {
+  // it used to hold a hand-written copy, which had already fallen behind the
+  // real one — a manual check that tests last week's code is worse than none
+  const tool = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'tools', 'prefill-console-test.js'), 'utf8');
+  assert.ok(/readFileSync\(SRC/.test(tool), 'it is not reading public/pingwin-prefill.js');
+  assert.ok(!/__pwPrefillRan\s*=\s*true/.test(tool), 'a copy of the script grew back inside the tool');
+});
 t('the companion script is shipped, and is inert without our parameters', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'public', 'pingwin-prefill.js'), 'utf8');
   assert.ok(/__pwPrefillRan/.test(src), 'nothing stops it running twice under GTM');

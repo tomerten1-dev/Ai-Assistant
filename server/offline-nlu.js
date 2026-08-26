@@ -1017,8 +1017,17 @@ function phrase(result, slots, cards) {
     // Don't announce "הנה מה שפנוי" when a relaxation line is about to explain
     // what was actually shown — two openings in a row read as two answers.
     const willExplain = (result.relaxed || []).length > 0;
+    // and the reason, which is the part a customer actually wants: February is
+    // the French school holiday. Tomer, 26/08 — he saw the bot answer "why is
+    // there nothing in February" with a generic line about our stock.
+    const why = (guidance.load().messages_he || {}).france_february_he || '';
     lines.push('שימו לב: אין לנו יציאות לצרפת בפברואר (מדלגים מ-30.1 ל-6.3)' +
       (cards.length && !willExplain ? ' — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:' : '.'));
+    // The reason earns its place when February IS the story. When the airport,
+    // the kids' club and the destination all had something to say first, a
+    // paragraph about French school holidays is the fifth thing the customer
+    // reads — and the line above already told them what happened.
+    if (why && lines.length <= 2) lines.push(why);
   }
   for (const r of result.relaxed || []) {
     // month / location / two_rooms / nights are printed by the server, verbatim
@@ -1527,7 +1536,11 @@ function loadFaq() {
   for (const e of (raw.entries || [])) {
     if (!e || !e.id || !e.match || !e.answer_he) { bad.push((e && e.id) || '(ללא id)'); continue; }
     try {
-      out.push({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match });
+      out.push({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match,
+        // a specific answer can silence a general one it already covers:
+        // "למה אין בפברואר" is answered by france_february, and why_none's
+        // paragraph about our stock after it reads as a second, vaguer answer
+        suppresses: Array.isArray(e.suppresses) ? e.suppresses : [] });
     } catch (err) {
       bad.push(`${e.id} (${err.message})`);
     }
@@ -1576,8 +1589,14 @@ function faqMulti(text) {
     }
   }
   if (!hits.length) return null;
-  return { id: hits[0].id, he: hits.map(h => h.he).join(String.fromCharCode(10)),
-    all: hits.map(h => ({ id: h.id, he: h.he })) };
+  // drop what a more specific answer already said
+  const byId = new Map(loadFaq().map(e => [e.id, e]));
+  const silenced = new Set();
+  for (const h of hits) for (const id of ((byId.get(h.id) || {}).suppresses || [])) silenced.add(id);
+  const kept = hits.filter(h => !silenced.has(h.id));
+  const final = kept.length ? kept : hits;
+  return { id: final[0].id, he: final.map(h => h.he).join(String.fromCharCode(10)),
+    all: final.map(h => ({ id: h.id, he: h.he })) };
 }
 
 function faq(text) {
@@ -1782,6 +1801,12 @@ function fillPlaceholders(text) {
       : out.replace(/,?\s*[^,.]*\{phone\}[^,.]*/g, '');
   }
   if (out.includes('{handoff}')) out = out.split('{handoff}').join(handoffTail()).trim();
+  // {france_february} — why we do not go to France in February. One sentence,
+  // in guidance.json, so the search path and the FAQ answer cannot drift apart.
+  if (out.includes('{france_february}')) {
+    const m = guidance.load().messages_he || {};
+    out = out.split('{france_february}').join(m.france_february_he || '').replace(/\s{2,}/g, ' ').trim();
+  }
   // {office_status} — "כרגע המשרד פתוח" / "כרגע המשרד סגור ונפתח מחר ב-9:00",
   // decided by the clock in Israel at the moment the customer wrote.
   if (out.includes('{office_status}')) {

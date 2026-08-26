@@ -315,6 +315,47 @@ t('a Shabbat ski pass question still belongs to the Shabbat answer', () => {
   assert.strictEqual(nlu.faq('סקיפס ל-6 ימים').id, 'shabbat_hotel');
 });
 
+// ── פברואר בצרפת ──────────────────────────────────────────────────────────
+// תומר ראה את הבוט עונה על "למה אין בפברואר?" תשובה כללית על מלאי (why_none),
+// במקום הסיבה האמיתית. 26/08.
+t('"למה אין בפברואר" מקבל את הסיבה, לא הסבר כללי על מלאי', () => {
+  const a = nlu.faqMulti('למה אין בפברואר?');
+  assert.ok(a, 'לא נמצאה תשובה בכלל');
+  assert.strictEqual(a.all[0].id, 'france_february', 'ענה ' + a.all[0].id);
+  assert.ok(/וואקאנס/.test(a.he), 'בלי הסיבה: ' + a.he);
+  assert.ok(!a.all.some(x => x.id === 'why_none'), 'התשובה הכללית נגררה אחריה');
+});
+t('גם כשהלקוח נוקב בצרפת במפורש', () => {
+  for (const q of ['למה אין צרפת בפברואר?', 'למה לא צרפת בפברואר', 'אין לכם צרפת בפברואר?']) {
+    const a = nlu.faqMulti(q);
+    assert.ok(a && a.all[0].id === 'france_february', q + ' → ' + (a && a.all[0].id));
+  }
+});
+t('"למה אין כלום" עדיין מקבל את התשובה הכללית', () => {
+  const a = nlu.faqMulti('למה אין כלום?');
+  assert.strictEqual(a.all[0].id, 'why_none');
+});
+t('התשובה על פברואר תואמת את מה שבאמת בטבלה', () => {
+  // אם פינגווין יתחילו למכור צרפת בפברואר, או יפסיקו בינואר/מרץ, התשובה הזאת
+  // הופכת לשקר — והבדיקה הזאת תיפול לפני שלקוח יקרא אותה
+  const units = require('../data/availability.json').units;
+  const monthsFR = new Set(units.filter(u => u.country === 'france')
+    .map(u => Number(u.date.slice(5, 7))));
+  assert.ok(!monthsFR.has(2), 'יש עכשיו יציאות לצרפת בפברואר — התשובה כבר לא נכונה');
+  assert.ok(monthsFR.has(1) && monthsFR.has(3), 'התשובה מבטיחה ינואר ומרץ');
+  const feb = new Set(units.filter(u => Number(u.date.slice(5, 7)) === 2).map(u => u.country));
+  for (const c of ['austria', 'bulgaria', 'andorra']) {
+    assert.ok(feb.has(c), 'התשובה מבטיחה ' + c + ' בפברואר, ואין');
+  }
+});
+t('אין מספרי כסף בתשובה החדשה', () => {
+  const e = require('../config/faq.json').entries.find(x => x.id === 'france_february');
+  const g = require('../config/guidance.json').messages_he.france_february_he;
+  for (const txt of [e.answer_he, g]) {
+    assert.ok(!/[€$₪]|\d+\s*(אירו|יורו|שקל|דולר)/.test(txt), 'כסף בטקסט: ' + txt);
+  }
+});
+
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
