@@ -73,7 +73,7 @@ const BASE = process.env.SITE_ROOMS_BASE || 'https://www.pingwin.co.il';
 
 // what the server would choose, per party size this unit can take
 function verdict(rooms, x) {
-  const base = { type: x.room_type, occMin: x.occ_min, occMax: x.occ_max };
+  const base = { type: x.room_type, occMin: x.occ_min, occMax: x.occ_max, hotel: x.hotel };
   const lo = x.occ_min || x.occ_max || 0, hi = x.occ_max || x.occ_min || 0;
   const by = new Map();
   for (let n = lo; n <= hi; n++) {

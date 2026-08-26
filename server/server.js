@@ -336,7 +336,8 @@ function presentCards(result, slots, skip, opts = {}) {
       // write "CONN Premium with View 5 pax"
       room_id: siteRooms.idFor(engine.hotelInfo(c.hotel).siteID,
         c.date, addNights(c.date, c.nights), c.room,
-        { type: c.room_type, occMin: c.occ_min, occMax: c.occ_max, party: partySize(slots) }),
+        { type: c.room_type, occMin: c.occ_min, occMax: c.occ_max,
+          party: partySize(slots), hotel: c.hotel }),
     }, slots),
   })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
 }

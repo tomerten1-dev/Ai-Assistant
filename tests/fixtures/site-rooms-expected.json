@@ -1,0 +1,216 @@
+{
+  "_note": "What the matcher must resolve for every room in the commitments workbook, against the room lists in site-rooms-live.json. Verified by hand, room by room, on 26/08. A change here is a change in which room a customer is quoted — read the diff, do not regenerate it blindly.",
+  "Belambra Tignes Val Claret": {
+    "_siteID": "1903",
+    "CONN Premium with View 5 pax": "5588",
+    "Premium Amazing View 5 pax": "5582"
+  },
+  "Plein Sud (allotment)": {
+    "_siteID": "1288",
+    "2 bedroom apt 4-5 pax": {
+      "4": "2882",
+      "5": "3721"
+    },
+    "2 bedroom apt 4 pax": "2882"
+  },
+  "Belambra L'Oree des Pistes": {
+    "_siteID": "1963",
+    "Premium 2-3": "5809",
+    "Premium 3 +1 balcony": "5810"
+  },
+  "Belambra Les Cretes L2A 1800": {
+    "_siteID": "1844",
+    "Premium Amazing 2-4": "5805"
+  },
+  "Belambra Val Claret": {
+    "_siteID": "2152",
+    "Premium Amazing View 2-4 pax": "6333",
+    "Premium with View 2+1 pax": "6331",
+    "Premium with View 3-4 pax": "6332",
+    "Premium Amazing View + Balcony 2 pax": "6334"
+  },
+  "Cheval Blanc (allotment)": {
+    "_siteID": "1292",
+    "1 bdrm apt 2-4 pax 27 mr privilege": "2901"
+  },
+  "Club Soleil Les 2 Alpes": {
+    "_siteID": "1673",
+    "connected 4+2": "4457",
+    "DBL 2+1": "6133"
+  },
+  "Club Soleil Montgenevre": {
+    "_siteID": "2115",
+    "DBL 2-4": "6132",
+    "DBL with Balcony 2-4": "6140",
+    "Room 3-5": "6132",
+    "Room with Balcony 3-5": "6140"
+  },
+  "Club Soleil Oz": {
+    "_siteID": "1278",
+    "DBL 2-4": "2833"
+  },
+  "Edenarc - Arc 1800": {
+    "_siteID": "1513",
+    "1 bedroom apart 4 pax 36 mr": "3750",
+    "2 bedroom apart 6 pax 50 mr": "3751"
+  },
+  "Golf": {
+    "_siteID": "1440",
+    "Premium 2-2": "6141",
+    "Classic 2-3": "3430"
+  },
+  "Hotel Kashmir": {
+    "_siteID": "1665",
+    "Family Suite 2-4 pax": "4438",
+    "Prestige Suite 4-5 pax": "4439"
+  },
+  "l'Eclose Alpe d'Huez": {
+    "_siteID": "1962",
+    "1 bedroom apart 4 pax 31 mr": "5524",
+    "2 bedroom apart 6 pax 45 mr": "5526"
+  },
+  "Res Village Montana (allotment)": {
+    "_siteID": "1293",
+    "1 bedroom+cabin 4 pax 35 mr": "2913"
+  },
+  "Residence Oxalys": {
+    "_siteID": "1402",
+    "4 bdrm apt 6-8 pax 95 mr SOUTH": "4011",
+    "2 bdrm apt 4-5 pax 65 mr": "3594"
+  },
+  "Ynycio": {
+    "_siteID": "1973",
+    "2 bedroom+cabin 6 pax 73 mr": "5552",
+    "2 bedroom+cabin 6 pax PLUS 60 mr": "5553"
+  },
+  "Belambra Avoriaz": {
+    "_siteID": "1949",
+    "Classic 2-3": "6326"
+  },
+  "Belambra Grand Massif": {
+    "_siteID": "2048",
+    "Premium 2-2 balcony": "5872",
+    "Premium 2 bdrm + balcony 4+1": "5873"
+  },
+  "Club Soleil Les Menuires": {
+    "_siteID": "1195",
+    "DBL 2-4": "5990",
+    "DBL 2-2": "5989"
+  },
+  "Casa Karina": {
+    "_siteID": "1435",
+    "Standard 2-3": "3395",
+    "Appt 1 bedroom": "3396",
+    "Appt 2 bedrooms": "3397"
+  },
+  "Regnum": {
+    "_siteID": "1765",
+    "Superior Suite 2-3": "4751",
+    "Deluxe Suite 2-4": "4755",
+    "Superior Double 2-2": "6327"
+  },
+  "Vihren": {
+    "_siteID": "1107",
+    "Studio 2-3": "2180"
+  },
+  "Alpenhof Kristal": {
+    "_siteID": "1408",
+    "DBL 2-2": "3319",
+    "DBL 2-3": "3319"
+  },
+  "Castel": {
+    "_siteID": "2093",
+    "Deluxe 2-3": "6037"
+  },
+  "Hotel Ferienhof": {
+    "_siteID": "2116",
+    "DBL 2-2 (Type2 )": "6135",
+    "DBL 2-2 (Type3)": "6134",
+    "DBL 2-3 (Type2 )": "6136",
+    "DBL 2+2 (Type1 )": "6137",
+    "TWIN 2-2 (Type2 )": "6325",
+    "DBL 2-2 (Type3 )": "6134",
+    "SGL": "6138"
+  },
+  "Landhaus Roscher": {
+    "_siteID": "2079",
+    "DBL 2-2": "5971",
+    "DBL 2-3": "5972"
+  },
+  "Mutmanor": {
+    "_siteID": "1234",
+    "Standard 2-2": "2663",
+    "Triple 2-3": "6051"
+  },
+  "Pension Kumbichlhof": {
+    "_siteID": "1966",
+    "DBL 2-3": "5542",
+    "DBL 2-2": "5542"
+  },
+  "Sport": {
+    "_siteID": "269",
+    "DBL Dlx 2-4": "3382",
+    "J. Suite 2+2": "3381",
+    "SGL": "5576",
+    "Twin Dlx 2-2": "6329",
+    "DBL Deluxe 2-3": "3382",
+    "Penthouse Suite 2-3": "5979",
+    "DBL Dlx 2-3": "3382",
+    "J. Suite 2-3": "3381",
+    "J. Suite 2-4": "3381"
+  },
+  "Strolz": {
+    "_siteID": "1917",
+    "DBL 2-2": "5368",
+    "DBL 2-3": "5368"
+  },
+  "Tuxer": {
+    "_siteID": "2080",
+    "App 2 BDRM": "5973"
+  },
+  "Waldheim": {
+    "_siteID": "1897",
+    "DBL Stillputl 2-2": "5332",
+    "DBL Ziller 2-2": "5281",
+    "DBL Ziller 2-3": "5281"
+  },
+  "FONT PAS": {
+    "_siteID": "984",
+    "DBL 2-3": "1833"
+  },
+  "GRAND PAS": {
+    "_siteID": "445",
+    "Exterior 2-3": "4530"
+  },
+  "MAGIC PAS": {
+    "_siteID": "444",
+    "DBL 2-3": "678"
+  },
+  "Rila": {
+    "_siteID": "1161",
+    "Signature Slopes 2-3": "5052",
+    "Signature Resort 2-3": "2386"
+  },
+  "Berghof": {
+    "_siteID": "1246",
+    "DBL 2-3": "2701",
+    "DBL 2-2": "2701"
+  },
+  "SCHLOSSHOF": {
+    "_siteID": "1257",
+    "Standard 2-3": "2736",
+    "Standard 2-2": "2736"
+  },
+  "Strass": {
+    "_siteID": "269",
+    "DBL 2-2": "95",
+    "DBL 2-3": "95",
+    "J. Suite 2+2": "1556",
+    "J. Suite 2+1": "1556",
+    "SGL": "3694"
+  },
+  "LODGE PARK (Allotment)": {
+    "_siteID": "243",
+    "Premium 2-4": "3808"
+  }
+}

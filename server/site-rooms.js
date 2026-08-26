@@ -128,7 +128,9 @@ function decodeEntities(t) {
 
 const norm = s => decodeEntities(String(s || '')).toLowerCase()
   .replace(/["'׳״]/g, '')
-  .replace(/[^א-תa-z0-9+]+/g, ' ')
+  // "2Bdrm", "Type2", "45M" — one token to a human, two to us
+  .replace(/(\d)([a-zא-ת])/g, '$1 $2').replace(/([a-zא-ת])(\d)/g, '$1 $2')
+  .replace(/[^א-תa-z0-9]+/g, ' ')
   .trim();
 
 // How many people the name says the room holds. Two ways of saying it, and the
@@ -153,29 +155,68 @@ function occOf(name) {
 const overlaps = (x, y) => !x || !y || (x.min <= y.max && y.min <= x.max);
 // does this room take exactly the party that is travelling?
 const holds = (occ, party) => !party || !occ || (occ.min <= party && party <= occ.max);
+// can this room hold the whole range we sell?
+const covers = (occ, ours) => !occ || !ours || (occ.min <= ours.min && ours.max <= occ.max);
+
+// The apartments are the hardest names to line up — "1 bdrm apt 2-4 pax 27 mr
+// privilege" against "חדר שינה וסלון כ-27 מ\"ר פריבילג' 2-4" — and both sides
+// state the floor area. Two rooms in one residence never share it, so when both
+// say a size and the sizes differ, they are not the same room. Nothing else in
+// this file is that decisive.
+const SIZE = /(\d+)\s*(?:m²|sqm|מ["'׳״]?ר|mr\b|m\b)/i;
+function sizeOf(name) {
+  const m = SIZE.exec(decodeEntities(String(name || '')));
+  return m ? { m2: parseInt(m[1], 10), said: m[0] } : null;
+}
+const sizeAgrees = (a, b) => !a || !b || a.m2 === b.m2;
 
 // one vocabulary for both languages, and the words that carry no information
 const SAME = new Map([
   ['bdrm', 'bdrm'], ['bedroom', 'bdrm'], ['bedrooms', 'bdrm'], ['חש', 'bdrm'],
   ['חדרי', 'bdrm'], ['שינה', ''], ['ח', ''], ['ש', ''],
+  ['one', '1'], ['two', '2'], ['three', '3'], ['four', '4'], ['five', '5'], ['six', '6'],
   ['view', 'view'], ['נוף', 'view'],
   ['balcony', 'balcony'], ['מרפסת', 'balcony'],
   ['studio', 'studio'], ['סטודיו', 'studio'],
   ['pmr', 'pmr'], ['נכים', 'pmr'], ['נגיש', 'pmr'],
+  // the bed types, in the four ways the two systems write them
+  ['dbl', 'double'], ['double', 'double'], ['doubles', 'double'], ['זוגי', 'double'], ['זוגית', 'double'],
+  ['sgl', 'single'], ['single', 'single'], ['יחיד', 'single'],
+  ['twin', 'twin'], ['טווין', 'twin'],
+  ['triple', 'triple'], ['טריפל', 'triple'],
+  ['dlx', 'deluxe'], ['deluxe', 'deluxe'], ['דלוקס', 'deluxe'],
+  ['j', 'junior'], ['junior', 'junior'], ['גוניור', 'junior'],
+  ['standard', 'standard'], ['סטנדרט', 'standard'], ['סטנדרד', 'standard'],
+  ['classic', 'classic'], ['קלאסיק', 'classic'],
+  ['privilege', 'privilege'], ['פריבילג', 'privilege'],
+  ['comfort', 'comfort'], ['קומפורט', 'comfort'],
+  ['premier', 'premier'], ['פרמייר', 'premier'],
+  ['cabin', 'cabin'], ['נישה', 'cabin'],
+  ['sauna', 'sauna'], ['סאונה', 'sauna'],
+  ['gallery', 'gallery'], ['גלריה', 'gallery'],
+  ['mountain', 'mountain'], ['הר', 'mountain'],
+  ['south', 'south'], ['דרום', 'south'], ['פונה', ''],
   ['amazing', 'amazing'], ['premium', 'premium'], ['prestige', 'prestige'],
-  ['deluxe', 'deluxe'], ['superior', 'superior'], ['standard', 'standard'],
-  ['suite', 'suite'], ['סוויטה', 'suite'], ['family', 'family'], ['משפחתי', 'family'],
+  ['superior', 'superior'], ['suite', 'suite'], ['סוויטה', 'suite'],
+  ['suites', 'suite'], ['family', 'family'], ['משפחתי', 'family'],
 ]);
+// the generic words for "a room" — dropped only as a last resort, when the two
+// sides share nothing else. Montgenèvre sells our "DBL 2-4" as "Standard 1-5".
+const GENERIC = new Set(['double', 'standard']);
 // words that appear on one side only, or in both with no distinguishing power
-const NOISE = new Set(['apt', 'apartment', 'appartement', 'דירה', 'דירת', 'room', 'rooms', 'חדר', 'חדרים',
+const NOISE = new Set(['apt', 'apartment', 'apartments', 'appartement', 'app', 'appt', 'apts',
+  'דירה', 'דירת', 'room', 'rooms', 'חדר', 'חדרים',
   'וסלון', 'סלון', 'living', 'lounge', 'with', 'and', 'the', 'of', 'pax', 'ppl', 'people',
-  'אורחים', 'נופשים', 'אנשים', 'עם', 'ו', 'conn', 'connecting', 'מחוברים', 'type', 'טיפוס', '+']);
+  'אורחים', 'נופשים', 'אנשים', 'עם', 'ו', 'conn', 'connecting', 'connected', 'מחוברים',
+  'type', 'טיפוס', 'כ', 'mr', 'מר', 'm', 'sqm']);
 
 function tokens(name) {
   // the occupancy is removed BEFORE normalising: norm() deletes the hyphen in
   // "2-5 pax", and then the range no longer looks like one — "2" survived as a
   // token and no Belambra room ever matched (Tomer's run, 26/08).
   let text = decodeEntities(String(name || ''));
+  const size = sizeOf(text);
+  if (size) text = text.split(size.said).join(' ');
   const occ = occOf(text);
   if (occ) text = text.split(occ.said).join(' ');
   const cleaned = norm(text);
@@ -200,7 +241,9 @@ function overrideFor(siteID, room) {
     catch (e) { overrides = {}; }
   }
   const forSite = overrides[String(siteID)] || {};
-  return forSite[room] || forSite[norm(room)] || null;
+  const hit = forSite[room] || forSite[norm(room)] || null;
+  // keys starting with _ are notes to whoever edits the file, not room ids
+  return hit && !String(room).startsWith('_') ? hit : null;
 }
 
 // The room in the site's own list, or null. Never throws, never waits.
@@ -216,31 +259,87 @@ function match(rooms, room, hint = {}) {
   const ourOcc = (hint.occMin || hint.occMax)
     ? { min: hint.occMin || hint.occMax, max: hint.occMax || hint.occMin }
     : occOf(room);
-  if (!ourTokens.size) return null;
+  const ourSize = sizeOf(room) || sizeOf(hint.type || '');
 
-  const scored = rooms.map(r => ({ r, tk: tokens(r.roomName), occ: occOf(r.roomName) }))
-    .filter(x => overlaps(ourOcc, x.occ));
+  // Anything that cannot be this room is gone before a single name is compared:
+  // a room that cannot hold our party, and a room whose floor area is a
+  // different number from ours.
+  const scored = rooms.map(r => ({ r, tk: tokens(r.roomName), occ: occOf(r.roomName), size: sizeOf(r.roomName) }))
+    .filter(x => overlaps(ourOcc, x.occ) && sizeAgrees(ourSize, x.size));
+  if (!scored.length) return null;
+  // The area named it: both sides stated a floor area, they agree, and one room
+  // is left. It still has to not contradict us — a 45 m² one-bedroom and a
+  // 45 m² two-bedroom are different rooms, so the two descriptions must share a
+  // word, or one of them must say nothing beyond the area.
+  if (scored.length === 1 && ourSize && scored[0].size) {
+    const theirs = scored[0].tk;
+    const shares = [...ourTokens].some(w => theirs.has(w));
+    if (shares || !theirs.size || !ourTokens.size) return scored[0].r.roomID;
+  }
 
-  // The party is the tie-break, and often the only one there is. We sell
-  // "2 bedroom apt 4-5 pax" as one unit; the site sells the same apartment as
-  // two products, "2 ח"ש וסלון 2-4 אורחים" and "2 ח"ש וסלון 5 אורחים". Nothing
-  // in the name separates them — only how many people are travelling does, and
-  // that is exactly what the customer already told us.
+  // Two rooms left that describe the same thing. Three ways to tell them apart,
+  // in the order we trust them:
   const pick = list => {
     if (list.length === 1) return list[0].r.roomID;
-    if (list.length > 1 && hint.party) {
+    if (list.length < 2) return null;
+    // 1 · who is travelling. We sell "2 bedroom apt 4-5 pax" as one unit; Plein
+    //     Sud sells that apartment twice, "2 ח"ש וסלון 2-4 אורחים" and
+    //     "2 ח"ש וסלון 5 אורחים". Only the party separates them, and the
+    //     customer already told us.
+    if (hint.party) {
       const fits = list.filter(x => holds(x.occ, hint.party));
       if (fits.length === 1) return fits[0].r.roomID;
+    }
+    // 2 · capacity. Ferienhof sells "DBL room type 2" at 1-2 and again at 1-3;
+    //     our two units are "DBL 2-2 (Type2)" and "DBL 2-3 (Type2)". The room
+    //     whose ceiling is our ceiling AND which holds our whole range is the
+    //     one. That second half is what stops this from guessing at Plein Sud,
+    //     where the 5-only room cannot take our 4-person low end.
+    if (ourOcc) {
+      const same = list.filter(x => x.occ && x.occ.max === ourOcc.max && covers(x.occ, ourOcc));
+      if (same.length === 1) return same[0].r.roomID;
     }
     return null;
   };
 
-  // 1 · the same description, in whichever language
-  const chosen = pick(scored.filter(x => sameSet(ourTokens, x.tk)));
-  if (chosen) return chosen;
-  // 2 · one description contains the other (ours is shorter, or theirs is)
-  return pick(scored.filter(x => subset(ourTokens, x.tk) || subset(x.tk, ourTokens)));
+  const tiers = [
+    // exactly the same description, in whichever language
+    tk => sameSet(ourTokens, tk),
+    // one description contains the other (ours is shorter, or theirs is)
+    tk => ourTokens.size && (subset(ourTokens, tk) || subset(tk, ourTokens)),
+  ];
+  for (const fits of tiers) {
+    const chosen = pick(scored.filter(x => fits(x.tk)));
+    if (chosen) return chosen;
+  }
+
+  // The hotel's own name, when the site puts it in the room and we do not.
+  // siteID 269 answers for Sport AND Strass in one list: "Strass Double Room"
+  // and "Sport Deluxe Double Room" both look like our "DBL". Only tried once
+  // nothing else worked, and it still has to be the only candidate.
+  if (hint.hotel) {
+    const withHotel = new Set(ourTokens);
+    for (const w of tokens(hint.hotel)) withHotel.add(w);
+    if (withHotel.size > ourTokens.size) {
+      for (const fits of [tk => sameSet(withHotel, tk), tk => subset(tk, withHotel)]) {
+        const chosen = pick(scored.filter(x => fits(x.tk)));
+        if (chosen) return chosen;
+      }
+    }
+  }
+
+  // Last: drop the words that only mean "a room". Montgenèvre sells our
+  // "DBL 2-4" as "Standard 1-5" — nothing is shared until both words go. Exact
+  // agreement only here, because after dropping them a set is often empty and
+  // "contains" would match everything.
+  const plain = set => new Set([...set].filter(w => !GENERIC.has(w)));
+  const ourPlain = plain(ourTokens);
+  if (ourPlain.size < ourTokens.size || !ourTokens.size) {
+    const chosen = pick(scored.filter(x => sameSet(ourPlain, plain(x.tk))));
+    if (chosen) return chosen;
+  }
   // anything else is a guess, and a guess books the wrong room
+  return null;
 }
 
 function idFor(siteID, from, till, room, hint, deps) {
@@ -252,5 +351,5 @@ function idFor(siteID, from, till, room, hint, deps) {
   return match(entry.rooms || [], room, hint || {});
 }
 
-module.exports = { idFor, match, warm, fetchRooms, enabled, norm, tokens, occOf, holds, decodeEntities,
+module.exports = { idFor, match, warm, fetchRooms, enabled, norm, tokens, occOf, sizeOf, holds, decodeEntities,
   _cache: load, _key: key, CACHE_FILE };

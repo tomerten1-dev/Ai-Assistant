@@ -129,6 +129,8 @@
   function norm(s) {
     return String(s || '').toLowerCase()
       .replace(/["'׳״]/g, '').replace(/[֑-ׇ]/g, '')
+      // "2Bdrm", "Type2" — one token to a human, two to us
+      .replace(/(\d)([a-zא-ת])/g, '$1 $2').replace(/([a-zא-ת])(\d)/g, '$1 $2')
       .replace(/[^א-תa-z0-9]+/g, ' ').trim();
   }
   // The same two-axis match the server does (server/site-rooms.js): what the
@@ -150,25 +152,56 @@
   }
   function overlaps(x, y) { return !x || !y || (x.min <= y.max && y.min <= x.max); }
   function holds(occ, party) { return !party || !occ || (occ.min <= party && party <= occ.max); }
+  function covers(occ, ours) { return !occ || !ours || (occ.min <= ours.min && ours.max <= occ.max); }
+  // both sides state the floor area of an apartment, and two apartments in one
+  // residence never share it — the most decisive thing in this file
+  var SIZE = /(\d+)\s*(?:m²|sqm|מ["'׳״]?ר|mr\b|m\b)/i;
+  function sizeOf(s) {
+    var m = SIZE.exec(String(s || ''));
+    return m ? { m2: parseInt(m[1], 10), said: m[0] } : null;
+  }
+  function sizeAgrees(a, b) { return !a || !b || a.m2 === b.m2; }
   // how many people are travelling — the only thing that separates
   // "2 ח"ש וסלון 2-4 אורחים" from "2 ח"ש וסלון 5 אורחים"
   function party() {
     var n = (parseInt(q.ad, 10) || 0) + (q.kids ? String(q.kids).split(',').filter(Boolean).length : 0);
     return n > 0 ? n : 0;
   }
-  var SAME = { bdrm: 'bdrm', bedroom: 'bdrm', bedrooms: 'bdrm', 'חש': 'bdrm', 'חדרי': 'bdrm',
-    'שינה': '', 'ח': '', 'ש': '', view: 'view', 'נוף': 'view',
-    balcony: 'balcony', 'מרפסת': 'balcony', studio: 'studio', 'סטודיו': 'studio',
-    pmr: 'pmr', 'נכים': 'pmr', 'נגיש': 'pmr', suite: 'suite', 'סוויטה': 'suite',
-    family: 'family', 'משפחתי': 'family' };
-  var NOISE = { apt: 1, apartment: 1, appartement: 1, 'דירה': 1, 'דירת': 1, room: 1, rooms: 1,
-    'חדר': 1, 'חדרים': 1, 'וסלון': 1, 'סלון': 1, living: 1, lounge: 1, with: 1, and: 1,
-    the: 1, of: 1, pax: 1, ppl: 1, people: 1, 'אורחים': 1, 'נופשים': 1, 'אנשים': 1,
-    'עם': 1, 'ו': 1, conn: 1, connecting: 1, 'מחוברים': 1, '+': 1 };
+  // Generated from server/site-rooms.js — tests/test-widget.js fails if the two
+  // ever disagree. Both sides of this product must read a room name the same way.
+  var SAME = {
+    "bdrm": "bdrm", "bedroom": "bdrm", "bedrooms": "bdrm", "חש": "bdrm", "חדרי": "bdrm",
+    "שינה": "", "ח": "", "ש": "", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
+    "six": "6", "view": "view", "נוף": "view", "balcony": "balcony", "מרפסת": "balcony",
+    "studio": "studio", "סטודיו": "studio", "pmr": "pmr", "נכים": "pmr", "נגיש": "pmr",
+    "dbl": "double", "double": "double", "doubles": "double", "זוגי": "double",
+    "זוגית": "double", "sgl": "single", "single": "single", "יחיד": "single", "twin": "twin",
+    "טווין": "twin", "triple": "triple", "טריפל": "triple", "dlx": "deluxe", "deluxe": "deluxe",
+    "דלוקס": "deluxe", "j": "junior", "junior": "junior", "גוניור": "junior",
+    "standard": "standard", "סטנדרט": "standard", "סטנדרד": "standard", "classic": "classic",
+    "קלאסיק": "classic", "privilege": "privilege", "פריבילג": "privilege", "comfort": "comfort",
+    "קומפורט": "comfort", "premier": "premier", "פרמייר": "premier", "cabin": "cabin",
+    "נישה": "cabin", "sauna": "sauna", "סאונה": "sauna", "gallery": "gallery",
+    "גלריה": "gallery", "mountain": "mountain", "הר": "mountain", "south": "south",
+    "דרום": "south", "פונה": "", "amazing": "amazing", "premium": "premium",
+    "prestige": "prestige", "superior": "superior", "suite": "suite", "סוויטה": "suite",
+    "suites": "suite", "family": "family", "משפחתי": "family"
+  };
+  var NOISE = {
+    "apt": 1, "apartment": 1, "apartments": 1, "appartement": 1, "app": 1, "appt": 1, "apts": 1,
+    "דירה": 1, "דירת": 1, "room": 1, "rooms": 1, "חדר": 1, "חדרים": 1, "וסלון": 1, "סלון": 1,
+    "living": 1, "lounge": 1, "with": 1, "and": 1, "the": 1, "of": 1, "pax": 1, "ppl": 1,
+    "people": 1, "אורחים": 1, "נופשים": 1, "אנשים": 1, "עם": 1, "ו": 1, "conn": 1,
+    "connecting": 1, "connected": 1, "מחוברים": 1, "type": 1, "טיפוס": 1, "כ": 1, "mr": 1,
+    "מר": 1, "m": 1, "sqm": 1
+  };
+  var GENERIC = { "double": 1, "standard": 1 };
   function tokens(s) {
     // the occupancy goes BEFORE normalising: norm() deletes the hyphen, and
     // then "2-5 pax" stops looking like a range and leaves a stray "2"
-    var text = String(s || ''), occ = occOf(text);
+    var text = String(s || ''), size = sizeOf(text);
+    if (size) text = text.split(size.said).join(' ');
+    var occ = occOf(text);
     if (occ) text = text.split(occ.said).join(' ');
     var words = norm(text).split(/\s+/);
     var out = [];
@@ -187,25 +220,53 @@
   }
   function sameSet(a, b) { return a.length === b.length && subset(a, b); }
   // one unambiguous candidate, or nothing — a guess books the wrong room
+  // The same three-tier match the server runs (server/site-rooms.js). This copy
+  // only decides anything when the link was built before the server had the
+  // site's room list — then it fills the room in the customer's browser instead.
   function byDescription(opts, want) {
-    var ours = tokens(want), ourOcc = occOf(want);
-    if (!ours.length) return null;
+    var ours = tokens(want), ourOcc = occOf(want), ourSize = sizeOf(want);
     var live = [], i;
     for (i = 0; i < opts.length; i++) {
       var name = opts[i].textContent;
-      if (overlaps(ourOcc, occOf(name))) live.push({ o: opts[i], tk: tokens(name) });
+      if (overlaps(ourOcc, occOf(name)) && sizeAgrees(ourSize, sizeOf(name))) {
+        live.push({ o: opts[i], tk: tokens(name), occ: occOf(name), size: sizeOf(name) });
+      }
+    }
+    if (!live.length) return null;
+    if (live.length === 1 && ourSize && live[0].size) {
+      var theirs = live[0].tk, shares = false;
+      for (i = 0; i < ours.length; i++) if (theirs.indexOf(ours[i]) >= 0) shares = true;
+      if (shares || !theirs.length || !ours.length) return live[0].o.value;
     }
     var pick = function (list) {
       if (list.length === 1) return list[0].o.value;
-      if (list.length > 1 && party()) {
-        var fits = list.filter(function (x) { return holds(occOf(x.o.textContent), party()); });
-        if (fits.length === 1) return fits[0].o.value;
+      if (list.length < 2) return null;
+      var fits = list.filter(function (x) { return holds(x.occ, party()); });
+      if (party() && fits.length === 1) return fits[0].o.value;
+      if (ourOcc) {
+        var same = list.filter(function (x) {
+          return x.occ && x.occ.max === ourOcc.max && covers(x.occ, ourOcc);
+        });
+        if (same.length === 1) return same[0].o.value;
       }
       return null;
     };
-    var chosen = pick(live.filter(function (x) { return sameSet(ours, x.tk); }));
-    if (chosen) return chosen;
-    return pick(live.filter(function (x) { return subset(ours, x.tk) || subset(x.tk, ours); }));
+    var tiers = [
+      function (tk) { return sameSet(ours, tk); },
+      function (tk) { return ours.length && (subset(ours, tk) || subset(tk, ours)); },
+    ];
+    for (i = 0; i < tiers.length; i++) {
+      var chosen = pick(live.filter(function (x) { return tiers[this](x.tk); }, i));
+      if (chosen) return chosen;
+    }
+    // last: drop the words that only mean "a room" — Montgenèvre sells our
+    // "DBL 2-4" as "Standard 1-5", and nothing is shared until both words go
+    var plain = function (list) { return list.filter(function (w) { return GENERIC[w] !== 1; }); };
+    var ourPlain = plain(ours);
+    if (ourPlain.length < ours.length || !ours.length) {
+      return pick(live.filter(function (x) { return sameSet(ourPlain, plain(x.tk)); }));
+    }
+    return null;
   }
   function waitForRooms() {
     if (!q.room && !q.roomid) return Promise.resolve(null);
