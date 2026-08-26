@@ -1121,7 +1121,7 @@ t('a single offer is not called "one of them"', () => {
 for (const [q, want] of [
   ['רוצים העברות פרטיות משדה התעופה', /הסעה פרטית|הסעות בחבילה/],
   ['אפשר חדרים קרובים זה לזה?', /בקשה מהמלון/],
-  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /שינוי שם|חברת התעופה/],
+  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /החלפת נוסע|שינוי שם/],  // wording per the terms, Tomer 26/08
 ]) {
   t('answered rather than deflected: ' + q.slice(0, 26), () =>
     handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
