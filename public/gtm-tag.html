@@ -14,18 +14,32 @@
     - "Support document.write" חייב להישאר לא מסומן
     - הסקריפט נטען אסינכרונית ולא מאט את האתר
     - טעינה כפולה (GTM לפעמים יורה פעמיים) מנוטרלת בתוך הווידג'ט
+
+  אנליטיקס (GA4 דרך GTM):
+    הווידג'ט דוחף ל-dataLayer אירוע אחד: event = 'pw_bot' עם pw_action =
+    open | message | offers | lead | error  (+ pw_turn / pw_count / pw_kind / pw_first).
+    ב-GTM: Trigger → Custom Event 'pw_bot'; Tag → GA4 Event בשם {{pw_action}}
+    עם משתני Data Layer ל-pw_*. אין בדחיפות שום מידע אישי.
+
+  אבטחה לפני פרודקשן (בשרת, קובץ .env):
+    ALLOWED_ORIGINS=https://www.pingwin.co.il,https://pingwin.co.il
+    TURNSTILE_SITEKEY / TURNSTILE_SECRET (Cloudflare Turnstile, חינם) — אופציונלי
+    RATE_* / DAILY_BUDGET_USD — ברירות מחדל סבירות, ראו server/limits.js
 -->
 <script>
   (function () {
     // כתובת השרת של הבוט — חייבת להיות HTTPS בפרודקשן
     var BOT_HOST = 'https://bot.pingwin.co.il';
+    // גרסת הווידג'ט — מעלים את המספר בכל פריסה כדי לעקוף cache של דפדפנים.
+    // (חייב להתאים ל-version ב-package.json של השרת; /healthz מציג אותה)
+    var BOT_VERSION = '0.2.0';
 
     // אל תטען פעמיים (GTM preview / SPA navigation)
     if (window.__pingwinBotTag) return;
     window.__pingwinBotTag = true;
 
     var s = document.createElement('script');
-    s.src = BOT_HOST + '/pingwin-bot.js';
+    s.src = BOT_HOST + '/pingwin-bot.js?v=' + BOT_VERSION;
     s.async = true;
     s.setAttribute('data-pingwin-bot', '');
     s.setAttribute('data-api', BOT_HOST);   // לאן לשלוח את בקשות הצ'אט

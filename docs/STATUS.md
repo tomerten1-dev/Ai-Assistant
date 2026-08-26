@@ -57,12 +57,14 @@
 - [ ] מנוע: "מתאים לכם כי: X, Y, Z" — רק שורות מאושרות, רק דירוג 4–5 לקהל
 - [ ] בדיקות + הרצת בנק מחדש (יעד: >88%)
 
-### שלב C — לפני GTM (פריסה)
-- [ ] rate limiting + תקציב טוקנים + timeouts
-- [ ] Cloudflare Turnstile (או דומה) ב-/api/chat ו-/api/lead
-- [ ] `ALLOWED_ORIGINS` = pingwin.co.il בלבד
-- [ ] loader ל-GTM עם גרסאות (`public/gtm-tag.html`)
-- [ ] dataLayer / GA4 אירועים (פתיחה, הצעה, ליד)
+### שלב C — לפני GTM (פריסה) — **קוד מוכן, נשאר תפעול**
+- [x] `server/limits.js`: rate limit לפי IP (צ'אט 30/דקה, 300/שעה; לידים 5/10 דק'), תקרת 80 תורים לשיחה → מסירה לנציג, timeout 25 שנ' עם תשובת נפילה, תקציב יומי `DAILY_BUDGET_USD` → מצב offline עד חצות
+- [x] Cloudflare Turnstile אופציונלי (`TURNSTILE_SITEKEY/SECRET`): אימות פעם אחת לשיחה + חותמת HMAC בסלוטים; הליד מקבל את החותמת
+- [x] `ALLOWED_ORIGINS` קשיח: בלי כוכבית, POST ללא Origin נדחה; כותרות nosniff/referrer
+- [x] `/healthz`, `/api/config`, גרסה מ-package.json (0.2.0), `pingwin-bot.js?v=` עם cache יומי
+- [x] dataLayer: `event:'pw_bot'` + `pw_action` open/message/offers/lead/error (בלי מידע אישי) — הוראות GA4 ב-`public/gtm-tag.html`
+- [x] `tests/test-limits.js` (17) ב-`npm test`
+- [ ] **תפעול (תומר):** שרת עם HTTPS (bot.pingwin.co.il), `.env` עם ALLOWED_ORIGINS + מפתחות Turnstile + DAILY_BUDGET_USD, TRUST_PROXY=1 אם מאחורי Cloudflare
 - [ ] לידים קבועים: webhook למערכת פינגווין (ש' 28 — "בהמשך")
 - [ ] פיילוט על עמוד אחד → כל האתר
 
@@ -76,6 +78,7 @@
 
 | תאריך | מה |
 |---|---|
+| 2026-08-26 | שלב C: limits.js (rate/turns/timeout/budget), Turnstile, origin קשיח, healthz, גרסאות, dataLayer; v0.2.0 |
 | 2026-08-26 | טבלת אתרים לאישור (ש' 25); `docs/STATUS.md` נוצר |
 | 2026-08-26 | ש' 29–30: צ'קבוקס הסכמה + קישור למדיניות פרטיות בטופס ליד; שורות שפה |
 | 2026-08-26 | ש' 13–23: ערבות, תשלומים, שינוי תאריך, טיסות, ק"מ העברות, נציגים, כשרות, ציוד, שיעורים |

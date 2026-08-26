@@ -19,12 +19,15 @@ const router = require('./answer-router.js');
 const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
+const limits = require('./limits.js');
 
 loadEnv();
 const has = k => process.env[k] && !process.env[k].includes('xxxx');
 // Provider is chosen by whichever key is present. With none, the bot still
 // works fully on the deterministic Hebrew layer — free, no account.
 function aiMode() {
+  // over the daily budget the bot keeps answering — on the free Hebrew layer
+  if (limits.budgetExceeded(openaiSpend.usd)) return 'offline';
   if (has('OPENAI_API_KEY')) return 'openai';
   if (has('ANTHROPIC_API_KEY')) return 'claude';
   return 'offline';
@@ -36,6 +39,7 @@ const MAX_QUESTIONS = +(process.env.MAX_QUESTIONS || 3);
 // even fit, so it is never merely informative.
 const SKIPPABLE = new Set(['month', 'country', 'airport', 'kids_club']);
 const PORT = +(process.env.PORT || 8787);
+const BOT_VERSION = require('../package.json').version;
 const ROOT = path.join(__dirname, '..');
 const engine = new SkiSearch();
 
@@ -1158,34 +1162,80 @@ function applyCors(req, res) {
   return true;
 }
 
+const STRICT_ORIGIN = !ALLOWED_ORIGINS.includes('*');
+const CHAT_TIMEOUT_MS = +(process.env.CHAT_TIMEOUT_MS || 25_000);
+const SLOW_DOWN_HE = 'קיבלנו הרבה הודעות ברצף — רגע אחד ונמשיך. אם דחוף, נשמח לעזור בטלפון 04-8557722.';
+const TOO_LONG_HE = 'השיחה התארכה — כדי לא לפספס כלום, מכאן נציג פינגווין ימשיך אתכם. השאירו טלפון ונחזור אליכם.';
+const VERIFY_HE = 'לא הצלחנו לאמת שהבקשה הגיעה מהאתר. רעננו את הדף ונסו שוב, או חייגו 04-8557722.';
+
+function json(res, code, obj, extra) {
+  res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', ...(extra || {}) });
+  res.end(JSON.stringify(obj));
+}
+async function readJson(req, cap) {
+  let raw = '';
+  for await (const chunk of req) { raw += chunk; if (raw.length > cap) { req.destroy(); return null; } }
+  try { return JSON.parse(raw || '{}'); } catch { return {}; }
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
+    res.setHeader('x-content-type-options', 'nosniff');
+    res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     if (!applyCors(req, res)) { res.writeHead(403); res.end('origin not allowed'); return; }
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+    // in production every browser POST carries an Origin; one without it is not the widget
+    if (STRICT_ORIGIN && req.method === 'POST' && !req.headers.origin) { res.writeHead(403); res.end('origin required'); return; }
+    if (req.method === 'GET' && url.pathname === '/healthz') {
+      return json(res, 200, { ok: true, mode: aiMode(), version: BOT_VERSION });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/config') {
+      // what the widget needs to know before its first request
+      return json(res, 200, { version: BOT_VERSION, turnstile: process.env.TURNSTILE_SITEKEY || null },
+        { 'cache-control': 'no-store' });
+    }
+    const ip = limits.clientIp(req);
     if (req.method === 'POST' && url.pathname === '/api/chat') {
-      let raw = '';
-      for await (const chunk of req) { raw += chunk; if (raw.length > 100_000) { req.destroy(); return; } }
-      let body = {};
-      try { body = JSON.parse(raw || '{}'); } catch { }
-      let out;
-      try { out = await handleChat(body); }
-      catch (e) {
-        console.error('chat error:', e.message, e.detail || '');
-        out = { reply_he: e.friendly || FALLBACK_HE, slots: body.slots || EMPTY_SLOTS, cards: [], chips: [] };
+      const wait = limits.checkRate('chat', ip);
+      if (wait) return json(res, 429, { reply_he: SLOW_DOWN_HE, slots: {}, cards: [], chips: [], retry_after: wait }, { 'retry-after': String(wait) });
+      const body = await readJson(req, 100_000);
+      if (!body) return;
+      const slots = { ...(body.slots || {}) };
+      if (limits.turnstileOn() && !limits.stampValid(slots)) {
+        const ok = await limits.verifyTurnstile(body.turnstile, ip);
+        if (!ok) return json(res, 403, { reply_he: VERIFY_HE, slots: body.slots || {}, cards: [], chips: [], verify: true });
+        if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+        slots._vt = limits.stamp(slots._cid);
       }
-      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(out));
-      return;
+      if (limits.turnsExceeded(slots)) {
+        return json(res, 200, { reply_he: TOO_LONG_HE, slots, cards: [], chips: [], open_lead_form: true });
+      }
+      body.slots = slots;
+      let out;
+      try {
+        out = await limits.withTimeout(handleChat(body), CHAT_TIMEOUT_MS, () => {
+          console.error('chat timeout after', CHAT_TIMEOUT_MS, 'ms');
+          return { reply_he: FALLBACK_HE, slots, cards: [], chips: [], timeout: true };
+        });
+      } catch (e) {
+        console.error('chat error:', e.message, e.detail || '');
+        out = { reply_he: e.friendly || FALLBACK_HE, slots, cards: [], chips: [] };
+      }
+      // the stamp and the turn counter must survive whatever handleChat did to the slots
+      out.slots = { ...(out.slots || {}), _turns: slots._turns, ...(slots._vt ? { _vt: slots._vt, _cid: slots._cid } : {}) };
+      return json(res, 200, out);
     }
     if (req.method === 'POST' && url.pathname === '/api/lead') {
-      let raw = '';
-      for await (const chunk of req) { raw += chunk; if (raw.length > 20_000) { req.destroy(); return; } }
-      let lead = {};
-      try { lead = JSON.parse(raw || '{}'); } catch { }
-      if (!lead.name || !lead.phone) {
-        res.writeHead(400, { 'content-type': 'application/json' });
-        res.end(JSON.stringify({ ok: false })); return;
+      const wait = limits.checkRate('lead', ip);
+      if (wait) return json(res, 429, { ok: false, retry_after: wait }, { 'retry-after': String(wait) });
+      const lead = await readJson(req, 20_000);
+      if (!lead) return;
+      if (!lead.name || !lead.phone) return json(res, 400, { ok: false });
+      if (limits.turnstileOn()) {
+        const ctxSlots = (lead.context && lead.context.slots) || null;
+        const ok = limits.stampValid(ctxSlots) || await limits.verifyTurnstile(lead.turnstile, ip);
+        if (!ok) return json(res, 403, { ok: false, verify: true });
       }
       // leads contain PII (name+phone) — stored server-side only, dir is gitignored.
       // Append-only JSONL: the old read-modify-write of one JSON array lost a
@@ -1215,7 +1265,10 @@ const server = http.createServer(async (req, res) => {
     const full = path.join(ROOT, path.normalize(file));
     if (!full.startsWith(path.join(ROOT, 'public'))) { res.writeHead(403); res.end(); return; }
     if (!fs.existsSync(full) || !fs.statSync(full).isFile()) { res.writeHead(404); res.end('not found'); return; }
-    res.writeHead(200, { 'content-type': MIME[path.extname(full)] || 'application/octet-stream' });
+    // the GTM loader appends ?v=<version>: a versioned URL may be cached for a
+    // day, an unversioned one is re-checked every time
+    const cache = url.searchParams.get('v') ? 'public, max-age=86400' : 'no-cache';
+    res.writeHead(200, { 'content-type': MIME[path.extname(full)] || 'application/octet-stream', 'cache-control': cache });
     res.end(fs.readFileSync(full));
   } catch (e) {
     console.error(e);
@@ -1224,6 +1277,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, () => console.log(`pingwin bot server → http://localhost:${PORT}`));
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 10_000;
+  server.listen(PORT, () => console.log(`pingwin bot server v${BOT_VERSION} [${aiMode()}] → http://localhost:${PORT}`));
 }
 module.exports = { handleChat, server, requiredMissing };

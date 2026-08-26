@@ -37,6 +37,59 @@
     (script && script.src ? new URL(script.src).origin : '') || '';
   var WHATSAPP = (script && script.getAttribute('data-whatsapp')) || THEME.whatsapp;
 
+  /* ============== analytics — dataLayer (GTM/GA4) ==============
+     Every event carries event:'pw_bot' + action, so one GA4 tag in GTM catches
+     them all. Nothing personal is pushed — never a name, phone or free text. */
+  function track(action, extra) {
+    try {
+      var w = window; w.dataLayer = w.dataLayer || [];
+      var ev = { event: 'pw_bot', pw_action: action };
+      if (extra) for (var k in extra) ev['pw_' + k] = extra[k];
+      w.dataLayer.push(ev);
+    } catch (e) { }
+  }
+
+  /* ============== Cloudflare Turnstile (optional) ==============
+     Enabled by the server (/api/config returns a site key). An invisible
+     challenge runs once; the token rides on the first chat turn or the lead,
+     after which the server stamps the session and no more tokens are needed. */
+  var CONFIG = { turnstile: null, version: null };
+  var configReady = fetchWithTimeout(API_BASE + '/api/config', { method: 'GET' }, 6000)
+    .then(function (r) { return r.json(); })
+    .then(function (c) { CONFIG = c || CONFIG; if (CONFIG.turnstile) loadTurnstile(); })
+    .catch(function () { });
+  var tsLoaded = null, tsHost = null;
+  function loadTurnstile() {
+    if (tsLoaded) return tsLoaded;
+    tsLoaded = new Promise(function (resolve) {
+      if (window.turnstile) return resolve();
+      var t = document.createElement('script');
+      t.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      t.async = true; t.onload = function () { resolve(); }; t.onerror = function () { resolve(); };
+      document.head.appendChild(t);
+    });
+    return tsLoaded;
+  }
+  // resolves to a token, or null when Turnstile is off / unavailable
+  function turnstileToken() {
+    if (!CONFIG.turnstile) return Promise.resolve(null);
+    return loadTurnstile().then(function () {
+      if (!window.turnstile) return null;
+      return new Promise(function (resolve) {
+        if (!tsHost) { tsHost = document.createElement('div'); tsHost.style.cssText = 'position:fixed;bottom:0;left:0;width:0;height:0;overflow:hidden'; document.body.appendChild(tsHost); }
+        var done = false, timer = setTimeout(function () { if (!done) { done = true; resolve(null); } }, 12000);
+        try {
+          var id = window.turnstile.render(tsHost, {
+            sitekey: CONFIG.turnstile, size: 'invisible',
+            callback: function (tok) { if (!done) { done = true; clearTimeout(timer); resolve(tok); } try { window.turnstile.remove(id); } catch (e) { } },
+            'error-callback': function () { if (!done) { done = true; clearTimeout(timer); resolve(null); } },
+          });
+        } catch (e) { if (!done) { done = true; clearTimeout(timer); resolve(null); } }
+      });
+    });
+  }
+  function needsToken() { return !!CONFIG.turnstile && !(state.slots && state.slots._vt); }
+
   // a phone keyboard covers half the screen: never pop it uninvited there
   var IS_TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window);
   function focusInput() { if (!IS_TOUCH) input.focus(); }
@@ -638,11 +691,12 @@
       if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
       if (!iConsent.checked) { note.textContent = 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'; iConsent.focus(); return; }
       go.disabled = true;
-      fetchWithTimeout(API_BASE + '/api/lead', {
+      turnstileToken().then(function (tok) { return fetchWithTimeout(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          name: nameVal, phone: phoneVal,
+          name: nameVal, phone: phoneVal, turnstile: tok,
           context: {
+            slots: state.slots ? { _cid: state.slots._cid, _vt: state.slots._vt } : null,
             hotel: card ? card.hotel : null, resort: card ? card.resort : null,
             date: card ? card.date : null, nights: card ? card.nights : null,
             room: card ? card.room : null,
@@ -654,14 +708,16 @@
             transcript: state.messages.slice(-12).map(function (m) { return (m.role === 'user' ? 'לקוח: ' : 'בוט: ') + m.content; }).join('\n')
           }
         })
-      }, 15000).then(function (r) { return r.json().then(function (j) { return { ok: r.ok && j && j.ok !== false, j: j }; }); }).then(function (res) {
+      }, 15000); }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok && j && j.ok !== false, j: j }; }); }).then(function (res) {
         // a 400 used to show "הפרטים התקבלו" — a lost lead disguised as success
         if (!res.ok) throw new Error('lead rejected');
+        track('lead', { kind: leadKind || 'customer', has_offer: !!card });
         f.remove();
         addMsg('bot', card
           ? 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + card.hotel + '.'
           : 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
+        track('error', { where: 'lead' });
         go.disabled = false; note.textContent = 'תקלה בשליחה — נסו שוב או חייגו 04-8557722';
       });
     });
@@ -682,10 +738,19 @@
     var minWait = new Promise(function (res) { setTimeout(res, 650); });
     // the server reads the last 20 turns anyway; sending the whole history
     // grew past its 100KB body cap in long chats and killed every turn after
-    var call = fetchWithTimeout(API_BASE + '/api/chat', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: state.messages.slice(-20), slots: state.slots })
-    }, 20000).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); });
+    state.turn = (state.turn || 0) + 1;
+    track('message', { turn: state.turn });
+    var call = configReady.then(function () { return needsToken() ? turnstileToken() : null; }).then(function (tok) {
+      return fetchWithTimeout(API_BASE + '/api/chat', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: state.messages.slice(-20), slots: state.slots, turnstile: tok })
+      }, 28000);
+    }).then(function (r) {
+      // 429 = "slow down": the server sends a polite line, show it as a reply
+      if (r.status === 429) return r.json().then(function (j) { j.slots = state.slots; return j; });
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
 
     Promise.all([call, minWait]).then(function (both) {
       var data = both[0];
@@ -697,6 +762,7 @@
         state.messages.push({ role: 'assistant', content: data.reply_he });
       }
       if (data.cards && data.cards.length) {
+        track('offers', { count: data.cards.length });
         // three offers side by side, so the customer barely scrolls
         var row = addCardsRow(data.cards);
         state.log.push({ t: 'cards', v: data.cards });
@@ -723,6 +789,7 @@
       else scrollDown();
     }).catch(function () {
       showTyping(false);
+      track('error', { where: 'chat' });
       // the message stays in history; "נסו שוב" re-sends it without retyping
       state.messages.pop();
       addMsg('bot', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו 04-8557722.');
@@ -759,6 +826,7 @@
   function openWin() {
     state.open = true; win.classList.add('open');
     fab.setAttribute('aria-expanded', 'true');
+    track('open', { first: !state.booted });
     if (!state.booted) {
       state.booted = true;
       addMsg('bot', 'שלום, אני העוזר האוטומטי של ' + THEME.brand + ' — מציג רק חופשות שבאמת פנויות אצלנו, ונציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.');
