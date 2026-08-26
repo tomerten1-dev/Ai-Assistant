@@ -118,4 +118,24 @@ function objection(kind) {
   };
 }
 
-module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, load, FILE };
+// Fixed wording for a hard rule the code detected. The rule is ours; the
+// sentence is Tomer's to edit. A missing key falls back to the built-in text so
+// a trimmed file can never turn a refusal into silence.
+const GUARD_DEFAULTS = {
+  profanity: 'לא אמשיך בשיחה בסגנון הזה. אם תרצו עזרה בחופשת סקי — כתבו לי כמה אתם ומתי.',
+  harassment: 'אני עוזר אוטומטי ונשאר בנושא חופשות סקי.',
+  impersonation: 'אין לי דרך לאמת זהות ולא אמסור מידע פנימי בצ\'אט. פניות של צוות או רשויות — במשרד: 04-8557722.',
+  security: 'זו שאלה שאף אחד לא יכול לענות עליה בוודאות. ההזמנה כפופה לתנאי הביטול שבתקנון, ונציג ישמח לעבור אתכם עליהם.',
+  antisemitism: 'אין לי נתונים שמאפשרים לענות על זה באחריות. בכל היעדים שלנו יש נציג ישראלי באתר; נציג ישמח לספר מניסיון.',
+  fraud: 'אני לא יכול לרשום פרט שאינו נכון, וזה עלול לבטל ביטוח או הזמנה.',
+  politics: 'על פוליטיקה אני לא מדבר — אני עוזר לחופשות סקי.',
+  card_number: 'אל תשלחו כאן מספרי כרטיס אשראי או תעודת זהות. התשלום מתבצע רק במסך ההזמנה המאובטח.',
+  guide_dog: 'כלב נחייה אינו חיית מחמד; נציג יסדיר את האישורים מראש — השאירו שם וטלפון.',
+  competitor_named: 'לא אשווה מול חברות אחרות — אני לא רואה מה כלול אצלן. מה שכלול אצלנו מופיע על כל הצעה.',
+};
+function guardText(key) {
+  const g = load().guards_he || {};
+  return (typeof g[key] === 'string' && g[key].trim()) ? g[key] : GUARD_DEFAULTS[key];
+}
+
+module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, load, FILE };

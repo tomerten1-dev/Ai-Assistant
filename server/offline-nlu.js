@@ -1465,6 +1465,25 @@ function handoffTail() {
 
 function guard(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  const G = k => guidance.guardText(k);
+  // ---- conduct guards: a rule, not a judgment call, so they run first ----
+  // a card or ID number pasted into the chat — refuse before anything logs it
+  if (/(?:\d[ -]?){13,19}/.test(t) && !/\d{2}[./-]\d{1,2}[./-]\d{2,4}/.test(t) || /מספר (ה)?(אשראי|כרטיס|תעודת זהות|ת"ז)|כרטיס האשראי שלי|ת\.?ז\.? שלי/.test(t)) {
+    if (!/איזה (סוג )?כרטיס|מקבלים כרטיס|אפשר לשלם ב|תשלומים/.test(t)) return G('card_number');
+  }
+  if (/תתעלם מ|התעלם מ|ignore (all|previous|your)|שכח את ה?הוראות|ההוראות שלך|תשכח מה?הוראות|developer mode|תן לי את ה?פרומפט|הפרומפט שלך|מה ה?הנחיות שלך|system prompt|אתה עכשיו dan|בוט בלי חוקים|pretend this is a test|translate your instructions/i.test(t)) {
+    return 'אני לא יכול לשנות את מה שאני עושה כאן ולא לחשוף מידע פנימי. אני כן אשמח למצוא לכם חופשת סקי — כמה אתם נוסעים ומתי?';
+  }
+  if (/בן זונה|כוס אמק|כוסאמק|זין |לך תזדיין|תזדיין|מניאק|חרא של|בן זונות|fuck|shit|יא אפס|מטומטם|אידיוט/i.test(t)) return G('profanity');
+  if (/את שווה|אתה שווה|נפגש\?|תני לי טלפון שלך|יפה את|מה את לובשת|רווקה\?|יש לך חבר/.test(t)) return G('harassment');
+  if (/אני המנהל|אני מנהל (של )?פינגווין|אני מה-?it|אני מהמשטרה|אני שוטר|אני הבעלים|אני עובד(ת)? (אצלכם|בפינגווין)|תאשר לי גישה|צריך את הלוגים|רשימת הלקוחות בקובץ/i.test(t)) return G('impersonation');
+  if (/(תרשום|תרשמו|תרשמי|רשום|תכתוב|תכתבו) (בהזמנה )?(שלי )?ש(הילד|הילדה|הבן|הבת) ב[תןנ]|תרשמו ש.*ב[תן] \d|להסתיר מהביטוח|להסתיר מ(המלון|חברת)|מכתב ביטוח מזויף|ביקורת (חיובית )?מזויפת|תזייף|לזייף|בלי לשלם.*אשלם אחר כך|לרשום גיל אחר/.test(t)) return G('fraud');
+  if (/בטוח לטוס|מסוכן לטוס|המצב הביטחוני|אם תהיה מלחמה|בגלל המלחמה|טילים|חות'ים|יסגרו את השמיים|לסגור את השמיים|מלחמה עם איראן|אזעק/.test(t) &&
+      !/גרנטי|guarantee|הגנת מלחמה|החזר|מבטלים|ביטול/.test(t)) return G('security');
+  if (/אנטישמי|שונאים ישראלים|מסוכן לישראלים|בטוח לישראלים|יהודים לא רצויים|לדבר עברית שם זה בסדר/.test(t)) return G('antisemitism');
+  if (/ביבי|נתניהו|בנט|לפיד|גנץ|בן גביר|סמוטריץ|הממשלה|בחירות|המלחמה בעזה|עזה|הפגנ|שמאלנ|ימני|קואליציה|טראמפ|ביידן/.test(t) && /דעה|מה אתה חושב|מה אתם חושבים|בעד|נגד|מצביע/.test(t)) return G('politics');
+  if (/כלב נחייה|כלב נחיה|כלב שירות|כלב עזר/.test(t)) return G('guide_dog');
+  if (/דיזנהאוז|סקי דיל|skideal|אשת טורס|אשת תיירות|קווי חופשה|דקה 90|גוליבר|איסתא|אופיר טורס|קשרי תעופה|סופר סקי|superski|club ?med|קלאב מד/i.test(t) && !/דרך (איסתא|סוכן)|הזמנו דרך|הזמנתי דרך/.test(t)) return G('competitor_named');
   // their OWN booking is not a red rule — "לא מצליח להיכנס לאזור האישי עם
   // מספר ההזמנה" belongs to the my-booking answer, not to this refusal
   if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי|ביצעתי הזמנה|איפה אני רואה|הסטטוס של/.test(t)) { /* fall through */ }
@@ -1489,9 +1508,6 @@ function guard(text) {
   // Red rule 10. An attempt to replace the instructions is answered plainly and
   // once. Ignoring it and answering the rest of the sentence leaves the
   // customer thinking it might work on the next try.
-  if (/תתעלם מ|התעלם מ|ignore (all|previous|your)|שכח את ה?הוראות|ההוראות שלך|תשכח מה?הוראות|developer mode|תן לי את ה?פרומפט|הפרומפט שלך|מה ה?הנחיות שלך/.test(t)) {
-    return 'אני לא יכול לשנות את מה שאני עושה כאן ולא לחשוף מידע פנימי. אני כן אשמח למצוא לכם חופשת סקי — כמה אתם נוסעים ומתי?';
-  }
   // Red rule 3. This lived in deflect(), which is skipped when the message also
   // fills a slot — and "רק רוצה לדעת כמה עולה שבוע לזוג" fills one. A guard
   // that protects a rule cannot be conditional on what else the sentence did.
