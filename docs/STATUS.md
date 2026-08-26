@@ -66,6 +66,7 @@
 - [x] `/healthz`, `/api/config`, גרסה מ-package.json (0.2.0), `pingwin-bot.js?v=` עם cache יומי
 - [x] dataLayer: `event:'pw_bot'` + `pw_action` open/message/offers/lead/error (בלי מידע אישי) — הוראות GA4 ב-`public/gtm-tag.html`
 - [x] `tests/test-limits.js` (17) ב-`npm test`
+- [x] `docs/DEPLOY.md` — מדריך פריסה מלא: שרת, .env, בדיקה, תג GTM, GA4, פיילוט, תקלות נפוצות
 - [ ] **תפעול (תומר):** שרת עם HTTPS (bot.pingwin.co.il), `.env` עם ALLOWED_ORIGINS + מפתחות Turnstile + DAILY_BUDGET_USD, TRUST_PROXY=1 אם מאחורי Cloudflare
 - [ ] לידים קבועים: webhook למערכת פינגווין (ש' 28 — "בהמשך")
 - [ ] פיילוט על עמוד אחד → כל האתר
