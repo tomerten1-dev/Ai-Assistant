@@ -47,3 +47,36 @@
     (document.body || document.head || document.documentElement).appendChild(s);
   })();
 </script>
+
+<!--
+  ============================================================
+  תג שני (חובה, כדי ש"המשך להזמנה" יגיע עם הפרטים מוכנים)
+  ============================================================
+
+  הבוט שולח את הלקוח לדף המלון עם הפרטים בכתובת:
+      …/Plein+Sud.html?siteID=1288&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3
+
+  טופס ההזמנה באתר נבנה בדפדפן (order_odyssea.js) ולא קורא כלום מהכתובת,
+  ולכן צריך סקריפט קטן שקורא את הפרמטרים ומפעיל את הטופס. הוא לא עושה
+  שום דבר בגלישה רגילה — רק כשהכתובת מכילה pwfrom/pwtill, כלומר רק אחרי
+  לחיצה על "המשך להזמנה" בצ'אט.
+
+  התקנה:
+    1. GTM → Tags → New → Tag Configuration → Custom HTML
+    2. הדבק את בלוק ה-<script> שמתחת
+    3. החלף BOT_HOST בכתובת השרת (אותה כתובת כמו בתג הראשון)
+    4. Triggering → All Pages   (או Page View עם URL contains "siteID=")
+    5. שם התג: Pingwin Booking Prefill → Save → Submit → Publish
+
+  בדיקה: לפתוח כתובת של דף מלון עם
+     &pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3
+  התאריכים צריכים להתמלא לבד, ומעל הטופס תופיע שורה שמסבירה למה.
+-->
+<script>
+  (function () {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'BOT_HOST/pingwin-prefill.js?v=BOT_VERSION';
+    document.head.appendChild(s);
+  })();
+</script>

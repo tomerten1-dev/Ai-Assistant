@@ -18,7 +18,7 @@ const guidance = require('./guidance.js');
 const router = require('./answer-router.js');
 const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
-const { buildBookingUrl } = require('../config/booking-url.js');
+const { buildBookingUrl, deepLink } = require('../config/booking-url.js');
 const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
 const recommend = require('./recommend.js');
@@ -316,7 +316,11 @@ function presentCards(result, slots, skip, opts = {}) {
     spa_access_he: c.spa_access_he, spa_note_he: c.spa_note_he, spa_min_age: c.spa_min_age,
     separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
     // the hotel's own page — the customer clicked this hotel, not the home page
-    booking_url: buildBookingUrl(engine.hotelInfo(c.hotel)),
+    // the hotel's own quote form, with the dates, the party and (when we can
+    // match it) the room already filled — see config/booking-url.js
+    booking_url: deepLink(engine.hotelInfo(c.hotel), {
+      date: c.date, nights: c.nights, room: c.room, board_he: c.board_he,
+    }, slots),
   })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
 }
 
