@@ -3,6 +3,10 @@
 // safe — it reaches the model, and it cannot loosen a red rule no matter what
 // he writes in it.
 // Run: node tests/test-guidance.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -146,6 +150,59 @@ t('there is a closing line for both outcomes', () => {
   assert.ok(guidance.closing('with_offers'));
   assert.ok(guidance.closing('no_offers'));
   assert.strictEqual(guidance.closing('nonsense'), '');
+});
+
+
+/* ---------- one place for the office number, one place for the copy ---------- */
+t('every fixed sentence comes from guidance.json, with the code wording as the floor', () => {
+  const g = require('../server/guidance.js');
+  assert.strictEqual(g.msg('fallback', 'לא בשימוש').includes('04-8557722'), true, '{phone} is filled');
+  assert.strictEqual(g.msg('no_such_key', 'ברירת מחדל {phone}'), 'ברירת מחדל 04-8557722', 'a missing key falls back');
+  assert.strictEqual(g.msg('no_such_key', 'בלי מספר'), 'בלי מספר');
+  assert.ok(g.phone(), 'the office number is configured');
+});
+t('the office phone is written down exactly once', () => {
+  const fs = require('fs'), path = require('path');
+  const root = path.join(__dirname, '..');
+  const hits = [];
+  for (const rel of ['server', 'public']) {
+    const dir = path.join(root, rel);
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.js') || f === 'prompts.js') continue;   // prompts.js is dead code, tracked separately
+      const src = fs.readFileSync(path.join(dir, f), 'utf8');
+      const n = (src.match(/04-8557722/g) || []).length;
+      if (n) hits.push(`${rel}/${f} ×${n}`);
+    }
+  }
+  // the widget keeps one literal as the floor for the moment before /api/config lands
+  assert.deepStrictEqual(hits, ['public/pingwin-bot.js ×1'], 'phone numbers in code: ' + hits.join(', '));
+});
+t('deflections are config, not code, and every placeholder resolves', () => {
+  const fs = require('fs'), path = require('path');
+  const d = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', 'deflect.json'), 'utf8'));
+  assert.ok(d.entries.length >= 15, 'the standing answers live in the file');
+  const offline = require('../server/offline-nlu.js');
+  for (const q of ['כמה זה עולה?', 'תחזרו אליי', 'יש לכם כלב?', 'מי הזמין?']) {
+    const a = offline.deflect(q);
+    assert.ok(a, 'answered: ' + q);
+    assert.ok(!/\{phone\}|\{handoff\}|\{whatsapp\}/.test(a), 'placeholder left in: ' + a);
+  }
+});
+t('a broken entry in deflect.json costs that answer, not the bot', () => {
+  const fs = require('fs'), path = require('path');
+  const P = path.join(__dirname, '..', 'config', 'deflect.json');
+  const good = fs.readFileSync(P, 'utf8');
+  try {
+    const d = JSON.parse(good);
+    d.entries.unshift({ id: 'broken', match: 'ביטול(', answer_he: 'x' });
+    fs.writeFileSync(P, JSON.stringify(d, null, 1));
+    fs.utimesSync(P, new Date(), new Date(Date.now() + 2000));
+    const offline = require('../server/offline-nlu.js');
+    assert.ok(offline.deflect('כמה זה עולה?'), 'the other answers still work');
+  } finally {
+    fs.writeFileSync(P, good);
+    fs.utimesSync(P, new Date(), new Date(Date.now() + 4000));
+  }
 });
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');

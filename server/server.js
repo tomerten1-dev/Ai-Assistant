@@ -63,7 +63,11 @@ const CHIP_TO_PREF = {
   'מתאים למתחילים': 'מתחילים', 'תקציב חסכוני': 'תקציב',
 };
 
-const FALLBACK_HE = 'סליחה, משהו השתבש לרגע. אפשר לנסח שוב? לחלופין, נציג זמין בטלפון 04-8557722.';
+// Every fixed sentence the bot says comes from config/guidance.json
+// (messages_he), with the wording below as the built-in floor. The office
+// phone number lives in exactly one place: handoff_he.phone.
+const FALLBACK_HE = () => guidance.msg('fallback',
+  'סליחה, משהו השתבש לרגע. אפשר לנסח שוב? לחלופין, נציג זמין בטלפון {phone}.');
 
 /* ---------- helpers ---------- */
 function requiredMissing(slots) {
@@ -618,8 +622,10 @@ async function handleChat(body) {
     else { pendingQuestion = q; delete slots._lastQuestion; }
   }
 
-  const OFF_TOPIC_HE = 'אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.';
-  const SEASON_HE = 'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.';
+  const OFF_TOPIC_HE = guidance.msg('off_topic',
+    'אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-{phone}.');
+  const SEASON_HE = guidance.msg('out_of_season',
+    'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.');
   // a direct answer to a direct question (exact price, other customers'
   // bookings) — showing offers again instead would read as evasion
   // A briefing is not a question. "…- סקי פס - השכרת ציוד…" inside a long
@@ -747,8 +753,8 @@ async function handleChat(body) {
     slots._lastQuestion = 'adults';
     return {
       open_lead_form: false,
-      reply_he: 'היי! אני עוזר למצוא חופשת סקי של פינגווין שבאמת פנויה.\n' +
-        'כדי להתחיל — כמה תהיו בסך הכל, ונוסעים גם ילדים? אדייק לפי זה.',
+      reply_he: guidance.msg('greeting', 'היי! אני עוזר למצוא חופשת סקי של פינגווין שבאמת פנויה.\n' +
+        'כדי להתחיל — כמה תהיו בסך הכל, ונוסעים גם ילדים? אדייק לפי זה.'),
       model_used: false, pending_parameter: 'adults', slots, cards: [],
       two_room_splits: [], notes: [], relaxed: [],
       chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים', 'בלי ילדים'],
@@ -839,19 +845,28 @@ async function handleChat(body) {
   // for Italy, the model rewrote the paragraph in its own words and the reason
   // — limited flight and hotel places, and that a rep can check other dates —
   // vanished from the reply.
-  const offCommLine = offline.offCommitmentLine(result, slots);
+  // From here to the end of the turn nothing is allowed to throw away the
+  // search result. Each deterministic line is built behind `safely`, so one
+  // unexpected shape costs that sentence and not the three real offers under
+  // it. (The template, the model phrasing and the final assembly are wrapped
+  // the same way further down.)
+  const safely = (what, fn, fallback = null) => {
+    try { return fn(); }
+    catch (e) { console.error(`reply line "${what}" failed:`, e.message); return fallback; }
+  };
+  const offCommLine = safely('off-commitment', () => offline.offCommitmentLine(result, slots));
   // What the search had to widen — a different month, a different country, two
   // rooms instead of one — is the most important sentence in the reply, and the
   // model kept paraphrasing it into nothing. Asked for December, shown January,
   // and not a word about the gap: three separate audit rounds.
-  const widened = offline.relaxationLines(result, slots);
+  const widened = safely('relaxations', () => offline.relaxationLines(result, slots), []) || [];
   // ...but said once. A customer who has already read "לא מצאתי בדיוק בדצמבר,
   // אז הרחבתי לינואר" does not need it again on the next turn; they know.
   const saidFixed = new Set(prevSlots._fixed_said || []);
   // the comparison verdict rides in the same verbatim channel — the model kept
   // rewriting "באוסטריה לא מצאתי" into something friendlier and wrong
-  let cmpLine = offline.comparingLine(result, slots);
-  const monthsLine = offline.bothMonthsLine(result, slots, cards.length > 0);
+  let cmpLine = safely('comparison', () => offline.comparingLine(result, slots));
+  const monthsLine = safely('both-months', () => offline.bothMonthsLine(result, slots, cards.length > 0));
   // "אפשר בדצמבר 2025?" — a fact about their request, true whether or not we
   // are showing offers this turn
   const yearLine = slots.wrong_year
@@ -874,10 +889,18 @@ async function handleChat(body) {
   // Offers held back for now (Tomer, 25/08): the reply is the question, and
   // nothing that describes a list the customer cannot see — and certainly not
   // "לא מצאתי התאמה", which would be a lie about a search that did find some.
-  const templated = holdingForDetails ? '' :
-    (offline.phrase(result, sayingSlots, cards) ||
-      (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
-        offline.noMatchAnswer()));
+  const CARDS_FLOOR_HE = guidance.msg('cards_floor', 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:');
+  let templated;
+  try {
+    templated = holdingForDetails ? '' :
+      (offline.phrase(result, sayingSlots, cards) ||
+        (cards.length ? CARDS_FLOOR_HE : offline.noMatchAnswer()));
+  } catch (e) {
+    // the template builder is deterministic, but it reads a dozen optional
+    // shapes off the result; one unexpected null must not cost the offers
+    console.error('template phrasing failed:', e.message);
+    templated = cards.length ? CARDS_FLOOR_HE : FALLBACK_HE();
+  }
   // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
   // sees the offers the deterministic filter already chose, so it cannot
   // invent one; and anything it returns must survive validate() or we ship
@@ -898,11 +921,21 @@ async function handleChat(body) {
     'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human']);
   const answeredOnly = !!faqHit &&
     (!slotsChanged(prevSlots, slots) || NO_PARAGRAPH_AFTER.has(faqHit.id));
-  const intro = (deflection || answeredOnly || holdingForDetails) ? templated : await phraseWithModel({
-    slots: sayingSlots, cards, result, fallback: templated,
-    lastReply: lastReply ? lastReply.content : null,
-    answered: preamble || null,
-  });
+  // The search is already done at this point — three real, available hotels are
+  // sitting in `cards`. Everything from here on is wording, and wording must
+  // never be able to throw them away: a customer who reads "משהו השתבש" instead
+  // of the offers we found is the most expensive failure this bot has.
+  let intro;
+  try {
+    intro = (deflection || answeredOnly || holdingForDetails) ? templated : await phraseWithModel({
+      slots: sayingSlots, cards, result, fallback: templated,
+      lastReply: lastReply ? lastReply.content : null,
+      answered: preamble || null,
+    });
+  } catch (e) {
+    console.error('phrasing failed, falling back to the template:', e.message);
+    intro = templated;
+  }
   slots._notes_said = [...new Set([...(prevSlots._notes_said || []),
     ...(slots.notes_from_customer || [])])].slice(-20);
 
@@ -948,7 +981,7 @@ async function handleChat(body) {
   }
   if (lostNudge || exhaustedNudge) slots._nudged = true;
 
-  const replyText = (() => {
+  const composeReply = () => {
     // THE COVERAGE GUARANTEE. The ack lines used to live inside the template,
     // and whenever the model's wording passed validation the template — acks
     // included — was replaced whole. That is where most "חסר" rejections came
@@ -1106,7 +1139,18 @@ async function handleChat(body) {
     // one turn later.
     slots._lastLines = [...new Set([...alreadySaid, ...all])].slice(-24);
     return all.join(String.fromCharCode(10));
-  })();
+  };
+  // Same rule as the phrasing above: assembling the sentences is the last thing
+  // that happens, and it happens after the expensive part succeeded. If it
+  // throws, ship what we already have — the offers plus the plain template —
+  // rather than losing the turn.
+  let replyText;
+  try {
+    replyText = composeReply();
+  } catch (e) {
+    console.error('reply assembly failed, shipping the plain lines:', e.message, e.stack);
+    replyText = [preamble, intro].filter(Boolean).join(String.fromCharCode(10)) || templated || FALLBACK_HE();
+  }
 
   // One line per turn. Every defect in this project was found by a person
   // reading a reply; this is what makes that possible without waiting for a
@@ -1176,9 +1220,12 @@ function applyCors(req, res) {
 
 const STRICT_ORIGIN = !ALLOWED_ORIGINS.includes('*');
 const CHAT_TIMEOUT_MS = +(process.env.CHAT_TIMEOUT_MS || 25_000);
-const SLOW_DOWN_HE = 'קיבלנו הרבה הודעות ברצף — רגע אחד ונמשיך. אם דחוף, נשמח לעזור בטלפון 04-8557722.';
-const TOO_LONG_HE = 'השיחה התארכה — כדי לא לפספס כלום, מכאן נציג פינגווין ימשיך אתכם. השאירו טלפון ונחזור אליכם.';
-const VERIFY_HE = 'לא הצלחנו לאמת שהבקשה הגיעה מהאתר. רעננו את הדף ונסו שוב, או חייגו 04-8557722.';
+const SLOW_DOWN_HE = () => guidance.msg('rate_limited',
+  'קיבלנו הרבה הודעות ברצף — רגע אחד ונמשיך. אם דחוף, נשמח לעזור בטלפון {phone}.');
+const TOO_LONG_HE = () => guidance.msg('chat_too_long',
+  'השיחה התארכה — כדי לא לפספס כלום, מכאן נציג פינגווין ימשיך אתכם. השאירו טלפון ונחזור אליכם.');
+const VERIFY_HE = () => guidance.msg('verify_failed',
+  'לא הצלחנו לאמת שהבקשה הגיעה מהאתר. רעננו את הדף ונסו שוב, או חייגו {phone}.');
 
 function json(res, code, obj, extra) {
   res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', ...(extra || {}) });
@@ -1204,35 +1251,44 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && url.pathname === '/api/config') {
       // what the widget needs to know before its first request
-      return json(res, 200, { version: BOT_VERSION, turnstile: process.env.TURNSTILE_SITEKEY || null },
-        { 'cache-control': 'no-store' });
+      // the widget's own copy comes from here too, so guidance.json is the
+      // single place the office number is written down
+      return json(res, 200, {
+        version: BOT_VERSION,
+        turnstile: process.env.TURNSTILE_SITEKEY || null,
+        phone: guidance.phone() || null,
+        messages: {
+          send_error: guidance.msg('widget_send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}'),
+          chat_error: guidance.msg('widget_chat_error', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו {phone}.'),
+        },
+      }, { 'cache-control': 'no-store' });
     }
     const ip = limits.clientIp(req);
     if (req.method === 'POST' && url.pathname === '/api/chat') {
       const wait = limits.checkRate('chat', ip);
-      if (wait) return json(res, 429, { reply_he: SLOW_DOWN_HE, slots: {}, cards: [], chips: [], retry_after: wait }, { 'retry-after': String(wait) });
+      if (wait) return json(res, 429, { reply_he: SLOW_DOWN_HE(), slots: {}, cards: [], chips: [], retry_after: wait }, { 'retry-after': String(wait) });
       const body = await readJson(req, 100_000);
       if (!body) return;
       const slots = { ...(body.slots || {}) };
       if (limits.turnstileOn() && !limits.stampValid(slots)) {
         const ok = await limits.verifyTurnstile(body.turnstile, ip);
-        if (!ok) return json(res, 403, { reply_he: VERIFY_HE, slots: body.slots || {}, cards: [], chips: [], verify: true });
+        if (!ok) return json(res, 403, { reply_he: VERIFY_HE(), slots: body.slots || {}, cards: [], chips: [], verify: true });
         if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
         slots._vt = limits.stamp(slots._cid);
       }
       if (limits.turnsExceeded(slots)) {
-        return json(res, 200, { reply_he: TOO_LONG_HE, slots, cards: [], chips: [], open_lead_form: true });
+        return json(res, 200, { reply_he: TOO_LONG_HE(), slots, cards: [], chips: [], open_lead_form: true });
       }
       body.slots = slots;
       let out;
       try {
         out = await limits.withTimeout(handleChat(body), CHAT_TIMEOUT_MS, () => {
           console.error('chat timeout after', CHAT_TIMEOUT_MS, 'ms');
-          return { reply_he: FALLBACK_HE, slots, cards: [], chips: [], timeout: true };
+          return { reply_he: FALLBACK_HE(), slots, cards: [], chips: [], timeout: true };
         });
       } catch (e) {
         console.error('chat error:', e.message, e.detail || '');
-        out = { reply_he: e.friendly || FALLBACK_HE, slots, cards: [], chips: [] };
+        out = { reply_he: e.friendly || FALLBACK_HE(), slots, cards: [], chips: [] };
       }
       // the stamp and the turn counter must survive whatever handleChat did to the slots
       out.slots = { ...(out.slots || {}), _turns: slots._turns, ...(slots._vt ? { _vt: slots._vt, _cid: slots._cid } : {}) };
@@ -1289,6 +1345,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 if (require.main === module) {
+  // retention: delete conversation logs older than CHAT_LOG_DAYS (default 30)
+  { const n = chatLog.sweep(); if (n) console.log(`chat log: removed ${n} day(s) past retention`); }
   server.requestTimeout = 30_000;
   server.headersTimeout = 10_000;
   server.listen(PORT, () => console.log(`pingwin bot server v${BOT_VERSION} [${aiMode()}] → http://localhost:${PORT}`));

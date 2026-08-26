@@ -12,6 +12,12 @@
 // the bot's reply and the machine state behind it. A conversation id is a
 // random string, not anything that identifies a person.
 //
+// But customers type phone numbers and e-mails into a chat box anyway — that is
+// why offline-nlu has a phone regex at all — so `redact()` strips them on the
+// way in. And the file is not kept forever: CHAT_LOG_DAYS (default 30) sweeps
+// older days at startup. A log nobody can delete from is a liability, not an
+// asset.
+//
 // Storage is one JSON object per line (JSONL): appending is atomic enough for
 // this volume, a corrupt line loses one turn rather than the file, and it can
 // be read with any text editor.
@@ -19,9 +25,44 @@ const fs = require('fs');
 const path = require('path');
 
 const DIR = process.env.LOG_DIR || path.join(__dirname, '..', 'logs');
-const ENABLED = process.env.CHAT_LOG !== 'off';
+// read per call, not once at require: the test runners switch it off before
+// they load the server, and a module-level constant ignored them — which is how
+// one day's log grew to 23MB of synthetic turns with the real ones buried in it
+const enabled = () => process.env.CHAT_LOG !== 'off';
 
 let warned = false;
+
+/* ---------- PII on the way in ---------- */
+// Nine or more digits in one run is a phone number or a card, never a price, a
+// year or an age. Written as a class of separators so "050-123 4567" is caught.
+const DIGIT_RUN = /(?:[+(]?\d[\d\-().\u00A0 ]{7,}\d)/g;
+const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/g;
+function redact(text) {
+  if (!text) return text;
+  return String(text)
+    .replace(EMAIL, '[מייל]')
+    .replace(DIGIT_RUN, m => {
+      const n = (m.match(/\d/g) || []).length;
+      return n >= 13 ? '[מספר]' : n >= 9 ? '[טלפון]' : m;   // 13+ digits is a card, not a phone
+    });
+}
+
+/* ---------- retention ---------- */
+// Runs once, at startup. Deleting is the only way a retention promise is real.
+function sweep(days) {
+  const keep = +(days != null ? days : process.env.CHAT_LOG_DAYS || 30);
+  if (!Number.isFinite(keep) || keep <= 0) return 0;
+  const cutoff = Date.now() - keep * 86400000;
+  let removed = 0;
+  try {
+    for (const name of fs.readdirSync(DIR)) {
+      const m = /^chat-(\d{4}-\d{2}-\d{2})\.jsonl$/.exec(name);
+      if (!m) continue;
+      if (Date.parse(m[1] + 'T23:59:59Z') < cutoff) { fs.unlinkSync(path.join(DIR, name)); removed++; }
+    }
+  } catch (e) { /* no log dir yet, or no permission — never fatal */ }
+  return removed;
+}
 
 function file(d) {
   const day = (d || new Date()).toISOString().slice(0, 10);
@@ -58,7 +99,7 @@ function signals({ cards, result, slots, reply, notUnderstood, answeredBy }) {
 }
 
 function append(entry) {
-  if (!ENABLED) return;
+  if (!enabled()) return;
   try {
     fs.mkdirSync(DIR, { recursive: true });
     fs.appendFileSync(file(), JSON.stringify(entry) + '\n', 'utf8');
@@ -82,7 +123,9 @@ function tidySlots(slots) {
     if (v == null) continue;
     if (Array.isArray(v) && !v.length) continue;
     if (v === false) continue;
-    out[k] = v;
+    // notes_from_customer quotes the customer back — same redaction as `user`
+    out[k] = Array.isArray(v) ? v.map(x => (typeof x === 'string' ? redact(x) : x))
+      : (typeof v === 'string' ? redact(v) : v);
   }
   return out;
 }
@@ -92,7 +135,7 @@ function logTurn({ conversationId, userText, reply, cards, result, slots, modelU
   append({
     at: new Date().toISOString(),
     cid: conversationId,
-    user: userText,
+    user: redact(userText),
     bot: reply,
     hotels: cards.map(c => `${c.hotel} ${c.date}`),
     slots: tidySlots(slots),
@@ -118,4 +161,6 @@ function read(day, filter) {
   return rows;
 }
 
-module.exports = { logTurn, read, file, DIR, ENABLED };
+module.exports = { logTurn, read, file, DIR, redact, sweep, enabled,
+  // kept for callers that read it as a value; prefer enabled()
+  get ENABLED() { return enabled(); } };

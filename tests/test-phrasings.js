@@ -1,6 +1,10 @@
 // Realistic Hebrew phrasings the offline NLU must handle.
 // Run: node tests/test-phrasings.js
 // Each case: [answered-question-key or null, text, expected slot subset]
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const { parseText, nextQuestion, deflect } = require('../server/offline-nlu.js');
 
 let pass = 0, fail = 0;

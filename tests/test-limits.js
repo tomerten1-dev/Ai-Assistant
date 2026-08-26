@@ -88,7 +88,7 @@ async function unit() {
 function startServer(env, port) {
   return new Promise((resolve, reject) => {
     const p = spawn(process.execPath, [path.join(__dirname, '../server/server.js')], {
-      env: { ...process.env, PORT: String(port), OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', ...env },
+      env: { ...process.env, PORT: String(port), CHAT_LOG: 'off', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', ...env },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let out = '';

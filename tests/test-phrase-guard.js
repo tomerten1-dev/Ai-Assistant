@@ -8,6 +8,10 @@
 //      it, never regress past it.
 //
 // Run: node tests/test-phrase-guard.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const assert = require('assert');
 const phrasing = require('../server/prompt-phrase');
 

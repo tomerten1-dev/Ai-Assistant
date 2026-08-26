@@ -1,6 +1,10 @@
 // Room-level facts from the pingwin.co.il hotel pages: the matcher, the
 // closed-universe guarantee (never name a room the hotel page does not list),
 // and the package rules Tomer stated (ski pass, equipment, transfers).
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const assert = require('assert');
 const { SkiSearch } = require('../data/filter');
 const { matchRoom, roomFacts } = require('../data/room-match');

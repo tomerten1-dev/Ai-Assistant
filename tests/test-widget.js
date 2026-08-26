@@ -17,7 +17,7 @@ const count = p => p.evaluate(`${SHADOW}.querySelectorAll('.m').length`);
 function startServer() {
   return new Promise((resolve, reject) => {
     const s = spawn(process.execPath, [path.join(__dirname, '../server/server.js')], {
-      env: { ...process.env, PORT: String(PORT), OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' },
+      env: { ...process.env, PORT: String(PORT), CHAT_LOG: 'off', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let out = '';

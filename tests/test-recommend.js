@@ -1,4 +1,8 @@
 'use strict';
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 /* q25 — reasoned recommendations from the approved resort table. */
 const assert = require('assert');
 process.env.OPENAI_API_KEY = ''; process.env.ANTHROPIC_API_KEY = '';

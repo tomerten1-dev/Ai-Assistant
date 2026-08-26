@@ -4,6 +4,7 @@
 // Not as flexible as Claude, but honors the exact same slot schema and the
 // same conversation policy (max 2 questions, one per message).
 
+const guidance = require('./guidance.js');   // the fixed sentences and the office phone live there
 const { SkiSearch } = require('../data/filter.js');
 
 const HE_NUM = {
@@ -1045,9 +1046,9 @@ function phrase(result, slots, cards) {
   if (partySize >= 9) {
     lines.push(note('group_rooms_by_rep')
       ? 'אלה המלונות והתאריכים הפנויים בתנאים שביקשתם. בחבורה בגודל הזה החלוקה לחדרים ' +
-        'ומקומות הטיסה נסגרים מול נציג — השאירו שם וטלפון או התקשרו ל-04-8557722.'
+        'ומקומות הטיסה נסגרים מול נציג — השאירו שם וטלפון או התקשרו ל-' + guidance.phone() + '.'
       : 'בחבורה בגודל הזה החלוקה לחדרים ומקומות הטיסה נסגרים מול נציג. ' +
-        'השאירו שם וטלפון ונציג ישלים אתכם את ההצעה, או התקשרו ל-04-8557722.');
+        'השאירו שם וטלפון ונציג ישלים אתכם את ההצעה, או התקשרו ל-' + guidance.phone() + '.');
   }
 
   // The answer to "יקר לי", in Tomer's own words from config/guidance.json.
@@ -1420,13 +1421,13 @@ const PAUSE = /עזבו? רגע|צריך לבדוק עם|צריכה לבדוק �
 function isPause(text) {
   return PAUSE.test(String(text || ''));
 }
-const PAUSE_HE = 'בכיף, קחו את הזמן — ההצעות לא בורחות ואני כאן כשתחזרו. ואם נוח יותר, השאירו שם וטלפון ונציג יחזור אליכם מתי שתבחרו.';
+const pauseHe = () => guidance.msg('pause', 'בכיף, קחו את הזמן — ההצעות לא בורחות ואני כאן כשתחזרו. ואם נוח יותר, השאירו שם וטלפון ונציג יחזור אליכם מתי שתבחרו.');
 
 const FAREWELL = /תפסיק לשלוח|תפסיקו לשלוח|די עם ההצעות|עזוב אותי|תפסיק להציע|לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
 function isFarewell(text) {
   return FAREWELL.test(String(text || '').trim());
 }
-const FAREWELL_HE = 'אין בעיה בכלל. אם בהמשך תרצו לבדוק — אני כאן, ואפשר גם להתקשר ל-04-8557722. חורף נעים!';
+const farewellHe = () => guidance.msg('farewell', 'אין בעיה בכלל. אם בהמשך תרצו לבדוק — אני כאן, ואפשר גם להתקשר ל-{phone}. חורף נעים!');
 
 // A resort a customer knows from elsewhere and we do not sell this season.
 // "מתלבטים בין בנסקו לזולדן" used to be answered about Bansko alone, as if
@@ -1453,20 +1454,55 @@ function isGreeting(text) {
 // Before this, anything with a question mark and no ski vocabulary in it got
 // "אני כאן בעיקר להתאמת חופשות סקי" — i.e. a customer asking about
 // cancellation or kosher food was told that is not our subject.
-const guidance = require('./guidance.js');
 
-const FAQ = (() => {
-  const raw = JSON.parse(require('fs').readFileSync(
-    require('path').join(__dirname, '..', 'config', 'faq.json'), 'utf8'));
-  return raw.entries.map(e => ({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match }));
-})();
+// config/faq.json is Tomer's file: he edits answers there without a developer.
+// So a mistake in it must cost one answer, never the site. Previously a stray
+// comma or an unbalanced bracket in a pattern threw at require time and the
+// server would not boot at all — the one file the business owner is invited to
+// edit was the one file that could take the bot down.
+//
+// Now: the file is read on demand and re-read when its mtime changes (same
+// contract as guidance.js, so an edit is live without a restart), each pattern
+// is compiled in its own try, and a bad entry is dropped with a line in the
+// log while every other answer keeps working.
+const FAQ_FILE = require('path').join(__dirname, '..', 'config', 'faq.json');
+let faqCache = null, faqStamp = -1, faqComplained = '';
+function loadFaq() {
+  let stamp = 0;
+  try { stamp = require('fs').statSync(FAQ_FILE).mtimeMs; } catch (e) { stamp = 0; }
+  if (faqCache && stamp === faqStamp) return faqCache;
+  let raw;
+  try {
+    raw = JSON.parse(require('fs').readFileSync(FAQ_FILE, 'utf8'));
+  } catch (e) {
+    if (faqComplained !== 'file:' + e.message) {
+      console.error('faq.json unreadable (%s) — keeping the previous answers', e.message);
+      faqComplained = 'file:' + e.message;
+    }
+    faqStamp = stamp;
+    return (faqCache = faqCache || []);      // last good set, or nothing at all
+  }
+  const out = [], bad = [];
+  for (const e of (raw.entries || [])) {
+    if (!e || !e.id || !e.match || !e.answer_he) { bad.push((e && e.id) || '(ללא id)'); continue; }
+    try {
+      out.push({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match });
+    } catch (err) {
+      bad.push(`${e.id} (${err.message})`);
+    }
+  }
+  if (bad.length) console.error('faq.json: %d entries skipped — %s', bad.length, bad.join('; '));
+  faqCache = out; faqStamp = stamp; faqComplained = '';
+  return out;
+}
+loadFaq();   // fail loudly at startup if the whole file is broken, but still boot
 
 // Order matters: the file lists the more specific patterns first, and the
 // first match wins. Returns {id, he} so callers can log which answer fired.
 // The approved answers, for the semantic router in server/answer-router.js.
 // Same list the regex layer uses — one source, two ways of reaching it.
 function faqEntries() {
-  return FAQ.map(e => ({ id: e.id, answer_he: e.he, match: e.match }));
+  return loadFaq().map(e => ({ id: e.id, answer_he: e.he, match: e.match }));
 }
 
 // Two questions in one message, both of which the patterns know. Free and
@@ -1492,7 +1528,7 @@ function faqMulti(text) {
   }
   if (hits.length < 3) {
     const whole = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-    for (const e of FAQ) {
+    for (const e of loadFaq()) {
       if (hits.length >= 3) break;
       if (hits.some(h => h.id === e.id)) continue;
       if (e.re.test(whole)) hits.push({ id: e.id, he: e.he });
@@ -1510,7 +1546,7 @@ function faq(text) {
     .replace(/[׳‘’]/g, "'")
     .replace(/[״“”]/g, '"')
     .replace(/\s+/g, ' ') + ' ';
-  for (const e of FAQ) if (e.re.test(t)) return { id: e.id, he: e.he };
+  for (const e of loadFaq()) if (e.re.test(t)) return { id: e.id, he: e.he };
   return null;
 }
 
@@ -1624,7 +1660,7 @@ function guard(text) {
     // accusation when someone is asking about the holiday they just bought.
     if (/שלי|שלנו|שהזמנתי|שהזמנו|שביצעתי/.test(t)) {
       return 'אין לי גישה למערכת ההזמנות ולא אוכל לראות הזמנה קיימת. ' +
-        'נציג כן יכול — 04-8557722, או השאירו כאן שם וטלפון ונחזור אליכם.';
+        'נציג כן יכול — ' + guidance.phone() + ', או השאירו כאן שם וטלפון ונחזור אליכם.';
     }
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
   }
@@ -1650,96 +1686,68 @@ function guard(text) {
   return null;
 }
 
+/* ---------- deflections: answer, do not search ----------
+   Eighteen standing answers that used to live as string literals in this
+   function. They are customer-facing business copy — the same class of thing
+   as config/faq.json — so they now live in config/deflect.json, where Tomer
+   edits them without a developer and without a deploy. What stays here is the
+   mechanism: order, the negative conditions, and the placeholders.
+   Loading is forgiving in the same way faq.json's is: one bad entry is skipped,
+   an unreadable file keeps the previous set, and nothing here can stop the
+   server from booting. */
+const DEFLECT_FILE = require('path').join(__dirname, '..', 'config', 'deflect.json');
+let deflectCache = null, deflectStamp = -1;
+function loadDeflect() {
+  let stamp = 0;
+  try { stamp = require('fs').statSync(DEFLECT_FILE).mtimeMs; } catch (e) { stamp = 0; }
+  if (deflectCache && stamp === deflectStamp) return deflectCache;
+  let raw;
+  try {
+    raw = JSON.parse(require('fs').readFileSync(DEFLECT_FILE, 'utf8'));
+  } catch (e) {
+    console.error('deflect.json unreadable (%s) — keeping the previous answers', e.message);
+    deflectStamp = stamp;
+    return (deflectCache = deflectCache || []);
+  }
+  const out = [], bad = [];
+  for (const e of (raw.entries || [])) {
+    if (!e || !e.id || !e.match || !e.answer_he) { bad.push((e && e.id) || '(ללא id)'); continue; }
+    try {
+      out.push({
+        id: e.id,
+        // the callback intent is recognised by the same expression that opens
+        // the lead form in the widget, so it cannot drift apart from it
+        re: e.match === '__WANTS_CALLBACK__' ? WANTS_CALLBACK : new RegExp(e.match),
+        no: e.not ? new RegExp(e.not) : null,
+        he: e.answer_he,
+      });
+    } catch (err) { bad.push(`${e.id} (${err.message})`); }
+  }
+  if (bad.length) console.error('deflect.json: %d entries skipped — %s', bad.length, bad.join('; '));
+  deflectCache = out; deflectStamp = stamp;
+  return out;
+}
+loadDeflect();
+
+// {phone} and {handoff} come from guidance.json, so the office number lives in
+// exactly one place. A missing phone drops its clause rather than printing "{phone}".
+function fillPlaceholders(text) {
+  const h = guidance.load().handoff_he || {};
+  let out = String(text);
+  if (out.includes('{phone}')) {
+    out = h.phone ? out.split('{phone}').join(h.phone)
+      : out.replace(/,?\s*[^,.]*\{phone\}[^,.]*/g, '');
+  }
+  if (out.includes('{handoff}')) out = out.split('{handoff}').join(handoffTail()).trim();
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
 function deflect(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  // "מספר ההזמנה" with the definite article was walking straight past this
-  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|פרטיו של לקוח|מי תפס/.test(t)) {
-    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
-  }
-  // any request for a number in money — "מה המחיר המדויק" and "מחיר בשקלים"
-  // were slipping past and reaching the offers instead of the red-rule answer
-  if (/כמה (זה )?עולה|מחיר מדויק|המחיר המדויק|בכמה|כמה יעלה|בשקלים|ביורו|מה המחיר|תן לי מחיר|תן לי הנחה|הנחה של|בחינם/.test(t)) {
-    return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
-  }
-  // Common follow-ups that were being answered by silently re-showing the same
-  // three cards — which reads as a bot that did not listen.
-  // not "כמה זמן הטיסה" — that is a different question with its own answer
-  if (/כמה לילות|כמה ימים|כמה זמן.{0,12}חופשה|משך החופשה/.test(t) && !/טיסה|נסיעה/.test(t)) {
-    return 'מספר הלילות מופיע על כל כרטיס — הוא משתנה לפי המוצר (7 לילות ברוב היעדים, ובבנסקו יש גם סופי שבוע קצרים).';
-  }
-  // "למה דווקא את אלה?" — the reason is already computed per card (why_he);
-  // this points at it rather than leaving the customer to guess.
-  if (/למה דווקא|למה אלה|למה בחרת|על סמך מה|איך בחרת|למה הצעת/.test(t)) {
-    return 'בחרתי לפי מה שאמרתם: גודל החבורה, החודש, היעד ומה שציינתם שחשוב לכם. ' +
-      'על כל הצעה כתוב למטה למה היא מתאימה. אם משהו לא מדויק — תגידו לי מה לשנות.';
-  }
-
-  // "אם זה לא סגור באמת תגידו לי" — a customer who wants to know whether what
-  // they are looking at is firm. The honest answer is the whole architecture.
-  if (/לא סגור באמת|זה סגור\?|באמת פנוי|זה ודאי|תגידו לי עכשיו|לא רציני/.test(t)) {
-    return 'אני מציג רק מה שרשום אצלנו כפנוי בפועל — לא פרסום. מה שאני לא יכול הוא לשריין: ' +
-      'ההזמנה נסגרת מול נציג, והוא זה שמאשר סופית מול המלון והטיסה. ' +
-      'אם חשוב לכם לנעול תאריך, השאירו שם וטלפון ונציג יחזור אליכם מהר.';
-  }
-
-  // "זה לא עונה לי" — a refusal without a reason. Asking what to change beats
-  // repeating the same three offers with a different sentence above them.
-  if (/לא עונה לי|לא מתאים לי|לא זה|לא אהבתי|משהו אחר לגמרי|לא בא לי אף אחד/.test(t)) {
-    return 'תגידו לי מה לשנות — יעד אחר, חודש אחר, קרוב יותר למסלול או תקציב נמוך יותר — ואביא הצעות אחרות.';
-  }
-
-  // Ski pass and transfers are package-wide rules we know, so answer them
-  // instead of pointing at the booking screen. Handled per offer as well, on
-  // the card, where the pass area (local vs extended) is stated.
-  if (/סקי ?פס/.test(t)) {
-    return 'סקי פס כלול בחבילות לאוסטריה, צרפת ואנדורה. בבולגריה הוא נרכש בנפרד. ' +
-      'היקף הפס (מקומי או מרחבי) משתנה בין היעדים ומצוין על כל הצעה.';
-  }
-  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה|כולל טיסות|מה כולל|כולל המחיר|החבילה כוללת|מה יש בחבילה|זה עם טיסות/.test(t)) {
-    return 'בכל החבילות כלולות טיסות הלוך ושוב והסעות משדה התעופה למלון ובחזרה. ' +
-      'סקי פס כלול בכל היעדים למעט בולגריה, והשכרת ציוד היא תוספת בתשלום (במועדוני השמש היא כלולה). ' +
-      'בסיס האירוח משתנה בין המלונות ומצוין על כל הצעה.';
-  }
-  if (/שעה|שעות טיסה|מתי ממריא|מתי הטיסה|לוח טיסות/.test(t)) {
-    return 'שעות הטיסה אינן סופיות ועשויות להשתנות, ולכן לא אציין אותן כאן. נציג ימסור לכם את הפרטים המעודכנים.';
-  }
-  // "תחזרו אליי" is a request, not small talk. It used to fall through to the
-  // offers and be ignored entirely.
-  if (WANTS_CALLBACK.test(t)) {
-    // the widget opens the form itself (see wantsCallback below), so this only
-    // has to say what is about to happen
-    // the form is about to open, so do not also explain where to find a button
-    const h = (guidance.load().handoff_he || {});
-    return `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם${h.phone ? `, או שאפשר להתקשר ל-${h.phone}` : ''}.`;
-  }
-  // An existing booking is never something this bot should touch.
-  if (/הזמנה קיימת|כבר הזמנתי|ההזמנה שלי|לשנות תאריך.{0,15}הזמנה|לבטל את ההזמנה|שינוי בהזמנה/.test(t)) {
-    return 'שינוי בהזמנה קיימת נעשה מול נציג ולא דרכי. ' + handoffTail();
-  }
-  // Dissatisfaction is on topic by definition. It used to get "I only handle
-  // ski holidays", which is the worst possible answer to an unhappy customer.
-  if (/לא מה שחיפשתי|לא מה שרציתי|לא מתאים לי|לא אהבתי|משהו אחר|לא זה/.test(t)) {
-    return 'סליחה, בואו נדייק — מה לשנות? תאריך, יעד, גודל החדר או משהו אחר?';
-  }
-  // Travelling with a pet is an ordinary travel question, not off topic.
-  if (/כלב|חתול|חיית מחמד|בעל ?חיים/.test(t)) {
-    return 'מדיניות בעלי חיים נקבעת על ידי המלון וחברת התעופה ומשתנה ביניהם. ' + handoffTail();
-  }
-  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת|קח את|ניקח את|בוא ניקח|נלך על|אני בוחר|אנחנו בוחרים|זה נראה לי|מתאים לנו/.test(t)
-      && !/לא מצליח|לא מצליחה|מנסה כבר|כבר שבוע|אף אחד לא|בעיה/.test(t)) {
-    return 'מצוין. לחצו "המשך להזמנה" בכרטיס שבחרתם כדי לראות את המחיר המדויק, או "תחזרו אליי" ונציג יסגור איתכם — ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.';
-  }
-  if (/הכי משתלם|הכי זול|מתי זול|איפה זול|הכי כדאי מבחינת מחיר/.test(t)) {
-    return 'המחיר משתנה לפי יעד, מלון ותאריך. אמרו לי מתי נוח לכם ואציג את האפשרויות מהזול ליקר — או לחצו "תקציב חסכוני" אחרי שתראו הצעות.';
-  }
-  if (/מה ההבדל|במה שונ|להשוות|השוואה|איזה עדיף|מה ממליץ|מה הכי טוב/.test(t)) {
-    return 'ההבדלים המרכזיים מופיעים על כל כרטיס — היישוב, המרחק מהמעלית, מה יש במלון וטווח המחיר. נציג ישמח לעבור איתכם על ההבדלים לעומק.';
-  }
-  if (/לא מה שביקשתי|לא התאים|לא רלוונטי|לא זה|לא מדויק/.test(t)) {
-    return 'סליחה על כך. אפשר לחדד — יעד אחר, חודש אחר, או תקציב? אפשר גם ללחוץ על אחד הצ׳יפים למטה.';
-  }
-  if (/^ ?(תודה|תודה רבה|מעולה|מגניב|סבבה|יופי)[!. ]* ?$/.test(t)) {
-    return 'בשמחה. אם תרצו לחדד משהו — יעד, חודש או תקציב — אני כאן.';
+  for (const e of loadDeflect()) {
+    if (!e.re.test(t)) continue;
+    if (e.no && e.no.test(t)) continue;
+    return fillPlaceholders(e.he);
   }
   return null;
 }
@@ -1749,7 +1757,7 @@ module.exports = {
   faqMulti,
   faqEntries,
   isPause,
-  PAUSE_HE,
+  get PAUSE_HE() { return pauseHe(); },
   comparingLine,
   bothMonthsLine,
   isRequirementNote,
@@ -1761,7 +1769,7 @@ module.exports = {
   canonicalDestination,
   notUnderstood,
   isFarewell,
-  FAREWELL_HE,
+  get FAREWELL_HE() { return farewellHe(); },
   unknownHotel,
   isGreeting,
   wantsMore,

@@ -124,7 +124,7 @@ function objection(kind) {
 const GUARD_DEFAULTS = {
   profanity: 'לא אמשיך בשיחה בסגנון הזה. אם תרצו עזרה בחופשת סקי — כתבו לי כמה אתם ומתי.',
   harassment: 'אני עוזר אוטומטי ונשאר בנושא חופשות סקי.',
-  impersonation: 'אין לי דרך לאמת זהות ולא אמסור מידע פנימי בצ\'אט. פניות של צוות או רשויות — במשרד: 04-8557722.',
+  impersonation: 'אין לי דרך לאמת זהות ולא אמסור מידע פנימי בצ\'אט. פניות של צוות או רשויות — במשרד: {phone}.',
   security: 'זו שאלה שאף אחד לא יכול לענות עליה בוודאות. ההזמנה כפופה לתנאי הביטול שבתקנון, ונציג ישמח לעבור אתכם עליהם.',
   antisemitism: 'אין לי נתונים שמאפשרים לענות על זה באחריות. בכל היעדים שלנו יש נציג ישראלי באתר; נציג ישמח לספר מניסיון.',
   fraud: 'אני לא יכול לרשום פרט שאינו נכון, וזה עלול לבטל ביטוח או הזמנה.',
@@ -135,18 +135,48 @@ const GUARD_DEFAULTS = {
 };
 function guardText(key) {
   const g = load().guards_he || {};
-  return (typeof g[key] === 'string' && g[key].trim()) ? g[key] : GUARD_DEFAULTS[key];
+  return fill((typeof g[key] === 'string' && g[key].trim()) ? g[key] : GUARD_DEFAULTS[key]);
 }
 
 function leadIntentText(kind) {
   const g = load().lead_intents_he || {};
   return (typeof g[kind] === 'string' && g[kind].trim()) ? g[kind]
-    : 'זו פנייה שנציג מטפל בה — השאירו שם וטלפון ונחזור אליכם, או התקשרו ל-04-8557722.';
+    : fill('זו פנייה שנציג מטפל בה — השאירו שם וטלפון ונחזור אליכם, או התקשרו ל-{phone}.');
 }
+
+/* ---------- fixed sentences ----------
+   The lines the bot says the same way every time: the fallback after an error,
+   the off-topic line, "slow down", the greeting. They used to be string
+   literals scattered across server.js and offline-nlu.js, which meant changing
+   the office phone number was a code change in eleven places.
+
+   `msg(key, fallback)` reads messages_he[key] from guidance.json, fills the
+   {phone} / {whatsapp} / {handoff} placeholders from handoff_he, and returns
+   the built-in wording when the key is missing — so a trimmed or broken
+   guidance.json can never turn a sentence into an empty string. */
+function fill(text) {
+  const h = load().handoff_he || {};
+  let out = String(text == null ? '' : text);
+  for (const [k, v] of [['{phone}', h.phone], ['{whatsapp}', h.whatsapp], ['{email}', h.email]]) {
+    if (!out.includes(k)) continue;
+    // no number configured: drop the clause that offered it rather than
+    // printing a placeholder at a customer
+    out = v ? out.split(k).join(v) : out.replace(new RegExp(`[^,.!?]*\\${k}[^,.!?]*[,.]?`, 'g'), '');
+  }
+  if (out.includes('{handoff}')) out = out.split('{handoff}').join(handoffLine());
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+function msg(key, fallback) {
+  const m = load().messages_he || {};
+  const raw = (typeof m[key] === 'string' && m[key].trim()) ? m[key] : fallback;
+  return fill(raw);
+}
+// the office number, for the one or two places that need it on its own
+function phone() { return (load().handoff_he || {}).phone || ''; }
 
 function languageText(key) {
   const g = load().languages_he || {};
   return (typeof g[key] === 'string' && g[key].trim()) ? g[key] : null;
 }
 
-module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, leadIntentText, languageText, load, FILE };
+module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, leadIntentText, languageText, msg, fill, phone, load, FILE };

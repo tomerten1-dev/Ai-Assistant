@@ -55,10 +55,21 @@
      Enabled by the server (/api/config returns a site key). An invisible
      challenge runs once; the token rides on the first chat turn or the lead,
      after which the server stamps the session and no more tokens are needed. */
-  var CONFIG = { turnstile: null, version: null };
+  // Filled from /api/config: the widget's fixed sentences and the office phone
+  // come from the server's guidance.json, not from this file, so changing the
+  // number is one edit in one place. The literals below are the floor for the
+  // moment before the config lands (or if it never does).
+  var CONFIG = { turnstile: null, version: null, phone: '04-8557722', messages: {} };
+  function say(key, fallback) {
+    var t = (CONFIG.messages && CONFIG.messages[key]) || fallback;
+    return String(t).split('{phone}').join(CONFIG.phone || '');
+  }
   var configReady = fetchWithTimeout(API_BASE + '/api/config', { method: 'GET' }, 6000)
     .then(function (r) { return r.json(); })
-    .then(function (c) { CONFIG = c || CONFIG; if (CONFIG.turnstile) loadTurnstile(); })
+    .then(function (c) {
+      if (c) { CONFIG.turnstile = c.turnstile; CONFIG.version = c.version; CONFIG.messages = c.messages || {}; if (c.phone) CONFIG.phone = c.phone; }
+      if (CONFIG.turnstile) loadTurnstile();
+    })
     .catch(function () { });
   var tsLoaded = null, tsHost = null;
   function loadTurnstile() {
@@ -797,7 +808,7 @@
           : 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         track('error', { where: 'lead' });
-        go.disabled = false; note.textContent = 'תקלה בשליחה — נסו שוב או חייגו 04-8557722';
+        go.disabled = false; note.textContent = say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}');
       });
     });
   }
@@ -877,7 +888,7 @@
       track('error', { where: 'chat' });
       // the message stays in history; "נסו שוב" re-sends it without retyping
       state.messages.pop();
-      addMsg('bot', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו 04-8557722.');
+      addMsg('bot', say('chat_error', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו {phone}.'));
       var retry = el('div', 'chips');
       var rb = el('button', 'chip', 'נסו שוב');
       rb.addEventListener('click', function () { retry.remove(); sendText(text); });

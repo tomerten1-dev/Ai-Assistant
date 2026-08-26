@@ -5,6 +5,10 @@
 // are answered, the answers obey the red rules, and the FAQ can never take a
 // question that the red-rule deflector must own.
 // Run: node tests/test-faq.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const assert = require('assert');
 const nlu = require('../server/offline-nlu');
 const faqFile = require('../config/faq.json');

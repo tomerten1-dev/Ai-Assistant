@@ -3,6 +3,10 @@
 // layer failed, phrasing never calls a model, and a broken model degrades
 // gracefully instead of breaking the bot.
 // Run: node tests/test-orchestration.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.ANTHROPIC_API_KEY = 'sk-ant-test-stub-not-real';
 // a placeholder value, not a delete: loadEnv() would otherwise pull the real
 // key out of .env and this suite would bill actual API calls

@@ -8,6 +8,10 @@
 // The model is disabled here — this is about what the deterministic path
 // delivers to the customer.
 // Run: node tests/test-end-to-end.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
 

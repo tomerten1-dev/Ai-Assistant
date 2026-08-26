@@ -1,5 +1,9 @@
 // Deterministic test suite — no AI involved. Run: node tests/run-tests.js
 // Covers spec section 9 items 1, 4, 4b, 4c, 5, 6 (2/3/7 need the live bot).
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const fs = require('fs');
 const path = require('path');
 const { parseInventory, stats } = require('../data/inventory.js');

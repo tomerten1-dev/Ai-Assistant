@@ -2,6 +2,10 @@
 // Run: node tests/test-offline.js
 // placeholders, not deletes — loadEnv() would otherwise load the real keys
 // from .env and this "offline" suite would quietly make paid API calls
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
 process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 const { handleChat } = require('../server/server.js');
