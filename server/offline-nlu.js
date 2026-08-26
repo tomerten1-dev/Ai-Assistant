@@ -37,7 +37,7 @@ const DESTS = [
   // Les Menuires was missing entirely — "לה מנואר" named a resort we sell and
   // the bot heard nothing, so it could be neither asked for nor ruled out
   [/לה ?מנו[אי]?ר|מנואר|les ?menuires/i, 'Les Menuires', 'france'],
-  [/סולדאו/, 'Soldeu', 'andorra'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
+  [/סולד[אי]?ו|soldeu/i, 'Soldeu', 'andorra'], [/עוז אן|oz.?en/i, 'Oz en Oisans', 'france'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
 ];
 // Resorts and brands pingwin sells, but which carry NO room commitments in
 // the winter 26/27 workbook.

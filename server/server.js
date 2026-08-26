@@ -20,6 +20,7 @@ const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
 const limits = require('./limits.js');
+const recommend = require('./recommend.js');
 
 loadEnv();
 const has = k => process.env[k] && !process.env[k].includes('xxxx');
@@ -522,6 +523,13 @@ async function handleChat(body) {
   if (faqHit && faqHit.id === 'compare_countries' && (slots.compare || []).length) {
     faqHit = null;
   }
+  // Reasoned recommendation (q25): "איזה אתר מתאים למשפחה?", "טיניי או ואל
+  // טורנס?", "איפה יש קרחון?" — answered from the approved resort table with
+  // the facts as reasons. It outranks the generic compare/country lecture.
+  if (!offline.guard(lastUser)) {
+    const rec = recommend.answer(lastUser, slots);
+    if (rec) faqHit = { id: 'recommend', he: rec.he, chips: rec.chips, all: [{ id: 'recommend', he: rec.he }] };
+  }
 
   // A pure policy question from someone who has told us nothing — cancellation
   // terms, deposits, insurance — used to be answered correctly and then buried
@@ -564,7 +572,7 @@ async function handleChat(body) {
       reply_he: replyText, model_used: modelUsed,
       pending_parameter: 'adults', slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [],
-      chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
+      chips: (faqHit.chips && faqHit.chips.length) ? faqHit.chips : ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
       chip_to_pref: CHIP_TO_PREF,
       ...(process.env.BANK_DEBUG ? { debug: {
         answered_by: faqHit.routed ? 'router' : 'faq', faq_ids: (faqHit.all || [faqHit]).map(a => a.id),
@@ -886,7 +894,7 @@ async function handleChat(body) {
   // Some standing answers are about what we will NOT do. Letting the model add
   // its own paragraph under them produced a reply that refused to rank hotels
   // and then ranked them.
-  const NO_PARAGRAPH_AFTER = new Set(['compare', 'compare_countries', 'complaint',
+  const NO_PARAGRAPH_AFTER = new Set(['compare', 'compare_countries', 'recommend', 'complaint',
     'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human']);
   const answeredOnly = !!faqHit &&
     (!slotsChanged(prevSlots, slots) || NO_PARAGRAPH_AFTER.has(faqHit.id));

@@ -67,7 +67,7 @@ async function ask(q) {
 
 (async () => {
   const server = spawn('node', ['server/server.js'], {
-    cwd: ROOT, env: { ...process.env, PORT: String(PORT), BANK_DEBUG: '1', ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '' },
+    cwd: ROOT, env: { ...process.env, PORT: String(PORT), BANK_DEBUG: '1', ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', RATE_CHAT_PER_MIN: '1000000', RATE_CHAT_PER_HOUR: '1000000', MAX_TURNS_PER_CHAT: '100000' },
     stdio: ['ignore', 'ignore', 'inherit'],
   });
   await new Promise(res => setTimeout(res, 1200));
