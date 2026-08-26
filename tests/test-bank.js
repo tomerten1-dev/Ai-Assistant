@@ -19,6 +19,10 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
   const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true];
 }));
 const PORT = 8799;
+// shared with report(): filled as the run progresses, so an interrupt can
+// summarise what was already measured
+const ROWS = [];
+let LIVE = false, TOTAL = 0;
 const GREETING = 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.';
 // a handoff, not the routine closing line ("או שאשאיר לנציג לחזור אליכם")
 const PHONE = /04-8557722|052-6543262|info@pingwin|נציג (יבדוק|יחזור|ימסור|יאשר|יטפל|ישמח)|אעביר לנציג|השאירו שם וטלפון|WhatsApp|וואטסאפ/;
@@ -77,7 +81,7 @@ async function ask(q) {
   //   node tests/test-bank.js --live                 the whole bank
   //   node tests/test-bank.js --live --stuck         only what dead-ended offline
   //   node tests/test-bank.js --live --sample=150    a random slice
-  const live = !!args.live;
+  const live = !!args.live; LIVE = live;
   const keys = live ? {} : { ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '' };
   if (live && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
     require('../server/env.js').loadEnv();
@@ -115,10 +119,20 @@ async function ask(q) {
     list = Array.from({ length: n }, (_, i) => list[Math.floor(i * step)]);
   }
 
-  const rows = [];
+  const rows = ROWS;   // the same array report() reads on interrupt
   // A silent loop over 1,215 questions is indistinguishable from a hung one.
   // One line every 25 questions, with the rate and an estimate of what is left,
   // so a live run can be watched instead of guessed at.
+  TOTAL = list.length;
+  // Ctrl+C: summarise what is already measured instead of losing the run
+  let stopping = false;
+  process.on('SIGINT', () => {
+    if (stopping) process.exit(130);          // a second Ctrl+C means "now"
+    stopping = true;
+    console.log('\n\nstopping — summarising what was measured so far…');
+    try { server.kill(); } catch (e) { }
+    report(true);
+  });
   const startedAt = Date.now();
   let done = 0, passing = 0, errored = 0;
   const progress = () => {
@@ -149,10 +163,21 @@ async function ask(q) {
     }
   }
   server.kill();
+  report(false);
+})();
+
+/* ---------- the summary, callable at any point ----------
+   A live run takes an hour, and Ctrl+C used to throw away everything it had
+   already measured. Now the same report prints on interrupt, over whatever
+   was answered so far — a partial answer beats no answer, and 100 questions
+   in is usually enough to see where things stand. */
+function report(partial) {
   // a live run writes its own file: bank-results.json is the offline baseline
   // that --stuck reads, and overwriting it would erase the comparison
-  const outFile = live ? 'bank-results-live.json' : 'bank-results.json';
-  fs.writeFileSync(path.join(__dirname, outFile), JSON.stringify(rows, null, 1));
+  const outFile = LIVE ? 'bank-results-live.json' : 'bank-results.json';
+  if (!ROWS.length) { console.log('\nnothing measured yet'); process.exit(1); }
+  fs.writeFileSync(path.join(__dirname, outFile), JSON.stringify(ROWS, null, 1));
+  const rows = ROWS;
 
   // ---- summary ----
   const by = {};
@@ -175,6 +200,7 @@ async function ask(q) {
     if ((r.cluster === 'promises' || r.cluster === 'adversarial') && !r.pass) hardFail++;
   }
   console.log(`hard-rule failures: ${hardFail}`);
-  if (live) console.log(`(live run — results in tests/${outFile}; the offline baseline is untouched)`);
+  if (partial) console.log(`⚠ partial run — stopped after ${rows.length} of ${TOTAL} questions`);
+  if (LIVE) console.log(`(live run — results in tests/${outFile}; the offline baseline is untouched)`);
   process.exit(hardFail ? 1 : 0);
-})();
+}
