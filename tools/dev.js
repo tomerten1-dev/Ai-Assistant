@@ -3,8 +3,19 @@
 const { execSync, spawn } = require('child_process');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
+// A file git generated itself (the lockfile) must never be what stops an update.
+function pull() { return execSync('git pull --ff-only', { cwd: ROOT, stdio: 'pipe' }).toString(); }
 try {
-  const out = execSync('git pull --ff-only', { cwd: ROOT, stdio: 'pipe' }).toString();
+  let out;
+  try { out = pull(); }
+  catch (first) {
+    const msg = (first.stderr || first.message).toString();
+    if (/package-lock\.json/.test(msg) && /local changes|would be overwritten/.test(msg)) {
+      console.log('משחזר את package-lock.json (נוצר אוטומטית) וממשיך…');
+      execSync('git checkout -- package-lock.json', { cwd: ROOT, stdio: 'ignore' });
+      out = pull();
+    } else throw first;
+  }
   console.log(/Already up to date|Already up-to-date/.test(out) ? 'Already up to date.' : 'Pulled from GitHub:\n' + out.trim());
 } catch (e) {
   const msg = (e.stderr || e.message).toString().trim();
@@ -26,6 +37,9 @@ try {
   }
   console.error('='.repeat(64) + '\n');
 }
-try { execSync('npm install --no-audit --no-fund', { cwd: ROOT, stdio: 'ignore' }); } catch (e) { }
+// --no-package-lock: npm used to rewrite package-lock.json on every run, which
+// made git refuse the NEXT pull ("local changes would be overwritten"). Tomer
+// hit that twice. Installing without touching the lock keeps `git pull` clean.
+try { execSync('npm install --no-audit --no-fund --no-package-lock', { cwd: ROOT, stdio: 'ignore' }); } catch (e) { }
 console.log('Starting the server... (Ctrl+C to stop)');
 spawn(process.execPath, [path.join(ROOT, 'server', 'server.js')], { cwd: ROOT, stdio: 'inherit' });
