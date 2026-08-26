@@ -5,10 +5,10 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 try {
   const out = execSync('git pull --ff-only', { cwd: ROOT, stdio: 'pipe' }).toString();
-  console.log(/Already up to date|Already up-to-date/.test(out) ? 'הקוד עדכני.' : 'נמשכו עדכונים מ-GitHub:\n' + out.trim());
+  console.log(/Already up to date|Already up-to-date/.test(out) ? 'Already up to date.' : 'Pulled from GitHub:\n' + out.trim());
 } catch (e) {
-  console.error('git pull נכשל (ממשיך עם הגרסה המקומית):', (e.stderr || e.message).toString().trim());
+  console.error('git pull failed (starting the local version anyway):', (e.stderr || e.message).toString().trim());
 }
 try { execSync('npm install --no-audit --no-fund', { cwd: ROOT, stdio: 'ignore' }); } catch (e) { }
-console.log('מפעיל את השרת… (Ctrl+C לעצירה)');
+console.log('Starting the server... (Ctrl+C to stop)');
 spawn(process.execPath, [path.join(ROOT, 'server', 'server.js')], { cwd: ROOT, stdio: 'inherit' });
