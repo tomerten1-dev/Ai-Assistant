@@ -73,7 +73,20 @@ const FILES = {
     });
     await p.close();
 
-    // 2 · a room name the site spells differently — dates still land
+    // 2 · the quote is produced, once everything is really in
+    p = await open('?siteID=1288&tab=20&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3&pwroom=' +
+      encodeURIComponent('2 ח"ש וסלון 2-4 אורחים') + '&pwpans=1&pwquote=1');
+    await p.waitForTimeout(800);
+    r = await read(p);
+    t('with pwquote=1 the quote button is pressed for the customer, once', () => {
+      const clicks = r.calls.filter(c => c === 'click:prop');
+      assert.strictEqual(clicks.length, 1, 'clicks: ' + JSON.stringify(r.calls));
+      assert.ok(!r.calls.includes('click:order'), 'pressed the BOOKING button, which holds a credit card');
+      assert.ok(/הצעת המחיר מופקת/.test(r.note || ''), 'the customer is not told what happened: ' + r.note);
+    });
+    await p.close();
+
+    // 3 · a room name the site spells differently — dates still land
     p = await open('?siteID=1288&pwfrom=09.01.2027&pwtill=16.01.2027&pwad=2&pwroom=' +
       encodeURIComponent('CONN Premium with View 5 pax'));
     r = await read(p);
@@ -85,7 +98,17 @@ const FILES = {
     });
     await p.close();
 
-    // 3 · the promise to Pingwin: an ordinary visitor sees nothing
+    // and the quote is NOT produced off a half-filled form
+    p = await open('?siteID=1288&pwfrom=09.01.2027&pwtill=16.01.2027&pwad=2&pwquote=1&pwroom=' +
+      encodeURIComponent('CONN Premium with View 5 pax'));
+    await p.waitForTimeout(800);
+    r = await read(p);
+    t('no room, no quote — the customer is never sent a price for the wrong room', () => {
+      assert.ok(!r.calls.some(c => c.startsWith('click:')), JSON.stringify(r.calls));
+    });
+    await p.close();
+
+    // 4 · the promise to Pingwin: an ordinary visitor sees nothing
     p = await open('?siteID=1288&tab=20');
     r = await read(p);
     t('on an ordinary page view it does nothing at all', () => {
@@ -96,7 +119,7 @@ const FILES = {
     });
     await p.close();
 
-    // 4 · a broken link must not break their page
+    // 5 · a broken link must not break their page
     p = await open('?siteID=1288&pwfrom=נונסנס&pwtill=06.02.2027&pwad=3');
     r = await read(p);
     t('a malformed date is ignored rather than typed into the form', () => {

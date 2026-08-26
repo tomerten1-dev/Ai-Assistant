@@ -21,8 +21,14 @@
       <select class="roomSelect" name="roomID[]"><option value="0">בחר חדר</option></select>
       <span class="travels"><select name="adults[]"><option value="0">מס מבוגרים</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></span>
       <span class="pension"><select class="panSelect" name="pansion[]"><option value="0">בסיס</option><option value="1">לינה בלבד</option><option value="2">ארוחת בוקר</option><option value="3">חצי פנסיון</option></select></span>
+      <span class="section price"><span></span></span>
     </div>
     <div class="addRoom">הוספת חדר</div>
+    <div class="nextStep">
+      <div class="tab" id="order">המשך להזמנה</div>
+      <div class="sep">או</div>
+      <div class="tab" id="prop">הפקת הצעת מחיר</div>
+    </div>
   </div>
 </div>
 
@@ -58,10 +64,18 @@
         room.querySelector('select.roomSelect').value = roomID;
         if (people && people.adults) room.querySelector('.travels select').value = String(people.adults);
         if (pans) room.querySelector('select.panSelect').value = String(pans);
+        // the price only appears once the server has priced the room
+        setTimeout(function () { room.querySelector('.section.price span').textContent = '€6897'; }, 200);
         return Promise.resolve(1);
       },
     };
   }, 400);
+</script>
+<script>
+  // the two buttons record their clicks, the way the real page would act on them
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.id) window.__calls.push(['click:' + e.target.id]);
+  });
 </script>
 <script src="/pingwin-prefill.js"></script>
 </body>

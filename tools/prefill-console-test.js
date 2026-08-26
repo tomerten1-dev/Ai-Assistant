@@ -2,14 +2,15 @@
 //
 // למה זה קיים: הסקריפט האמיתי (public/pingwin-prefill.js) מוגש מהשרת שלנו
 // ונטען לדף של פינגווין דרך תג GTM. עד שהשרת עולה לאוויר אין דרך לטעון אותו
-// לאתר האמיתי — ולכן הקישור עם הפרמטרים לא עשה כלום כשתומר ניסה (26/08).
+// לאתר האמיתי — ולכן קישור עם הפרמטרים לבדו לא עושה כלום.
 //
 // איך בודקים עכשיו:
-//   1. לפתוח את דף המלון עם הפרמטרים, למשל:
-//      https://www.pingwin.co.il/Plein+Sud.html?siteID=1288&tab=20&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3
+//   1. לפתוח דף מלון עם הפרמטרים, למשל:
+//      https://www.pingwin.co.il/Plein+Sud.html?siteID=1288&tab=20&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3&pwroom=2%20%D7%97%22%D7%A9%20%D7%95%D7%A1%D7%9C%D7%95%D7%9F%202-4%20%D7%90%D7%95%D7%A8%D7%97%D7%99%D7%9D&pwpans=1&pwquote=1
 //   2. F12 → Console
 //   3. להדביק את כל מה שמתחת → Enter
-//   4. התאריכים אמורים להתמלא, ומעל הטופס תופיע שורת הסבר.
+//   4. התאריכים, החדר, מספר האורחים ובסיס האירוח מתמלאים, ואם יש pwquote=1
+//      גם נלחץ "הפקת הצעת מחיר" — אבל רק אחרי שיש מחיר לחדר.
 //
 // זה בדיוק אותו קוד שיגיע דרך GTM, בלי ההערות.
 
@@ -21,7 +22,7 @@
   var q = {};
   try {
     var sp = new URLSearchParams(window.location.search);
-    ['from', 'till', 'room', 'ad', 'kids', 'pans'].forEach(function (k) {
+    ['from', 'till', 'room', 'ad', 'kids', 'pans', 'quote'].forEach(function (k) {
       var v = sp.get(NS + k);
       if (v) q[k] = v;
     });
@@ -32,8 +33,10 @@
   function notice(text) {
     try {
       var host = document.getElementById('step1');
-      if (!host || document.getElementById('pw-prefill-note')) return;
-      var d = document.createElement('div');
+      if (!host) return;
+      var d = document.getElementById('pw-prefill-note');
+      if (d) { d.textContent = text; return; }
+      d = document.createElement('div');
       d.id = 'pw-prefill-note';
       d.setAttribute('style', 'margin:10px 0;padding:9px 13px;border-radius:9px;background:#eaf2f8;' +
         'color:#1c3d5a;font-size:14px;line-height:1.5;direction:rtl;text-align:right');
@@ -74,7 +77,26 @@
       notice(matched === null
         ? 'התאריכים מולאו לפי מה שביקשתם בצ׳אט. את סוג החדר אפשר לבחור למטה.'
         : 'התאריכים והחדר מולאו לפי מה שביקשתם בצ׳אט — אפשר לשנות הכל כאן.');
+      if (matched && q.quote === '1') return quoteWhenPriced();
+      return null;
     }).catch(function () { });
+  }
+  function quoteWhenPriced() {
+    var tries = 0;
+    return new Promise(function (resolve) {
+      var t = setInterval(function () {
+        tries++;
+        var price = document.querySelector('#roomsBlock .section.price span');
+        var btn = document.getElementById('prop');
+        if (price && String(price.textContent).trim() && btn) {
+          clearInterval(t);
+          notice('התאריכים והחדר מולאו לפי מה שביקשתם בצ׳אט, והצעת המחיר מופקת עכשיו — אפשר לשנות הכל למעלה.');
+          btn.click();
+          return resolve(true);
+        }
+        if (tries > 60) { clearInterval(t); resolve(false); }   // ~9s
+      }, 150);
+    });
   }
   function norm(s) {
     return String(s || '').toLowerCase()

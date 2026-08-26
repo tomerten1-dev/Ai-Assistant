@@ -27,7 +27,7 @@
   var q = {};
   try {
     var sp = new URLSearchParams(window.location.search);
-    ['from', 'till', 'room', 'ad', 'kids', 'pans'].forEach(function (k) {
+    ['from', 'till', 'room', 'ad', 'kids', 'pans', 'quote'].forEach(function (k) {
       var v = sp.get(NS + k);
       if (v) q[k] = v;
     });
@@ -42,8 +42,10 @@
   function notice(text) {
     try {
       var host = document.getElementById('step1');
-      if (!host || document.getElementById('pw-prefill-note')) return;
-      var d = document.createElement('div');
+      if (!host) return;
+      var d = document.getElementById('pw-prefill-note');
+      if (d) { d.textContent = text; return; }
+      d = document.createElement('div');
       d.id = 'pw-prefill-note';
       d.setAttribute('style', 'margin:10px 0;padding:9px 13px;border-radius:9px;background:#eaf2f8;' +
         'color:#1c3d5a;font-size:14px;line-height:1.5;direction:rtl;text-align:right');
@@ -92,7 +94,32 @@
       notice(matched === null
         ? 'התאריכים מולאו לפי מה שביקשתם בצ׳אט. את סוג החדר אפשר לבחור למטה.'
         : 'התאריכים והחדר מולאו לפי מה שביקשתם בצ׳אט — אפשר לשנות הכל כאן.');
+      // Tomer, 26/08: once everything is in, produce the quote for them too.
+      // "הפקת הצעת מחיר" only reveals the price breakdown and the email box —
+      // it books nothing and sends nothing; the customer still decides.
+      if (matched && q.quote === '1') return quoteWhenPriced();
+      return null;
     }).catch(function () { });
+  }
+
+  // The quote button errors if the room has no price yet, so wait for the
+  // price the server put on the row — and give up quietly if it never comes.
+  function quoteWhenPriced() {
+    var tries = 0;
+    return new Promise(function (resolve) {
+      var t = setInterval(function () {
+        tries++;
+        var price = document.querySelector('#roomsBlock .section.price span');
+        var btn = document.getElementById('prop');
+        if (price && String(price.textContent).trim() && btn) {
+          clearInterval(t);
+          notice('התאריכים והחדר מולאו לפי מה שביקשתם בצ׳אט, והצעת המחיר מופקת עכשיו — אפשר לשנות הכל למעלה.');
+          btn.click();
+          return resolve(true);
+        }
+        if (tries > 60) { clearInterval(t); resolve(false); }   // ~9s
+      }, 150);
+    });
   }
 
   // The room <select> is filled from the server. Match OUR room name against

@@ -82,6 +82,10 @@ function deepLink(hotelInfo, card, party) {
   if (kids.length) p.set(NS + 'kids', kids.join(','));
   const pans = pansionCode(card.board_he);
   if (pans) p.set(NS + 'pans', String(pans));
+  // and produce the quote for them (Tomer, 26/08). The companion script only
+  // presses it once the room has a price — that is, only when the prefill
+  // actually succeeded; on a half-filled form the customer is left to choose.
+  p.set(NS + 'quote', '1');
   return base + '&' + p.toString();
 }
 

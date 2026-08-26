@@ -42,6 +42,7 @@ t('the whole link: hotel, dates, party and room', () => {
   assert.strictEqual(q.pwroom, '2 ח"ש וסלון 2-4 אורחים');
   assert.strictEqual(q.pwpans, '1', 'לינה בלבד is board code 1');
   assert.ok(!('pwkids' in q), 'no children — no parameter');
+  assert.strictEqual(q.pwquote, '1', 'the quote is produced for the customer');
 });
 t('children travel as ages, because that is what the form asks for', () => {
   const q = parse(b.deepLink(INFO, { date: '2027-01-09', nights: 7 }, { adults: 2, children_ages: [5, 9] }));
