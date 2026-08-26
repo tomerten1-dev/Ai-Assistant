@@ -989,6 +989,32 @@ async function handleChat(body) {
     for (const [he, code] of Object.entries(byHe)) if (!ex.includes(code)) gapChips.push(he);
   }
 
+  // When the bot ASKS something, the chips must answer that question and
+  // nothing else. Tomer, 26/08: under "באיזה חודש תרצו לצאת?" the widget also
+  // offered "טיסה מנתב\"ג" and "טיסה מחיפה" — buttons that answer a question
+  // nobody asked, next to a question with no month buttons for December or
+  // March. Chips are the answer sheet for the question on screen.
+  const chipsForQuestion = (text) => {
+    const q = String(text || '');
+    if (/כמה תהיו|כמה נוסעים|כמה אתם|בסך הכול|בסך הכל/.test(q)) {
+      return ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'];
+    }
+    if (/גילאים|בן כמה|בת כמה|נוסעים גם ילדים|יש ילדים/.test(q)) {
+      return ['בלי ילדים', 'ילד אחד', 'שני ילדים', 'שלושה ילדים'];
+    }
+    if (/חודש|מתי תרצו|מתי לצאת|באיזה תאריך|אילו תאריכים/.test(q)) {
+      return ['חנוכה', 'דצמבר', 'ינואר', 'פברואר', 'מרץ', 'פורים', 'גמיש'];
+    }
+    if (/קייטנ/.test(q)) return ['כן, קייטנה בעברית', 'בלי קייטנה'];
+    if (/לטוס|נתב"ג|נתב״ג|שדה התעופה/.test(q)) return ['טיסה מנתב"ג', 'טיסה מחיפה'];
+    if (/יעד שמושך|איזו מדינה|אוסטריה, צרפת/.test(q)) {
+      const ex = slots.excluded_countries || [];
+      const byHe = { 'אוסטריה': 'austria', 'צרפת': 'france', 'אנדורה': 'andorra', 'בולגריה': 'bulgaria' };
+      return Object.entries(byHe).filter(([, c]) => !ex.includes(c)).map(([he]) => he);
+    }
+    return null;
+  };
+
   // The closing line goes last of all — after the question, so the reply ends
   // by moving forward rather than by asking. Skipped when the wording already
   // contains it, which happens when the model followed the same guidance.
@@ -1196,6 +1222,11 @@ async function handleChat(body) {
       : faqHit ? (faqHit.routed ? 'router' : 'faq') : null,
   });
 
+  // the question this turn actually ended on: the blocking one if we held the
+  // offers back, otherwise the one that rode along under them
+  const askedNow = replyIfNotReady || tailQuestion || null;
+  const focusedChips = cards.length ? null : chipsForQuestion(askedNow);
+
   // A request to be called back opens the form, on the offer they were looking
   // at if there is one. Telling someone where to find a button is not service.
   slots._lastFaqId = faqHit ? faqHit.id : null;
@@ -1213,7 +1244,9 @@ async function handleChat(body) {
     slots, cards,
     two_room_splits: (result.two_room_splits || []).map(sp => ({ ...sp, hotel: displayHotel(sp.hotel) })),
     notes: result.notes, relaxed: result.relaxed,
-    chips: cards.length ? [...gapChips, ...CHIP_LABELS] : gapChips,
+    // with offers on screen the chips are for exploring; with a question on
+    // screen they are for answering it
+    chips: cards.length ? [...gapChips, ...CHIP_LABELS] : (focusedChips || gapChips),
     chip_to_pref: CHIP_TO_PREF,
     // how the turn was decided — for the question-bank harness only, never
     // shown to customers (tests/test-bank.js sets BANK_DEBUG=1)

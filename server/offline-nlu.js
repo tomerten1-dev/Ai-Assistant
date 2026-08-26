@@ -49,9 +49,15 @@ const DESTS = [
 // not quote availability for them either: it says what it has on commitment,
 // and hands the rest to a rep.
 const OFF_COMMITMENT = [
-  [/זאלבאך|סאלבאך/, 'זאלבאך', 'austria'], [/צל אם ?זה|צל ?אם|zell/i, 'צל אם זה', 'austria'],
-  [/סנט ?אנטון|st\.? ?anton/i, 'סנט אנטון', 'austria'], [/הינטרגלם/, 'הינטרגלם', 'austria'],
-  [/קצברג/, 'קצברג', 'austria'],
+  // spelling variants matter more here than anywhere else in the file: a resort
+  // we did not RECOGNISE is a resort we silently replace with its country.
+  // Tomer, 26/08: he wrote "סן אנטון", the pattern knew only "סנט אנטון", and
+  // the bot answered with Ischgl and Mayrhofen as if he had asked for Austria.
+  [/זאלבא?ך|סאלבא?ך|זלבך|saalbach/i, 'זאלבאך', 'austria'],
+  [/צל אם ?זה|זל אם ?זה|צל ?אם|zell ?am/i, 'צל אם זה', 'austria'],
+  [/סנט ?אנטון|סן ?אנטון|סאנט ?אנטון|סנטאנטון|st\.? ?anton/i, 'סנט אנטון', 'austria'],
+  [/הינטרגל[םא]?ם?|hinterglemm/i, 'הינטרגלם', 'austria'],
+  [/קצברג|קפרון|kaprun/i, 'קצברג', 'austria'],
   [/ואל ?ד'?יזר|val ?d/i, "ואל ד'יזר", 'france'], [/לה ?פלאן|la ?plagne/i, 'לה פלאן', 'france'],
   [/קלאב ?מד|club ?med/i, 'קלאב מד', null],
   [/פראגלטו|פרגלטו/, 'פראגלטו', null], [/סוצ'?י/, "סוצ'י", null],

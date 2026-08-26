@@ -1499,3 +1499,29 @@ t('pool / view / renovation / lift distance are quoted from the hotel page, or d
   assert.ok(f2.some(f => /^שיפוץ: /.test(f)) && f2.some(f => /^מהמעלית: /.test(f)), f2.join(' | '));
   assert.ok(!/\d+ ?(שעות|דק')/.test(reno.reply_he), 'no journey times');
 });
+
+/* ---- chips answer the question on screen (Tomer, 26/08, screenshot) ---- */
+// Under "באיזה חודש תרצו לצאת?" the widget also offered "טיסה מנתב"ג" and
+// "טיסה מחיפה" — buttons for a question nobody asked — and no December or March.
+t('the chips answer the question that was actually asked', async () => {
+  const first = await handleChat({ messages: [{ role: 'user', content: 'שני אנשים סן אנטון מלון 4 כוכבים' }], slots: {} });
+  assert.ok(/ילדים|גילאים/.test(first.reply_he), 'expected the children question: ' + first.reply_he);
+  assert.ok(first.chips.includes('בלי ילדים'), first.chips.join('|'));
+  assert.ok(!first.chips.some(c => /טיסה|נתב/.test(c)), 'airport chips under a children question: ' + first.chips.join('|'));
+
+  const second = await handleChat({
+    messages: [{ role: 'user', content: 'שני אנשים סן אנטון' }, { role: 'assistant', content: first.reply_he },
+      { role: 'user', content: 'בלי ילדים' }],
+    slots: first.slots,
+  });
+  assert.ok(/מתי תרצו|חודש/.test(second.reply_he), 'expected the month question: ' + second.reply_he);
+  for (const m of ['דצמבר', 'ינואר', 'פברואר', 'מרץ', 'חנוכה', 'פורים', 'גמיש']) {
+    assert.ok(second.chips.includes(m), 'missing month chip ' + m + ': ' + second.chips.join('|'));
+  }
+  assert.ok(!second.chips.some(c => /טיסה|נתב/.test(c)), 'airport chips under a month question: ' + second.chips.join('|'));
+});
+t('with offers on screen the chips stay the exploring set', async () => {
+  const out = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} });
+  assert.ok(out.cards.length, 'expected offers');
+  assert.ok(out.chips.length > 3, 'the preference chips disappeared: ' + out.chips.join('|'));
+});
