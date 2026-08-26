@@ -134,5 +134,67 @@
    "airport": "ליון",
    "km": 145
   }
+ },
+ "reps": {
+  "_comment": "נציג פינגווין באתר — תומר, 26/08/2026 (שאלה 23). 'on_site' = נציגים באתר עצמו; 'served_from' = נציג שגר באתר סמוך ונותן מענה.",
+  "Soldeu": {
+   "on_site": true
+  },
+  "Pas de la Casa": {
+   "on_site": true
+  },
+  "Bansko": {
+   "on_site": true
+  },
+  "Borovets": {
+   "on_site": true,
+   "note_he": "נציגה מקומית דוברת אנגלית שגרה בבורובץ ועובדת איתנו"
+  },
+  "Mayrhofen": {
+   "on_site": true
+  },
+  "Ischgl": {
+   "on_site": true
+  },
+  "Saalbach": {
+   "served_from": "Mayrhofen"
+  },
+  "Zell am See": {
+   "served_from": "Mayrhofen"
+  },
+  "St. Anton": {
+   "served_from": "Ischgl"
+  },
+  "Tignes": {
+   "on_site": true
+  },
+  "Les 2 Alpes": {
+   "on_site": true,
+   "note_he": "נציגים בעיירה"
+  },
+  "Flaine Grand Massif": {
+   "on_site": true
+  },
+  "Avoriaz": {
+   "served_from": "Flaine Grand Massif"
+  },
+  "Les Menuires": {
+   "served_from": "Val Thorens"
+  },
+  "Alpe d'Huez": {
+   "on_site": true
+  },
+  "Oz en Oisans": {
+   "served_from": "Alpe d'Huez"
+  },
+  "Montgenevre": {
+   "on_site": true
+  },
+  "Val Thorens": {
+   "on_site": true
+  },
+  "Les Arcs": {
+   "on_site": true
+  }
  }
 }
