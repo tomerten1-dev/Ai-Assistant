@@ -945,7 +945,7 @@ function phrase(result, slots, cards) {
   const partial = note('camp_age_partial');
   if (partial && partial.ages.length) {
     const ages = partial.ages.join(', ');
-    lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-13, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
+    lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-14, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
   }
 
   if (slots.wrong_year) {
@@ -957,8 +957,8 @@ function phrase(result, slots, cards) {
     const a = (campAge.ages || []);
     const ages = a.length > 1 ? a.slice(0, -1).join(', ') + ' ו-' + a[a.length - 1] : a.join('');
     lines.push(ages
-      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-13, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
-      : 'הקייטנות שלנו מיועדות לגילאי 4-13. הנה מה שפנוי:');
+      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-14, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
+      : 'הקייטנות שלנו מיועדות לגילאי 4-14. הנה מה שפנוי:');
   }
 
   const airportNote = (result.notes || []).find(n => n.type === 'airport_cannot_reach');
@@ -985,7 +985,7 @@ function phrase(result, slots, cards) {
     // "קבוצת הגיל של הילד" with two children in two groups left the parent
     // guessing which child has no group — name the groups when there are two
     const groupsHe = (() => {
-      const g = [...SkiSearch.neededAgeGroups(slots.children_ages)].map(x => x === '6*' ? '6-13' : x);
+      const g = [...SkiSearch.neededAgeGroups(slots.children_ages)];
       const u = [...new Set(g)];
       return u.length > 1 ? { s: `קבוצות ${u.join(' ו-')}`, v: 'פועלות', p: 'הן' } : { s: 'קבוצת הגיל של הילד', v: 'פועלת', p: 'היא' };
     })();

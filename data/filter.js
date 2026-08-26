@@ -81,12 +81,14 @@ class SkiSearch {
       Math.max((slots.children_ages || []).length, slots.children_count || 0);
   }
 
+  // policy (Tomer 26/08, questionnaire q4): a six-year-old goes to the 6-13
+  // group, and the 6-13 group takes children up to and including 14. Under
+  // four there is no group — "3 ו-10 חודשים" is a no, not a maybe.
   static neededAgeGroups(childrenAges) {
     const groups = new Set();
     for (const a of childrenAges || []) {
       if (a >= 4 && a < 6) groups.add('4-6');
-      else if (a > 6 && a <= 13) groups.add('6-13');
-      else if (a === 6) groups.add('6*'); // fits either group
+      else if (a >= 6 && a <= 14) groups.add('6-13');
     }
     return groups;
   }
@@ -106,11 +108,7 @@ class SkiSearch {
       if (waitSeats(g)) waitlistOnly.push(g);
       else missing.push(g);
     };
-    for (const g of needed) {
-      if (g === '6*') {
-        if (!openSeats('4-6') && !openSeats('6-13')) check('6-13');
-      } else check(g);
-    }
+    for (const g of needed) check(g);
     return { full: missing.length === 0 && waitlistOnly.length === 0, running, missing, waitlist_only: waitlistOnly };
   }
 
@@ -156,7 +154,7 @@ class SkiSearch {
         !(slots.excluded_countries || []).includes('france')) {
       notes.push({ type: 'france_february_gap' });
     }
-    // a kids club was asked for, but no child falls in 4–13
+    // a kids club was asked for, but no child falls in 4–14
     // ...but only once the ages are known. With "2 ילדים" and no ages yet,
     // telling the family the camp is not for them — and then asking the
     // ages — was both wrong and rude.
@@ -167,7 +165,7 @@ class SkiSearch {
     // Some children are in range and some are not. Saying nothing about the
     // 14-year-old lets a parent assume all their children have a group.
     if (slots.needs_hebrew_kids_club) {
-      const outside = (slots.children_ages || []).filter(a => a < 4 || a > 13);
+      const outside = (slots.children_ages || []).filter(a => a < 4 || a > 14);
       if (outside.length && SkiSearch.neededAgeGroups(slots.children_ages).size) {
         notes.push({ type: 'camp_age_partial', ages: outside });
       }
