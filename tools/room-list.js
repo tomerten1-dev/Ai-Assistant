@@ -18,7 +18,7 @@
 // השרת לרשימה הלבנה אצל מי שמתחזק את האתר.
 
 const siteRooms = require('../server/site-rooms.js');
-const { addNights } = require('../config/booking-url.js');
+const { addNights, pageFor } = require('../config/booking-url.js');
 
 const resorts = require('../data/resorts.json');
 const units = (require('../data/availability.json').units || []);
@@ -89,18 +89,22 @@ function verdict(rooms, x) {
   // and the manual bridge, for the names that will never look alike — it is
   // what the server uses too, so a report that ignored it would be lying
   if (!by.size) {
-    const manual = siteRooms.idFor(String(siteIDof(x.hotel)), '', '', x.room);
+    const manual = siteRooms.idFor(String(siteIDof(x.hotel, x.nights)), '', '', x.room);
     const hit = manual && rooms.find(r => String(r.roomID) === String(manual));
     if (hit) { hit.manual = true; by.set('', hit); }
   }
   return by;
 }
-const siteIDof = hotel => (resorts.hotels[hotel] || {}).siteID;
+const siteIDof = (hotel, nights) => pageFor(resorts.hotels[hotel], nights).siteID;
 
 async function askAbout(u) {
-  const info = resorts.hotels[u.hotel];
+  // a hotel with a short-stay page is asked about on the page that sells THIS
+  // stay — the ordinary one answers with no rooms at all
+  const info = pageFor(resorts.hotels[u.hotel], u.nights);
   const till = addNights(u.date, u.nights);
-  const lines = [`── ${u.hotel} (siteID ${info.siteID}) · ${u.date} → ${till}`];
+  const short = info.siteID !== resorts.hotels[u.hotel].siteID;
+  const lines = [`── ${u.hotel} (siteID ${info.siteID}${short ? ', עמוד שהייה קצרה' : ''}) · ` +
+    `${u.date} → ${till} (${u.nights} לילות)`];
   let rooms;
   try {
     rooms = await siteRooms.fetchRooms(info.siteID, u.date, till);

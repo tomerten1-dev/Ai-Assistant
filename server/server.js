@@ -18,7 +18,7 @@ const guidance = require('./guidance.js');
 const router = require('./answer-router.js');
 const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
-const { buildBookingUrl, deepLink, addNights } = require('../config/booking-url.js');
+const { buildBookingUrl, deepLink, pageFor, addNights } = require('../config/booking-url.js');
 const siteRooms = require('./site-rooms.js');
 const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
@@ -334,7 +334,9 @@ function presentCards(result, slots, skip, opts = {}) {
       // the hint is what the workbook knows and the room's name does not
       // always say — the site writes "Premium with View 4-5 pax" where we
       // write "CONN Premium with View 5 pax"
-      room_id: siteRooms.idFor(engine.hotelInfo(c.hotel).siteID,
+      // the same page the link goes to — Casa Karina answers about a short
+      // stay only on its short-stay siteID
+      room_id: siteRooms.idFor(pageFor(engine.hotelInfo(c.hotel), c.nights).siteID,
         c.date, addNights(c.date, c.nights), c.room,
         { type: c.room_type, occMin: c.occ_min, occMax: c.occ_max,
           party: partySize(slots), hotel: c.hotel }),

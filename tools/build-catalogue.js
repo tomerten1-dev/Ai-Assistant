@@ -176,7 +176,10 @@ const BULGARIA = {
   'Bansko': [
     ['Vihren Royal Palace spa', 1107, 'ארוחת בוקר, סקי פס מקומי'],
     ['Casa Karina', 1435, 'חצי פנסיון + כיבוד קל ושתייה חופשית אחה"צ, חדרים לעד 5'],
-    ['Casa Karina Short Stay', 1445, 'חצי פנסיון + כיבוד קל ושתייה חופשית אחה"צ'],
+    // the same hotel on a second page, for stays shorter than a week. It is a
+    // booking page, not a hotel, and a customer asking about Bansko must never
+    // be told about it as if it were one more option.
+    ['Casa Karina Short Stay', 1445, 'חצי פנסיון + כיבוד קל ושתייה חופשית אחה"צ', 'Casa Karina'],
     ['Regnum Ski hotel & Spa', 1765, 'ארוחת בוקר, חדרים לעד 5, סקי פס מקומי'],
     ['Riverside Boutique Hotel', 1819, 'חצי פנסיון, חדרים לזוג עד זוג + שני ילדים'],
     ['MPM Sport Hotel', 2077, 'ארוחת בוקר או חצי פנסיון, חדרים עד 4 אורחים'],
@@ -270,11 +273,14 @@ function build() {
   const hotels = [];
   for (const [country, byResort] of Object.entries(BY_COUNTRY)) {
     for (const [resort, rows] of Object.entries(byResort)) {
-      for (const [name, siteID, board_he] of rows) {
+      for (const [name, siteID, board_he, sameAs] of rows) {
         const hit = committed.get(name);
         hotels.push({
           name, siteID, resort, resort_he: RESORT_HE[resort] || resort, country,
           board_he,
+          // another booking page for a hotel already in this list — kept so the
+          // link can reach it, hidden from everything a customer reads
+          same_as: sameAs || null,
           // true = the workbook holds free rooms for it, so the search can offer
           // it with a date. false = we sell it, but only a rep can confirm.
           commitment: !!hit,

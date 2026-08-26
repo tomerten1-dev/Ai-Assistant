@@ -32,7 +32,14 @@ function load() {
   return cache;
 }
 
-const hotels = () => (load().hotels || []);
+// Every hotel the customer can be told about. A row with `same_as` is another
+// BOOKING PAGE for a hotel already in this list — Casa Karina sells stays
+// shorter than a week on a page of its own — and naming it as a second hotel in
+// Bansko would be plainly wrong. The link still reaches it: config/booking-url.js
+// picks the page from data/resorts.json, not from here.
+const hotels = () => (load().hotels || []).filter(h => !h.same_as);
+// including the alternate pages, for anything that works with siteIDs
+const allPages = () => (load().hotels || []);
 
 // Every hotel we sell in a resort, named the way the site names it.
 // `resortHe` is what the customer's message resolved to ("סנט אנטון").
@@ -72,4 +79,4 @@ function names(list, cap = 4) {
   return rest > 0 ? `${joined} ועוד ${rest}` : joined;
 }
 
-module.exports = { load, hotels, inResort, inResortHe, catalogueOnly, names, FILE };
+module.exports = { load, hotels, allPages, inResort, inResortHe, catalogueOnly, names, FILE };

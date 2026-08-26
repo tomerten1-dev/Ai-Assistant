@@ -67,6 +67,38 @@ t('our parameters stay in our own namespace, so the site never collides with the
     assert.ok(k === 'siteID' || k.startsWith('pw'), 'stray parameter: ' + k);
   }
 });
+t('a stay shorter than a week goes to the page that sells one', () => {
+  // Casa Karina is the only hotel with a second booking page. Asking the
+  // ordinary one about 3 nights returns no rooms at all — npm run rooms proved
+  // it — so the customer would land on a page that cannot price their holiday.
+  const ck = require('../data/resorts.json').hotels['Casa Karina'];
+  assert.strictEqual(b.pageFor(ck, 3).siteID, 1445);
+  assert.strictEqual(b.pageFor(ck, 6).siteID, 1445);
+  assert.strictEqual(b.pageFor(ck, 7).siteID, 1435, 'a full week belongs on the ordinary page');
+  assert.strictEqual(b.pageFor(ck, null).siteID, 1435, 'no nights, no swap');
+  const short = parse(b.deepLink(ck, { date: '2027-01-07', nights: 3 }, { adults: 2 }));
+  assert.strictEqual(short.siteID, '1445');
+  assert.ok(b.deepLink(ck, { date: '2027-01-07', nights: 3 }, {}).includes('Short+Stay'));
+  const week = parse(b.deepLink(ck, { date: '2027-01-15', nights: 7 }, { adults: 2 }));
+  assert.strictEqual(week.siteID, '1435');
+});
+t('and it is that hotel\'s property, not a rule about short stays', () => {
+  // Regnum and Vihren sell 3-night stays on their own page — the live run got
+  // full room lists from both. Sending them somewhere else would break them.
+  const hotels = require('../data/resorts.json').hotels;
+  for (const name of ['Regnum', 'Vihren']) {
+    assert.strictEqual(b.pageFor(hotels[name], 3).siteID, hotels[name].siteID, name);
+  }
+  const withAlt = Object.entries(hotels).filter(([, h]) => h.short_stay).map(([n]) => n);
+  assert.deepStrictEqual(withAlt, ['Casa Karina'], 'a second hotel grew a short-stay page: ' + withAlt);
+});
+t('the short-stay page is never offered as a hotel of its own', () => {
+  const cat = require('../server/catalogue.js');
+  const named = cat.hotels().map(h => h.name);
+  assert.ok(!named.includes('Casa Karina Short Stay'), 'listed as a separate hotel in Bansko');
+  assert.ok(named.includes('Casa Karina'));
+  assert.ok(cat.allPages().some(h => h.siteID === 1445), 'the page itself was lost');
+});
 t('the companion script is shipped, and is inert without our parameters', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'public', 'pingwin-prefill.js'), 'utf8');
   assert.ok(/__pwPrefillRan/.test(src), 'nothing stops it running twice under GTM');
