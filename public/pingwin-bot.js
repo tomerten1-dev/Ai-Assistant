@@ -269,6 +269,35 @@
     + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #e1e8ef;border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(16,32,48,.05);'
     + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
     + '.card:hover{box-shadow:0 10px 26px rgba(16,32,48,.12);transform:translateY(-2px);border-color:#c8d5e2}'
+    /* ---- variant: the photo IS the card (?pwcard=photo) ----
+       Closed, the hotel's own photograph fills the card and the text sits on a
+       scrim over it. Opened, it hands back to the ordinary white card: the
+       details are a lot of small text, and small text on a photograph is where
+       this idea stops being worth it. Every colour below is scoped to the
+       CLOSED card — white text stayed white on the opened white card, and
+       "מתאים ל-4 נוסעים" went invisible. */
+    + '.card.pbg{position:relative;background-size:cover;background-position:center;overflow:hidden}'
+    + '.card.pbg:not(.open){border-color:transparent;min-height:206px;justify-content:flex-end;color:#fff}'
+    + '.card.pbg:not(.open)::before{content:"";position:absolute;inset:0;pointer-events:none;'
+    + 'background:linear-gradient(180deg,rgba(9,20,35,.10) 0%,rgba(9,20,35,.48) 42%,rgba(9,20,35,.90) 100%)}'
+    + '.card.pbg:not(.open) > *{position:relative;z-index:1}'
+    + '.card.pbg:not(.open) .gal{display:none}'
+    + '.card.pbg:not(.open) .hname,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .brief b'
+    + '{color:#fff;text-shadow:0 1px 4px rgba(9,20,35,.55)}'
+    + '.card.pbg:not(.open) .cwhere{color:rgba(255,255,255,.82)}'
+    + '.card.pbg:not(.open) .brief .sep{color:rgba(255,255,255,.45)}'
+    /* .card .brief .bprice outranks .card.pbg .bprice, so the price band stayed
+       navy — unreadable against the photograph */
+    + '.card.pbg:not(.open) .brief .bprice{color:#9fd4ff}'
+    + '.card.pbg:not(.open) .dtog{color:#fff;opacity:.9}'
+    /* no panel around the reason: a translucent box over a picture reads as an
+       empty grey bar, and the scrim already carries the text */
+    + '.card.pbg:not(.open) .why{background:none;color:#fff;padding:2px 0;text-shadow:0 1px 3px rgba(9,20,35,.6)}'
+    + '.card.pbg:not(.open) .tag{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.25)}'
+    + '.card.pbg:not(.open) .tag.rec{background:rgba(255,255,255,.92);color:' + THEME.primaryDark + '}'
+    + '.card.pbg:not(.open) .btn.sec{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.65)}'
+    + '.card.pbg:hover{box-shadow:0 14px 30px rgba(9,20,35,.28)}'
+    + '.card.pbg.open{background-image:none!important;border-color:#e1e8ef}'
     // gallery: the photo fills the top of the card, arrows sit on it
     + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:15px 15px 0 0;overflow:hidden;background:#e8edf1}'
     + '.card .gal::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(16,32,48,.35) 100%);pointer-events:none}'
@@ -544,6 +573,17 @@
   /* ============== session persistence ==============
      "המשך להזמנה" navigates to a hotel page; without this the customer came
      back to an empty chat. sessionStorage: same tab, cleared when it closes. */
+  // Which card style to draw. A switch, so the two can be compared on the real
+  // site with real photos before one of them becomes the only one:
+  // ?pwcard=photo on the page, or ...pingwin-bot.js?card=photo on the tag.
+  var CARD_STYLE = (function () {
+    try {
+      var v = new URLSearchParams(window.location.search).get('pwcard');
+      if (!v && script && script.src) v = new URL(script.src).searchParams.get('card');
+      return v === 'photo' ? 'photo' : 'plain';
+    } catch (e) { return 'plain'; }
+  })();
+
   var STORE_KEY = 'pingwin_bot_session_v1';
   // The widget's own build, taken from its script URL (?v=0.2.0 in the GTM tag).
   // A conversation started on an older build is not resumed on a newer one: the
@@ -668,6 +708,13 @@
      the widget invents nothing. */
   function addCard(c, container) {
     var card = el('div', 'card');
+    if (CARD_STYLE === 'photo') {
+      var bg = (c.images && c.images[0]) || c.image;
+      if (bg) {
+        card.classList.add('pbg');
+        card.style.backgroundImage = 'url("' + String(bg).replace(/"/g, '%22') + '")';
+      }
+    }
 
     // ---- gallery: the hotel's own photos, paged with two arrows
     var photos = (c.images && c.images.length ? c.images : (c.image ? [c.image] : []));

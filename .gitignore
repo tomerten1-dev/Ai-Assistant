@@ -13,3 +13,4 @@ logs/
 tests/bank-results.json
 tests/bank-results-live.json
 tests/bank-results-live-typical.json
+shots/
