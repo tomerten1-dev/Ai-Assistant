@@ -80,7 +80,8 @@ async function ask(q) {
   // the phrasings the patterns miss, and it is invisible offline.
   //   node tests/test-bank.js --live                 the whole bank
   //   node tests/test-bank.js --live --stuck         only what dead-ended offline
-  //   node tests/test-bank.js --live --sample=150    a random slice
+  //   node tests/test-bank.js --live --sample=150    a deterministic slice
+  //   node tests/test-bank.js --live --watch          one line per answer
   const live = !!args.live; LIVE = live;
   const keys = live ? {} : { ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '' };
   if (live && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
@@ -135,6 +136,7 @@ async function ask(q) {
   });
   const startedAt = Date.now();
   let done = 0, passing = 0, errored = 0;
+  const clock = secs => `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(Math.round(secs) % 60).padStart(2, '0')}`;
   const progress = () => {
     const secs = (Date.now() - startedAt) / 1000;
     const perSec = done / Math.max(secs, 0.001);
@@ -143,13 +145,29 @@ async function ask(q) {
       process.stdout.write(`     1/${list.length}  first answer in ${secs.toFixed(1)}s — running\n`);
       return;
     }
-    const mm = String(Math.floor(left / 60)).padStart(2, '0'), ss = String(left % 60).padStart(2, '0');
     process.stdout.write(`  ${String(done).padStart(4)}/${list.length}  ${Math.round(100 * passing / done)}% pass` +
-      `${errored ? `  ${errored} errors` : ''}  ~${mm}:${ss} left\n`);
+      `${errored ? `  ${errored} errors` : ''}  ~${clock(left)} left\n`);
+  };
+  // --watch: one line per answer, as it lands. Slower to read but there is
+  // never a moment where you cannot tell whether it is working — and you see
+  // which question is slow, which is where a live run actually hurts.
+  const watch = (e, pass, observed, ms) => {
+    const secs = (Date.now() - startedAt) / 1000;
+    const perSec = done / Math.max(secs, 0.001);
+    const left = Math.round((list.length - done) / Math.max(perSec, 0.001));
+    const q = e.q.length > 42 ? e.q.slice(0, 41) + '…' : e.q;
+    process.stdout.write(
+      `${pass ? '✓' : '✗'} ${String(done).padStart(4)}/${list.length}` +
+      `  ${String(Math.round(ms)).padStart(5)}ms` +
+      `  ${String(Math.round(100 * passing / done)).padStart(3)}%` +
+      `  ~${clock(left)}` +
+      `  ${[...observed].join(',').padEnd(14)}  ${q}\n`);
   };
   for (const e of list) {
     let res;
+    const askedAt = Date.now();
     try { res = await ask(e.q); } catch (err) { res = { reply_he: '', debug: {}, error: String(err) }; }
+    const ms = Date.now() - askedAt;
     if (res.error) errored++;
     const observed = classify(res);
     const d = res.debug || {};
@@ -164,7 +182,8 @@ async function ask(q) {
     // the first one immediately — that is the "it started" signal — then every
     // 5 live / 25 offline.
     const every = live ? 5 : 25;
-    if (!args.show && (done === 1 || done % every === 0 || done === list.length)) progress();
+    if (args.watch && !args.show) watch(e, pass, observed, ms);
+    else if (!args.show && (done === 1 || done % every === 0 || done === list.length)) progress();
     if (args.show) {
       console.log(`${pass ? '✓' : '✗'} [${e.cluster}] ${e.q}`);
       console.log(`    → ${[...observed].join(',')}${d.faq_ids && d.faq_ids.length ? ' ' + d.faq_ids.join('+') : ''}${invented ? '  ⚠ INVENTED NUMBER' : ''}`);
