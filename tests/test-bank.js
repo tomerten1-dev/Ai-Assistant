@@ -66,14 +66,54 @@ async function ask(q) {
 }
 
 (async () => {
+  // The bank runs OFFLINE by default: both keys are blanked, so a full run is
+  // free, repeatable, and measures the deterministic layer on its own. That is
+  // what makes the score a ratchet rather than a weather report.
+  //
+  // --live sends the same questions through the real model (slot filling, the
+  // semantic router, the phrasing). That is the only way to see what a customer
+  // in production actually gets — the router in particular exists precisely for
+  // the phrasings the patterns miss, and it is invisible offline.
+  //   node tests/test-bank.js --live                 the whole bank
+  //   node tests/test-bank.js --live --stuck         only what dead-ended offline
+  //   node tests/test-bank.js --live --sample=150    a random slice
+  const live = !!args.live;
+  const keys = live ? {} : { ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '' };
+  if (live && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+    require('../server/env.js').loadEnv();
+    if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+      console.error('--live needs a key in .env (OPENAI_API_KEY=...)'); process.exit(1);
+    }
+  }
   const server = spawn('node', ['server/server.js'], {
-    cwd: ROOT, env: { ...process.env, PORT: String(PORT), BANK_DEBUG: '1', CHAT_LOG: 'off', ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', RATE_CHAT_PER_MIN: '1000000', RATE_CHAT_PER_HOUR: '1000000', MAX_TURNS_PER_CHAT: '100000' },
+    cwd: ROOT, env: { ...process.env, PORT: String(PORT), BANK_DEBUG: '1', CHAT_LOG: 'off', ...keys, RATE_CHAT_PER_MIN: '1000000', RATE_CHAT_PER_HOUR: '1000000', MAX_TURNS_PER_CHAT: '100000' },
     stdio: ['ignore', 'ignore', 'inherit'],
   });
   await new Promise(res => setTimeout(res, 1200));
   let list = BANK;
   if (args.cluster) list = list.filter(e => e.cluster === args.cluster);
   if (args.grep) list = list.filter(e => e.q.includes(args.grep));
+  // --stuck: only the questions the offline run brushed off ("לא בטוח שהבנתי" /
+  // "אני כאן בעיקר..."). Read from the previous results file, so it costs a
+  // fraction of a full live run and answers the one question worth paying for.
+  if (args.stuck) {
+    let prev = [];
+    try { prev = JSON.parse(fs.readFileSync(path.join(__dirname, 'bank-results.json'), 'utf8')); }
+    catch (e) { console.error('--stuck needs a previous run: node tests/test-bank.js first'); process.exit(1); }
+    const DEAD = /לא בטוח שהבנתי|אני כאן בעיקר להתאמת חופשות סקי/;
+    const stuck = new Set(prev.filter(r => {
+      const lines = String(r.reply || '').split('\n').filter(l => l.trim());
+      return lines.length && lines.every(l => DEAD.test(l) || l.includes('כמה תהיו') || l.includes('מתי תרצו'));
+    }).map(r => r.q));
+    list = list.filter(e => stuck.has(e.q));
+    console.log(`--stuck: ${list.length} questions that dead-ended offline`);
+  }
+  if (args.sample) {
+    // deterministic slice, so two runs compare like for like
+    const n = Math.max(1, Math.min(list.length, parseInt(args.sample, 10) || 100));
+    const step = list.length / n;
+    list = Array.from({ length: n }, (_, i) => list[Math.floor(i * step)]);
+  }
 
   const rows = [];
   for (const e of list) {
@@ -93,7 +133,10 @@ async function ask(q) {
     }
   }
   server.kill();
-  fs.writeFileSync(path.join(__dirname, 'bank-results.json'), JSON.stringify(rows, null, 1));
+  // a live run writes its own file: bank-results.json is the offline baseline
+  // that --stuck reads, and overwriting it would erase the comparison
+  const outFile = live ? 'bank-results-live.json' : 'bank-results.json';
+  fs.writeFileSync(path.join(__dirname, outFile), JSON.stringify(rows, null, 1));
 
   // ---- summary ----
   const by = {};
@@ -116,5 +159,6 @@ async function ask(q) {
     if ((r.cluster === 'promises' || r.cluster === 'adversarial') && !r.pass) hardFail++;
   }
   console.log(`hard-rule failures: ${hardFail}`);
+  if (live) console.log(`(live run — results in tests/${outFile}; the offline baseline is untouched)`);
   process.exit(hardFail ? 1 : 0);
 })();
