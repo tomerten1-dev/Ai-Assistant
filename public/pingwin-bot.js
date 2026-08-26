@@ -146,7 +146,9 @@
     + '.hdr .wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;background:#e7f6ec;color:#1b6b3a;border:1px solid #cfe9d8;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}'
     + '.hdr .wa:hover{background:#d9f0e1}'
     + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.accent + ';outline-offset:2px}'
-    + '.hdr .wa + .exp{margin-inline-start:0}'
+    + '.hdr .wa + .newc,.hdr .wa + .exp{margin-inline-start:0}'
+    + '.hdr .newc{margin-inline-start:auto;display:flex;align-items:center;padding:5px 7px}'
+    + '.hdr .newc + .exp,.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .exp{margin-inline-start:auto;font-size:16px}'
     + '.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;padding:3px 7px;border-radius:7px;line-height:1}'
@@ -326,6 +328,11 @@
   }
   hExp.addEventListener('click', function () { setExpanded(!win.classList.contains('max')); });
   try { if (localStorage.getItem('pingwin_bot_max') === '1') setExpanded(true); } catch (e) {}
+  var hNew = el('button', 'x newc');
+  hNew.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/></svg>';
+  hNew.title = 'שיחה חדשה';
+  hNew.setAttribute('aria-label', hNew.title);
+  hNew.addEventListener('click', function () { resetChat(); });
   var hX = el('button', 'x', '✕');
   hX.setAttribute('aria-label', 'סגירת הצ׳אט');
   // a human is one tap away from every state — the research is unambiguous
@@ -343,7 +350,7 @@
     });
     hWa.href = 'https://wa.me/' + WHATSAPP;
   }
-  hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hExp); hdr.appendChild(hX);
+  hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hNew); hdr.appendChild(hExp); hdr.appendChild(hX);
 
   var msgs = el('div', 'msgs');
   msgs.setAttribute('aria-live', 'polite');
@@ -385,9 +392,16 @@
      "המשך להזמנה" navigates to a hotel page; without this the customer came
      back to an empty chat. sessionStorage: same tab, cleared when it closes. */
   var STORE_KEY = 'pingwin_bot_session_v1';
+  // The widget's own build, taken from its script URL (?v=0.2.0 in the GTM tag).
+  // A conversation started on an older build is not resumed on a newer one: the
+  // replay would mix old wording and old cards into a new bot.
+  var BUILD = (function () {
+    try { return new URL(script.src).searchParams.get('v') || '0'; } catch (e) { return '0'; }
+  })();
   function persist() {
     try {
       sessionStorage.setItem(STORE_KEY, JSON.stringify({
+        build: BUILD,
         messages: state.messages.slice(-20), slots: state.slots, lastCards: state.lastCards || null,
         booted: state.booted, open: state.open, log: state.log.slice(-40)
       }));
@@ -395,12 +409,27 @@
   }
   function restore() {
     try {
+      // ?pwreset=1 in the URL (or #pwreset) forces a clean chat — the switch
+      // testers reach for when a hard refresh keeps replaying the old session
+      if (/[?&#]pwreset\b/.test(location.href)) { sessionStorage.removeItem(STORE_KEY); return null; }
       var raw = sessionStorage.getItem(STORE_KEY);
       if (!raw) return null;
       var d = JSON.parse(raw);
       if (!d || !Array.isArray(d.messages)) return null;
+      if (d.build !== BUILD) { sessionStorage.removeItem(STORE_KEY); return null; }
       return d;
     } catch (e) { return null; }
+  }
+  // Start over — for a customer whose plans changed, and for us while testing.
+  function resetChat() {
+    try { sessionStorage.removeItem(STORE_KEY); } catch (e) {}
+    state.messages = []; state.slots = {}; state.lastCards = null; state.log = [];
+    state.booted = false; state.turn = 0; state.busy = false;
+    while (msgs.firstChild) msgs.removeChild(msgs.firstChild);
+    win.classList.remove('big');
+    send.disabled = false;
+    state.open = false; openWin();        // re-runs the greeting and the starters
+    track('reset');
   }
   // bring an element to the TOP of the view — used when offers arrive, so the
   // customer sees them from the first card instead of landing past them
