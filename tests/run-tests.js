@@ -179,6 +179,29 @@ t('Sabbath rule survives relaxation',
   shabbatTight.candidates.every(c => new Date(c.date + 'T00:00:00Z').getUTCDay() !== 6));
 t('the applied requirements are reported back',
   shabbat.notes.some(n => n.type === 'applied_requirements' && n.items.includes('בלי טיסות בשבת')));
+// two-room splits are offers too — a family of six was shown two rooms on a
+// Saturday departure while every single room correctly respected the rule
+for (const country of ['austria', 'france']) for (const month of [1, 2, 3]) {
+  const r = engine.search({ adults: 6, month, country, no_saturday_flights: true });
+  t(`two-room splits respect Sabbath (${country} ${month})`,
+    (r.two_room_splits || []).every(s => new Date(s.date + 'T00:00:00Z').getUTCDay() !== 6),
+    (r.two_room_splits || []).map(s => s.date).join(','));
+}
+const splitNights = engine.search({ adults: 6, month: 1, country: 'france', nights_wanted: 7 });
+t('two-room splits respect the requested nights',
+  (splitNights.two_room_splits || []).every(s => s.nights === 7));
+
+console.log('\n[party] children without ages still count, everywhere');
+const noAges = engine.search({ adults: 2, children_count: 2, month: 1, country: 'austria', needs_hebrew_kids_club: true });
+t('no camp_age_mismatch before the ages are known',
+  !noAges.notes.some(n => n.type === 'camp_age_mismatch'));
+t('party of four is searched, not two',
+  noAges.candidates.every(c => c.occ_effective == null || c.occ_effective.max == null || c.occ_effective.max >= 4));
+t('partyOf counts children_count', SkiSearch.partyOf({ adults: 2, children_count: 2 }) === 4);
+t('partyOf prefers known ages', SkiSearch.partyOf({ adults: 2, children_ages: [5, 9, 12], children_count: 2 }) === 5);
+const knownOut = engine.search({ adults: 2, children_ages: [16], month: 1, needs_hebrew_kids_club: true });
+t('camp_age_mismatch still fires for a 16-year-old',
+  knownOut.notes.some(n => n.type === 'camp_age_mismatch'));
 
 console.log('\n— guardrails —');
 const r5 = engine.search({ adults: 2, children_ages: [], month: 1 });

@@ -4,6 +4,8 @@
 // Not as flexible as Claude, but honors the exact same slot schema and the
 // same conversation policy (max 2 questions, one per message).
 
+const { SkiSearch } = require('../data/filter.js');
+
 const HE_NUM = {
   'אחד': 1, 'אחת': 1, 'שניים': 2, 'שתיים': 2, 'שני': 2, 'שתי': 2,
   'שלושה': 3, 'שלוש': 3, 'שלושת': 3, 'ארבעה': 4, 'ארבע': 4, 'ארבעת': 4,
@@ -992,7 +994,7 @@ function phrase(result, slots, cards) {
   // Nine travellers and up is a group booking: flight seats and hotel rooms
   // are checked together, by a person. A two-room split for twelve is not an
   // answer, and offering one quietly wastes the customer's time.
-  const partySize = (slots.adults || 0) + (slots.children_ages || []).length;
+  const partySize = SkiSearch.partyOf(slots);
   if (partySize >= 9) {
     lines.push(note('group_rooms_by_rep')
       ? 'אלה המלונות והתאריכים הפנויים בתנאים שביקשתם. בחבורה בגודל הזה החלוקה לחדרים ' +
@@ -1062,7 +1064,7 @@ function phrase(result, slots, cards) {
 
   for (const c of cards) {
     const why = [];
-    if (c.occ && c.occ.max != null) why.push(`מתאים ל-${slots.adults != null ? (slots.adults + (slots.children_ages || []).length) : c.occ.max} נוסעים`);
+    if (c.occ && c.occ.max != null) why.push(`מתאים ל-${slots.adults != null ? SkiSearch.partyOf(slots) : c.occ.max} נוסעים`);
     if (c.camps && c.camps.full && (slots.children_ages || []).length) why.push('קייטנה בעברית לכל הילדים באותו שבוע');
     else if (c.camps && !c.camps.full && c.camps.missing.length) why.push(`שימו לב: פועלת רק קבוצת ${c.camps.running.join(' + ')} — אין קבוצת ${c.camps.missing.join(', ')} בשבוע זה`);
     else if (c.camps && c.camps.waitlist_only && c.camps.waitlist_only.length) why.push(`קבוצת ${c.camps.waitlist_only.join(',')} בהרשמת המתנה (ללא חיוב)`);

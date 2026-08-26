@@ -72,6 +72,15 @@ class SkiSearch {
      policy (Tomer 23/08): regular camp = ages 6-13 (split by ski level,
      runs most weeks); ages 4-6 camp opens only on specific dates.
      age 6 fits either group. ---- */
+  /* ---- how many seats does this party take? ----
+     Children whose ages are not known yet still travel: "זוג עם 2 ילדים"
+     must be four people everywhere — in the search, the trade-off counts and
+     the card captions — not four in one place and two in another. */
+  static partyOf(slots) {
+    return (slots.adults || 0) +
+      Math.max((slots.children_ages || []).length, slots.children_count || 0);
+  }
+
   static neededAgeGroups(childrenAges) {
     const groups = new Set();
     for (const a of childrenAges || []) {
@@ -138,8 +147,7 @@ class SkiSearch {
     // children whose ages we do not know yet still take seats: "עם 3 נכדים"
     // was a party of two by this arithmetic, and five people were offered
     // rooms for three
-    const party = (slots.adults || 0) +
-      Math.max((slots.children_ages || []).length, slots.children_count || 0);
+    const party = SkiSearch.partyOf(slots);
     const notes = [];   // machine-readable notes Claude may phrase
     let relaxed = []; // which constraints were relaxed, in order
 
@@ -149,7 +157,11 @@ class SkiSearch {
       notes.push({ type: 'france_february_gap' });
     }
     // a kids club was asked for, but no child falls in 4–13
-    if (slots.needs_hebrew_kids_club && !SkiSearch.neededAgeGroups(slots.children_ages).size) {
+    // ...but only once the ages are known. With "2 ילדים" and no ages yet,
+    // telling the family the camp is not for them — and then asking the
+    // ages — was both wrong and rude.
+    if (slots.needs_hebrew_kids_club && (slots.children_ages || []).length &&
+        !SkiSearch.neededAgeGroups(slots.children_ages).size) {
       notes.push({ type: 'camp_age_mismatch', ages: slots.children_ages || [] });
     }
     // Some children are in range and some are not. Saying nothing about the
@@ -626,6 +638,11 @@ class SkiSearch {
       // customer's flight cannot reach
       if (sheets && !sheets.includes(u.sheet)) continue;
       if (this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
+      // Sabbath observance binds a split exactly as it binds a single room:
+      // a family of six who said "בלי טיסות בשבת" was offered two rooms on a
+      // Saturday departure, because this loop never looked at the weekday
+      if (slots.no_saturday_flights && new Date(u.date + 'T00:00:00Z').getUTCDay() === 6) continue;
+      if (slots.nights_wanted && u.nights !== slots.nights_wanted) continue;
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       if ((slots.excluded_countries || []).includes(u.country)) continue;
@@ -633,9 +650,11 @@ class SkiSearch {
       if (slots.hotel && u.hotel !== slots.hotel) continue;
       // asked for a specific third of the month
       if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
+      if (slots.exact_day && Math.abs(+u.date.slice(8, 10) - slots.exact_day) > 3) continue;
       // a resort the customer ruled out ("לא בנסקו") — the country stays open
       if ((slots.excluded_destinations || []).some(
         d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
+      if (slots.destination && !matchDestination(slots.destination, u, this.resortOf(u.hotel))) continue;
       const k = u.hotel + '||' + u.date;
       if (!byHotelDate.has(k)) byHotelDate.set(k, []);
       byHotelDate.get(k).push(u);
@@ -725,7 +744,7 @@ class SkiSearch {
     const out = [];
     const count = (over) => {
       const alt = { ...slots, ...over };
-      const p = (alt.adults || 0) + (alt.children_ages || []).length;
+      const p = SkiSearch.partyOf(alt);
       let list = this._filter(alt, p || party, {
         month: alt.month, country: alt.country, destination: alt.destination,
         ignoreNights: over.nights_wanted === null,
