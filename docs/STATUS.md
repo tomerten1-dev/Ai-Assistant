@@ -100,7 +100,8 @@
 ```bash
 git checkout fix/demo-polish && git pull
 npm install            # פעם אחת (אין תלויות חיצוניות כבדות)
-npm start              # → http://localhost:8787   (PORT=xxxx לשינוי)
+npm run dev            # מושך את הגרסה האחרונה מ-GitHub ומפעיל → http://localhost:8787
+npm start              # הפעלה בלבד, בלי משיכה (PORT=xxxx לשינוי)
 npm test               # כל הבדיקות; שורות "stub exhausted" הן רעש תקין
 node tests/test-bank.js
 ```
