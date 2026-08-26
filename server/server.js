@@ -45,7 +45,7 @@ const EMPTY_SLOTS = {
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
-  month_alt: null, holiday: null,
+  month_alt: null, holiday: null, age_boundary: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
   wrong_year: null,
@@ -348,6 +348,28 @@ async function handleChat(body) {
   let replyIfNotReady = null;
   let modelUsed = false;
 
+  // ---- step 1a: not Hebrew? one sentence in their language, and the form ----
+  const lang = offline.foreignLanguage(lastUser);
+  // transliterated Hebrew always gets the invitation (what it parsed is kept);
+  // a real foreign sentence that the English floor already understood
+  // ("family of 4 in february") goes on to the search instead
+  if (lang && (lang === 'translit' || !slotsChanged(prevSlots, slots)) && !offline.guard(lastUser)) {
+    const line = guidance.languageText(lang);
+    if (line) {
+      if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+      chatLog.logTurn({ conversationId: body.conversationId || slots._cid, userText: lastUser, reply: line,
+        cards: [], result: { notes: [], relaxed: [] }, slots, modelUsed: false, ms: Date.now() - startedAt,
+        notUnderstood: false, answeredBy: 'lang:' + lang });
+      return {
+        open_lead_form: lang !== 'translit', lead_kind: lang !== 'translit' ? 'language_' + lang : null, lead_prefill: null,
+        reply_he: line, model_used: false, pending_parameter: lang === 'translit' ? 'adults' : null,
+        slots, cards: [], two_room_splits: [], notes: [], relaxed: [],
+        chips: lang === 'translit' ? ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'] : [], chip_to_pref: CHIP_TO_PREF,
+        ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'lang', lang, faq_ids: [], guard: null, off_topic: false, not_understood: false, pending: null } } : {}),
+      };
+    }
+  }
+
   // ---- step 1b: is this even a customer looking for a holiday? ----
   // A travel agent, a company, a school, a journalist, someone who already
   // booked, someone who pasted a phone number — one sentence and the form,
@@ -630,8 +652,11 @@ async function handleChat(body) {
   // when the complaint answer opens with its own, the social line yields.
   let social = offline.socialLine(lastUser);
   if (social && faqHit && /מצטער/.test(social) && /מצטער/.test(faqHit.he)) social = null;
+  // "בת 3 ו-10 חודשים" — say how the age is reckoned, once
+  const ageLine = slots.age_boundary != null && prevSlots.age_boundary == null ? guidance.languageText('age_boundary') : null;
   let preamble = [
     social,
+    ageLine,
     deflection,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     !deflection && faqSuppressed ? PER_CARD_POINTER[faqHit.id] : null,

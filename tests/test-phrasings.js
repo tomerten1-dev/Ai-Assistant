@@ -305,6 +305,13 @@ check('חנוכה is early December', null, 'משפחה בחנוכה', { month: 
 check('פורים is late March', null, 'זוג בפורים', { month: 3, month_part: 'late', holiday: 'פורים' });
 check('moving on to a plain month drops the holiday', { month: 12, month_part: 'early', holiday: 'חנוכה' }, 'בעצם ינואר', { month: 1, holiday: null });
 check('"תחילת דצמבר" is not overwritten by the holiday word', null, 'תחילת דצמבר, לא חנוכה', { month: 12, month_part: 'early' });
+// age boundaries: months and halves are one child, and a birthday before the flight is flagged
+check('3 ו-10 חודשים is a 3-year-old on the boundary', null, 'בת 3 ו-10 חודשים, תוכל להצטרף לקייטנה של 4?', { children_ages: [3], age_boundary: 3 });
+check('"קייטנה של 4" is not a family of four', null, 'בת 3 ו-10 חודשים, תוכל להצטרף לקייטנה של 4?', { adults: null });
+check('12.5 keeps the whole year', null, 'ילד בן 12.5 ואחד בן 9', { children_ages: [12, 9], age_boundary: 12 });
+check('שלוש וחצי is three', null, 'זוג עם ילדה בת שלוש וחצי בינואר', { children_ages: [3], age_boundary: 3, adults: 2 });
+check('"הבן נהיה 13 לפני הטיסה" is one child, not thirteen travellers', null, 'הבן נהיה 13 לפני הטיסה, איזו קבוצה?', { children_ages: [13], adults: null, age_boundary: -1 });
+check('"נהיה 13 אנשים" is still thirteen travellers', null, 'נהיה 13 אנשים בסך הכל', { adults: 13 });
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

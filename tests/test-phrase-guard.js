@@ -211,5 +211,20 @@ none('אפשר לחגוג בר מצווה במלון? עוגה?');
 none('אני מארגן קבוצה של 12 חברים, יש מחיר קבוצתי?');
 none('תתקשרו אליי ל-054-1234567 לגבי ההצעה הזו, יש שאלה על הקייטנה?');
 
+// ---- which language ----
+const { foreignLanguage } = require('../server/offline-nlu.js');
+console.log('\n[languages]');
+const lang = (q, k) => t(`${k || 'hebrew'}: ${q}`, () => assert.strictEqual(foreignLanguage(q), k));
+lang('Do you have ski packages with English-speaking kids club?', 'en');
+lang('Есть ли у вас пакеты в Банско на январь?', 'ru');
+lang('هل لديكم رحلات تزلج للعائلات؟', 'ar');
+lang('Bonjour, vous avez des séjours à Val Thorens ?', 'fr');
+lang('Shalom, yesh lachem chavilot le Bansko?', 'translit');
+lang('ma hamechir le mishpacha 4 nefashot', 'translit');
+lang('⛷️❄️🏔️❓', null);
+lang('ok', null);
+lang('יש לכם ski-in ski-out בVal Thorens?', null);
+lang('054-1234567', null);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

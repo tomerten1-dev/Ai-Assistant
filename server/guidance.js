@@ -144,4 +144,9 @@ function leadIntentText(kind) {
     : 'זו פנייה שנציג מטפל בה — השאירו שם וטלפון ונחזור אליכם, או התקשרו ל-04-8557722.';
 }
 
-module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, leadIntentText, load, FILE };
+function languageText(key) {
+  const g = load().languages_he || {};
+  return (typeof g[key] === 'string' && g[key].trim()) ? g[key] : null;
+}
+
+module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, leadIntentText, languageText, load, FILE };

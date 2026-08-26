@@ -90,6 +90,8 @@ function parseText(text, slots) {
   // same word to a reader and two different strings to a regex.
   const t = ' ' + text
     .replace(/[\u0591-\u05C7]/g, '')
+    // "3 ו-10 חודשים" is one age, not two numbers
+    .replace(/(\d{1,2})\s*ו-?\s*\d{1,2}\s*חודשים/g, '$1 וחצי')
     .replace(/[\u05F4\u201C\u201D]/g, '"')
     .replace(/[\u05F3\u2018\u2019]/g, "'")
     .replace(/([א-ת])[-–—]([א-ת])/g, '$1 $2')
@@ -128,11 +130,20 @@ function parseText(text, slots) {
     // The age words need Hebrew boundaries. Without them "לא בשבת" matched the
     // "בת" inside "שבת" and invented a 2-year-old out of "יש 2 חברים שומרים",
     // which then cost the party an adult. JS \b does not work here.
-    const ageChunk = t.match(/(?:^|[^א-ת])(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)(?![א-ת])[^.!?]{0,45}/g);
+    // a decimal ("12.5") is not a sentence end; "נהיה 13" states an age too
+    const ageChunk = t.match(/(?:^|[^א-ת])(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת|(?:הבן|הבת|הילד|הילדה|הוא|היא) (?:נהיה|נהיית|יהיה|תהיה))(?![א-ת])(?:[^.!?]|\.(?=\d)){0,45}/g);
     let ages = [], grownUps = 0;
     if (ageChunk) {
       for (let chunk of ageChunk) {
-        chunk = chunk.split(/ינואר|פברואר|מרץ|מארס|דצמבר|חנוכה|פורים/)[0];
+        // stop at a month, and at "קייטנה של 4" — that 4 is a club, not a child
+        chunk = chunk.split(/ינואר|פברואר|מרץ|מארס|דצמבר|חנוכה|פורים|קייטנה|קבוצה|מועדון|קיטנה/)[0];
+        // "3 ו-10 חודשים", "בת שלוש וחצי", "3.5" — the whole years count now,
+        // and the boundary is flagged so the bot says how the age is reckoned
+        chunk = chunk.replace(/(\d{1,2})\s*ו-?\s*\d{1,2}\s*חודשים/g, (m0, y) => { s.age_boundary = +y; return y; })
+          .replace(/(\d{1,2})\s*וחצי/g, (m0, y) => { s.age_boundary = +y; return y; })
+          .replace(/(\d{1,2})[.,]5(?![\d])/g, (m0, y) => { s.age_boundary = +y; return y; })
+          .replace(/(שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|אחת עשרה|שתים עשרה) וחצי/g, (m0, w) => { s.age_boundary = HE_NUM[w] != null ? HE_NUM[w] : null; return w; });
+        if (/(נהיה|תהיה|יהיה|יגיע|תגיע|ימלאו|חוגג|חוגגת) .{0,12}(לפני|עד|ב) ?(הטיסה|היציאה|הנסיעה|חודש|קרוב)/.test(chunk)) s.age_boundary = s.age_boundary ?? -1;
         for (const m of chunk.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)) {
           const n = +m[1];
           if (n >= 0 && n <= 17) ages.push(n);
@@ -287,7 +298,9 @@ function parseText(text, slots) {
       if (total >= 3 && total <= 8) { s.adults = 2; s.children_count = total - 2; s.no_children = false; }
     }
   }
-  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2}|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה)(?![א-ת])/) ||
+  // "הבן נהיה 13" is a birthday, not thirteen travellers
+  const childTurns = /(הבן|הבת|הילד|הילדה|הוא|היא|הקטן|הקטנה|הגדול|הגדולה) (נהיה|נהיית|יהיה|תהיה) ?\d/.test(t);
+  m = (childTurns ? null : t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2}|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה)(?![א-ת])/)) ||
       t.match(/(\d{1,2}|[א-ת]+)\s*(?:אנשים|נוסעים|אורחים|חברים|חברות|בחורים|בחורות|גברים|נשים)(?![א-ת])/);
   if (m) {
     const total = +m[1] || heNum(m[1]);
@@ -309,7 +322,7 @@ function parseText(text, slots) {
   }
   // "משפחה של 4" / "4 נפשות" with known kids
   if (s.adults == null) {
-    m = t.match(/(?:משפחה של|של)\s*(\d{1,2})/);
+    m = t.match(/(?<!קייטנה |קבוצה |מועדון |קיטנה |בגיל |גיל )(?:משפחה של|של)\s*(\d{1,2})/);
     if (m) {
       const total = +m[1], kids = (s.children_ages || []).length;
       // "משפחה של 5, הילדים בני 6 ו-9" → three adults.
@@ -1454,6 +1467,23 @@ function unknownAnswer() {
 // turns this into an actual form rather than telling the customer where to
 // find a button.
 const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג/;
+/* ---- which language? ----
+   A Cyrillic, Arabic or French/English sentence gets one fixed sentence in
+   that language and the form; Hebrew typed in Latin letters ("yesh lachem
+   chavilot") gets a Hebrew invitation to write Hebrew. Anything the English
+   floor above can already parse (month, country, ages) still counts. */
+const TRANSLIT = /\b(yesh|lachem|lecha|lach|ani|anachnu|anahnu|rotze|rotza|rotzim|chavila|chavilot|havila|havilot|kama|ma\b|mah\b|mechir|hamechir|yeladim|zug|mishpacha|efshar|shalom|toda|todah|bevakasha|matai|eifo|sheli|shelanu)\b/i;
+function foreignLanguage(text) {
+  const raw = String(text || '');
+  if (/[א-ת]/.test(raw)) return null;                       // any Hebrew — it is a Hebrew message
+  if (/[\u0400-\u04FF]{3}/.test(raw)) return 'ru';
+  if (/[\u0600-\u06FF]{3}/.test(raw)) return 'ar';
+  if (!/[a-z]{3}/i.test(raw)) return null;                  // digits, emoji, punctuation
+  if (TRANSLIT.test(raw)) return 'translit';
+  if (/\b(bonjour|vous|avez|séjour|sejour|nous|est-ce|merci|semaine|enfants)\b/i.test(raw)) return 'fr';
+  return 'en';
+}
+
 /* ---- who is writing? ----
    Not every message is a customer looking for a holiday. A travel agent, a
    company, a school, a journalist, someone who already booked, someone who
@@ -1663,4 +1693,4 @@ module.exports = {
   hotelNamed,
   wantsCallback,
   unknownAnswer,
-  noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent };
+  noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent, foreignLanguage };
