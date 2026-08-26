@@ -8,4 +8,8 @@ source-data/
 /tmp/
 server-data/
 logs/
+# תוצאות ריצה של הבנק — פלט, לא מקור. כל מכונה מייצרת אותן בעצמה,
+# ושמירתן ב-git גרמה להתנגשות אצל תומר ב-git pull (26/08).
 tests/bank-results.json
+tests/bank-results-live.json
+tests/bank-results-live-typical.json
