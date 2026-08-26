@@ -163,6 +163,60 @@ function startServer() {
     });
     t('it is said once, not with every message', () => assert.strictEqual(fine.count, 1));
 
+    // ── The card is the hotel's photograph ────────────────────────────────
+    // Tomer, 26/08: "תעשה שהכרטיס כולו הוא התמונה של המלון... תשאיר את
+    // האופציה להחליף בין התמונות של אותו מלון... תדאג שיראו את הטקסט".
+    {
+      const pic = require('fs').readFileSync(require('path').join(__dirname, 'fixtures', 'stand-in.jpg'));
+      const p3 = await browser.newPage({ viewport: { width: 430, height: 920 } });
+      let served = 0;
+      await p3.route('**pingwin.co.il/**', r => (/thumbMini|\.jpe?g|\.png/i.test(r.request().url())
+        ? (served++, r.fulfill({ status: 200, contentType: 'image/jpeg', body: pic }))
+        : r.continue()));
+      let m = null, after = null;
+      try {
+        await p3.goto(URL + '?pwreset=1');
+        await p3.waitForTimeout(500);
+        await p3.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p3.waitForTimeout(400);
+        await p3.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+          ta.value = '4 מבוגרים בינואר בצרפת'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+          r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
+        await p3.waitForTimeout(3500);
+        const read = `(() => { const r = ${SHADOW}; const c = r.querySelector('.card');
+          const n = c.querySelector('.galn'), b = c.querySelector('.galb');
+          const st = getComputedStyle(c.querySelector('.hname'));
+          // the whole URL: the first 40 characters of two thumbMini links are
+          // identical, so a prefix comparison would pass on a card that never
+          // changed its photograph
+          return { pbg: c.classList.contains('pbg'), bg: c.style.backgroundImage,
+            counter: n && n.textContent, counterShown: n && getComputedStyle(n).opacity !== '0',
+            arrowShown: b && getComputedStyle(b).opacity !== '0',
+            nameColour: st.color, outline: st.textShadow.split('rgba').length - 1 }; })()`;
+        m = await p3.evaluate(read);
+        await p3.evaluate(`${SHADOW}.querySelector('.card .galb.next').click()`);
+        await p3.waitForTimeout(400);
+        after = await p3.evaluate(read);
+      } finally { await p3.close(); }
+
+      t('the offer is drawn as the hotel\'s photograph', () => {
+        assert.ok(m.pbg, 'the card is not a photo card');
+        assert.ok(/^url\("http/.test(m.bg), 'no photograph on it: ' + m.bg);
+      });
+      t('and the other photographs of the same hotel are one tap away', () => {
+        assert.ok(m.arrowShown, 'the arrows are invisible');
+        assert.ok(m.counterShown, 'nothing says there are more photographs');
+        assert.ok(/^1\//.test(m.counter || ''), 'counter: ' + m.counter);
+        assert.ok(/^2\//.test(after.counter || ''), 'the arrow did not page: ' + after.counter);
+        assert.notStrictEqual(after.bg, m.bg, 'the card kept the same photograph');
+      });
+      t('white text on a photograph carries its own outline', () => {
+        assert.strictEqual(m.nameColour, 'rgb(255, 255, 255)');
+        // four hard shadows for the outline, two soft ones for the lift
+        assert.ok(m.outline >= 5, 'only ' + m.outline + ' shadow layers — a snow photo will swallow it');
+      });
+    }
+
     // ── How much scrolling one answer costs ──────────────────────────────
     // Tomer, 26/08: "הבוט לא נוח מבחינה ui צריך לגלול הרבה". Measured then:
     // a single answer with three offers was 1.95 screens on a phone and 1.31

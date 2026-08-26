@@ -277,14 +277,49 @@
        CLOSED card — white text stayed white on the opened white card, and
        "מתאים ל-4 נוסעים" went invisible. */
     + '.card.pbg{position:relative;background-size:cover;background-position:center;overflow:hidden}'
-    + '.card.pbg:not(.open){border-color:transparent;min-height:206px;justify-content:flex-end;color:#fff}'
+    /* the bottom strip belongs to the controls: "פרטים" at the start, the photo
+       arrows at the end. Reserved, because a card with one line less of text
+       put the arrows straight on top of "המשך להזמנה". */
+    + '.card.pbg:not(.open){border-color:transparent;min-height:214px;justify-content:flex-end;'
+    + 'color:#fff;padding-bottom:48px}'
+    + '.card.pbg:not(.open) .dtog{position:absolute;bottom:15px;inset-inline-start:14px;margin:0;z-index:3}'
     + '.card.pbg:not(.open)::before{content:"";position:absolute;inset:0;pointer-events:none;'
-    + 'background:linear-gradient(180deg,rgba(9,20,35,.10) 0%,rgba(9,20,35,.48) 42%,rgba(9,20,35,.90) 100%)}'
+    /* A ski photograph is mostly snow and sky, so the floor has to be set by
+       the scrim rather than hoped for from the picture. */
+    + 'background:linear-gradient(180deg,rgba(9,20,35,.34) 0%,rgba(9,20,35,.16) 26%,'
+    + 'rgba(9,20,35,.62) 58%,rgba(9,20,35,.88) 82%,rgba(9,20,35,.95) 100%)}'
     + '.card.pbg:not(.open) > *{position:relative;z-index:1}'
-    + '.card.pbg:not(.open) .gal{display:none}'
-    + '.card.pbg:not(.open) .hname,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .brief b'
-    + '{color:#fff;text-shadow:0 1px 4px rgba(9,20,35,.55)}'
-    + '.card.pbg:not(.open) .cwhere{color:rgba(255,255,255,.82)}'
+    /* the hotel's other photographs, over the whole card instead of inside a
+       strip at the top of it */
+    + '.card.pbg:not(.open) .gal{position:absolute;inset:0;margin:0;width:auto;'
+    + 'border-radius:16px;overflow:hidden;pointer-events:none;z-index:2;background:none}'
+    + '.card.pbg:not(.open) .gal > *{pointer-events:auto}'
+    + '.card.pbg:not(.open) .gal .photo{display:none}'
+    + '.card.pbg:not(.open) .gal::after{display:none}'
+    /* Where the photo controls go, on a card that is all photo and all text.
+       Centred, they sat on the room name; at the top, on the hotel name. The
+       one corner with nothing in it is the bottom end — "פרטים" is at the
+       bottom start — so they cluster there as ‹ 3/12 ›. */
+    + '.card.pbg:not(.open) .galb{opacity:1;top:auto;bottom:7px;transform:none;width:34px;height:34px;'
+    + 'background:rgba(255,255,255,.9);color:#16283d;box-shadow:0 1px 5px rgba(9,20,35,.4)}'
+    + '.card.pbg:not(.open) .galb:hover{background:#fff}'
+    + '.card.pbg:not(.open) .galb.next{inset-inline-end:8px;inset-inline-start:auto}'
+    + '.card.pbg:not(.open) .galb.prev{inset-inline-end:84px;inset-inline-start:auto}'
+    /* .card:not(.open) .galn is hidden on the plain card — here it is the only
+       thing telling you there are more photographs */
+    + '.card.pbg:not(.open) .gal .galn{opacity:1;bottom:17px;top:auto;inset-inline-end:46px;inset-inline-start:auto;'
+    + 'transform:none;background:rgba(9,20,35,.72);font-variant-numeric:tabular-nums}'
+    + '.card.pbg:not(.open) .gal .tier{top:10px;bottom:auto;inset-inline-start:10px}'
+    /* An outline, drawn as four hard shadows plus two soft ones. -webkit-text
+       -stroke paints the stroke OVER the glyph and thins it; this does not, and
+       it works in every browser we care about. */
+    + '.card.pbg:not(.open) .hname,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .brief b,'
+    + '.card.pbg:not(.open) .cwhere,.card.pbg:not(.open) .why,.card.pbg:not(.open) .dtog'
+    + '{text-shadow:1px 1px 0 rgba(9,20,35,.55),-1px 1px 0 rgba(9,20,35,.55),'
+    + '1px -1px 0 rgba(9,20,35,.55),-1px -1px 0 rgba(9,20,35,.55),'
+    + '0 1px 3px rgba(9,20,35,.95),0 0 10px rgba(9,20,35,.7)}'
+    + '.card.pbg:not(.open) .hname,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .brief b{color:#fff}'
+    + '.card.pbg:not(.open) .cwhere{color:rgba(255,255,255,.92)}'
     + '.card.pbg:not(.open) .brief .sep{color:rgba(255,255,255,.45)}'
     /* .card .brief .bprice outranks .card.pbg .bprice, so the price band stayed
        navy — unreadable against the photograph */
@@ -292,10 +327,14 @@
     + '.card.pbg:not(.open) .dtog{color:#fff;opacity:.9}'
     /* no panel around the reason: a translucent box over a picture reads as an
        empty grey bar, and the scrim already carries the text */
-    + '.card.pbg:not(.open) .why{background:none;color:#fff;padding:2px 0;text-shadow:0 1px 3px rgba(9,20,35,.6)}'
+    + '.card.pbg:not(.open) .why{background:none;color:#fff;padding:2px 0}'
     + '.card.pbg:not(.open) .tag{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.25)}'
     + '.card.pbg:not(.open) .tag.rec{background:rgba(255,255,255,.92);color:' + THEME.primaryDark + '}'
-    + '.card.pbg:not(.open) .btn.sec{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.65)}'
+    /* the buttons carry their own contrast — they must never depend on the
+       photograph behind them */
+    + '.card.pbg:not(.open) .btn.sec{background:rgba(9,20,35,.55);color:#fff;'
+    + 'border-color:rgba(255,255,255,.8);backdrop-filter:blur(3px)}'
+    + '.card.pbg:not(.open) .btn.pri{box-shadow:0 2px 10px rgba(9,20,35,.5)}'
     + '.card.pbg:hover{box-shadow:0 14px 30px rgba(9,20,35,.28)}'
     + '.card.pbg.open{background-image:none!important;border-color:#e1e8ef}'
     // gallery: the photo fills the top of the card, arrows sit on it
@@ -573,15 +612,16 @@
   /* ============== session persistence ==============
      "המשך להזמנה" navigates to a hotel page; without this the customer came
      back to an empty chat. sessionStorage: same tab, cleared when it closes. */
-  // Which card style to draw. A switch, so the two can be compared on the real
-  // site with real photos before one of them becomes the only one:
-  // ?pwcard=photo on the page, or ...pingwin-bot.js?card=photo on the tag.
+  // The offer is the hotel's photograph, with the text on it (Tomer, 26/08).
+  // ?pwcard=plain — or ...pingwin-bot.js?card=plain on the tag — draws the
+  // older white card instead; kept because it is the fallback whenever a hotel
+  // has no photo at all, and the two are worth comparing on real traffic.
   var CARD_STYLE = (function () {
     try {
       var v = new URLSearchParams(window.location.search).get('pwcard');
       if (!v && script && script.src) v = new URL(script.src).searchParams.get('card');
-      return v === 'photo' ? 'photo' : 'plain';
-    } catch (e) { return 'plain'; }
+      return v === 'plain' ? 'plain' : 'photo';
+    } catch (e) { return 'photo'; }
   })();
 
   var STORE_KEY = 'pingwin_bot_session_v1';
@@ -708,16 +748,18 @@
      the widget invents nothing. */
   function addCard(c, container) {
     var card = el('div', 'card');
-    if (CARD_STYLE === 'photo') {
-      var bg = (c.images && c.images[0]) || c.image;
-      if (bg) {
-        card.classList.add('pbg');
-        card.style.backgroundImage = 'url("' + String(bg).replace(/"/g, '%22') + '")';
-      }
-    }
-
-    // ---- gallery: the hotel's own photos, paged with two arrows
     var photos = (c.images && c.images.length ? c.images : (c.image ? [c.image] : []));
+    // the offer IS the photograph, unless there is no photograph
+    var asPhoto = CARD_STYLE === 'photo' && photos.length > 0;
+    if (asPhoto) card.classList.add('pbg');
+    var showPhoto = function (i) {
+      if (asPhoto) card.style.backgroundImage = 'url("' + String(photos[i]).replace(/"/g, '%22') + '")';
+    };
+    showPhoto(0);
+
+    // ---- gallery: the hotel's own photos, paged with two arrows. On a photo
+    // card the arrows sit over the whole card and change its background; on the
+    // plain one they page the strip at the top. Same code, same index.
     if (photos.length) {
       var gal = el('div', 'gal');
       var im = document.createElement('img');
@@ -725,16 +767,23 @@
       im.src = photos[0];
       im.alt = c.hotel;
       im.loading = 'lazy';
-      im.addEventListener('error', function () { gal.remove(); });
+      im.addEventListener('error', function () {
+        // a photo we cannot load must not leave a grey rectangle where the
+        // offer should be — fall back to the readable white card
+        gal.remove();
+        if (asPhoto) { asPhoto = false; card.classList.remove('pbg'); card.style.backgroundImage = ''; }
+      });
       gal.appendChild(im);
       if (photos.length > 1) {
         var at = 0;
         var count = el('div', 'galn', '1/' + photos.length);
+        gal.setAttribute('data-many', '1');
         var step = function (d) {
           return function (ev) {
             ev.stopPropagation();
             at = (at + d + photos.length) % photos.length;
             im.src = photos[at];
+            showPhoto(at);
             count.textContent = (at + 1) + '/' + photos.length;
           };
         };
