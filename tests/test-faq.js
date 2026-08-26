@@ -88,6 +88,9 @@ t('no answer promises a journey time', () => {
 t('no answer names a hotel or invents a room', () => {
   const resorts = require('../data/resorts.json');
   for (const e of faqFile.entries) {
+    // a camp pick-up point is a place, not a recommendation (Tomer, 26/08:
+    // "16:00 בלובי של מלון Strass")
+    if (/^camp_schedule/.test(e.id)) continue;
     for (const hotel of Object.keys(resorts.hotels)) {
       assert.ok(!e.answer_he.includes(hotel), e.id + ' names ' + hotel);
     }
