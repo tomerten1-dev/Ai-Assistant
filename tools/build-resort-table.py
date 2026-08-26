@@ -48,8 +48,7 @@ COLS = [
     ('אזור מתחילים ליד הכפר', 11, 'fact', 'נוחות'), ('Ski-in / Ski-out', 10, 'fact', 'נוחות'),
     ('שדה תעופה', 10, 'fact', 'לוגיסטיקה'), ('ק"מ משדה התעופה', 10, 'fact', 'לוגיסטיקה'),
     ('נציג פינגווין', 16, 'fact', 'לוגיסטיקה'), ('קייטנה בעברית', 9, 'fact', 'לוגיסטיקה'), ('עיר קרובה', 18, 'fact', 'לוגיסטיקה'),
-    ('אפרה-סקי 1–5\n(הצעה שלנו)', 11, 'draft', 'הצעה שלנו — לאשר/לתקן'), ('משפחות 1–5\n(הצעה שלנו)', 11, 'draft', 'הצעה שלנו — לאשר/לתקן'),
-    ('מתחילים 1–5', 9, 'edit', 'פינגווין ממלאת'), ('משפחות עם ילדים 1–5', 10, 'edit', 'פינגווין ממלאת'), ('אפרה-סקי / צעירים 1–5', 11, 'edit', 'פינגווין ממלאת'),
+    ('מתחילים 1–5', 9, 'edit', 'פינגווין ממלאת'), ('משפחות עם ילדים 1–5', 10, 'suggest', 'פינגווין ממלאת'), ('אפרה-סקי / צעירים 1–5', 11, 'suggest', 'פינגווין ממלאת'),
     ('גולשים מנוסים 1–5', 9, 'edit', 'פינגווין ממלאת'), ('רמת מחיר\n(משתלם / בינוני / פרימיום)', 13, 'edit', 'פינגווין ממלאת'),
     ('להמליץ? (כן/לא)', 9, 'edit', 'פינגווין ממלאת'), ('הערות פינגווין', 30, 'edit', 'פינגווין ממלאת'), ('מאושר ✓', 8, 'edit', 'פינגווין ממלאת'),
     ('מקור', 40, 'fact', 'מקור'),
@@ -57,13 +56,13 @@ COLS = [
 
 ws['A1'] = 'טבלת אתרים — בסיס להמלצה מנומקת (שאלה 25)'
 ws['A1'].font = F(bold=True, size=14)
-ws['A2'] = 'לבן = עובדה מהאתר הרשמי.  כתום = הצעה שלנו (1–5), לאשר או לתקן.  צהוב = פינגווין ממלאת.  כל הסולמות מוסברים בגיליון "מקרא".  הבוט ישתמש רק בשורות עם ✓ ב"מאושר".'
+ws['A2'] = 'לבן = עובדה מהאתר הרשמי.  צהוב = פינגווין ממלאת.  כתום בתוך הצהוב = מספר שהצענו, לאשר או לשנות.  כל הסולמות מוסברים בגיליון "מקרא".  הבוט ישתמש רק בשורות עם ✓ ב"מאושר".'
 ws['A2'].font = F(italic=True, size=10)
 ws.merge_cells('A1:J1'); ws.merge_cells('A2:T2')
 
 GR, HR = 4, 5
 GROUP_FILL = {'זיהוי': '1F3864', 'ההר': '2F5597', 'נוחות': '2F5597', 'לוגיסטיקה': '2F5597',
-              'הצעה שלנו — לאשר/לתקן': 'C55A11', 'פינגווין ממלאת': 'BF8F00', 'מקור': '7F7F7F'}
+              'פינגווין ממלאת': 'BF8F00', 'מקור': '7F7F7F'}
 # group band row
 start = 1
 for i in range(1, len(COLS) + 2):
@@ -97,15 +96,13 @@ for name, p in order:
            p['easy_pct'], p['hard_pct'], yn(p['glacier']), yn(p['snow_park']), yn(p['night_skiing']),
            yn(p['beginner_near_village']), yn(p['ski_in_out']), t.get('airport'), km_txt, rep_he,
            'כן' if name in camp_resorts else 'לא', p['city_he'],
-           NIGHT_SCORE.get(p['nightlife']), FAM_SCORE.get(p['family']),
-           None, None, None, None, None, None, None, None, p['source']]
+           None, FAM_SCORE.get(p['family']), NIGHT_SCORE.get(p['nightlife']), None, None, None, None, None, p['source']]
     for i, v in enumerate(row, 1):
         c = ws.cell(row=r, column=i, value=v)
         kind = COLS[i - 1][2]
         c.font = F(size=10); c.border = BORDER
         c.alignment = RIGHT if i in (1, 3, 8, 18, 20, 29, 31) else CENTER
-        if kind == 'draft' and isinstance(v, int): c.font = F(size=10, bold=True)
-        if kind == 'draft': c.fill = DRAFT_FILL
+        if kind == 'suggest': c.fill = DRAFT_FILL; c.font = F(size=10, bold=True)   # our proposal inside Pingwin's column
         elif kind == 'edit': c.fill = EDIT_FILL
         if v is None and kind == 'fact':
             c.value = '?'; c.font = F(size=10, color='C00000')
@@ -122,7 +119,7 @@ dvyn = DataValidation(type='list', formula1='"כן,לא"', allow_blank=True)
 dvbud = DataValidation(type='list', formula1='"משתלם,בינוני,פרימיום"', allow_blank=True)
 dvok = DataValidation(type='list', formula1='"✓"', allow_blank=True)
 for dv in (dv15, dvyn, dvbud, dvok): ws.add_data_validation(dv)
-for h in ('מתחילים 1–5', 'משפחות עם ילדים 1–5', 'אפרה-סקי / צעירים 1–5', 'גולשים מנוסים 1–5', 'אפרה-סקי 1–5\n(הצעה שלנו)', 'משפחות 1–5\n(הצעה שלנו)'):
+for h in ('מתחילים 1–5', 'משפחות עם ילדים 1–5', 'אפרה-סקי / צעירים 1–5', 'גולשים מנוסים 1–5'):
     dv15.add(f"{col(h)}{HR+1}:{col(h)}{LAST}")
 dvyn.add(f"{col('להמליץ? (כן/לא)')}{HR+1}:{col('להמליץ? (כן/לא)')}{LAST}")
 PRICE_H = 'רמת מחיר\n(משתלם / בינוני / פרימיום)'
@@ -157,7 +154,7 @@ r = 1
 lrow(r, 'מה הטבלה הזאת', 'עובדות + דירוגים לכל אתר. אחרי אישור, הבוט ממליץ מנומק: "טיניי מתאים לכם כי: אתר גבוה עם קרחון, קייטנה בעברית, נציג באתר". בלי אישור — אין המלצות.', size=11); r += 2
 lrow(r, 'צבעים', '', bold=True); r += 1
 lrow(r, 'לבן', 'עובדה מהאתר הרשמי (קישור בעמודה "מקור"). מותר לתקן. "?" = לא נמצא — להשלים או להשאיר ריק, הבוט לא ימציא.'); r += 1
-lrow(r, 'כתום', 'הצעה שלנו בסולם 1–5, מתוך המיצוב של האתר עצמו. לא מחייב — לאשר או לשנות את המספר.', fill=DRAFT_FILL); r += 1
+lrow(r, 'כתום', 'מספר שהצענו בתוך העמודות הצהובות (אפרה-סקי, משפחות) — לאשר או להחליף. אם מסכימים, פשוט משאירים.', fill=DRAFT_FILL); r += 1
 lrow(r, 'צהוב', 'פינגווין ממלאת: דירוג 1–5 לכל קהל, רמת מחיר, להמליץ?, הערות, ו-✓ ב"מאושר".', fill=EDIT_FILL); r += 2
 lrow(r, 'הסולם 1–5 — כלל', '5 = האתר הכי מתאים לקהל הזה אצלנו, 1 = לא מתאים. הבוט ימליץ לקהל רק על אתרים עם 4–5, ויסביר למה.', bold=True); r += 2
 lrow(r, 'אפרה-סקי / צעירים', '', bold=True); r += 1
