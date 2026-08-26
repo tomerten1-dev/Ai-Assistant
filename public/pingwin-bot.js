@@ -45,7 +45,10 @@
   // which page the customer is standing on — it decides the opening suggestions
   // and which Pingi greets them from the corner
   var PAGE = (function () {
-    var u = (location.pathname + ' ' + location.href).toLowerCase();
+    // the title too, not just the address: a hotel page on pingwin.co.il is
+    // "/Sport+%26+Spa+Hotel+Strass.html?siteID=269" — nothing in the URL says
+    // Mayrhofen, but the page's own title does
+    var u = (location.pathname + ' ' + location.href + ' ' + (document.title || '')).toLowerCase();
     var h = decodeURIComponent(u);
     if (/בנסקו|bansko|בולגריה|bulgaria/.test(h)) return { country: 'בולגריה' };
     if (/אוסטריה|austria|ischgl|mayrhofen|saalbach|zillertal/.test(h)) return { country: 'אוסטריה' };
