@@ -205,5 +205,23 @@ t('a broken entry in deflect.json costs that answer, not the bot', () => {
   }
 });
 
+t('a two-word question is asked back, not answered with a headcount request', () => {
+  // the live typical run: "עד מתי?" and "כמה זמן?" got "לא בטוח שהבנתי. כתבו לי
+  // כמה אתם נוסעים" — which reads as ignoring a question
+  const offline = require('../server/offline-nlu.js');
+  for (const q of ['עד מתי?', 'כמה זמן?']) {
+    const a = offline.notUnderstood(q);
+    assert.ok(a && /\?/.test(a), 'answered with a question: ' + q);
+    assert.ok(/במשפט אחד/.test(a), 'asks them to say it in a sentence: ' + a);
+  }
+  const noise = offline.notUnderstood('מיע');
+  assert.ok(noise && !/במשפט אחד/.test(noise), 'gibberish still gets the plain line: ' + noise);
+});
+t('both not-understood lines come from guidance.json', () => {
+  const g = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'config', 'guidance.json'), 'utf8'));
+  assert.ok(g.messages_he.not_understood && g.messages_he.not_understood_question, 'both keys are in the file');
+});
+
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

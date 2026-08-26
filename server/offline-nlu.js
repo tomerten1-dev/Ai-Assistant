@@ -1367,7 +1367,15 @@ function notUnderstood(text) {
   const tokens = t.split(/\s+/);
   if (!t || tokens.length > 2 || t.length > 14) return null;
   if (/\d/.test(t) || COURTESY.test(t)) return null;
-  return 'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.';
+  // A two-word fragment that ends in a question mark is a question, not noise
+  // ("עד מתי?", "כמה זמן?"). Answering it with "כמה אתם נוסעים" reads as
+  // ignoring the question; asking what they meant is what a person would do.
+  if (/[?？]\s*$/.test(t)) {
+    return guidance.msg('not_understood_question',
+      'לא בטוח שהבנתי למה הכוונה — אפשר לכתוב את השאלה במשפט אחד ואענה. ובינתיים, כמה אתם נוסעים ומתי בערך?');
+  }
+  return guidance.msg('not_understood',
+    'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.');
 }
 
 const ASK_LEXICON = [

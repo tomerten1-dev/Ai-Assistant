@@ -292,5 +292,29 @@ t('a leading question about the Hebrew escort is answered, not turned into a hea
 });
 
 
+/* ---- the first typical-customer live run (26/08): 6 of 100 missed ---- */
+t('what the live run of ordinary customer questions left unanswered', () => {
+  for (const [q, id] of [
+    ['בית מרקחת?', 'medical_on_site'],
+    ['טובוגן ארוך?', 'snow_park'],
+    ['אפשר סקיפס 5 ימים ל-6 לילות?', 'skipass_days'],
+    ['צרפת יקרה יותר או שזה מיתוס?', 'country_price'],
+  ]) {
+    const a = nlu.faq(q);
+    assert.ok(a && a.id === id, `${q} → ${a ? a.id : 'nothing'} (expected ${id})`);
+  }
+});
+t('a price comparison between countries answers without ranking or a number', () => {
+  const a = nlu.faq('צרפת יקרה יותר או שזה מיתוס?');
+  assert.ok(!/₪|€|\$|יורו|שקל/.test(a.he), 'money: ' + a.he);
+  assert.ok(/אין לזה תשובה גורפת/.test(a.he), a.he);
+});
+t('a Shabbat ski pass question still belongs to the Shabbat answer', () => {
+  // "סקיפס ל-6 ימים" is asked by a religious family, not by someone shortening
+  // the week — skipass_days must not take it
+  assert.strictEqual(nlu.faq('סקיפס ל-6 ימים').id, 'shabbat_hotel');
+});
+
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
