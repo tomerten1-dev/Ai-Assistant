@@ -303,7 +303,7 @@ function presentCards(result, slots, skip) {
     room_facts: c.room_facts, board_he: c.board_he, transfer_he: c.transfer_he,
     ski_pass_he: c.ski_pass_he, ski_pass_included: c.ski_pass_included,
     equipment_he: c.equipment_he, equipment_included: c.equipment_included,
-    wifi_he: c.wifi_he, spa_he: c.spa_he, spa_access: c.spa_access,
+    wifi_he: c.wifi_he, spa_he: c.spa_he, spa_access: c.spa_access, page_facts: c.page_facts || null,
     spa_access_he: c.spa_access_he, spa_note_he: c.spa_note_he, spa_min_age: c.spa_min_age,
     separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
     // the hotel's own page — the customer clicked this hotel, not the home page

@@ -861,6 +861,7 @@ class SkiSearch {
       board_he: info.board_he || null,         // בסיס האירוח מדף המלון
       wifi_he: info.wifi_he || null,           // ציטוט מדף המלון
       spa_he: info.spa_he || null,             // ציטוט מדף המלון
+      page_facts: info.page_facts || null,     // נוף, בריכה, מיקום, מסעדה… — ציטוטים מדף המלון (data/hotel-facts.json)
       spa_access: info.spa_access || 'none',   // free|entries|paid|guests|not_stated|none
       spa_access_he: info.spa_access_he || null,
       spa_note_he: info.spa_note_he || null,

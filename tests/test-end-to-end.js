@@ -1469,3 +1469,18 @@ t('the trade-off line never precedes the offers\' introduction', async () => {
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();
+
+/* ---- hotel-page facts (Tomer, 26/08: "ספא ונוף אתה יכול לבדוק באתר של פינגווין") ---- */
+t('pool / view / renovation / lift distance are quoted from the hotel page, or deferred — never guessed', async () => {
+  const first = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר במאיירהופן' }], slots: {} });
+  const msgs = [{ role: 'user', content: 'זוג בפברואר במאיירהופן' }, { role: 'assistant', content: first.reply_he }];
+  const ask = q => handleChat({ messages: [...msgs, { role: 'user', content: q }], slots: first.slots });
+  const pool = await ask('יש בריכה? ונוף מהחדר?');
+  const facts = pool.cards.flatMap(c => c.facts_he || []);
+  assert.ok(facts.some(f => /^בריכה: /.test(f)), 'a hotel with a pool on its page says so: ' + facts.join(' | '));
+  assert.ok(facts.every(f => /^בריכה: |בריכה — נציג יאמת|אין בריכה|נוף: |הנוף מהחדר — נציג יאמת/.test(f)), facts.join(' | '));
+  const reno = await ask('מתי שופץ? כמה מטר למעלית?');
+  const f2 = reno.cards.flatMap(c => c.facts_he || []);
+  assert.ok(f2.some(f => /^שיפוץ: /.test(f)) && f2.some(f => /^מהמעלית: /.test(f)), f2.join(' | '));
+  assert.ok(!/\d+ ?(שעות|דק')/.test(reno.reply_he), 'no journey times');
+});

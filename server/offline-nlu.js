@@ -467,7 +467,21 @@ function parseText(text, slots) {
     [/חדר גדול|חדר מרווח|סוויטה|חדרי שינה|כמה חדרים|דירה גדולה|כמה מ"ר|גודל החדר/, 'גודל החדר'],
     [/מקלח|אמבטי|שירותים בחדר|חדרי רחצה|כמה שירותים/, 'חדרי רחצה'],
     [/wifi|וויפי|ויי ?פיי|אינטרנט/i, 'WIFI'],
-    [/ספא|בריכה|סאונה|ג'קוזי|חמאם/, 'ספא ובריכה'],
+    [/ספא|סאונה|ג'קוזי|חמאם|וולנס|wellness/i, 'ספא ובריכה'],
+    // hotel-page facts (data/hotel-facts.json): quoted, never inferred
+    [/בריכ/, 'בריכה'],
+    [/נוף|עם נוף|נוף להר|נוף למסלול/, 'נוף'],
+    [/מרפסת|בלקון/, 'מרפסת'],
+    [/מיקום|במרכז העיירה|במרכז הכפר|מרכז העיירה|שקט בלילה|רועש|רחוב ראשי|קרוב לחנויות|ליד המסעדות|מרחק מהמרכז|מהמרכז/, 'מיקום'],
+    [/מרחק מהמעלית|רחוק מהמעלית|קרוב למעלית|ליד המעלית|כמה מטר למעלית|צמוד למסלול|על המסלול|סקי.?אין|ski.?in|הליכה למסלול|ללכת ברגל למסלול|מרחק מהמסלול/i, 'מרחק מהמעלית'],
+    [/שאטל|סקי ?באס|אוטובוס למסלול|הסעה למסלול/, 'שאטל למסלולים'],
+    [/מסעדה במלון|מסעדת המלון|אוכל במלון|בר במלון|חדר אוכל|ארוחת ערב במלון|יש מסעדה|האוכל טוב|אוכל טוב/, 'מסעדה במלון'],
+    [/חדר משחקים|מועדון ילדים|פינת ילדים|קידס קלאב|kids ?club|לילדים במלון|משחקייה/i, 'מתקנים לילדים במלון'],
+    [/חדר סקי|מייבש נעליים|מייבש מגפיים|לוקר|אחסון ציוד|איפה שמים את הסקי/, 'חדר סקי'],
+    [/חניה|חנייה/, 'חניה'],
+    [/מעלית במלון|יש מעלית|בלי מדרגות|מדרגות/, 'מעלית במלון'],
+    [/שופץ|שיפוץ|משופץ|מתי נבנה|ישן|חדש/, 'שיפוץ'],
+    [/כוכבים|דירוג המלון|איזה רמה המלון|רמת המלון/, 'דירוג המלון'],
   ];
   s.unverifiable = [];
   for (const [re, label] of UNVERIFIABLE) if (re.test(t) && !s.unverifiable.includes(label)) s.unverifiable.push(label);
@@ -1132,6 +1146,7 @@ function phrase(result, slots, cards) {
 // what really is unknown.
 function cardFacts(c, asked, open) {
   const rf = c.room_facts || {};
+  const pf = c.page_facts || {};
   const out = [];
   const say = (topic, text) => { if (text) { out.push(text); open.delete(topic); } };
   // this card cannot answer it, but another card might — so it is named here
@@ -1188,6 +1203,62 @@ function cardFacts(c, asked, open) {
       case 'חדרי רחצה':
         if (rf.bath_he) say(topic, 'חדרי רחצה: ' + rf.bath_he);
         else defer('חדרי הרחצה');
+        break;
+      // --- verbatim from the hotel page on pingwin.co.il (data/hotel-facts.json).
+      // Present on the page → quoted. Absent → "נציג יאמת", never a guess.
+      case 'בריכה':
+        if (pf.pool_he) say(topic, 'בריכה: ' + pf.pool_he);
+        else if (c.spa_access === 'none') say(topic, 'אין בריכה או ספא במלון הזה');
+        else defer('בריכה');
+        break;
+      case 'נוף':
+        if (pf.view_he) say(topic, 'נוף: ' + pf.view_he);
+        else defer('הנוף מהחדר');
+        break;
+      case 'מרפסת':
+        if (pf.balcony_he) say(topic, 'מרפסת: ' + pf.balcony_he);
+        else defer('מרפסת');
+        break;
+      case 'מיקום':
+        if (pf.location_he) say(topic, 'מיקום: ' + pf.location_he + (pf.center_he ? ' ' + pf.center_he : ''));
+        else defer('המיקום בעיירה');
+        break;
+      case 'מרחק מהמעלית':
+        if (pf.lift_page_he || c.lift_he) say(topic, 'מהמעלית: ' + (pf.lift_page_he || c.lift_he));
+        else defer('המרחק מהמעלית');
+        break;
+      case 'שאטל למסלולים':
+        if (pf.shuttle_he) say(topic, 'שאטל: ' + pf.shuttle_he);
+        else if (pf.lift_page_he || c.lift_he) say(topic, 'מהמעלית: ' + (pf.lift_page_he || c.lift_he));
+        else defer('שאטל למסלולים');
+        break;
+      case 'מסעדה במלון':
+        if (pf.restaurant_he) say(topic, 'אוכל במלון: ' + pf.restaurant_he);
+        else defer('המסעדה במלון');
+        break;
+      case 'מתקנים לילדים במלון':
+        if (pf.kids_he) say(topic, 'לילדים במלון: ' + pf.kids_he);
+        else defer('מתקנים לילדים במלון');
+        break;
+      case 'חדר סקי':
+        if (pf.ski_room_he) say(topic, 'חדר סקי: ' + pf.ski_room_he);
+        else defer('חדר סקי');
+        break;
+      case 'חניה':
+        if (pf.parking_he) say(topic, 'חניה: ' + pf.parking_he);
+        else defer('חניה');
+        break;
+      case 'מעלית במלון':
+        if (pf.elevator_he) say(topic, 'מעלית במלון: ' + pf.elevator_he);
+        else defer('מעלית במלון');
+        break;
+      case 'שיפוץ':
+        if (pf.renovated_he) say(topic, 'שיפוץ: ' + pf.renovated_he);
+        else defer('מועד השיפוץ האחרון');
+        break;
+      case 'דירוג המלון':
+        if (pf.stars_he) say(topic, 'דירוג: ' + pf.stars_he);
+        else defer('דירוג המלון');
         break;
       // Distance in km only, never a duration (Tomer, 24/08): the time
       // depends on weather, traffic and snow on the road, and a number we
