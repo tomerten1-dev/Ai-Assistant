@@ -169,5 +169,26 @@ t('the guarantee answer no longer implies Aqaba is on offer', () => {
   assert.ok(/אינו מובטח מראש|נבחן לגופו/.test(g.he), 'Aqaba is qualified: ' + g.he);
 });
 
+/* ---- age boundaries (Tomer, 26/08) ---- */
+t('under four there is no group and no flexibility', () => {
+  const a = nlu.faq('הבן שלי בן 3 ו-10 חודשים, אפשר לצרף לקייטנה?');
+  assert.ok(a && /אין קבוצה ואין גמישות/.test(a.he), a && a.he);
+});
+t('15 to 17: no camp, but lessons in English can be booked through us', () => {
+  for (const q of ['יש קייטנה לנער בן 16?', 'בן 15 יש לו קייטנה?', 'בת 17 יכולה להצטרף לקייטנה?']) {
+    const a = nlu.faq(q);
+    assert.ok(a && a.id === 'teen_camp', 'not answered: ' + q);
+    assert.ok(/מגיל 15 אין קייטנה/.test(a.he), q);
+    assert.ok(/מדריך מקומי באנגלית/.test(a.he), 'the alternative is named: ' + q);
+  }
+});
+t('a teenager merely mentioned in a search is not lectured about camps', () => {
+  // "זוג עם ילד בן 16, מרץ" is a request for offers, not a question about camps
+  for (const q of ['זוג עם ילד בן 16, מרץ', 'משפחה עם בן 13 בפברואר']) {
+    const a = nlu.faq(q);
+    assert.ok(!a || a.id !== 'teen_camp', 'volunteered a camp answer to: ' + q);
+  }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
