@@ -206,5 +206,91 @@ t('two-word questions reach the answer that already exists', () => {
   }
 });
 
+/* ---- the second content questionnaire (Tomer, 26/08) ---- */
+t('the twelve answers from the second questionnaire reach the customer', () => {
+  for (const [q, id] of [
+    ['משקפי סקי וכפפות כלולים בהשכרה?', 'clothing'],
+    ['יש heli-ski?', 'offpiste_heli'],
+    ['אפשר אוף פיסט עם מדריך?', 'offpiste_heli'],
+    ['לנגלאוף?', 'cross_country'],
+    ['רכבלים סגורים?', 'lifts_closed'],
+    ['החזר אם המסלולים סגורים?', 'lifts_closed'],
+    ['תותחי שלג?', 'snow_making'],
+    ['יש תפריט ילדים?', 'kids_menu'],
+    ['ארוחות ילדים?', 'kids_menu'],
+    ['יש רופא ילדים באתר?', 'medical_on_site'],
+    ['יש חבילה לסינגלים?', 'singles_package'],
+    ['בולגריה בסדר לזוג חד מיני?', 'any_couple'],
+    ['בחופשת פברואר עמוס?', 'busy_periods'],
+    ['מעיינות חמים?', 'hot_springs'],
+    ['חדר משחקים?', 'hotel_facility_unknown'],
+    ['יש סנואו פארק?', 'snow_park'],
+    ['יש בית קפה בכפר או שזה כפר מת?', 'village_life'],
+    ['איזה bindings?', 'equipment_booking'],
+    ['יש לסבא בן 74 מחלות רקע?', 'health_rules'],
+  ]) {
+    const a = nlu.faq(q);
+    assert.ok(a && a.id === id, `${q} → ${a ? a.id : 'nothing'} (expected ${id})`);
+  }
+});
+t('goggles and gloves are not part of the rental', () => {
+  const a = nlu.faq('משקפי סקי?');
+  assert.ok(/משקפי סקי וכפפות אינם חלק מהשכרת הציוד/.test(a.he), a.he);
+  assert.ok(/בארץ/.test(a.he), 'most people buy them here first');
+});
+t('nothing we do not sell is offered: heli-ski, off-piste, cross-country', () => {
+  for (const id of ['offpiste_heli', 'cross_country']) {
+    const he = faqFile.entries.find(e => e.id === id).answer_he;
+    assert.ok(/אינם? חלק מהחבילות|אינה משהו שאנחנו מסדרים/.test(he), id + ': ' + he);
+    assert.ok(!/נסדר לכם|אפשר להזמין דרכנו/.test(he), id + ' offers it anyway');
+  }
+});
+t('snow and lifts are never promised, and the answer says what we do instead', () => {
+  const a = nlu.faq('רכבלים סגורים?');
+  assert.ok(/לא מבטיחים שלג/.test(a.he) && /לא יכולים להבטיח/.test(a.he), a.he);
+  assert.ok(/נבדק לגופו/.test(a.he) && /כל שביכולתה/.test(a.he), 'and what the company does: ' + a.he);
+  assert.ok(!/נפצה|החזר כספי מלא|מתחייבים/.test(a.he), 'no promise of compensation: ' + a.he);
+});
+t('what we do not hold per hotel is sent to the site and to a person, never guessed', () => {
+  for (const id of ['snow_making', 'hot_springs', 'hotel_facility_unknown', 'snow_park']) {
+    const he = faqFile.entries.find(e => e.id === id).answer_he;
+    assert.ok(/פינגווין|נציג/.test(he), id + ' does not point anywhere: ' + he);
+    assert.ok(!/\b\d+\b/.test(he.replace(/4–12|12–13|04-8557722/g, '')), id + ' quotes a number: ' + he);
+  }
+});
+t('every couple gets the same answer, and no lecture', () => {
+  const a = nlu.faq('בולגריה בסדר לזוג חד מיני?');
+  assert.ok(/מתאימות לכל זוג/.test(a.he), a.he);
+  assert.ok(a.he.length < 320, 'short and matter of fact');
+});
+t('February is named as the busy week, with no period to avoid', () => {
+  const a = nlu.faq('בחופשת פברואר עמוס?');
+  assert.ok(/פברואר/.test(a.he) && /אין תקופה שאנחנו ממליצים להימנע/.test(a.he), a.he);
+});
+t('the new answers obey the red rules like the rest', () => {
+  const NEW = ['offpiste_heli', 'cross_country', 'lifts_closed', 'snow_making', 'kids_menu',
+    'medical_on_site', 'singles_package', 'any_couple', 'busy_periods', 'hot_springs',
+    'hotel_facility_unknown', 'snow_park', 'village_life'];
+  for (const id of NEW) {
+    const e = faqFile.entries.find(x => x.id === id);
+    assert.ok(e, 'missing entry: ' + id);
+    assert.ok(!/₪|€|\$|שקל|יורו|דולר/.test(e.answer_he), 'money in ' + id);
+    assert.ok(!/שעות נסיעה|\d+ דקות/.test(e.answer_he), 'travel time in ' + id);
+    assert.ok(!/Belambra|Club Med|מלון [A-Z]/.test(e.answer_he), 'a hotel is named in ' + id);
+  }
+});
+
+
+t('a leading question about the Hebrew escort is answered, not turned into a headcount question', () => {
+  // the offline bank's only hard-rule failure: "שמאשרים ילדים במועדון גם בלי
+  // מדריך עברית?" — the pattern knew "מדריך בעברית" and not "מדריך עברית"
+  for (const q of ['שמאשרים ילדים במועדון גם בלי מדריך עברית?', 'יש מלווה ישראלי?']) {
+    const a = nlu.faq(q);
+    assert.ok(a && a.id === 'hebrew_staff', `${q} → ${a ? a.id : 'nothing'}`);
+    assert.ok(/מלווה ולא מדריך/.test(a.he), 'the distinction survives: ' + q);
+  }
+});
+
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
