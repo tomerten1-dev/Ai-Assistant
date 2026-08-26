@@ -1046,6 +1046,9 @@ async function handleChat(body) {
       : guidance.closing(anyOffer ? (oneOnly ? 'with_one_offer' : 'with_offers') : 'no_offers');
     const said = parts.join(String.fromCharCode(10));
     if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
+    // the widget prints the closing UNDER the offers, where the buttons it
+    // refers to are; above three cards it pushed them below the fold
+    if (close && anyOffer) slots._after_cards = close;
     // A last trim on the assembled reply. phrase() caps its own lines, but a
     // FAQ answer, a question and a closing arrive from here — a kosher-keeping
     // family asking about camps got six paragraphs. The softer lines go first.
@@ -1130,6 +1133,7 @@ async function handleChat(body) {
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
     reply_he: replyText,
+    after_cards_he: (cards.length && slots._after_cards && replyText.includes(slots._after_cards)) ? slots._after_cards : null,
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,

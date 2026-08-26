@@ -170,12 +170,20 @@
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
     + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
     + '.cards-row .card{flex:1 1 270px;min-width:0}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:7px;'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:14px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px;'
     + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
     + '.card:hover{box-shadow:0 6px 18px rgba(16,32,48,.10);transform:translateY(-2px);border-color:#c8d5e2}'
     // gallery: the photo fills the top of the card, arrows sit on it
-    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-14px -14px 8px;border-radius:13px 13px 0 0;overflow:hidden;background:#e8edf1}'
-    + '.card .photo{width:100%;height:150px;object-fit:cover;display:block}'
+    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:13px 13px 0 0;overflow:hidden;background:#e8edf1}'
+    // 112px: three cards with their date, room, price and both buttons fit a
+    // laptop screen without scrolling — the photo is the first thing to give
+    + '.card .photo{width:100%;height:104px;object-fit:cover;display:block}'
+    + '.card .gal .tier{position:absolute;top:8px;inset-inline-start:8px;box-shadow:0 1px 4px rgba(0,0,0,.25)}'
+    // everything that is nice to know but not needed to choose lives behind one toggle
+    + '.card .details{display:none;flex-direction:column;gap:6px}'
+    + '.card.open .details{display:flex}'
+    + '.card .dtog{align-self:flex-start;background:none;border:none;padding:2px 0;font-family:inherit;font-size:12.5px;color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600}'
+    + '.card .dtog:hover{text-decoration:underline}'
     + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;'
     + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';line-height:0;cursor:pointer;padding:0;'
     + 'display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(16,32,48,.25);opacity:0;transition:opacity .15s}'
@@ -193,7 +201,7 @@
     + '.card .cwhere{font-size:13px;color:' + THEME.textLight + '}'
 
     // labelled rows: label in grey, value in ink — readable at a glance
-    + '.card .rows{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-top:1px solid #edf1f5;border-bottom:1px solid #edf1f5}'
+    + '.card .rows{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-top:1px solid #edf1f5;border-bottom:1px solid #edf1f5}'
     + '.card .row{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}'
     + '.card .rlab{font-size:12.5px;color:' + THEME.textLight + ';flex:none}'
     + '.card .rval{font-size:13.5px;color:' + THEME.text + ';font-weight:600}'
@@ -215,10 +223,12 @@
     + '.card .cfoot{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:2px}'
     + '.card .fits{font-size:13px;color:' + THEME.textLight + '}'
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
-    + '.card .hname{font-weight:700;font-size:15.5px;color:' + THEME.text + ';line-height:1.3;letter-spacing:-.2px}'
+    + '.card .hname{font-weight:700;font-size:15px;color:' + THEME.text + ';line-height:1.25;letter-spacing:-.2px}'
     + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
+    + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
+    + '.m.bot.after::before{display:none}'
     + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
     + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
@@ -227,8 +237,8 @@
     + '.tag.tier{background:' + THEME.primaryDark + ';color:#fff;border:1px solid ' + THEME.primaryDark + ';font-weight:600}'
     + '.tag.left{background:#fbeeea;color:#8a3b2a;border:1px solid #efcfc6}'
     + '.card .price{font-size:14.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px}'
-    + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:8px;flex-wrap:wrap}'
-    + '.btn{flex:1 1 0;min-width:112px;padding:10px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
+    + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:6px;flex-wrap:wrap}'
+    + '.btn{flex:1 1 0;min-width:112px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
     + '.btn.pri{background:' + THEME.primary + ';color:#fff}'
     + '.btn.pri:hover{background:' + THEME.primaryDark + '}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
@@ -462,6 +472,7 @@
         next.addEventListener('click', step(-1));
         gal.appendChild(prev); gal.appendChild(next); gal.appendChild(count);
       }
+      if (c.tier_he) gal.appendChild(el('span', 'tag tier', c.tier_he));
       card.appendChild(gal);
     }
 
@@ -516,6 +527,12 @@
     }
     card.appendChild(rows);
 
+    // ---- the fold: what helps to CHOOSE stays visible (date, room, price,
+    // answers to what the customer asked); what helps to DECIDE LATER (what the
+    // package includes, the hotel blurb, lift distance) opens on one click.
+    // Three cards used to run past the bottom of a laptop screen.
+    var details = el('div', 'details');
+
     // What this package includes, straight from the hotel page. Clamped to
     // three lines because some run to a paragraph; the whole thing opens on a
     // click, the same disclosure the room row uses.
@@ -533,11 +550,22 @@
         itxt.classList.add('clamp3');
         inc.appendChild(more);
       }
-      card.appendChild(inc);
+      details.appendChild(inc);
     }
 
-    if (c.desc_he) card.appendChild(el('div', 'cdesc', c.desc_he));
-    if (c.lift_he) card.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
+    if (c.desc_he) details.appendChild(el('div', 'cdesc', c.desc_he));
+    if (c.lift_he) details.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
+    if (details.childNodes.length) {
+      var dtog = el('button', 'dtog', 'מה כלול ופרטי המלון ▾');
+      dtog.setAttribute('aria-expanded', 'false');
+      dtog.addEventListener('click', function () {
+        var open = card.classList.toggle('open');
+        dtog.textContent = open ? 'פחות פרטים ▴' : 'מה כלול ופרטי המלון ▾';
+        dtog.setAttribute('aria-expanded', String(open));
+      });
+      card.appendChild(dtog);
+      card.appendChild(details);
+    }
 
     // answers to what THIS customer asked about (beds, board, ski pass, ...)
     if (c.facts_he && c.facts_he.length) {
@@ -547,7 +575,7 @@
     }
 
     var tags = el('div', 'tags');
-    if (c.tier_he) tags.appendChild(el('span', 'tag tier', c.tier_he));
+    if (c.tier_he && !photos.length) tags.appendChild(el('span', 'tag tier', c.tier_he));
     if (c.recommended) tags.appendChild(el('span', 'tag rec', 'מומלץ'));
     if (c.rooms_left_he) tags.appendChild(el('span', 'tag left', c.rooms_left_he));
     if (c.camps && c.camps.running && c.camps.running.length) {
@@ -559,7 +587,8 @@
 
     var foot = el('div', 'cfoot');
     foot.appendChild(el('div', 'price', 'טווח מחיר: ' + c.price_range));
-    if (c.occ && c.occ.max != null) {
+    // "מתאים ל-4 נוסעים" already opens the why-line on most cards — once is enough
+    if (c.occ && c.occ.max != null && !(c.why_he && c.why_he.indexOf('מתאים ל-') === 0)) {
       foot.appendChild(el('div', 'fits', 'מתאים ל-' + c.occ.max + ' נוסעים'));
     }
     card.appendChild(foot);
@@ -587,6 +616,8 @@
     var old = msgs.querySelectorAll('.chips');
     for (var i = 0; i < old.length; i++) old[i].remove();
     var box = el('div', 'chips');
+    // two rows of chips is a menu, not a nudge — the first ten carry the intent
+    labels = labels.slice(0, 10);
     labels.forEach(function (l) {
       var ch = el('button', 'chip', l);
       ch.addEventListener('click', function () { sendText(l); });
@@ -757,14 +788,20 @@
       showTyping(false);
       state.slots = data.slots || state.slots;
       var introEl = null;
-      if (data.reply_he) {
-        introEl = addMsg('bot', data.reply_he);
+      // the closing sentence ("אם אחת מהן נראית לכם…") talks about the buttons —
+      // so it goes under the cards, not above them
+      var after = (data.cards && data.cards.length && data.after_cards_he) ? data.after_cards_he : null;
+      var shown = data.reply_he;
+      if (after && shown) shown = shown.split(after).join('').replace(/\n+$/, '').replace(/\n\n+/g, '\n');
+      if (shown) {
+        introEl = addMsg('bot', shown);
         state.messages.push({ role: 'assistant', content: data.reply_he });
       }
       if (data.cards && data.cards.length) {
         track('offers', { count: data.cards.length });
         // three offers side by side, so the customer barely scrolls
         var row = addCardsRow(data.cards);
+        if (after) addMsg('bot', after).classList.add('after');
         state.log.push({ t: 'cards', v: data.cards });
         // park the view on the intro line + first card, not below them
         scrollToTopOf(introEl || row);
