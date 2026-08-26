@@ -8,3 +8,4 @@ source-data/
 /tmp/
 server-data/
 logs/
+tests/bank-results.json

@@ -493,6 +493,10 @@ async function handleChat(body) {
       notes: [], relaxed: [],
       chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
       chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: {
+        answered_by: faqHit.routed ? 'router' : 'faq', faq_ids: (faqHit.all || [faqHit]).map(a => a.id),
+        guard: null, off_topic: false, not_understood: false, pending: 'adults', early_return: true,
+      } } : {}),
     };
   }
 
@@ -1032,6 +1036,14 @@ async function handleChat(body) {
     notes: result.notes, relaxed: result.relaxed,
     chips: cards.length ? [...gapChips, ...CHIP_LABELS] : gapChips,
     chip_to_pref: CHIP_TO_PREF,
+    // how the turn was decided — for the question-bank harness only, never
+    // shown to customers (tests/test-bank.js sets BANK_DEBUG=1)
+    ...(process.env.BANK_DEBUG ? { debug: {
+      answered_by: guarded ? 'guard' : deflection ? 'deflect' : faqHit ? (faqHit.routed ? 'router' : 'faq') : null,
+      faq_ids: faqHit ? (faqHit.all || [faqHit]).map(a => a.id) : [],
+      guard: guarded || null, off_topic: !!offTopic, not_understood: !!(offTopic && !deflection && !faqHit),
+      pending: pendingQuestion ? pendingQuestion.key : null,
+    } } : {}),
   };
 }
 
