@@ -11,6 +11,8 @@
     primary: '#1c3d5a',        // TODO: להחליף לכחול פינגווין הרשמי
     primaryDark: '#132c42',
     accent: '#8a9bab',         // אפור-כחול מאופק
+    ice: '#eaf2f8',            // רקע "קרח" עדין להדגשות
+    grad: 'linear-gradient(135deg,#1c3d5a 0%,#2b5f86 100%)',  // כפתורים ראשיים ובועה
     bg: '#ffffff',
     bgAlt: '#f5f7f9',
     text: '#212b33',
@@ -116,12 +118,12 @@
     + ':host{all:initial}'
     + '*{box-sizing:border-box;margin:0;padding:0}'
     + '.wrap{position:fixed;bottom:20px;' + THEME.position + ':20px;z-index:' + THEME.zIndex + ';font-family:' + THEME.font + ';direction:rtl}'
-    + '.fab{width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;background:' + THEME.primary + ';color:#fff;'
-    + 'box-shadow:0 3px 12px rgba(16,32,48,.28);display:flex;align-items:center;justify-content:center;transition:transform .15s}'
-    + '.fab:hover{transform:scale(1.06)}'
+    + '.fab{width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;background:' + THEME.grad + ';color:#fff;'
+    + 'box-shadow:0 6px 18px rgba(28,61,90,.35),0 0 0 4px rgba(28,61,90,.08);display:flex;align-items:center;justify-content:center;transition:transform .18s,box-shadow .18s}'
+    + '.fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 24px rgba(28,61,90,.4),0 0 0 6px rgba(28,61,90,.08)}'
     + '.fab:focus-visible{outline:3px solid ' + THEME.accent + '}'
     + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
-    + 'background:' + THEME.bg + ';border-radius:' + THEME.radius + ';box-shadow:0 10px 36px rgba(16,32,48,.22);border:1px solid #dfe5ea;display:none;flex-direction:column;overflow:hidden;'
+    + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
@@ -131,9 +133,11 @@
     // on a phone the window is the screen, whatever .big/.max say — those two
     // used to win on specificity and leave a lopsided box with a 32px gap
     + '@media (max-width:480px){.win,.win.big,.win.max{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0;margin:0}'
-    + '.hdr .sub{display:none}.hdr .ttl{font-size:13.5px}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
+    + '.hdr .sub{display:none}.hdr .ttl{font-size:14px;white-space:nowrap}.hdr .ttl .long{display:none}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
-    + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf1}'
+    + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:12px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #e8edf1}'
+    + '.hdr .mark{width:36px;height:36px;border-radius:11px;background:' + THEME.grad + ';color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none;position:relative;box-shadow:0 2px 6px rgba(28,61,90,.25)}'
+    + '.hdr .mark::after{content:"";position:absolute;inset-inline-end:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;background:#2fb26a;border:2px solid ' + THEME.bg + '}'
     + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
     + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
     + '.form .consent{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:' + THEME.textLight + ';margin:10px 0 4px;line-height:1.4;cursor:pointer}'
@@ -149,18 +153,18 @@
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
     // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
-    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:22px 20px 18px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth}'
+    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:22px 20px 18px;background:linear-gradient(180deg,#fbfcfd 0%,#f4f7fa 100%);display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth}'
     // the default Windows scrollbar is a slab down the side of a small window
     + '.msgs::-webkit-scrollbar{width:8px}'
     + '.msgs::-webkit-scrollbar-thumb{background:#d3dae1;border-radius:99px;border:2px solid ' + THEME.bg + '}'
     + '.msgs::-webkit-scrollbar-thumb:hover{background:#b9c4ce}'
     + '.msgs::-webkit-scrollbar-track{background:transparent}'
     + '.m{font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word}'
-    + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.bgAlt + ';color:' + THEME.text + ';'
-    + 'border:1px solid #e4e9ee;border-radius:16px 16px 16px 4px;padding:10px 15px}'
+    + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.ice + ';color:' + THEME.text + ';'
+    + 'border:1px solid #d9e6f0;border-radius:16px 16px 16px 4px;padding:10px 15px}'
     + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:32px;position:relative}'
-    + '.m.bot::before{content:"P";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:6px;'
-    + 'background:' + THEME.primary + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:.3px}'
+    + '.m.bot::before{content:"P";position:absolute;inset-inline-start:0;top:2px;width:22px;height:22px;border-radius:7px;'
+    + 'background:' + THEME.grad + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:.3px}'
     + '.typing{align-self:stretch;padding:2px 0 2px 32px;padding-inline-start:32px;display:flex;gap:5px;align-items:center;position:relative}'
     + '.typing::before{content:"P";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:6px;'
     + 'background:' + THEME.primary + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}'
@@ -170,11 +174,13 @@
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
     + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
     + '.cards-row .card{flex:1 1 270px;min-width:0}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde6ee;border-radius:14px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px;'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #e1e8ef;border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 3px rgba(16,32,48,.05);'
     + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
-    + '.card:hover{box-shadow:0 6px 18px rgba(16,32,48,.10);transform:translateY(-2px);border-color:#c8d5e2}'
+    + '.card:hover{box-shadow:0 10px 26px rgba(16,32,48,.12);transform:translateY(-2px);border-color:#c8d5e2}'
     // gallery: the photo fills the top of the card, arrows sit on it
-    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:13px 13px 0 0;overflow:hidden;background:#e8edf1}'
+    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:15px 15px 0 0;overflow:hidden;background:#e8edf1}'
+    + '.card .gal::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(16,32,48,.35) 100%);pointer-events:none}'
+    + '.card .gal .galb,.card .gal .galn,.card .gal .tier{z-index:1}'
     // 112px: three cards with their date, room, price and both buttons fit a
     // laptop screen without scrolling — the photo is the first thing to give
     + '.card .photo{width:100%;height:104px;object-fit:cover;display:block}'
@@ -236,11 +242,11 @@
     + '.tag.rec{background:#e8eef4;color:' + THEME.primaryDark + ';border:1px solid #cfdae4}'
     + '.tag.tier{background:' + THEME.primaryDark + ';color:#fff;border:1px solid ' + THEME.primaryDark + ';font-weight:600}'
     + '.tag.left{background:#fbeeea;color:#8a3b2a;border:1px solid #efcfc6}'
-    + '.card .price{font-size:14.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px}'
+    + '.card .price{font-size:13.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px;background:' + THEME.ice + ';border-radius:8px;padding:4px 10px}'
     + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:6px;flex-wrap:wrap}'
     + '.btn{flex:1 1 0;min-width:112px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
-    + '.btn.pri{background:' + THEME.primary + ';color:#fff}'
-    + '.btn.pri:hover{background:' + THEME.primaryDark + '}'
+    + '.btn.pri{background:' + THEME.grad + ';color:#fff;box-shadow:0 2px 6px rgba(28,61,90,.25)}'
+    + '.btn.pri:hover{filter:brightness(1.08);box-shadow:0 4px 12px rgba(28,61,90,.3)}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
     + '.btn.sec:hover{background:' + THEME.bgAlt + '}'
     + '.chips{display:flex;flex-wrap:wrap;gap:7px;align-self:stretch;padding-inline-start:32px}'
@@ -248,7 +254,7 @@
     // min-height 36px: a 30px chip is below the comfortable tap target on a
     // phone, and chips are the main way a customer refines on mobile
     + 'padding:9px 15px;min-height:38px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
-    + '.chip:hover{background:' + THEME.bgAlt + ';color:' + THEME.primaryDark + ';border-color:' + THEME.primary + '}'
+    + '.chip:hover{background:' + THEME.primary + ';color:#fff;border-color:' + THEME.primary + '}'
     // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
     + '.inp{display:flex;gap:8px;padding:12px 16px 16px;background:' + THEME.bg + ';align-items:flex-end;border-top:1px solid #eef2f5}'
     + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #d8dfe6;border-radius:14px;'
@@ -257,8 +263,8 @@
     + '.inp textarea{flex:1;border:none;background:none;padding:9px 4px;font-size:15px;font-family:inherit;direction:rtl;'
     + 'resize:none;overflow-y:auto;line-height:1.5;max-height:110px;min-height:32px;color:' + THEME.text + '}'
     + '.inp textarea:focus{outline:none}'
-    + '.send:hover:not(:disabled){background:' + THEME.primaryDark + '}'
-    + '.send{background:' + THEME.primary + ';border:none;color:#fff;border-radius:10px;width:36px;height:36px;flex:none;'
+    + '.send:hover:not(:disabled){filter:brightness(1.1)}'
+    + '.send{background:' + THEME.grad + ';border:none;color:#fff;border-radius:11px;width:36px;height:36px;flex:none;'
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
     + '.send:disabled{opacity:.5;cursor:default}'
     + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
@@ -270,6 +276,16 @@
   var style = document.createElement('style');
   style.textContent = css;
   root.appendChild(style);
+  // Hebrew brand face. Loaded into the host document (fonts do not cross the
+  // shadow boundary); falls back to the system stack if the CDN is blocked.
+  try {
+    if (!document.querySelector('link[data-pw-font]')) {
+      var fl = document.createElement('link');
+      fl.rel = 'stylesheet'; fl.setAttribute('data-pw-font', '');
+      fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap';
+      document.head.appendChild(fl);
+    }
+  } catch (e) { }
 
   /* ============== dom ============== */
   function el(tag, cls, txt) {
@@ -288,8 +304,11 @@
   win.setAttribute('aria-label', 'צ׳אט פינגווין');
 
   var hdr = el('div', 'hdr');
+  hdr.appendChild(el('div', 'mark', 'P'));
   var hTxt = el('div');
-  hTxt.appendChild(el('div', 'ttl', 'פינגווין | ייעוץ חופשות סקי'));
+  var ttl = el('div', 'ttl', 'פינגווין');
+  ttl.appendChild(el('span', 'long', ' | ייעוץ חופשות סקי'));
+  hTxt.appendChild(ttl);
   hTxt.appendChild(el('div', 'sub', 'זמינות בזמן אמת מתוך המלאי שלנו'));
   // Let the customer decide how much room the chat gets. A fixed box the
   // page cannot escape is the most common complaint about widgets like this,
