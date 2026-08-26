@@ -5,11 +5,12 @@
   "description": "בוט התאמת חופשות סקי לאתר פינגווין — דמו",
   "scripts": {
     "build:data": "node tools/build-availability.js && node tools/build-camps.js && node tools/build-restrictions.js && node tools/merge-rooms.js",
-    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js && node tests/test-lead.js && node tests/test-booking-url.js",
+    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js && node tests/test-lead.js && node tests/test-booking-url.js && node tests/test-site-rooms.js",
     "start": "node server/server.js",
     "dev": "node tools/dev.js",
     "test:ui": "node tests/test-widget.js",
     "test:prefill": "node tests/test-prefill.js",
+    "rooms": "node tools/room-list.js",
     "bank": "node tests/test-bank.js",
     "bank:live": "node tests/test-bank.js --typical --sample=100 --live --watch",
     "stress": "node tests/stress.js",

@@ -27,7 +27,7 @@
   var q = {};
   try {
     var sp = new URLSearchParams(window.location.search);
-    ['from', 'till', 'room', 'ad', 'kids', 'pans', 'quote'].forEach(function (k) {
+    ['from', 'till', 'room', 'roomid', 'ad', 'kids', 'pans', 'quote'].forEach(function (k) {
       var v = sp.get(NS + k);
       if (v) q[k] = v;
     });
@@ -132,9 +132,8 @@
       .replace(/[^א-תa-z0-9]+/g, ' ').trim();
   }
   function waitForRooms() {
-    if (!q.room) return Promise.resolve(null);
+    if (!q.room && !q.roomid) return Promise.resolve(null);
     var want = norm(q.room);
-    if (!want) return Promise.resolve(null);
     var tries = 0;
     return new Promise(function (resolve) {
       var t = setInterval(function () {
@@ -146,6 +145,13 @@
           return;
         }
         clearInterval(t);
+        // the id the booking engine itself gave us — checked against the list,
+        // because a stale id must never select the wrong room
+        if (q.roomid) {
+          var byId = opts.filter(function (o) { return o.value === q.roomid; });
+          if (byId.length === 1) return resolve(byId[0].value);
+        }
+        if (!want) return resolve(null);
         var exact = opts.filter(function (o) { return norm(o.textContent) === want; });
         if (exact.length === 1) return resolve(exact[0].value);
         var partial = opts.filter(function (o) {

@@ -18,7 +18,8 @@ const guidance = require('./guidance.js');
 const router = require('./answer-router.js');
 const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
-const { buildBookingUrl, deepLink } = require('../config/booking-url.js');
+const { buildBookingUrl, deepLink, addNights } = require('../config/booking-url.js');
+const siteRooms = require('./site-rooms.js');
 const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
 const recommend = require('./recommend.js');
@@ -320,6 +321,8 @@ function presentCards(result, slots, skip, opts = {}) {
     // match it) the room already filled — see config/booking-url.js
     booking_url: deepLink(engine.hotelInfo(c.hotel), {
       date: c.date, nights: c.nights, room: c.room, board_he: c.board_he,
+      room_id: siteRooms.idFor(engine.hotelInfo(c.hotel).siteID,
+        c.date, addNights(c.date, c.nights), c.room),
     }, slots),
   })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
 }

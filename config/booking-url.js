@@ -75,7 +75,10 @@ function deepLink(hotelInfo, card, party) {
   const p = new URLSearchParams();
   p.set(NS + 'from', from);
   p.set(NS + 'till', till);
-  if (card.room) p.set(NS + 'room', card.room);     // matched by name on the page
+  // the site's own id when we know it (server/site-rooms.js asked the booking
+  // engine); the name stays as the fallback the browser can still match on
+  if (card.room_id) p.set(NS + 'roomid', String(card.room_id));
+  if (card.room) p.set(NS + 'room', card.room);
   const adults = party && party.adults;
   if (adults) p.set(NS + 'ad', String(adults));
   const kids = (party && party.children_ages) || [];

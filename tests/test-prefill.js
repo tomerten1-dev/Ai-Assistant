@@ -86,7 +86,24 @@ const FILES = {
     });
     await p.close();
 
-    // 3 · a room name the site spells differently — dates still land
+    // 3 · the id from the booking engine beats any name matching
+    p = await open('?siteID=1288&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3&pwroomid=813&pwroom=' +
+      encodeURIComponent('שם שגוי לגמרי'));
+    r = await read(p);
+    t('the site\'s own room id is used when we have it', () => {
+      assert.strictEqual(r.room, '813', 'the id was ignored in favour of a name that cannot match');
+    });
+    await p.close();
+
+    // …and an id the list does not contain is not forced in
+    p = await open('?siteID=1288&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3&pwroomid=999999');
+    r = await read(p);
+    t('a stale id selects nothing rather than the wrong room', () => {
+      assert.strictEqual(r.room, '0');
+    });
+    await p.close();
+
+    // 4 · a room name the site spells differently — dates still land
     p = await open('?siteID=1288&pwfrom=09.01.2027&pwtill=16.01.2027&pwad=2&pwroom=' +
       encodeURIComponent('CONN Premium with View 5 pax'));
     r = await read(p);
@@ -108,7 +125,7 @@ const FILES = {
     });
     await p.close();
 
-    // 4 · the promise to Pingwin: an ordinary visitor sees nothing
+    // 5 · the promise to Pingwin: an ordinary visitor sees nothing
     p = await open('?siteID=1288&tab=20');
     r = await read(p);
     t('on an ordinary page view it does nothing at all', () => {
@@ -119,7 +136,7 @@ const FILES = {
     });
     await p.close();
 
-    // 5 · a broken link must not break their page
+    // 6 · a broken link must not break their page
     p = await open('?siteID=1288&pwfrom=נונסנס&pwtill=06.02.2027&pwad=3');
     r = await read(p);
     t('a malformed date is ignored rather than typed into the form', () => {
