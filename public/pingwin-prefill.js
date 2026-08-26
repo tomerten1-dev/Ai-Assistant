@@ -135,15 +135,27 @@
   // room IS, reduced to tokens in one language, and how many people it holds.
   // The site writes "Premium with View 4-5 pax" where the workbook writes
   // "CONN Premium with View 5 pax" — same room, no shared substring.
+  // two ways of saying how many people: "2-5 pax" / "5 אורחים", and the bare
+  // range "Premium Room 2-3". A lone number counts BEDROOMS ("2 ח\"ש"), so the
+  // bare form is read only as a range or a plus, and only with no bed word after
   var OCC = /(\d+)\s*(?:[-–]\s*(\d+)|\+\s*(\d+))?\s*(?:pax|ppl|people|אורחים|נופשים|אנשים)/i;
+  var OCC_BARE = /(\d+)\s*(?:[-–]\s*(\d+)|\+\s*(\d+))(?!\s*(?:bdrm|bedrooms?|ח["'׳״]?ש|חדרי|rooms?)\b)/i;
   function occOf(s) {
-    var m = OCC.exec(String(s || ''));
+    var text = String(s || '');
+    var m = OCC.exec(text) || OCC_BARE.exec(text);
     if (!m) return null;
     var a = parseInt(m[1], 10);
     var b = m[2] ? parseInt(m[2], 10) : (m[3] ? a + parseInt(m[3], 10) : a);
-    return { min: Math.min(a, b), max: Math.max(a, b) };
+    return { min: Math.min(a, b), max: Math.max(a, b), said: m[0] };
   }
   function overlaps(x, y) { return !x || !y || (x.min <= y.max && y.min <= x.max); }
+  function holds(occ, party) { return !party || !occ || (occ.min <= party && party <= occ.max); }
+  // how many people are travelling — the only thing that separates
+  // "2 ח"ש וסלון 2-4 אורחים" from "2 ח"ש וסלון 5 אורחים"
+  function party() {
+    var n = (parseInt(q.ad, 10) || 0) + (q.kids ? String(q.kids).split(',').filter(Boolean).length : 0);
+    return n > 0 ? n : 0;
+  }
   var SAME = { bdrm: 'bdrm', bedroom: 'bdrm', bedrooms: 'bdrm', 'חש': 'bdrm', 'חדרי': 'bdrm',
     'שינה': '', 'ח': '', 'ש': '', view: 'view', 'נוף': 'view',
     balcony: 'balcony', 'מרפסת': 'balcony', studio: 'studio', 'סטודיו': 'studio',
@@ -152,11 +164,13 @@
   var NOISE = { apt: 1, apartment: 1, appartement: 1, 'דירה': 1, 'דירת': 1, room: 1, rooms: 1,
     'חדר': 1, 'חדרים': 1, 'וסלון': 1, 'סלון': 1, living: 1, lounge: 1, with: 1, and: 1,
     the: 1, of: 1, pax: 1, ppl: 1, people: 1, 'אורחים': 1, 'נופשים': 1, 'אנשים': 1,
-    'עם': 1, 'ו': 1, conn: 1, connecting: 1, 'מחוברים': 1 };
+    'עם': 1, 'ו': 1, conn: 1, connecting: 1, 'מחוברים': 1, '+': 1 };
   function tokens(s) {
     // the occupancy goes BEFORE normalising: norm() deletes the hyphen, and
     // then "2-5 pax" stops looking like a range and leaves a stray "2"
-    var words = norm(String(s || '').replace(OCC, ' ')).split(/\s+/);
+    var text = String(s || ''), occ = occOf(text);
+    if (occ) text = text.split(occ.said).join(' ');
+    var words = norm(text).split(/\s+/);
     var out = [];
     for (var i = 0; i < words.length; i++) {
       var w = words[i];
@@ -181,10 +195,17 @@
       var name = opts[i].textContent;
       if (overlaps(ourOcc, occOf(name))) live.push({ o: opts[i], tk: tokens(name) });
     }
-    var same = live.filter(function (x) { return sameSet(ours, x.tk); });
-    if (same.length === 1) return same[0].o.value;
-    var near = live.filter(function (x) { return subset(ours, x.tk) || subset(x.tk, ours); });
-    return near.length === 1 ? near[0].o.value : null;
+    var pick = function (list) {
+      if (list.length === 1) return list[0].o.value;
+      if (list.length > 1 && party()) {
+        var fits = list.filter(function (x) { return holds(occOf(x.o.textContent), party()); });
+        if (fits.length === 1) return fits[0].o.value;
+      }
+      return null;
+    };
+    var chosen = pick(live.filter(function (x) { return sameSet(ours, x.tk); }));
+    if (chosen) return chosen;
+    return pick(live.filter(function (x) { return subset(ours, x.tk) || subset(x.tk, ours); }));
   }
   function waitForRooms() {
     if (!q.room && !q.roomid) return Promise.resolve(null);

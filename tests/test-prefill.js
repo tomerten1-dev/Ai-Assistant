@@ -150,6 +150,23 @@ const FILES = {
     });
     await p.close();
 
+    // 4c · one room name, two products, told apart by who is travelling
+    const plein = n => '?siteID=1288&pwfrom=13.03.2027&pwtill=20.03.2027&pwad=' + n +
+      '&pwroom=' + encodeURIComponent('2 bedroom apt 4-5 pax');
+    p = await open(plein(5));
+    r = await read(p);
+    t('five travellers get the room the site sells to five', () => {
+      assert.strictEqual(r.room, '3721', 'ours "4-5 pax" → theirs "5 אורחים"');
+    });
+    await p.close();
+
+    p = await open(plein(4));
+    r = await read(p);
+    t('four travellers get the other one, at the other price', () => {
+      assert.strictEqual(r.room, '2882', 'ours "4-5 pax" → theirs "2-4 אורחים"');
+    });
+    await p.close();
+
     // 5 · the promise to Pingwin: an ordinary visitor sees nothing
     p = await open('?siteID=1288&tab=20');
     r = await read(p);

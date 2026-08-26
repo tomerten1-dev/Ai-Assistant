@@ -63,11 +63,29 @@ const list = [...seen.values()].slice(0, all ? 200 : 3);
     }
     console.log('   החדרים שלנו לאותה יציאה:');
     for (const x of ours) {
-      const id = siteRooms.match(rooms, x.room,
-        { type: x.room_type, occMin: x.occ_min, occMax: x.occ_max });
-      const hit = id && rooms.find(r => String(r.roomID) === String(id));
-      if (hit) matched++;
-      console.log(`     ${x.room}\n        → ${hit ? `✓ ${hit.roomID} (${hit.roomName})` : '✗ אין התאמה'}`);
+      // the same call server.js makes, once per party size this unit can take —
+      // the site often splits one of our units into a room per party size
+      const base = { type: x.room_type, occMin: x.occ_min, occMax: x.occ_max };
+      const lo = x.occ_min || x.occ_max || 0, hi = x.occ_max || x.occ_min || 0;
+      const by = new Map();
+      for (let n = lo; n <= hi; n++) {
+        const id = siteRooms.match(rooms, x.room, { ...base, party: n });
+        const hit = id && rooms.find(r => String(r.roomID) === String(id));
+        if (hit) by.set(String(n), hit);
+      }
+      if (!by.size) {
+        console.log(`     ${x.room}\n        → ✗ אין התאמה`);
+        continue;
+      }
+      matched++;
+      const ids = new Set([...by.values()].map(h => h.roomID));
+      if (ids.size === 1) {
+        const h = [...by.values()][0];
+        console.log(`     ${x.room}\n        → ✓ ${h.roomID} (${h.roomName})`);
+      } else {
+        console.log(`     ${x.room}`);
+        for (const [n, h] of by) console.log(`        → ✓ ${n} אנשים: ${h.roomID} (${h.roomName})`);
+      }
     }
     console.log('');
   }

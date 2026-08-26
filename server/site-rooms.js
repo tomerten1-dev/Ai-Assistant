@@ -131,17 +131,28 @@ const norm = s => decodeEntities(String(s || '')).toLowerCase()
   .replace(/[^א-תa-z0-9+]+/g, ' ')
   .trim();
 
-// how many people the name says the room holds: "5 pax", "2-5 pax",
-// "2+1 pax", "5 אורחים", "2-4 אורחים"
-const OCC = /(\d+)\s*(?:[-–]\s*(\d+)|\+\s*(\d+))?\s*(?:pax|ppl|people|אורחים|נופשים|אנשים)/i;
+// How many people the name says the room holds. Two ways of saying it, and the
+// second one has no word attached at all:
+//   "5 pax", "2-5 pax", "2+1 pax", "5 אורחים", "2-4 אורחים"   ← spelled out
+//   "Premium Room 2-3", "Premium with Balcony 3+1"           ← just the range
+// A bare number is NOT occupancy — "2 ח\"ש", "2 bdrm" count bedrooms — so the
+// second form is only read when it is a range or a plus, and only when no
+// bedroom word follows it.
+const PEOPLE = 'pax|ppl|people|אורחים|נופשים|אנשים';
+const BEDS = "bdrm|bedrooms?|ח[\"'׳״]?ש|חדרי|rooms?";
+const OCC = new RegExp('(\\d+)\\s*(?:[-–]\\s*(\\d+)|\\+\\s*(\\d+))?\\s*(?:' + PEOPLE + ')', 'i');
+const OCC_BARE = new RegExp('(\\d+)\\s*(?:[-–]\\s*(\\d+)|\\+\\s*(\\d+))(?!\\s*(?:' + BEDS + ')\\b)', 'i');
 function occOf(name) {
-  const m = OCC.exec(decodeEntities(String(name || '')));
+  const text = decodeEntities(String(name || ''));
+  const m = OCC.exec(text) || OCC_BARE.exec(text);
   if (!m) return null;
   const a = parseInt(m[1], 10);
   const b = m[2] ? parseInt(m[2], 10) : (m[3] ? a + parseInt(m[3], 10) : a);
-  return { min: Math.min(a, b), max: Math.max(a, b) };
+  return { min: Math.min(a, b), max: Math.max(a, b), said: m[0] };
 }
 const overlaps = (x, y) => !x || !y || (x.min <= y.max && y.min <= x.max);
+// does this room take exactly the party that is travelling?
+const holds = (occ, party) => !party || !occ || (occ.min <= party && party <= occ.max);
 
 // one vocabulary for both languages, and the words that carry no information
 const SAME = new Map([
@@ -158,13 +169,16 @@ const SAME = new Map([
 // words that appear on one side only, or in both with no distinguishing power
 const NOISE = new Set(['apt', 'apartment', 'appartement', 'דירה', 'דירת', 'room', 'rooms', 'חדר', 'חדרים',
   'וסלון', 'סלון', 'living', 'lounge', 'with', 'and', 'the', 'of', 'pax', 'ppl', 'people',
-  'אורחים', 'נופשים', 'אנשים', 'עם', 'ו', 'conn', 'connecting', 'מחוברים', 'type', 'טיפוס']);
+  'אורחים', 'נופשים', 'אנשים', 'עם', 'ו', 'conn', 'connecting', 'מחוברים', 'type', 'טיפוס', '+']);
 
 function tokens(name) {
   // the occupancy is removed BEFORE normalising: norm() deletes the hyphen in
   // "2-5 pax", and then the range no longer looks like one — "2" survived as a
   // token and no Belambra room ever matched (Tomer's run, 26/08).
-  const cleaned = norm(decodeEntities(String(name || '')).replace(OCC, ' '));
+  let text = decodeEntities(String(name || ''));
+  const occ = occOf(text);
+  if (occ) text = text.split(occ.said).join(' ');
+  const cleaned = norm(text);
   const out = new Set();
   for (let w of cleaned.split(/\s+/)) {
     if (!w) continue;
@@ -194,8 +208,11 @@ function overrideFor(siteID, room) {
 // { type: 'CONN Premium with View', occMin: 5, occMax: 5 }.
 function match(rooms, room, hint = {}) {
   if (!rooms || !rooms.length || !room) return null;
-  const ourName = hint.type || room;
-  const ourTokens = tokens(ourName);
+  // the workbook splits the same name across two columns and neither is
+  // complete: room_type for "Premium 3 +1 balcony" is just "Premium". So the
+  // description is everything both columns say.
+  const ourTokens = tokens(room);
+  for (const w of tokens(hint.type || '')) ourTokens.add(w);
   const ourOcc = (hint.occMin || hint.occMax)
     ? { min: hint.occMin || hint.occMax, max: hint.occMax || hint.occMin }
     : occOf(room);
@@ -204,14 +221,26 @@ function match(rooms, room, hint = {}) {
   const scored = rooms.map(r => ({ r, tk: tokens(r.roomName), occ: occOf(r.roomName) }))
     .filter(x => overlaps(ourOcc, x.occ));
 
+  // The party is the tie-break, and often the only one there is. We sell
+  // "2 bedroom apt 4-5 pax" as one unit; the site sells the same apartment as
+  // two products, "2 ח"ש וסלון 2-4 אורחים" and "2 ח"ש וסלון 5 אורחים". Nothing
+  // in the name separates them — only how many people are travelling does, and
+  // that is exactly what the customer already told us.
+  const pick = list => {
+    if (list.length === 1) return list[0].r.roomID;
+    if (list.length > 1 && hint.party) {
+      const fits = list.filter(x => holds(x.occ, hint.party));
+      if (fits.length === 1) return fits[0].r.roomID;
+    }
+    return null;
+  };
+
   // 1 · the same description, in whichever language
-  const same = scored.filter(x => sameSet(ourTokens, x.tk));
-  if (same.length === 1) return same[0].r.roomID;
+  const chosen = pick(scored.filter(x => sameSet(ourTokens, x.tk)));
+  if (chosen) return chosen;
   // 2 · one description contains the other (ours is shorter, or theirs is)
-  const near = scored.filter(x => subset(ourTokens, x.tk) || subset(x.tk, ourTokens));
-  if (near.length === 1) return near[0].r.roomID;
+  return pick(scored.filter(x => subset(ourTokens, x.tk) || subset(x.tk, ourTokens)));
   // anything else is a guess, and a guess books the wrong room
-  return null;
 }
 
 function idFor(siteID, from, till, room, hint, deps) {
@@ -223,5 +252,5 @@ function idFor(siteID, from, till, room, hint, deps) {
   return match(entry.rooms || [], room, hint || {});
 }
 
-module.exports = { idFor, match, warm, fetchRooms, enabled, norm, tokens, occOf, decodeEntities,
+module.exports = { idFor, match, warm, fetchRooms, enabled, norm, tokens, occOf, holds, decodeEntities,
   _cache: load, _key: key, CACHE_FILE };

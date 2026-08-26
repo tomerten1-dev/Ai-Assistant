@@ -258,6 +258,16 @@ function displayHotel(name) {
   return String(name || '').replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim();
 }
 
+// How many people are actually travelling. The site sells one apartment as two
+// products — "2 ח\"ש וסלון 2-4 אורחים" and "2 ח\"ש וסלון 5 אורחים" — and only
+// this number tells them apart.
+function partySize(slots) {
+  const s = slots || {};
+  const kids = Array.isArray(s.children_ages) ? s.children_ages.length : (Number(s.children) || 0);
+  const total = (Number(s.adults) || 0) + kids;
+  return total > 0 ? total : null;
+}
+
 // `opts.noTier` drops the "המשתלם ביותר" / "הפרימיום" badge. The badge ranks
 // two hotels by price band, which is right when the customer is choosing among
 // offers and wrong when they asked us to compare two RESORTS — there it reads
@@ -326,7 +336,7 @@ function presentCards(result, slots, skip, opts = {}) {
       // write "CONN Premium with View 5 pax"
       room_id: siteRooms.idFor(engine.hotelInfo(c.hotel).siteID,
         c.date, addNights(c.date, c.nights), c.room,
-        { type: c.room_type, occMin: c.occ_min, occMax: c.occ_max }),
+        { type: c.room_type, occMin: c.occ_min, occMax: c.occ_max, party: partySize(slots) }),
     }, slots),
   })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
 }

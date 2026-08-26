@@ -132,6 +132,57 @@ const okFetch = (seen) => async (url) => {
     assert.strictEqual(sr.match(live, '3 bdrm apt 2-4 pax', {}), null);
   });
 
+  // Every room the three hotels in Tomer's run actually returned, verbatim.
+  const TIGNES = [['5581', 'Premium Amazing View + Balcony 2 pax'], ['5582', 'Premium Amazing View 2-5 pax'],
+    ['5583', 'Premium with View + Balcony 2 pax'], ['5584', 'Premium with View 2+1 pax'],
+    ['5585', 'Premium with View 3-4 pax'], ['5586', 'Premium 2-4 pax'],
+    ['5587', 'Premium 2 bdrm Amazing View + Balcony 4-5 pax'], ['5588', 'Premium with View 4-5 pax'],
+    ['6337', 'Premium 2 pax PMR - חדר נכים']].map(([roomID, roomName]) => ({ roomID, roomName }));
+  const PLEIN = [['2882', '2 ח"ש וסלון 2-4 אורחים'], ['3721', '2 ח"ש וסלון 5 אורחים'],
+    ['5396', '3 ח"ש וסלון']].map(([roomID, roomName]) => ({ roomID, roomName }));
+  const OREE = [['5809', 'Premium Room 2-3'], ['5810', 'Premium with Balcony 3+1']]
+    .map(([roomID, roomName]) => ({ roomID, roomName }));
+
+  await t('nine Tignes rooms, and ours picks the two that are ours', () => {
+    assert.strictEqual(sr.match(TIGNES, 'CONN Premium with View 5 pax',
+      { type: 'CONN Premium with View', occMin: 5, occMax: 5, party: 5 }), '5588');
+    assert.strictEqual(sr.match(TIGNES, 'Premium Amazing View 5 pax',
+      { type: 'Premium Amazing View', occMin: 5, occMax: 5, party: 5 }), '5582');
+  });
+
+  await t('a room whose name is only a range is read as one', () => {
+    // "Premium Room 2-3" says nothing about people, and means people anyway
+    assert.deepStrictEqual([sr.occOf('Premium Room 2-3').min, sr.occOf('Premium Room 2-3').max], [2, 3]);
+    assert.deepStrictEqual([sr.occOf('Premium with Balcony 3+1').min, sr.occOf('Premium with Balcony 3+1').max], [3, 4]);
+    // but a lone number counts bedrooms, and must never be read as people
+    assert.strictEqual(sr.occOf('3 ח"ש וסלון'), null);
+    assert.strictEqual(sr.occOf('2-3 bdrm apt'), null);
+    assert.strictEqual(sr.match(OREE, 'Premium 2-3', { type: 'Premium', occMin: 2, occMax: 3 }), '5809');
+    assert.strictEqual(sr.match(OREE, 'Premium 3 +1 balcony', { type: 'Premium', occMin: 3, occMax: 4 }), '5810');
+  });
+
+  await t('the workbook\'s two columns are read together, because neither is whole', () => {
+    // room_type for "Premium 3 +1 balcony" is just "Premium" — on its own it
+    // fits both Oree rooms, and used to choose neither
+    assert.strictEqual(sr.match(OREE, 'Premium 3 +1 balcony', { type: 'Premium' }), '5810');
+  });
+
+  await t('one of our units, two of their rooms: the party decides', () => {
+    // we sell "2 bedroom apt 4-5 pax"; the site sells that apartment twice,
+    // once for up to 4 people and once for 5 — same name, different price
+    const hint = { type: '2 bedroom apt', occMin: 4, occMax: 5 };
+    assert.strictEqual(sr.match(PLEIN, '2 bedroom apt 4-5 pax', { ...hint, party: 4 }), '2882');
+    assert.strictEqual(sr.match(PLEIN, '2 bedroom apt 4-5 pax', { ...hint, party: 5 }), '3721');
+    assert.strictEqual(sr.match(PLEIN, '2 bedroom apt 4-5 pax', hint), null, 'chose without knowing the party');
+    assert.strictEqual(sr.match(PLEIN, '3 bedroom apt', { type: '3 bedroom apt' }), '5396');
+  });
+
+  await t('the party never overrules the description', () => {
+    // 3 people fit "2-4 אורחים", but a 3-bedroom apartment is not a 2-bedroom one
+    assert.strictEqual(sr.match(PLEIN, '4 bedroom apt 3 pax',
+      { type: '4 bedroom apt', occMin: 3, occMax: 3, party: 3 }), null);
+  });
+
   await t('SITE_ROOMS=off turns the whole thing into nothing', () => {
     process.env.SITE_ROOMS = 'off';
     assert.strictEqual(sr.enabled(), false);

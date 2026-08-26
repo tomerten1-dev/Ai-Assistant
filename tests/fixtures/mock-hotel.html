@@ -19,7 +19,7 @@
   <div class="orderForm" id="roomsBlock">
     <div class="room" id="room0">
       <select class="roomSelect" name="roomID[]"><option value="0">בחר חדר</option></select>
-      <span class="travels"><select name="adults[]"><option value="0">מס מבוגרים</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></span>
+      <span class="travels"><select name="adults[]"><option value="0">מס מבוגרים</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></span>
       <span class="pension"><select class="panSelect" name="pansion[]"><option value="0">בסיס</option><option value="1">לינה בלבד</option><option value="2">ארוחת בוקר</option><option value="3">חצי פנסיון</option></select></span>
       <span class="section price"><span></span></span>
     </div>
@@ -51,6 +51,10 @@
             var list = from === '20.02.2027'
               ? [['0', 'בחר חדר'], ['5582', 'Premium Amazing View 2-5 pax'],
                  ['5588', 'Premium with View 4-5 pax']]
+              // Plein Sud: the same apartment sold twice, by party size
+              : from === '13.03.2027'
+              ? [['0', 'בחר חדר'], ['2882', '2 ח"ש וסלון 2-4 אורחים'],
+                 ['3721', '2 ח"ש וסלון 5 אורחים'], ['5396', '3 ח"ש וסלון']]
               : [['0', 'בחר חדר'], ['811', '2 ח"ש וסלון 2-4 אורחים'], ['812', 'סטודיו 2-3 אורחים'],
                  ['813', '1 bdrm apt 2-4 pax']];
             list.forEach(function (r) {
