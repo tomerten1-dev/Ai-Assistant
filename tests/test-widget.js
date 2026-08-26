@@ -106,6 +106,17 @@ function startServer() {
     t('the dot goes away once the chat is opened', () => assert.ok(after.seen));
     t('Pingi introduces himself by name', () => assert.ok(/פינגי/.test(after.greeting), after.greeting.slice(0, 60)));
 
+    // Pingi dresses for the room: on a destination page he is already on skis
+    await page.goto(URL + '?pwreset=1&page=' + encodeURIComponent('חופשת סקי בצרפת'));
+    await page.waitForTimeout(600);
+    const outfit = await page.evaluate(`${SHADOW}.querySelector('.fab .av img').getAttribute('src')`);
+    t('on a destination page the launcher wears the ski outfit', () => assert.ok(/pingi-ski\.png$/.test(outfit), String(outfit)));
+    await page.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+    await page.waitForTimeout(400);
+    const tiny = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.m.bot'), '::before').backgroundImage`);
+    t('the 24px avatar stays the plain penguin, which is the one that survives that size',
+      () => assert.ok(/pingi-plain\.png/.test(tiny), String(tiny)));
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     await browser.close(); srv.kill();

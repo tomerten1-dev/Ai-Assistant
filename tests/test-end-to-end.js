@@ -1525,3 +1525,19 @@ t('with offers on screen the chips stay the exploring set', async () => {
   assert.ok(out.cards.length, 'expected offers');
   assert.ok(out.chips.length > 3, 'the preference chips disappeared: ' + out.chips.join('|'));
 });
+
+/* ---- Pingi says goodbye (Tomer, 26/08) ---- */
+t('a goodbye is recognised however it is written, and Pingi waves', async () => {
+  const offline = require('../server/offline-nlu.js');
+  // "תודה, ביי" used to get "לא בטוח שהבנתי" — the last thing a customer reads
+  for (const q of ['תודה, ביי', 'ביי', 'להתראות', 'תודה רבה ביי', 'לא תודה', 'יום טוב', 'נתראה']) {
+    assert.ok(offline.isFarewell(q), 'not a goodbye: ' + q);
+  }
+  for (const q of ['תודה!', 'תודה על העזרה מה עוד יש?', 'זוג בפברואר', 'יום טוב לגלוש בפברואר?']) {
+    assert.ok(!offline.isFarewell(q), 'treated as a goodbye: ' + q);
+  }
+  const out = await handleChat({ messages: [{ role: 'user', content: 'תודה, ביי' }], slots: {} });
+  assert.strictEqual(out.mood, 'wave', 'the widget is not told to show the wave');
+  assert.ok(/חורף נעים|אני כאן/.test(out.reply_he), out.reply_he);
+  assert.strictEqual(out.cards.length, 0, 'offered hotels to someone who said goodbye');
+});

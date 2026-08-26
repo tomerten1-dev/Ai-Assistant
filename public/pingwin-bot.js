@@ -42,6 +42,30 @@
   // כמו הווידג'ט, עם הגרסה בכתובת כדי שהדפדפן יוכל לשמור אותו במטמון.
   var PINGI = API_BASE + '/pingi.png';
   var SEEN_KEY = 'pw_seen';
+  // which page the customer is standing on — it decides the opening suggestions
+  // and which Pingi greets them from the corner
+  var PAGE = (function () {
+    var u = (location.pathname + ' ' + location.href).toLowerCase();
+    var h = decodeURIComponent(u);
+    if (/בנסקו|bansko|בולגריה|bulgaria/.test(h)) return { country: 'בולגריה' };
+    if (/אוסטריה|austria|ischgl|mayrhofen|saalbach|zillertal/.test(h)) return { country: 'אוסטריה' };
+    if (/צרפת|france|tignes|arcs|thorens|alpes|avoriaz|flaine/.test(h)) return { country: 'צרפת' };
+    if (/אנדורה|andorra|soldeu|grandvalira/.test(h)) return { country: 'אנדורה' };
+    if (/קייטנ|בעברית|hebrew/.test(h)) return { camp: true };
+    if (/סנובורד|snowboard|freestyle|פארק/.test(h)) return { board: true };
+    return {};
+  })();
+  // Pingi dresses for the room. On a destination page he is already on the
+  // slope; on the camps page he is the one building a snowman with the kids;
+  // everywhere else he is simply waving. Below ~40px the ski and board poses
+  // turn to mush, which is why the tiny avatar beside every message uses the plain
+  // one — legibility beats charm at 24 pixels.
+  var PINGI_LAUNCH = PAGE.board ? (API_BASE + '/pingi-board.png')
+    : PAGE.country ? (API_BASE + '/pingi-ski.png')
+      : PAGE.camp ? (API_BASE + '/pingi-wave.png')
+        : PINGI;
+  var PINGI_PLAIN = API_BASE + '/pingi-plain.png';
+  var PINGI_WAVE = API_BASE + '/pingi-wave.png';
   var BOT_NAME = 'פינגי';
   var LAUNCH_T = 'מתלבטים איפה לגלוש?';
   var LAUNCH_S = 'פינגי כאן, ועונה תוך שנייה';
@@ -214,10 +238,10 @@
     + 'border:1px solid #d9e6f0;border-radius:16px 16px 16px 4px;padding:10px 15px}'
     + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:32px;position:relative}'
     + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:1px;width:24px;height:24px;border-radius:8px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/20px 20px no-repeat}'
+    + 'background:' + THEME.ice + ' url(' + PINGI_PLAIN + ') center/22px 22px no-repeat}'
     + '.typing{align-self:stretch;padding:2px 0 2px 32px;padding-inline-start:32px;display:flex;gap:5px;align-items:center;position:relative}'
     + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:7px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/18px 18px no-repeat}'
+    + 'background:' + THEME.ice + ' url(' + PINGI_PLAIN + ') center/20px 20px no-repeat}'
     + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
@@ -283,6 +307,8 @@
     + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
+    + '.m.bot.wave{padding-inline-start:60px;min-height:52px}'
+    + '.m.bot.wave::before{width:52px;height:52px;border-radius:14px;top:-4px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/48px 48px no-repeat}'
     + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
     + '.m.bot.after::before{display:none}'
     + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
@@ -348,7 +374,7 @@
   var wrap = el('div', 'wrap');
   var fab = el('button', 'fab');
   fab.innerHTML =
-    '<span class="av"><img src="' + PINGI + '" alt="" aria-hidden="true"><span class="dot" aria-hidden="true"></span></span>' +
+    '<span class="av"><img src="' + PINGI_LAUNCH + '" alt="" aria-hidden="true"><span class="dot" aria-hidden="true"></span></span>' +
     '<span class="txt"><b class="l1">' + LAUNCH_T + '</b><span class="l2">' + LAUNCH_S + '</span></span>' +
     '<span class="go" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none">' +
     '<path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
@@ -906,6 +932,8 @@
       if (after && shown) shown = shown.split(after).join('').replace(/\n+$/, '').replace(/\n\n+/g, '\n');
       if (shown) {
         introEl = addMsg('bot', shown);
+        // the server says when the moment deserves more than the small avatar
+        if (data.mood === 'wave') introEl.classList.add('wave');
         state.messages.push({ role: 'assistant', content: data.reply_he });
       }
       if (data.cards && data.cards.length) {
@@ -955,16 +983,6 @@
   // The first message says what this is (an AI assistant — the research shows
   // the disclosure cuts abandonment after a mistake) and offers starters that
   // fit the page the customer is on, not "how can I help?"
-  var PAGE = (function () {
-    var u = (location.pathname + ' ' + location.href).toLowerCase();
-    var h = decodeURIComponent(u);
-    if (/בנסקו|bansko|בולגריה|bulgaria/.test(h)) return { country: 'בולגריה' };
-    if (/אוסטריה|austria|ischgl|mayrhofen|saalbach|zillertal/.test(h)) return { country: 'אוסטריה' };
-    if (/צרפת|france|tignes|arcs|thorens|alpes|avoriaz|flaine/.test(h)) return { country: 'צרפת' };
-    if (/אנדורה|andorra|soldeu|grandvalira/.test(h)) return { country: 'אנדורה' };
-    if (/קייטנ|בעברית|hebrew/.test(h)) return { camp: true };
-    return {};
-  })();
   var STARTERS = PAGE.country
     ? ['משפחה עם ילדים ב' + PAGE.country, 'זוג ב' + PAGE.country + ' בפברואר', 'מה כלול בחבילה?', 'יש קייטנה בעברית ב' + PAGE.country + '?']
     : PAGE.camp

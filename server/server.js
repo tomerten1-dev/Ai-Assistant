@@ -754,6 +754,8 @@ async function handleChat(body) {
   if (offline.isFarewell(lastUser)) {
     return {
       open_lead_form: false, reply_he: offline.FAREWELL_HE, model_used: false,
+      // the one moment Pingi is worth more than 24 pixels: he waves goodbye
+      mood: 'wave',
       pending_parameter: null, slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
     };
