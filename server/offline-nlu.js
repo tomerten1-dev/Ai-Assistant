@@ -29,16 +29,16 @@ const COUNTRIES = [
   [/אנדור[הא]/, 'andorra'], [/בולגרי+[הא]/, 'bulgaria'],
 ];
 const DESTS = [
-  [/מ[אי]?יי?רהופן|מאירהופן/, 'Mayrhofen', 'austria'], [/אישגי?ל/, 'Ischgl', 'austria'],
-  [/ו?ואל ?טורנס/, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
-  [/לה ?דוז|לה ?דו ?אלפ|לה 2|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?/, 'Bansko', 'bulgaria'],
-  [/בורוב[ץץז]/, 'Borovets', 'bulgaria'], [/אבורי?אז/, 'Avoriaz', 'france'],
-  [/לז ?ארק|לה ?ארק/, 'Les Arcs', 'france'], [/פליין|גרנד ?מסיף/, 'Flaine Grand Massif', 'france'],
-  [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונט?ז['׳״"]?נבר/, 'Montgenevre', 'france'],
+  [/מ[אי]?יי?רהופן|מאירהופן|mayrhofen/i, 'Mayrhofen', 'austria'], [/אישגי?ל|ischgl/i, 'Ischgl', 'austria'],
+  [/ו?ואל ?טורנס|val ?thorens/i, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
+  [/לה ?דוז|לה ?דו ?אלפ|לה 2|les ?2 ?alpes|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?|bansko/i, 'Bansko', 'bulgaria'],
+  [/בורוב[ץץז]|borovets/i, 'Borovets', 'bulgaria'], [/אבורי?אז|avoriaz/i, 'Avoriaz', 'france'],
+  [/לז ?ארק|לה ?ארק|les ?arcs/i, 'Les Arcs', 'france'], [/פליין|גרנד ?מסיף|flaine/i, 'Flaine Grand Massif', 'france'],
+  [/אלפ ד|אלף ד|alpe ?d'?huez/i, "Alpe d'Huez", 'france'], [/מונט?ז['׳״"]?נבר|montgen[eè]vre/i, 'Montgenevre', 'france'],
   // Les Menuires was missing entirely — "לה מנואר" named a resort we sell and
   // the bot heard nothing, so it could be neither asked for nor ruled out
   [/לה ?מנו[אי]?ר|מנואר|les ?menuires/i, 'Les Menuires', 'france'],
-  [/סולד[אי]?ו|soldeu/i, 'Soldeu', 'andorra'], [/עוז אן|oz.?en/i, 'Oz en Oisans', 'france'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
+  [/סולד[אי]?ו|soldeu/i, 'Soldeu', 'andorra'], [/עוז אן|oz.?en/i, 'Oz en Oisans', 'france'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])|pas ?de ?la ?casa/i, 'Pas de la Casa', 'andorra'],
 ];
 // Resorts and brands pingwin sells, but which carry NO room commitments in
 // the winter 26/27 workbook.
@@ -1310,12 +1310,16 @@ const HOTEL_HE = [
 // Returns a hotel only when EXACTLY one is named. "מה עדיף קאזה קארינה או
 // רגנום?" names two, and locking the search to whichever matched first answers
 // a question the customer did not ask.
-function hotelNamed(text) {
+function hotelsNamed(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   const found = new Set();
   for (const [re, name] of HOTEL_HE) if (re.test(t)) found.add(name);
   for (const [name, re] of HOTEL_NAMES) if (name.length >= 5 && re.test(t)) found.add(name);
-  return found.size === 1 ? [...found][0] : null;
+  return [...found];
+}
+function hotelNamed(text) {
+  const found = hotelsNamed(text);
+  return found.length === 1 ? found[0] : null;
 }
 
 // "יש עוד?" is a request for the NEXT options, not a topic to discuss. It used
@@ -1774,6 +1778,7 @@ module.exports = {
   isGreeting,
   wantsMore,
   hotelNamed,
+  hotelsNamed,
   wantsCallback,
   unknownAnswer,
   noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent, foreignLanguage };

@@ -75,6 +75,42 @@ t('red rules: no money, no hotel names, no travel times, no hotel ranking', () =
     assert.ok(!/שעות נסיעה|\d+ דקות|\d+ שעות/.test(a.he), 'travel time in: ' + q);
   }
 });
+t('"תשווה לי בין X ל-Y" is a comparison, whatever the verb form', () => {
+  // Tomer, 26/08: he asked the bot to compare two resorts and it answered with
+  // hotel cards — "תשווה" was simply not in the pattern.
+  for (const q of ['תשווה לי בין טיניי לוואל טורנס', 'תעשה לי השוואה בין אבוריאז לפליין',
+                   'אפשר להשוות בין לה דוז אלפ לטיניי?', 'טיניי מול ואל טורנס',
+                   'מה עדיף, בנסקו או בורובץ?']) {
+    const a = ask(q);
+    assert.ok(a, 'not recognised: ' + q);
+    assert.strictEqual(a.intent.kind, 'compare', q);
+  }
+});
+t('a comparison with no subjects asks which two, and answers nothing else', () => {
+  const a = ask('תשווה בין שני אתרים');
+  assert.strictEqual(a.intent.kind, 'compare_ask');
+  assert.ok(a.ask_only, 'a question, so no offers underneath it');
+  assert.ok(/על אילו שני אתרים/.test(a.he));
+  assert.ok(/טיניי/.test(a.he) && /בנסקו/.test(a.he), 'it lists what we sell');
+  const one = ask('תשווה לי בין טיניי למשהו אחר');
+  assert.ok(/טיניי מול מה/.test(one.he), 'one named → asks for the second');
+});
+t('resorts are recognised in Latin too', () => {
+  const a = ask('מה ההבדל בין Les Arcs ל-Val Thorens ל-Ischgl?');
+  assert.ok(a && a.intent.kind === 'compare', 'Latin names are names');
+  assert.ok(a.he.includes('לה ארק') || a.he.includes('ואל טורנס'));
+});
+t('a comparison that is not about places is left alone', () => {
+  for (const q of ['מה ההבדל ביניכם לבין להזמין לבד באינטרנט?', 'מה ההבדל בין סקי פס לציוד?',
+                   'מה ההבדל ביניכם לבין חברות אחרות?', 'מה ההבדל האמיתי?']) {
+    assert.strictEqual(ask(q), null, 'hijacked: ' + q);
+  }
+});
+t('hotel comparisons stay with the FAQ — plural nun included', () => {
+  assert.strictEqual(ask('מה ההבדל בין המלונות?'), null);
+  assert.strictEqual(ask('איזה מלון יותר טוב?'), null);
+  assert.strictEqual(ask('תשווה לי בין שני המלונות'), null);
+});
 t('not a recommendation question → null (the rest of the pipeline answers)', () => {
   assert.strictEqual(ask('מה כלול במחיר?'), null);
   assert.strictEqual(ask('יש ספא במלון?'), null);
@@ -94,6 +130,26 @@ t('not a recommendation question → null (the rest of the pipeline answers)', (
   t('e2e: compare gets the facts, then offers from both', () => {
     assert.ok(/מול/.test(r2.reply_he));
     assert.ok(r2.cards.length > 0);
+  });
+  const r3 = await handleChat({ messages: [{ role: 'user', content: 'תשווה לי בין טיניי לוואל טורנס' }], slots: {} });
+  t('e2e: a resort comparison is answered in words, and its cards carry no price verdict', () => {
+    assert.ok(/מול/.test(r3.reply_he), 'the comparison itself is the reply');
+    assert.ok(/טיניי/.test(r3.reply_he) && /ואל טורנס/.test(r3.reply_he));
+    const resorts = new Set(r3.cards.map(c => c.resort));
+    assert.ok(resorts.has('Tignes') && resorts.has('Val Thorens'), 'both resorts are represented: ' + [...resorts]);
+    assert.deepStrictEqual(r3.cards.map(c => c.tier_he).filter(Boolean), [],
+      'no "המשתלם ביותר" badge when the question was about resorts');
+  });
+  const r4 = await handleChat({ messages: [{ role: 'user', content: 'תשווה בין שני אתרים' }], slots: {} });
+  t('e2e: "which two?" comes back with no cards at all', () => {
+    assert.strictEqual(r4.cards.length, 0);
+    assert.ok(/על אילו שני אתרים/.test(r4.reply_he));
+    assert.ok(r4.chips.length >= 2, 'the resorts are offered as chips');
+  });
+  const r5 = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} });
+  t('the price badge still works on an ordinary search', () => {
+    assert.ok(r5.cards.length >= 2);
+    assert.ok('tier_he' in r5.cards[0], 'the field is still produced');
   });
   console.log(`recommend: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

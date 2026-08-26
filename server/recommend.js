@@ -53,7 +53,13 @@ const ATTR = [
 // "לאן כדאי"). A requirement ("חשוב לנו ספא"), a child's age or a policy
 // question also mention audiences — those belong to the rest of the pipeline.
 const ASK_WHICH = /איפה ה?[א-ת\-' ]{0,20}הכי|איזה (אתר|יעד|מקום|מדינה)|איזו מדינה|באיזה (אתר|יעד|מקום)|באיזו (מדינה|עיירה)|באילו|איפה (הכי|עדיף|כדאי|יש|מתאים)|לאן (כדאי|עדיף|ללכת|לנסוע|הכי)|מה (הכי|עדיף|מתאים|מומלץ) (אתר|יעד|ל)|תמליצ|המלצה על (אתר|יעד)|הכי (מתאים|טוב|שקט|מאתגר|גבוה|קרוב|גדול|תוסס) (אתר|יעד|ל|בשביל)|יש אתר (עם|ש)|יש (קרחון|סקי לילה|סנואו)/;
-const COMPARE = /(^|\s)או(\s|$)|מה ההבדל|במה שונ|להשוות|השוואה|מול|לעומת|עדיף/;
+// "תשווה לי בין X ל-Y" was not recognised as a comparison at all — the
+// imperative forms were missing — so the bot skipped the reasoned answer and
+// went straight to hotel cards. That is exactly what a customer reads as
+// "I asked a question and got an ad".
+const COMPARE = /(^|\s)או(\s|$)|מה ההבדל|במה שונ|להשוות|השוואה|תשוו|נשוו|השווה|מול|לעומת|עדיף|מה יותר טוב|מה עדיף/;
+// an explicit request to compare, as opposed to an "או" that happens to appear
+const ASKS_COMPARE = /להשוות|השוואה|תשוו|נשוו|השווה|מה ההבדל|במה שונ|מה עדיף|מה יותר טוב/;
 
 function detect(text, slots) {
   const t = String(text || '');
@@ -67,9 +73,30 @@ function detect(text, slots) {
   if (asksUs && slots && (slots.children_ages || []).length && !audience.includes('families')) audience.push('families');
 
   // hotel / price / policy talk is not "which resort" — the FAQ owns it
-  if (/מלון|חדר|ספא|מחיר|כמה עולה|ביטוח|ביטול|כולל|כלול|טיסות/.test(t)) return null;
+  // מלון / מלונות — the final nun means /מלון/ alone misses the plural, which
+  // is how "מה ההבדל בין המלונות?" reached the resort engine instead of the FAQ
+  if (/מלו[ןנ]|חדר|ספא|מחיר|כמה עולה|ביטוח|ביטול|כולל|כלול|טיסות/.test(t)) return null;
+  // "מה עדיף קאזה קארינה או רגנום?" names two HOTELS. That comparison has its
+  // own standing answer (we do not rank hotels); this engine compares resorts.
+  // Required lazily: offline-nlu owns the hotel lexicon and does not know us.
+  if (require('./offline-nlu.js').hotelsNamed(t).length) return null;
   if (names.length >= 2 && COMPARE.test(t)) return { kind: 'compare', names: names.slice(0, 3), audience };
   if (countries.length >= 2 && !names.length && COMPARE.test(t)) return { kind: 'countries', countries: countries.slice(0, 3), audience, attrs };
+  // "תשווה לי בין שני אתרים" — the intent is clear, the subjects are not.
+  // Ask which two rather than answering something else entirely.
+  // "מה ההבדל ביניכם לבין חברות אחרות?" and "מה ההבדל בין סקי פס לציוד?" are
+  // comparisons too — just not of places. Ask "which two resorts?" only when
+  // the sentence is actually about places: it says so, or it named one.
+  const ABOUT_PLACES = /אתר|יעד|מקום|עיירה|מדינה|יעדים|אתרים/.test(t) ||
+    names.length === 1 || countries.length === 1 || !!single;
+  if (ASKS_COMPARE.test(t) && ABOUT_PLACES && names.length + countries.length < 2) {
+    // one resort named on its own arrives as `destination`, not in `compare`
+    const named = names.length ? names
+      : single ? [single]
+        : countries.length ? countries.map(c => COUNTRY_HE[c]) : [];
+    const he = named.map(n => (profiles.resorts[n] || {}).he || n);
+    return { kind: 'compare_ask', named: he, audience, attrs };
+  }
   if (names.length < 2 && single && (audience.length || attrs.length) && /מתאים|טוב ל|כדאי|שווה|בסדר ל/.test(t)) {
     return { kind: 'assess', name: single, audience, attrs };
   }
@@ -251,6 +278,25 @@ function countriesCompare(intent) {
   return { he: `${intent.countries.map(c => COUNTRY_HE[c]).join(' מול ')}, לפי היעדים שאנחנו מוכרים:\n${lines.join('\n')}${pick}`, chips: intent.countries.map(c => COUNTRY_HE[c]) };
 }
 
+// The subjects are missing. Name what we sell, grouped the way a customer
+// thinks about it, and ask for two.
+function compareAsk(intent, slots) {
+  const all = limitCountry(approved().filter(p => p.recommend), slots);
+  const byCountry = {};
+  for (const p of all) (byCountry[p.country] = byCountry[p.country] || []).push(p.he);
+  const lines = Object.entries(byCountry)
+    .map(([c, names]) => `• ${COUNTRY_HE[c]}: ${names.join(', ')}`);
+  const one = intent.named.length === 1 ? intent.named[0] : null;
+  const head = one
+    ? `בשמחה — ${one} מול מה? אלה האתרים שאנחנו מוכרים:`
+    : 'בשמחה. על אילו שני אתרים להשוות? אלה האתרים שאנחנו מוכרים:';
+  return {
+    he: `${head}\n${lines.join('\n')}\nכתבו לי שניים ואפרט את ההבדלים — גובה, גודל אזור הגלישה, מתאים למי, ומרחק משדה התעופה.`,
+    chips: all.slice(0, 4).map(p => p.he),
+    ask_only: true,   // a question, not an answer: no hotel cards under it
+  };
+}
+
 function assess(intent, slots) {
   const p = approved().find(x => x.name === intent.name);
   if (!p) return null;
@@ -269,6 +315,7 @@ function answer(text, slots) {
   const intent = detect(text, slots);
   if (!intent) return null;
   const out = intent.kind === 'compare' ? compare(intent, slots)
+    : intent.kind === 'compare_ask' ? compareAsk(intent, slots)
     : intent.kind === 'countries' ? countriesCompare(intent)
     : intent.kind === 'assess' ? assess(intent, slots)
       : which(intent, slots);

@@ -256,7 +256,11 @@ function displayHotel(name) {
   return String(name || '').replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim();
 }
 
-function presentCards(result, slots, skip) {
+// `opts.noTier` drops the "המשתלם ביותר" / "הפרימיום" badge. The badge ranks
+// two hotels by price band, which is right when the customer is choosing among
+// offers and wrong when they asked us to compare two RESORTS — there it reads
+// as a verdict about a hotel nobody asked about (Tomer, 26/08).
+function presentCards(result, slots, skip, opts = {}) {
   // top 3 for display; ranked by the deterministic sort, but prefer showing
   // three DIFFERENT hotels before a second room of the same hotel
   // never show the same hotel on the same date twice — with only one hotel
@@ -312,7 +316,7 @@ function presentCards(result, slots, skip) {
     separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
     // the hotel's own page — the customer clicked this hotel, not the home page
     booking_url: buildBookingUrl(engine.hotelInfo(c.hotel)),
-  })).map((card, i, arr) => ({ ...card, tier_he: tierLabel(card, arr) }));
+  })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
 }
 
 /* ---------- lead delivery ----------
@@ -530,9 +534,11 @@ async function handleChat(body) {
   // Reasoned recommendation (q25): "איזה אתר מתאים למשפחה?", "טיניי או ואל
   // טורנס?", "איפה יש קרחון?" — answered from the approved resort table with
   // the facts as reasons. It outranks the generic compare/country lecture.
+  let recAnswer = null;
   if (!offline.guard(lastUser)) {
-    const rec = recommend.answer(lastUser, slots);
-    if (rec) faqHit = { id: 'recommend', he: rec.he, chips: rec.chips, all: [{ id: 'recommend', he: rec.he }] };
+    recAnswer = recommend.answer(lastUser, slots);
+    if (recAnswer) faqHit = { id: 'recommend', he: recAnswer.he, chips: recAnswer.chips,
+      all: [{ id: 'recommend', he: recAnswer.he }] };
   }
 
   // A pure policy question from someone who has told us nothing — cancellation
@@ -543,6 +549,24 @@ async function handleChat(body) {
     slots.month == null && slots.country == null && slots.destination == null &&
     !slots.children_count;
   const PER_CARD_IDS = new Set(['spa', 'wifi', 'help_me']);
+  // "על אילו שני אתרים להשוות?" is a question back to the customer. Three
+  // hotels underneath it answer something nobody asked — which is how a
+  // request to compare two resorts came back as one hotel with a price badge.
+  if (recAnswer && recAnswer.ask_only) {
+    slots._lastQuestion = 'compare_which';
+    chatLog.logTurn({
+      conversationId: body.conversationId || slots._cid || (slots._cid = 'c' + Math.random().toString(36).slice(2, 10)),
+      userText: lastUser, reply: recAnswer.he, cards: [], result: { notes: [], relaxed: [] },
+      slots, modelUsed, ms: Date.now() - startedAt, notUnderstood: false, answeredBy: 'recommend',
+    });
+    return {
+      open_lead_form: false, reply_he: recAnswer.he, model_used: false,
+      pending_parameter: null, slots, cards: [], two_room_splits: [],
+      notes: [], relaxed: [], chips: recAnswer.chips || [], chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'recommend', faq_ids: ['recommend'],
+        guard: null, off_topic: false, not_understood: false, pending: 'compare_which' } } : {}),
+    };
+  }
   if (faqHit && nothingKnownYet && !slotsChanged(prevSlots, slots) &&
       !PER_CARD_IDS.has(faqHit.id) && !offline.guard(lastUser)) {
     slots._lastQuestion = 'adults';
@@ -768,7 +792,10 @@ async function handleChat(body) {
   // list runs out we say so rather than silently looping.
   const more = offline.wantsMore(lastUser);
   const seenBefore = new Set(prevSlots._shown || []);
-  let cards = presentCards(result, slots, more ? seenBefore : null);
+  // a resort comparison is answered in words above; the cards below it are
+  // "what is open in each", not a ranking
+  const comparingResorts = !!(recAnswer && (recAnswer.intent.kind === 'compare' || recAnswer.intent.kind === 'countries'));
+  let cards = presentCards(result, slots, more ? seenBefore : null, { noTier: comparingResorts });
 
   // Tomer, 25/08: ask two or three questions FIRST, then show offers — unless
   // we already know enough. Showing three hotels after every message, before
@@ -807,7 +834,7 @@ async function handleChat(body) {
   }
   let exhausted = false;
   if (more && !cards.length) {
-    cards = presentCards(result, slots);      // start over rather than show nothing
+    cards = presentCards(result, slots, null, { noTier: comparingResorts });   // start over rather than show nothing
     exhausted = true;
   }
   slots._shown = [...seenBefore, ...cards.map(c => c.hotel + '|' + c.date)].slice(-30);
