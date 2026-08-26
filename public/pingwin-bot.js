@@ -33,13 +33,18 @@
   var API_BASE = (script && script.getAttribute('data-api')) ||
     (script && script.src ? new URL(script.src).origin : '') || '';
 
+  // a phone keyboard covers half the screen: never pop it uninvited there
+  var IS_TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window);
+  function focusInput() { if (!IS_TOUCH) input.focus(); }
+
   /* ============== state ============== */
   var state = {
     open: false,
     messages: [],   // {role:'user'|'assistant', content}
     slots: {},
     busy: false,
-    booted: false
+    booted: false,
+    log: []         // what was rendered, for replay after navigation: {t:'user'|'bot'|'cards'|'chips', v}
   };
 
   /* ============== host + shadow ============== */
@@ -58,15 +63,17 @@
     + 'box-shadow:0 3px 12px rgba(16,32,48,.28);display:flex;align-items:center;justify-content:center;transition:transform .15s}'
     + '.fab:hover{transform:scale(1.06)}'
     + '.fab:focus-visible{outline:3px solid ' + THEME.accent + '}'
-    + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100dvh - 110px));'
+    + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
     + 'background:' + THEME.bg + ';border-radius:' + THEME.radius + ';box-shadow:0 10px 36px rgba(16,32,48,.22);border:1px solid #dfe5ea;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
-    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100dvh - 116px)}'
-    + '.win.max{width:calc(100vw - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
+    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 116px);height:calc(100dvh - 116px)}'
+    + '.win.max{width:calc(100vw - 32px);height:calc(100vh - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
     + '.win.max .msgs{padding:20px 24px}'
-    + '@media (max-width:480px){.win{bottom:0;' + THEME.position + ':0;width:100vw;height:100dvh;border-radius:0}}'
+    // on a phone the window is the screen, whatever .big/.max say — those two
+    // used to win on specificity and leave a lopsided box with a 32px gap
+    + '@media (max-width:480px){.win,.win.big,.win.max{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0;margin:0}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
     + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf1}'
     + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
@@ -255,6 +262,35 @@
 
   /* ============== ui helpers ============== */
   function scrollDown() { msgs.scrollTop = msgs.scrollHeight; }
+  // a hung request must not lock the chat forever
+  function fetchWithTimeout(url, opts, ms) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    if (ctrl) opts.signal = ctrl.signal;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms);
+    return fetch(url, opts).then(function (r) { clearTimeout(timer); return r; },
+      function (e) { clearTimeout(timer); throw e; });
+  }
+  /* ============== session persistence ==============
+     "המשך להזמנה" navigates to a hotel page; without this the customer came
+     back to an empty chat. sessionStorage: same tab, cleared when it closes. */
+  var STORE_KEY = 'pingwin_bot_session_v1';
+  function persist() {
+    try {
+      sessionStorage.setItem(STORE_KEY, JSON.stringify({
+        messages: state.messages.slice(-20), slots: state.slots, lastCards: state.lastCards || null,
+        booted: state.booted, open: state.open, log: state.log.slice(-40)
+      }));
+    } catch (e) {}
+  }
+  function restore() {
+    try {
+      var raw = sessionStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.messages)) return null;
+      return d;
+    } catch (e) { return null; }
+  }
   // bring an element to the TOP of the view — used when offers arrive, so the
   // customer sees them from the first card instead of landing past them
   function scrollToTopOf(node) {
@@ -262,10 +298,11 @@
     msgs.scrollTop = Math.max(0, node.offsetTop - msgs.offsetTop - 12);
   }
 
-  function addMsg(role, text) {
+  function addMsg(role, text, silent) {
     if (!text) return null;
     var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), text);
     msgs.appendChild(m); scrollDown();
+    if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text });
     return m;
   }
 
@@ -472,13 +509,58 @@
       box.appendChild(ch);
     });
     msgs.appendChild(box);
+    state.log.push({ t: 'chips', v: labels });
+  }
+  function addCardsRow(cards) {
+    win.classList.add('big');
+    var row = el('div', 'cards-row');
+    msgs.appendChild(row);
+    cards.forEach(function (c) { addCard(c, row); });
+    state.lastCards = cards;
+    return row;
+  }
+  // replay a saved conversation after the page changed under us
+  function replay(d) {
+    state.messages = d.messages; state.slots = d.slots || {}; state.booted = !!d.booted;
+    state.log = [];
+    (d.log || []).forEach(function (e) {
+      if (e.t === 'user') addMsg('user', e.v);
+      else if (e.t === 'bot') addMsg('bot', e.v);
+      else if (e.t === 'cards') { addCardsRow(e.v); state.log.push(e); }
+      else if (e.t === 'chips') addChips(e.v);
+    });
+    if (d.lastCards) state.lastCards = d.lastCards;
+    // chips of a finished turn are still live — the customer may pick up where they left
+    scrollDown();
+  }
+
+  // three offers on screen and a typed "תחזרו אליי": ask which one, so the
+  // rep calls about a hotel and not about "no specific offer"
+  function openLeadPicker(cards) {
+    var old = msgs.querySelectorAll('.chips');
+    for (var i = 0; i < old.length; i++) old[i].remove();
+    addMsg('bot', 'על איזו מההצעות תרצו שנציג יחזור אליכם?');
+    var box = el('div', 'chips');
+    cards.forEach(function (c) {
+      var ch = el('button', 'chip', c.hotel + ' · ' + fmtDate(c.date, c.date_label));
+      ch.addEventListener('click', function () { box.remove(); openLeadForm(c); });
+      box.appendChild(ch);
+    });
+    var any = el('button', 'chip', 'לא משנה, שיחזרו אליי');
+    any.addEventListener('click', function () { box.remove(); openLeadForm(null); });
+    box.appendChild(any);
+    msgs.appendChild(box); scrollDown();
   }
 
   /* lead form — שם + טלפון בלבד (חוק אדום 8) */
   // `card` is optional: someone who simply types "תחזרו אליי" has not picked an
   // offer yet, and should still get the form rather than a pointer to a button.
   function openLeadForm(card) {
-    var f = el('div', 'form');
+    // one open form at a time — pressing "תחזרו אליי" twice stacked two forms
+    var prev = msgs.querySelectorAll('.form');
+    for (var pi = 0; pi < prev.length; pi++) prev[pi].remove();
+    var f = document.createElement('form'); f.className = 'form';
+    f.setAttribute('novalidate', '');
     if (card) {
       f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + card.hotel));
       f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
@@ -487,16 +569,17 @@
       f.appendChild(el('div', 'note', 'השאירו שם וטלפון ונציג פינגווין יחזור אליכם.'));
     }
     var lName = el('label', null, 'שם'); var iName = document.createElement('input');
-    iName.setAttribute('aria-label', 'שם');
+    iName.setAttribute('aria-label', 'שם'); iName.name = 'name'; iName.autocomplete = 'name'; lName.htmlFor = iName.id = 'pw-lead-name';
     var lPhone = el('label', null, 'טלפון'); var iPhone = document.createElement('input');
-    iPhone.type = 'tel'; iPhone.setAttribute('aria-label', 'טלפון');
-    var go = el('button', 'btn pri', 'שלחו לנציג');
+    iPhone.type = 'tel'; iPhone.setAttribute('aria-label', 'טלפון'); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
+    var go = el('button', 'btn pri', 'שלחו לנציג'); go.type = 'submit';
     var note = el('div', 'note', 'רק שם וטלפון — בלי התחייבות. ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.');
     f.appendChild(lName); f.appendChild(iName);
     f.appendChild(lPhone); f.appendChild(iPhone);
     f.appendChild(note); f.appendChild(go);
     msgs.appendChild(f); scrollDown();
-    go.addEventListener('click', function () {
+    f.addEventListener('submit', function (ev) {
+      ev.preventDefault();
       var nameVal = iName.value.trim();
       var phoneVal = iPhone.value.trim();
       if (!nameVal || !phoneVal) { note.textContent = 'נדרשים שם וטלפון ליצירת קשר.'; return; }
@@ -508,7 +591,7 @@
       }
       if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
       go.disabled = true;
-      fetch(API_BASE + '/api/lead', {
+      fetchWithTimeout(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           name: nameVal, phone: phoneVal,
@@ -516,10 +599,15 @@
             hotel: card ? card.hotel : null, resort: card ? card.resort : null,
             date: card ? card.date : null, nights: card ? card.nights : null,
             room: card ? card.room : null,
-            party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null
+            party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null,
+            conversation_id: state.slots ? state.slots._cid : null,
+            // the rep should see what the customer asked, not only a hotel name
+            transcript: state.messages.slice(-12).map(function (m) { return (m.role === 'user' ? 'לקוח: ' : 'בוט: ') + m.content; }).join('\n')
           }
         })
-      }).then(function (r) { return r.json(); }).then(function () {
+      }, 15000).then(function (r) { return r.json().then(function (j) { return { ok: r.ok && j && j.ok !== false, j: j }; }); }).then(function (res) {
+        // a 400 used to show "הפרטים התקבלו" — a lost lead disguised as success
+        if (!res.ok) throw new Error('lead rejected');
         f.remove();
         addMsg('bot', card
           ? 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + card.hotel + '.'
@@ -543,10 +631,12 @@
     // keep the typing indicator on screen long enough to be seen — offline
     // mode answers almost instantly, which otherwise feels like a jump cut
     var minWait = new Promise(function (res) { setTimeout(res, 650); });
-    var call = fetch(API_BASE + '/api/chat', {
+    // the server reads the last 20 turns anyway; sending the whole history
+    // grew past its 100KB body cap in long chats and killed every turn after
+    var call = fetchWithTimeout(API_BASE + '/api/chat', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: state.messages, slots: state.slots })
-    }).then(function (r) { return r.json(); });
+      body: JSON.stringify({ messages: state.messages.slice(-20), slots: state.slots })
+    }, 20000).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); });
 
     Promise.all([call, minWait]).then(function (both) {
       var data = both[0];
@@ -559,11 +649,8 @@
       }
       if (data.cards && data.cards.length) {
         // three offers side by side, so the customer barely scrolls
-        win.classList.add('big');
-        var row = el('div', 'cards-row');
-        msgs.appendChild(row);
-        data.cards.forEach(function (c) { addCard(c, row); });
-        state.lastCards = data.cards;
+        var row = addCardsRow(data.cards);
+        state.log.push({ t: 'cards', v: data.cards });
         // park the view on the intro line + first card, not below them
         scrollToTopOf(introEl || row);
         state.messages.push({ role: 'assistant', content: '[הוצגו ' + data.cards.length + ' הצעות: ' + data.cards.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
@@ -576,16 +663,26 @@
       // asked to be called back — open the form on the offer they were looking
       // at, or a blank one if they have not chosen yet
       if (data.open_lead_form) {
-        openLeadForm(state.lastCards && state.lastCards.length === 1 ? state.lastCards[0] : null);
+        var lc = state.lastCards || [];
+        if (lc.length === 1) openLeadForm(lc[0]);
+        else if (lc.length > 1) openLeadPicker(lc);   // "על איזו הצעה?" — not "ללא הצעה ספציפית"
+        else openLeadForm(null);
       } else if (data.chips && data.chips.length) addChips(data.chips);
       // chips render below the offers; re-anchor so the offers stay in view
       if (data.cards && data.cards.length) scrollToTopOf(introEl || row);
       else scrollDown();
     }).catch(function () {
       showTyping(false);
+      // the message stays in history; "נסו שוב" re-sends it without retyping
+      state.messages.pop();
       addMsg('bot', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו 04-8557722.');
+      var retry = el('div', 'chips');
+      var rb = el('button', 'chip', 'נסו שוב');
+      rb.addEventListener('click', function () { retry.remove(); sendText(text); });
+      retry.appendChild(rb); msgs.appendChild(retry); scrollDown();
     }).then(function () {
-      state.busy = false; send.disabled = false; input.focus();
+      state.busy = false; send.disabled = false; focusInput();
+      persist();
     });
   }
 
@@ -606,13 +703,22 @@
       state.messages.push({ role: 'assistant', content: 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.' });
       addChips(STARTERS);
     }
-    setTimeout(function () { input.focus(); }, 50);
+    setTimeout(focusInput, 50);
+    persist();
   }
   function closeWin() {
     state.open = false; win.classList.remove('open');
     fab.setAttribute('aria-expanded', 'false'); fab.focus();
+    persist();
   }
   fab.addEventListener('click', function () { state.open ? closeWin() : openWin(); });
+  // came back from a hotel page? pick the conversation up where it was
+  (function () {
+    var saved = restore();
+    if (!saved || !saved.booted) return;
+    replay(saved);
+    if (saved.open) { state.open = true; win.classList.add('open'); fab.setAttribute('aria-expanded', 'true'); }
+  })();
   hX.addEventListener('click', closeWin);
   win.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWin(); });
   send.addEventListener('click', function () { sendText(input.value); });

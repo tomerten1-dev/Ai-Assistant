@@ -71,8 +71,14 @@ function requiredMissing(slots) {
   return missing;
 }
 
+// the widget's "[הוצגו N הצעות: …]" marker — context for the models, never a reply
+function isBookkeeping(content) {
+  return /^\s*\[הוצגו \d+ הצעות/.test(String(content || ''));
+}
+
 function assistantQuestionCount(messages) {
-  return messages.filter(m => m.role === 'assistant' && /\?/.test(String(m.content))).length;
+  return messages.filter(m => m.role === 'assistant' && !isBookkeeping(m.content) &&
+    /\?/.test(String(m.content))).length;
 }
 
 function toSearchSlots(slots) {
@@ -765,7 +771,11 @@ async function handleChat(body) {
   // invent one; and anything it returns must survive validate() or we ship
   // the template unchanged. The template is therefore the floor, never a
   // regression.
-  const lastReply = [...messages].reverse().find(m => m.role === 'assistant');
+  // The widget files a bookkeeping line "[הוצגו 3 הצעות: …]" as an assistant
+  // message after every card turn. It is not a reply — comparing the new
+  // phrasing against it meant the real previous sentences were never deduped
+  // whenever cards had been shown.
+  const lastReply = [...messages].reverse().find(m => m.role === 'assistant' && !isBookkeeping(m.content));
   // A direct answer to a direct question — a price rule, a booking decision, a
   // refusal — is complete on its own. Letting the model add three sentences of
   // card facts under it turned "ניקח את הראשון" into a lecture.
