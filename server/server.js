@@ -829,7 +829,10 @@ async function handleChat(body) {
     wantsToSee || offline.isGreeting(lastUser) ||
     (slots.notes_from_customer || []).length > (prevSlots.notes_from_customer || []).length ||
     (slots.preferences || []).length > (prevSlots.preferences || []).length;
-  if (holdingForDetails && !understoodSomething && lastUser.trim()) {
+  // …but say it once. Step 3 already puts the line in the preamble when the
+  // message is off topic, and a customer who asked for a cake recipe got the
+  // same sentence twice, one under the other.
+  if (holdingForDetails && !understoodSomething && lastUser.trim() && !preamble.includes(OFF_TOPIC_HE)) {
     preamble = [preamble, OFF_TOPIC_HE].filter(Boolean).join(String.fromCharCode(10));
   }
   let exhausted = false;

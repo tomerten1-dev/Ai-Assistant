@@ -124,14 +124,64 @@ t('the office hours are known, for answering when asked', () => {
   assert.strictEqual(guidance.officeOpen(saturday), false);
 });
 
-// Tomer, 24/08: do not phrase the handoff by the clock. "המשרד סגור כרגע"
-// talks someone out of leaving their details at the moment they wanted to.
-t('the handoff sentence is the same at any hour', () => {
-  const midnight = guidance.handoffLine(new Date(2026, 7, 29, 23, 0));
-  const midday = guidance.handoffLine(new Date(2026, 7, 23, 10, 0));
-  assert.strictEqual(midnight, midday, 'the wording still changes with the clock');
-  assert.ok(/04-8557722/.test(midday), 'no way to reach anyone: ' + midday);
-  assert.ok(!/סגור/.test(midnight), 'still announces that the office is closed');
+// Tomer, 24/08: do not talk someone out of leaving their details.
+// Tomer, 26/08: but do not tell a customer writing at 23:00 to call now.
+// Both hold: the closed line keeps the invitation and drops only the "call now".
+const IL = {
+  sunday_0930: new Date('2026-08-23T06:30:00Z'),   // Sunday 09:30 in Israel (06:30 UTC)
+  sunday_0730: new Date('2026-08-23T04:30:00Z'),   // Sunday 07:30 — opens later today
+  sunday_1900: new Date('2026-08-23T16:00:00Z'),   // Sunday 19:00 — opens tomorrow
+  friday_1500: new Date('2026-08-28T12:00:00Z'),   // Friday 15:00 — closed until Sunday
+  saturday_1200: new Date('2026-08-29T09:00:00Z'), // Saturday noon
+};
+t('the office clock is Israel\'s, not the server\'s', () => {
+  // a cloud host runs in UTC: at 09:30 in Haifa its own clock says 06:30, and
+  // the office would read as closed. This is the test that pins the timezone.
+  assert.strictEqual(guidance.officeOpen(IL.sunday_0930), true, 'Sunday 09:30 in Israel is open');
+  assert.strictEqual(guidance.officeState(IL.sunday_0930).open, true);
+});
+t('outside office hours the handoff says when we open, and still invites details', () => {
+  const cases = [
+    [IL.sunday_0730, /היום ב-9:00/],
+    [IL.sunday_1900, /מחר ב-9:00/],
+    [IL.friday_1500, /ביום ראשון ב-9:00/],
+    [IL.saturday_1200, /מחר ב-9:00/],
+  ];
+  for (const [when, opens] of cases) {
+    const line = guidance.handoffLine(when);
+    assert.ok(/סגור/.test(line), 'does not say it is closed: ' + line);
+    assert.ok(opens.test(line), 'does not say when it opens: ' + line);
+    assert.ok(/שם וטלפון/.test(line), 'stopped inviting details: ' + line);
+    assert.ok(!/להתקשר|התקשרו/.test(line), 'tells them to call when nobody will answer: ' + line);
+  }
+});
+t('during office hours the handoff is the one that says "call now"', () => {
+  const line = guidance.handoffLine(IL.sunday_0930);
+  assert.ok(/04-8557722/.test(line), 'no way to reach anyone: ' + line);
+  assert.ok(!/סגור/.test(line), 'announces closed while open: ' + line);
+});
+t('both handoff lines come from guidance.json, and the closed one has its placeholder', () => {
+  const H = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'config', 'guidance.json'), 'utf8')).handoff_he;
+  assert.ok(H.line_he && H.line_closed_he, 'both sentences are in the file');
+  assert.ok(H.line_closed_he.includes('{opens}'), 'the opening time is filled in, not hard-coded');
+  assert.ok(H.opens_he && H.opens_he.today_he && H.opens_he.tomorrow_he && H.opens_he.weekday_he);
+});
+t('with no hours configured nothing is invented', () => {
+  const g = require('../server/guidance.js');
+  const real = g.load().handoff_he.hours;
+  try {
+    delete g.load().handoff_he.hours;
+    assert.strictEqual(g.officeOpen(IL.saturday_1200), null);
+    assert.strictEqual(g.officeState(IL.saturday_1200), null);
+    assert.ok(!/סגור/.test(g.handoffLine(IL.saturday_1200)), 'invented a closing without hours');
+  } finally { g.load().handoff_he.hours = real; }
+});
+t('"מתי אתם פתוחים?" answers with the hours and with the status right now', () => {
+  const a = require('../server/offline-nlu.js').faq('מתי אתם פתוחים?');
+  assert.ok(a && a.id === 'hours');
+  assert.ok(/9:00-18:00/.test(a.he), 'the hours themselves are still there');
+  assert.ok(/כרגע המשרד (פתוח|סגור)/.test(a.he), 'the status is filled in: ' + a.he);
+  assert.ok(!/\{office_status\}/.test(a.he), 'placeholder left in the customer text');
 });
 
 t('who each destination suits reaches the prompt', () => {

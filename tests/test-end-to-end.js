@@ -404,11 +404,22 @@ t('an ordinary message does not open the form', () => {
   }).then(out => assert.ok(!out.open_lead_form, 'opened the form unasked'));
 });
 
-t('the callback line never talks the customer out of leaving details', () => {
+// Tomer, 24/08: never talk someone out of leaving their details.
+// Tomer, 26/08: and never tell someone writing at 23:00 to call now.
+// So the invitation holds at every hour; only the "call now" is hour-dependent.
+t('the callback line always invites details, and suits the hour', () => {
+  const guidance = require('../server/guidance.js');
   return handleChat({ messages: [{ role: 'user', content: 'תחזרו אליי' }], slots: {} })
     .then(out => {
-      assert.ok(!/סגור/.test(out.reply_he), 'announced the office is closed: ' + out.reply_he);
-      assert.ok(/04-8557722/.test(out.reply_he), out.reply_he);
+      assert.ok(out.open_lead_form, 'the form did not open');
+      assert.ok(/שם וטלפון/.test(out.reply_he), 'stopped inviting details: ' + out.reply_he);
+      if (guidance.officeOpen()) {
+        assert.ok(/04-8557722/.test(out.reply_he), 'open, but no number: ' + out.reply_he);
+        assert.ok(!/סגור/.test(out.reply_he), 'open, but says closed: ' + out.reply_he);
+      } else {
+        assert.ok(/נפתח/.test(out.reply_he), 'closed, but does not say when it opens: ' + out.reply_he);
+        assert.ok(!/להתקשר|התקשרו/.test(out.reply_he), 'closed, but tells them to call: ' + out.reply_he);
+      }
     });
 });
 

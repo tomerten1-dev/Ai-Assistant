@@ -1514,7 +1514,7 @@ loadFaq();   // fail loudly at startup if the whole file is broken, but still bo
 // The approved answers, for the semantic router in server/answer-router.js.
 // Same list the regex layer uses — one source, two ways of reaching it.
 function faqEntries() {
-  return loadFaq().map(e => ({ id: e.id, answer_he: e.he, match: e.match }));
+  return loadFaq().map(e => ({ id: e.id, answer_he: fillPlaceholders(e.he), match: e.match }));
 }
 
 // Two questions in one message, both of which the patterns know. Free and
@@ -1543,7 +1543,7 @@ function faqMulti(text) {
     for (const e of loadFaq()) {
       if (hits.length >= 3) break;
       if (hits.some(h => h.id === e.id)) continue;
-      if (e.re.test(whole)) hits.push({ id: e.id, he: e.he });
+      if (e.re.test(whole)) hits.push({ id: e.id, he: fillPlaceholders(e.he) });
     }
   }
   if (!hits.length) return null;
@@ -1558,7 +1558,7 @@ function faq(text) {
     .replace(/[׳‘’]/g, "'")
     .replace(/[״“”]/g, '"')
     .replace(/\s+/g, ' ') + ' ';
-  for (const e of loadFaq()) if (e.re.test(t)) return { id: e.id, he: e.he };
+  for (const e of loadFaq()) if (e.re.test(t)) return { id: e.id, he: fillPlaceholders(e.he) };
   return null;
 }
 
@@ -1587,7 +1587,9 @@ function unknownAnswer() {
 // "תחזרו אליי" is a request to be called, not a topic to discuss. The widget
 // turns this into an actual form rather than telling the customer where to
 // find a button.
-const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג/;
+// "אפשר לדבר עם נציג?" is one of the commonest things a customer types, and
+// it used to fall through to the off-topic line instead of opening the form.
+const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג|לדבר עם נציג|לדבר עם בן ?אדם|לדבר עם מישהו|לדבר עם איש|נציג אנושי|בן ?אדם אמיתי|מישהו אנושי|אפשר נציג|תעביר.{0,10}לנציג|העבר.{0,10}לנציג|להעביר.{0,10}לנציג|לעבור לנציג|לשוחח עם נציג|לדבר עם אדם/;
 /* ---- which language? ----
    A Cyrillic, Arabic or French/English sentence gets one fixed sentence in
    that language and the form; Hebrew typed in Latin letters ("yesh lachem
@@ -1751,6 +1753,17 @@ function fillPlaceholders(text) {
       : out.replace(/,?\s*[^,.]*\{phone\}[^,.]*/g, '');
   }
   if (out.includes('{handoff}')) out = out.split('{handoff}').join(handoffTail()).trim();
+  // {office_status} — "כרגע המשרד פתוח" / "כרגע המשרד סגור ונפתח מחר ב-9:00",
+  // decided by the clock in Israel at the moment the customer wrote.
+  if (out.includes('{office_status}')) {
+    const st = guidance.officeState();
+    const m = guidance.load().messages_he || {};
+    const txt = !st ? ''
+      : st.open ? (m.office_open_now || 'כרגע המשרד פתוח')
+        : (m.office_closed_now || 'כרגע המשרד סגור ונפתח {opens}').split('{opens}').join(st.opens_he);
+    out = txt ? out.split('{office_status}').join(txt)
+      : out.replace(/\s*\{office_status\}\s*\.?/g, ' ');
+  }
   return out.replace(/\s{2,}/g, ' ').trim();
 }
 
