@@ -18,6 +18,8 @@ async function callClaude({ system, messages, maxTokens = 700 }) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
+    // same reason as in openai.js: a hung request must not hold the turn
+    signal: AbortSignal.timeout(+(process.env.MODEL_TIMEOUT_MS || 20000)),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
