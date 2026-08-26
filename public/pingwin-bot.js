@@ -78,6 +78,11 @@
   /* ============== analytics — dataLayer (GTM/GA4) ==============
      Every event carries event:'pw_bot' + action, so one GA4 tag in GTM catches
      them all. Nothing personal is pushed — never a name, phone or free text. */
+  // the conversation id the server gave us — every event carries it, so a lead
+  // and the chat that produced it can be put side by side
+  function cid() { return (state && state.slots && state.slots._cid) || null; }
+  // FSI…PDI around a foreign name, so the punctuation around it stays put
+  function iso(x) { return '\u2068' + String(x == null ? '' : x) + '\u2069'; }
   function track(action, extra) {
     try {
       var w = window; w.dataLayer = w.dataLayer || [];
@@ -174,7 +179,7 @@
     + '.wrap{position:fixed;bottom:20px;' + THEME.position + ':20px;z-index:' + THEME.zIndex + ';font-family:' + THEME.font + ';direction:rtl}'
     // הכפתור הוא "דלפק קבלה": פינגי, שאלה, ומי עונה עליה (תומר, 26/08).
     // הלקוח לא צריך לנחש מה קורה כשלוחצים.
-    + '.fab{display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border:none;cursor:pointer;'
+    + '.fab{display:flex;align-items:center;gap:12px;padding:10px;padding-inline:10px 18px;border:none;cursor:pointer;'
     + 'background:' + THEME.grad + ';color:#fff;border-radius:18px;font-family:inherit;text-align:start;'
     + 'box-shadow:0 10px 24px rgba(28,61,90,.32),0 0 0 4px rgba(28,61,90,.06);transition:transform .18s,box-shadow .18s}'
     + '.fab:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(28,61,90,.4),0 0 0 6px rgba(28,61,90,.07)}'
@@ -202,7 +207,8 @@
     + '.fab .txt,.fab .go{display:none}'
     + '.fab .av{background:transparent;width:54px;height:54px}.fab .av img{width:52px;height:52px}'
     + '.fab .dot{box-shadow:0 0 0 3px ' + THEME.bg + '}}'
-    + '@media (prefers-reduced-motion:reduce){.fab .dot::after{animation:none}}'
+    // מי שביקש פחות תנועה מקבל אפס תנועה — לא רק בנקודה האדומה
+    + '@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.msgs{scroll-behavior:auto!important}}'
     + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
     + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
@@ -229,11 +235,13 @@
     + '.hdr .wa:hover{background:#d9f0e1}'
     + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.accent + ';outline-offset:2px}'
     + '.hdr .wa + .newc,.hdr .wa + .exp{margin-inline-start:0}'
-    + '.hdr .newc{margin-inline-start:auto;display:flex;align-items:center;padding:5px 7px}'
+    + '.hdr .newc{margin-inline-start:auto;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:10px}'
     + '.hdr .newc + .exp,.hdr .exp + .x{margin-inline-start:0}'
-    + '.hdr .exp{margin-inline-start:auto;font-size:16px}'
+    + '.hdr .exp{margin-inline-start:auto;font-size:16px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px}'
     + '.hdr .exp + .x{margin-inline-start:0}'
-    + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;padding:3px 7px;border-radius:7px;line-height:1}'
+    + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;'
+    + 'min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;line-height:1}'
+    + '.hdr .x:focus-visible,.hdr .newc:focus-visible,.hdr .exp:focus-visible,.send:focus-visible,.chip:focus-visible,.btn:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
     // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
@@ -249,7 +257,7 @@
     + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:46px;position:relative;min-height:36px}'
     + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:-2px;width:36px;height:36px;border-radius:11px;'
     + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
-    + '.typing{align-self:stretch;padding:4px 0 4px 46px;padding-inline-start:46px;min-height:34px;display:flex;gap:5px;align-items:center;position:relative}'
+    + '.typing{align-self:stretch;padding:4px 0;padding-inline-start:46px;min-height:34px;display:flex;gap:5px;align-items:center;position:relative}'
     + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:-1px;width:36px;height:36px;border-radius:11px;'
     + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
     + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
@@ -319,6 +327,9 @@
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
     + '.m.bot.wave{padding-inline-start:74px;min-height:64px}'
     + '.m.bot.wave::before{width:64px;height:64px;border-radius:16px;top:-6px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/60px 60px no-repeat}'
+    + '.ts{display:block;font-size:10.5px;line-height:1.4;color:' + THEME.textLight + ';opacity:.75;margin-top:3px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}'
+    + '.m.user .ts{color:rgba(255,255,255,.75)}'
+    + '.m.after .ts,.m.wave .ts{display:none}'
     + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
     + '.m.bot.after::before{display:none}'
     // גילוי נאות: הערת שוליים, לא הודעה של פינגי — ולכן בלי הפרצוף שלו,
@@ -349,13 +360,14 @@
     // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
     + '.inp{display:flex;gap:8px;padding:12px 16px 16px;background:' + THEME.bg + ';align-items:flex-end;border-top:1px solid #eef2f5}'
     + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #d8dfe6;border-radius:14px;'
-    + 'padding:5px 6px 5px 12px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
+    + 'padding:5px;padding-inline:12px 6px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
     + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
     + '.inp textarea{flex:1;border:none;background:none;padding:9px 4px;font-size:15px;font-family:inherit;direction:rtl;'
     + 'resize:none;overflow-y:auto;line-height:1.5;max-height:110px;min-height:32px;color:' + THEME.text + '}'
     + '.inp textarea:focus{outline:none}'
+    + '.inp .box:focus-within{outline:3px solid ' + THEME.primaryDark + ';outline-offset:1px}'
     + '.send:hover:not(:disabled){filter:brightness(1.1)}'
-    + '.send{background:' + THEME.grad + ';border:none;color:#fff;border-radius:11px;width:36px;height:36px;flex:none;'
+    + '.send{background:' + THEME.grad + ';border:none;color:#fff;border-radius:12px;width:44px;height:44px;flex:none;'
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
     + '.send:disabled{opacity:.5;cursor:default}'
     + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
@@ -442,9 +454,24 @@
     hWa.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4c.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.5-.3z"/></svg><span>וואטסאפ</span>';
     hWa.setAttribute('aria-label', 'המשך בוואטסאפ עם נציג');
     hWa.addEventListener('click', function () {
-      // hand the rep the gist, not a blank chat
+      // The rep used to get three fragments of the customer's own words and
+      // nothing else — no hotel, no dates, no way to find the conversation.
       var gist = state.messages.filter(function (m) { return m.role === 'user'; }).slice(-3).map(function (m) { return m.content; }).join(' / ');
-      hWa.href = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent('שלום, הגעתי מהצ׳אט באתר. ' + (gist ? 'מה שחיפשתי: ' + gist : ''));
+      var last = (state.lastCards || [])[0];
+      var sl = state.slots || {};
+      var bits = ['שלום, הגעתי מהצ׳אט באתר של פינגווין.'];
+      if (last) {
+        bits.push('ההצעה שראיתי: ' + last.hotel + (last.resort ? ' (' + last.resort + ')' : '') +
+          (last.date ? ', ' + fmtDate(last.date) : '') + (last.nights ? ', ' + last.nights + ' לילות' : ''));
+      }
+      var who = [];
+      if (sl.adults) who.push(sl.adults + ' מבוגרים');
+      if ((sl.children_ages || []).length) who.push('ילדים בגילאי ' + sl.children_ages.join(', '));
+      if (who.length) bits.push('נוסעים: ' + who.join(' + '));
+      if (gist) bits.push('מה שחיפשתי: ' + gist);
+      if (cid()) bits.push('מזהה שיחה: ' + cid());
+      hWa.href = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(bits.join('\n'));
+      track('whatsapp', { hotel: last ? last.hotel : null, cid: cid() });
     });
     hWa.href = 'https://wa.me/' + WHATSAPP;
   }
@@ -542,14 +569,25 @@
     msgs.scrollTop = Math.max(0, node.offsetTop - msgs.offsetTop - 12);
   }
 
-  function addMsg(role, text, silent) {
+  // "12:04" in the customer's own clock. A conversation that is resumed a day
+  // later without times reads as one long block — and this chat is meant to be
+  // picked up again (Tomer, 26/08, after Issta's bot).
+  function clockOf(iso) {
+    var d = iso ? new Date(iso) : new Date();
+    if (isNaN(d.getTime())) d = new Date();
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function addMsg(role, text, silent, at) {
     if (!text) return null;
     // a phone number that wraps mid-way reads as a typo ("04--8557722"): show
     // it with a non-breaking hyphen so it always stays on one line
     var shown = String(text).replace(/(\d{2,3})-(\d{7})/g, '$1\u2011$2');
     var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), shown);
+    var ts = el('span', 'ts', clockOf(at));
+    ts.setAttribute('aria-hidden', 'true');   // the time is decoration for a screen reader
+    m.appendChild(ts);
     msgs.appendChild(m); scrollDown();
-    if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text });
+    if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text, at: at || new Date().toISOString() });
     return m;
   }
 
@@ -774,11 +812,19 @@
     var btns = el('div', 'btns');
     var b1 = el('button', 'btn sec', 'תחזרו אליי');
     b1.title = 'תחזרו אליי עם פרטים על ההצעה הזו';
-    b1.addEventListener('click', function () { openLeadForm(c); });
+    b1.addEventListener('click', function () {
+      track('lead_form_open', { where: 'card', hotel: c.hotel, cid: cid() });
+      openLeadForm(c);
+    });
     btns.appendChild(b1);
     if (c.booking_url) {
       var b2 = el('button', 'btn pri', 'המשך להזמנה');
-      b2.addEventListener('click', function () { window.open(c.booking_url, '_blank', 'noopener'); });
+      b2.addEventListener('click', function () {
+        // THE conversion event. Without it there is no way to show that the
+        // bot pays for itself — every other number is activity, not outcome.
+        track('booking_click', { hotel: c.hotel, resort: c.resort, date: c.date, nights: c.nights, cid: cid() });
+        window.open(c.booking_url, '_blank', 'noopener');
+      });
       btns.appendChild(b2);
     }
     card.appendChild(btns);
@@ -815,8 +861,8 @@
     state.messages = d.messages; state.slots = d.slots || {}; state.booted = !!d.booted;
     state.log = [];
     (d.log || []).forEach(function (e) {
-      if (e.t === 'user') addMsg('user', e.v);
-      else if (e.t === 'bot') addMsg('bot', e.v);
+      if (e.t === 'user') addMsg('user', e.v, false, e.at);
+      else if (e.t === 'bot') addMsg('bot', e.v, false, e.at);
       else if (e.t === 'cards') { addCardsRow(e.v); state.log.push(e); }
       else if (e.t === 'chips') addChips(e.v);
     });
@@ -833,7 +879,7 @@
     addMsg('bot', 'על איזו מההצעות תרצו שנציג יחזור אליכם?');
     var box = el('div', 'chips');
     cards.forEach(function (c) {
-      var ch = el('button', 'chip', c.hotel + ' · ' + fmtDate(c.date, c.date_label));
+      var ch = el('button', 'chip', iso(c.hotel) + ' · ' + fmtDate(c.date, c.date_label));
       ch.addEventListener('click', function () { box.remove(); openLeadForm(c); });
       box.appendChild(ch);
     });
@@ -854,7 +900,7 @@
     var f = document.createElement('form'); f.className = 'form';
     f.setAttribute('novalidate', '');
     if (card) {
-      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + card.hotel));
+      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + iso(card.hotel)));
       f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
     } else {
       f.appendChild(el('div', 'hname', 'נציג יחזור אליכם'));
@@ -866,7 +912,15 @@
     if (opts.prefill && opts.prefill.name) iName.value = opts.prefill.name;
     var lPhone = el('label', null, 'טלפון'); var iPhone = document.createElement('input');
     if (opts.prefill && opts.prefill.phone) iPhone.value = opts.prefill.phone;
-    iPhone.type = 'tel'; iPhone.setAttribute('aria-label', 'טלפון'); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
+    iPhone.type = 'tel'; iPhone.dir = 'ltr'; iPhone.setAttribute('aria-label', 'טלפון'); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
+    // Optional, and said plainly why: the customer who wants the offer in
+    // writing is the customer who is showing it to somebody else tonight.
+    var lMail = el('label', null, 'מייל (לא חובה — לקבלת ההצעה בכתב)');
+    var iMail = document.createElement('input');
+    iMail.type = 'email'; iMail.setAttribute('aria-label', 'מייל לקבלת ההצעה'); iMail.name = 'email';
+    iMail.autocomplete = 'email'; iMail.inputMode = 'email'; iMail.dir = 'ltr';
+    lMail.htmlFor = iMail.id = 'pw-lead-email';
+    if (opts.prefill && opts.prefill.email) iMail.value = opts.prefill.email;
     var go = el('button', 'btn pri', 'שלחו לנציג'); go.type = 'submit';
     var note = el('div', 'note', 'רק שם וטלפון — בלי התחייבות. ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.');
     // consent (Tomer, q30; Privacy Protection Law amendment 13): an unticked
@@ -881,6 +935,7 @@
     consent.appendChild(cTxt);
     f.appendChild(lName); f.appendChild(iName);
     f.appendChild(lPhone); f.appendChild(iPhone);
+    f.appendChild(lMail); f.appendChild(iMail);
     f.appendChild(consent);
     f.appendChild(note); f.appendChild(go);
     msgs.appendChild(f); scrollDown();
@@ -896,12 +951,16 @@
         return;
       }
       if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
+      var mailVal = iMail.value.trim();
+      if (mailVal && !/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(mailVal)) {
+        note.textContent = 'כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.'; iMail.focus(); return;
+      }
       if (!iConsent.checked) { note.textContent = 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'; iConsent.focus(); return; }
       go.disabled = true;
       turnstileToken().then(function (tok) { return fetchWithTimeout(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          name: nameVal, phone: phoneVal, turnstile: tok,
+          name: nameVal, phone: phoneVal, email: mailVal || null, turnstile: tok,
           context: {
             slots: state.slots ? { _cid: state.slots._cid, _vt: state.slots._vt } : null,
             hotel: card ? card.hotel : null, resort: card ? card.resort : null,
@@ -921,7 +980,7 @@
         track('lead', { kind: leadKind || 'customer', has_offer: !!card });
         f.remove();
         addMsg('bot', card
-          ? 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + card.hotel + '.'
+          ? 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + iso(card.hotel) + '.'
           : 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         track('error', { where: 'lead' });

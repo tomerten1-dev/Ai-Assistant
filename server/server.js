@@ -20,6 +20,7 @@ const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl } = require('../config/booking-url.js');
 const limits = require('./limits.js');
+const leadMail = require('./lead-mail.js');
 const recommend = require('./recommend.js');
 
 loadEnv();
@@ -358,6 +359,11 @@ async function handleChat(body) {
 
   // ---- step 1: deterministic Hebrew parse — always runs, always free ----
   let slots = offline.parseText(lastUser, prevSlots);
+  // One conversation id, minted on the first turn and carried by every reply —
+  // including the early returns (greeting, farewell, guard, language). It is
+  // what ties a lead to the chat that produced it, and it used to be handed
+  // back only when Turnstile was on, so most leads had no chat at all.
+  if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
   let replyIfNotReady = null;
   let modelUsed = false;
 
@@ -1340,10 +1346,12 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req, 100_000);
       if (!body) return;
       const slots = { ...(body.slots || {}) };
+      // minted here, before anything can return early, so the id the widget
+      // gets back is the same one the log and the lead will carry
+      if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
       if (limits.turnstileOn() && !limits.stampValid(slots)) {
         const ok = await limits.verifyTurnstile(body.turnstile, ip);
         if (!ok) return json(res, 403, { reply_he: VERIFY_HE(), slots: body.slots || {}, cards: [], chips: [], verify: true });
-        if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
         slots._vt = limits.stamp(slots._cid);
       }
       if (limits.turnsExceeded(slots)) {
@@ -1361,7 +1369,8 @@ const server = http.createServer(async (req, res) => {
         out = { reply_he: e.friendly || FALLBACK_HE(), slots, cards: [], chips: [] };
       }
       // the stamp and the turn counter must survive whatever handleChat did to the slots
-      out.slots = { ...(out.slots || {}), _turns: slots._turns, ...(slots._vt ? { _vt: slots._vt, _cid: slots._cid } : {}) };
+      out.slots = { ...(out.slots || {}), _turns: slots._turns, _cid: slots._cid,
+        ...(slots._vt ? { _vt: slots._vt } : {}) };
       return json(res, 200, out);
     }
     if (req.method === 'POST' && url.pathname === '/api/lead') {
@@ -1385,6 +1394,9 @@ const server = http.createServer(async (req, res) => {
         id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         at: new Date().toISOString(),
         name: String(lead.name).slice(0, 80), phone: String(lead.phone).slice(0, 30),
+        // optional: the customer may want the offer in writing (Tomer, 26/08 —
+        // the quote itself will be sent from Pingwin's own system later)
+        email: lead.email ? String(lead.email).slice(0, 120) : null,
         kind: String(ctx.kind || 'customer').slice(0, 30),
         context: ctx,
       };
@@ -1392,6 +1404,10 @@ const server = http.createServer(async (req, res) => {
       // no PII on stdout — only that a lead landed and what kind
       console.log(`lead ${record.id} [${record.kind}] → ${ctx.hotel || 'ללא הצעה ספציפית'} ${ctx.date || ''}`.trim());
       notifyLead(record).catch(e => console.error('lead notify failed:', e.message));
+      // and the version that needs no integration: an email to a person
+      leadMail.sendLead(record).then(r => {
+        if (r.sent) console.log(`lead ${record.id} emailed`);
+      }).catch(e => console.error('lead email crashed:', e.message));
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true, id: record.id }));
       return;
@@ -1419,6 +1435,7 @@ if (require.main === module) {
   { const n = chatLog.sweep(); if (n) console.log(`chat log: removed ${n} day(s) past retention`); }
   server.requestTimeout = 30_000;
   server.headersTimeout = 10_000;
+  leadMail.warnIfUnwatched();
   server.listen(PORT, () => console.log(`pingwin bot server v${BOT_VERSION} [${aiMode()}] → http://localhost:${PORT}`));
 }
 module.exports = { handleChat, server, requiredMissing };

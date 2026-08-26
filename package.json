@@ -5,7 +5,7 @@
   "description": "בוט התאמת חופשות סקי לאתר פינגווין — דמו",
   "scripts": {
     "build:data": "node tools/build-availability.js && node tools/build-camps.js && node tools/build-restrictions.js && node tools/merge-rooms.js",
-    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js",
+    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js && node tests/test-lead.js",
     "start": "node server/server.js",
     "dev": "node tools/dev.js",
     "test:ui": "node tests/test-widget.js",
@@ -14,5 +14,8 @@
     "stress": "node tests/stress.js",
     "review": "node tools/review-log.js",
     "build:site": "node tools/fetch-hotel-images.js && node tools/fetch-inclusions.js"
+  },
+  "dependencies": {
+    "nodemailer": "^9.0.5"
   }
 }
