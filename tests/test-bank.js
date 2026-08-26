@@ -139,6 +139,10 @@ async function ask(q) {
     const secs = (Date.now() - startedAt) / 1000;
     const perSec = done / Math.max(secs, 0.001);
     const left = Math.round((list.length - done) / Math.max(perSec, 0.001));
+    if (done === 1) {
+      process.stdout.write(`     1/${list.length}  first answer in ${secs.toFixed(1)}s — running\n`);
+      return;
+    }
     const mm = String(Math.floor(left / 60)).padStart(2, '0'), ss = String(left % 60).padStart(2, '0');
     process.stdout.write(`  ${String(done).padStart(4)}/${list.length}  ${Math.round(100 * passing / done)}% pass` +
       `${errored ? `  ${errored} errors` : ''}  ~${mm}:${ss} left\n`);
@@ -155,7 +159,12 @@ async function ask(q) {
     rows.push({ q: e.q, cluster: e.cluster, expect: e.expect, observed: [...observed], faq_ids: d.faq_ids || [],
       invented_number: invented, ignored, pass, reply: (res.reply_he || '').slice(0, 220) });
     done++; if (pass) passing++;
-    if (!args.show && (done % 25 === 0 || done === list.length)) progress();
+    // A live question can take up to a minute (three model calls, 20s each), so
+    // "every 25" could mean 20 minutes of silence before the first line. Print
+    // the first one immediately — that is the "it started" signal — then every
+    // 5 live / 25 offline.
+    const every = live ? 5 : 25;
+    if (!args.show && (done === 1 || done % every === 0 || done === list.length)) progress();
     if (args.show) {
       console.log(`${pass ? '✓' : '✗'} [${e.cluster}] ${e.q}`);
       console.log(`    → ${[...observed].join(',')}${d.faq_ids && d.faq_ids.length ? ' ' + d.faq_ids.join('+') : ''}${invented ? '  ⚠ INVENTED NUMBER' : ''}`);
