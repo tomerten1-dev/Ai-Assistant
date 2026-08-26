@@ -142,5 +142,32 @@ t('every entry compiles and has a non-empty answer', () => {
   }
 });
 
+
+/* ---- Aqaba and the 2023 precedent (Tomer, 26/08) ---- */
+t('what we did last year is told as effort, never as a promise', () => {
+  const a = nlu.faq('תוציאו אותנו דרך עקבה?');
+  assert.ok(a && a.id === 'aqaba_precedent', 'answered: ' + (a && a.id));
+  assert.ok(/כל שביכולתה/.test(a.he), 'says what the company did');
+  assert.ok(/כל מקרה נבחן לגופו|אי אפשר להבטיח/.test(a.he), 'and that it is not a guarantee');
+  assert.ok(!/נבטיח|מתחייב|בטוח שנוציא/.test(a.he), 'no promise: ' + a.he);
+});
+t('the October 2023 terms are never quoted', () => {
+  // Tomer decided the bot does not repeat what was refunded then: it would read
+  // as a commitment to do the same again.
+  const MONEY_2023 = /אוקטובר 2023.*(€|יורו|₪|קרדיט מלא|בונוס|15)/s;
+  for (const e of faqFile.entries) {
+    assert.ok(!MONEY_2023.test(e.answer_he), 'the 2023 precedent is quoted in: ' + e.id);
+    assert.ok(!/בניכוי €?15|קרדיט מלא \+ בונוס/.test(e.answer_he), 'the 2023 terms appear in: ' + e.id);
+  }
+  const a = nlu.faq('מה עשיתם באוקטובר 2023?');
+  assert.ok(a && a.id === 'aqaba_precedent');
+  assert.ok(!/2023/.test(a.he), 'the answer does not name the event: ' + a.he);
+});
+t('the guarantee answer no longer implies Aqaba is on offer', () => {
+  const g = nlu.faq('מה זה Pingwin Guarantee?');
+  assert.ok(g && g.id === 'war_protection');
+  assert.ok(/אינו מובטח מראש|נבחן לגופו/.test(g.he), 'Aqaba is qualified: ' + g.he);
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
