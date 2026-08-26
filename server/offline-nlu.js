@@ -885,12 +885,33 @@ function offCommitmentLine(result, slots) {
   const cfg = OFF_COMMITMENT_COPY;
   const tpl = (cfg.constraint_by_country || {})[offComm.country] || cfg.constraint_default;
   const dates = (offComm.open_dates || []).map(fmtDay);
+  // Name the hotels we actually work with there. Until the catalogue existed
+  // the bot could only say "there are limited seats" about a resort it could
+  // not name a single hotel in — which is how "סן אנטון" came back as Ischgl
+  // and Mayrhofen (Tomer, 26/08).
+  const catalogue = require('./catalogue.js');
+  const there = catalogue.inResortHe(offComm.name);
+  const hotelsLine = there.length && cfg.hotels_he
+    ? cfg.hotels_he.replace('{hotels}', catalogue.names(there)) : null;
   return [
     tpl.replace('{resort}', offComm.name),
+    hotelsLine,
     dates.length ? cfg.with_dates_he.replace('{dates}', dates.join(', '))
       : (slots.month == null || slots.month === 'any' ? cfg.no_dates_no_month_he : cfg.no_dates_he),
     cfg.caveat_he,
-  ].join(' ');
+  ].filter(Boolean).join(' ');
+}
+
+// The customer named a hotel by name. If it is one we sell but hold no rooms
+// for, saying "we do not have it" would be false and saying nothing would be
+// worse — this says yes, and hands it to a person without inventing a date.
+function catalogueHotelLine(text) {
+  const catalogue = require('./catalogue.js');
+  const h = catalogue.catalogueOnly(text);
+  if (!h) return null;
+  const tpl = OFF_COMMITMENT_COPY.hotel_only_he;
+  if (!tpl) return null;
+  return tpl.replace('{hotel}', h.name).replace('{resort}', h.resort_he);
 }
 
 // What the search had to give up on, in fixed words. Printed above anything the
@@ -1797,6 +1818,7 @@ module.exports = {
   relaxationLines,
   guard,
   offCommitmentLine,
+  catalogueHotelLine,
   canonicalDestination,
   notUnderstood,
   isFarewell,

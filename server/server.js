@@ -663,7 +663,7 @@ async function handleChat(body) {
   // The red-rule guard runs unconditionally — not gated on the FAQ, not gated
   // on whether the message also filled a slot.
   let guarded = offline.guard(lastUser) ||
-    offline.unknownHotel(lastUser) || offline.unknownResort(lastUser);
+    offline.unknownHotel(lastUser) || offline.catalogueHotelLine(lastUser) || offline.unknownResort(lastUser);
   // the same refusal twice running is right to repeat — and reads better as a
   // person repeating themselves on purpose
   if (guarded && guarded === prevSlots._lastGuard) guarded = 'כאמור — ' + guarded;

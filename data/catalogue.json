@@ -1,0 +1,1379 @@
+{
+ "_comment": "כל המלונות שפינגווין מוכרת, מדפי היעדים ב-pingwin.co.il. לא כולל קלאב מד ולא כולל שאלה פרטיים (הוראת תומר, 26/08/2026).",
+ "_rule_he": "מלון עם commitment=false אינו במאגר ההתחייבויות: אפשר להציע אותו בתאריכים שאינם תחת \"מכירת התחייבויות בלבד\", בכפוף לאישור מול המלון — אבל לעולם לא לצטט עליו זמינות, חדר או מחיר. הבוט מזכיר את שמו ומעביר לנציג.",
+ "_source": "דפי היעדים ב-pingwin.co.il, נשלפו 26/08/2026",
+ "_generated_by": "tools/build-catalogue.js",
+ "counts": {
+  "total": 117,
+  "with_commitments": 38,
+  "catalogue_only": 79,
+  "resorts": 23
+ },
+ "hotels": [
+  {
+   "name": "Sport & Spa Hotel Strass",
+   "siteID": 269,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "ארוחת בוקר או חצי פנסיון, עד 4 אורחים",
+   "commitment": true,
+   "commitment_names": [
+    "Sport",
+    "Strass"
+   ],
+   "page": "https://www.pingwin.co.il/Sport+%26+Spa+Hotel+Strass.html?siteID=269"
+  },
+  {
+   "name": "Hotel Ferienhof",
+   "siteID": 2116,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חדרים זוגיים ולשלושה אורחים",
+   "commitment": true,
+   "commitment_names": [
+    "Hotel Ferienhof"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Ferienhof.html?siteID=2116"
+  },
+  {
+   "name": "Alpenhof Kristal",
+   "siteID": 1408,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חדרים 2-3 על בסיס ארוחת בוקר",
+   "commitment": true,
+   "commitment_names": [
+    "Alpenhof Kristal"
+   ],
+   "page": "https://www.pingwin.co.il/Alpenhof+Kristal.html?siteID=1408"
+  },
+  {
+   "name": "Hotel Waldheim",
+   "siteID": 1897,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חדר זוגי על בסיס ארוחת בוקר",
+   "commitment": true,
+   "commitment_names": [
+    "Waldheim"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Waldheim.html?siteID=1897"
+  },
+  {
+   "name": "Post Residence",
+   "siteID": 1528,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "לינה, ארוחת בוקר או חצי פנסיון, עד 8 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Post+Residence.html?siteID=1528"
+  },
+  {
+   "name": "Berghof Hotel",
+   "siteID": 1246,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "Berghof"
+   ],
+   "page": "https://www.pingwin.co.il/Berghof+Hotel.html?siteID=1246"
+  },
+  {
+   "name": "Der Siegeler",
+   "siteID": 985,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Der+Siegeler.html?siteID=985"
+  },
+  {
+   "name": "Landhaus Roscher",
+   "siteID": 2079,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר",
+   "commitment": true,
+   "commitment_names": [
+    "Landhaus Roscher"
+   ],
+   "page": "https://www.pingwin.co.il/Landhaus+Roscher.html?siteID=2079"
+  },
+  {
+   "name": "Pension Kumbi",
+   "siteID": 1966,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "commitment": true,
+   "commitment_names": [
+    "Pension Kumbichlhof"
+   ],
+   "page": "https://www.pingwin.co.il/Pension+Kumbi.html?siteID=1966"
+  },
+  {
+   "name": "Hotel Strolz",
+   "siteID": 1917,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "Strolz"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Strolz.html?siteID=1917"
+  },
+  {
+   "name": "Apartment Tuxer",
+   "siteID": 2080,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "עד 5 אורחים, לינה בלבד",
+   "commitment": true,
+   "commitment_names": [
+    "Tuxer"
+   ],
+   "page": "https://www.pingwin.co.il/Apartment+Tuxer.html?siteID=2080"
+  },
+  {
+   "name": "Hotel Fliana - Ischgl",
+   "siteID": 363,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 4 בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Fliana+-+Ischgl.html?siteID=363"
+  },
+  {
+   "name": "Sporthotel Silvretta",
+   "siteID": 1590,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "5 כוכבים, ארוחת בוקר, עד 6 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Sporthotel+Silvretta.html?siteID=1590"
+  },
+  {
+   "name": "Madlein",
+   "siteID": 1374,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Madlein.html?siteID=1374"
+  },
+  {
+   "name": "Kristall Hotel",
+   "siteID": 1359,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 3 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Kristall+Hotel.html?siteID=1359"
+  },
+  {
+   "name": "Montanara",
+   "siteID": 1581,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חדרים ודירות עד 8 אורחים, לינה וארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Montanara.html?siteID=1581"
+  },
+  {
+   "name": "Schlosshof",
+   "siteID": 1257,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "ארוחת בוקר, עד 3 אורחים",
+   "commitment": true,
+   "commitment_names": [
+    "SCHLOSSHOF"
+   ],
+   "page": "https://www.pingwin.co.il/Schlosshof.html?siteID=1257"
+  },
+  {
+   "name": "Mutmanor",
+   "siteID": 1234,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, 2-3 אורחים",
+   "commitment": true,
+   "commitment_names": [
+    "Mutmanor"
+   ],
+   "page": "https://www.pingwin.co.il/Mutmanor.html?siteID=1234"
+  },
+  {
+   "name": "Garni Castel",
+   "siteID": 2093,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "commitment": true,
+   "commitment_names": [
+    "Castel"
+   ],
+   "page": "https://www.pingwin.co.il/Garni+Castel.html?siteID=2093"
+  },
+  {
+   "name": "Solaria Ischgl",
+   "siteID": 2097,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Solaria+Ischgl.html?siteID=2097"
+  },
+  {
+   "name": "Hotel Arnika",
+   "siteID": 2114,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חדרים עד 4 אורחים, ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Arnika.html?siteID=2114"
+  },
+  {
+   "name": "Alpin Resort & Spa",
+   "siteID": 168,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "פנסיון מלא + כיבוד אפרה סקי + שתייה קלה וחריפה חופשי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Alpin+Resort+%26+Spa.html?siteID=168"
+  },
+  {
+   "name": "Hotel Die Sonne",
+   "siteID": 1624,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "הכל כלול + שתייה קלה חמה וחריפה חופשית",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Die+Sonne.html?siteID=1624"
+  },
+  {
+   "name": "Sport Hotel Berger's",
+   "siteID": 1458,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 4 אורחים בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Sport+Hotel+Berger's.html?siteID=1458"
+  },
+  {
+   "name": "Saalbacher Hof",
+   "siteID": 2007,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Saalbacher+Hof.html?siteID=2007"
+  },
+  {
+   "name": "Panther Hotel",
+   "siteID": 1260,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, חדרים לעד 3 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Panther+Hotel.html?siteID=1260"
+  },
+  {
+   "name": "Konig Hotel",
+   "siteID": 1370,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, רוב החדרים ל-2-3 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Konig+Hotel.html?siteID=1370"
+  },
+  {
+   "name": "JUFA Alpenhotel Saalbach",
+   "siteID": 1985,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 2 אורחים בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/JUFA+Alpenhotel+Saalbach.html?siteID=1985"
+  },
+  {
+   "name": "Dorfhotel Glucksschhmiede",
+   "siteID": 407,
+   "resort": "Hinterglemm",
+   "resort_he": "הינטרגלם",
+   "country": "austria",
+   "board_he": "עד 4 אורחים, ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Dorfhotel+Glucksschhmiede.html?siteID=407"
+  },
+  {
+   "name": "Almrausch Hotel",
+   "siteID": 2096,
+   "resort": "Hinterglemm",
+   "resort_he": "הינטרגלם",
+   "country": "austria",
+   "board_he": "עד 4 אורחים, חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Almrausch+Hotel.html?siteID=2096"
+  },
+  {
+   "name": "Karl Schranz",
+   "siteID": 739,
+   "resort": "St. Anton",
+   "resort_he": "סנט אנטון",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 3 נופשים בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Karl+Schranz.html?siteID=739"
+  },
+  {
+   "name": "Hotel Nassereinerhof",
+   "siteID": 1251,
+   "resort": "St. Anton",
+   "resort_he": "סנט אנטון",
+   "country": "austria",
+   "board_he": "חצי פנסיון, חדרים לאירוח של עד 5",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Nassereinerhof.html?siteID=1251"
+  },
+  {
+   "name": "St Georg Hotel",
+   "siteID": 285,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "ארוחת בוקר, עד 4 בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/St+Georg+Hotel.html?siteID=285"
+  },
+  {
+   "name": "Hotel Lebzelter",
+   "siteID": 741,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 3 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Lebzelter.html?siteID=741"
+  },
+  {
+   "name": "Der Schmittenhof",
+   "siteID": 1537,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 4 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Der+Schmittenhof.html?siteID=1537"
+  },
+  {
+   "name": "Botique Hotel Martha",
+   "siteID": 1538,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 4 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Botique+Hotel+Martha.html?siteID=1538"
+  },
+  {
+   "name": "Der Schutthof",
+   "siteID": 1671,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "ארוחת בוקר, אפשרות לחצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Der+Schutthof.html?siteID=1671"
+  },
+  {
+   "name": "Hotel Latini",
+   "siteID": 1672,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Latini.html?siteID=1672"
+  },
+  {
+   "name": "Hotel Neue Post",
+   "siteID": 1826,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 4 בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Neue+Post.html?siteID=1826"
+  },
+  {
+   "name": "Salzburgerhof Zell",
+   "siteID": 2153,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "חצי פנסיון + כיבוד צהריים אפרה סקי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Salzburgerhof+Zell.html?siteID=2153"
+  },
+  {
+   "name": "AlpenParks Apart Central",
+   "siteID": 2127,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "דירות מאובזרות, 4-8 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/AlpenParks+Apart+Central.html?siteID=2127"
+  },
+  {
+   "name": "Falkensteiner Club Funimation",
+   "siteID": 2154,
+   "resort": "Katschberg",
+   "resort_he": "קצברג",
+   "country": "austria",
+   "board_he": "הכל כלול",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Falkensteiner+Club+Funimation.html?siteID=2154"
+  },
+  {
+   "name": "Plein Sud",
+   "siteID": 1288,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, ארוחת בוקר או חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "Plein Sud (allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Plein+Sud.html?siteID=1288"
+  },
+  {
+   "name": "Hotel Kashmir",
+   "siteID": 1665,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "ארוחת בוקר",
+   "commitment": true,
+   "commitment_names": [
+    "Hotel Kashmir"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Kashmir.html?siteID=1665"
+  },
+  {
+   "name": "Residence Kashmir",
+   "siteID": 1974,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "דירות עם מטבחון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Residence+Kashmir.html?siteID=1974"
+  },
+  {
+   "name": "Residence Montana",
+   "siteID": 1293,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, יחידות עם מטבחון",
+   "commitment": true,
+   "commitment_names": [
+    "Res Village Montana (allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Residence+Montana.html?siteID=1293"
+  },
+  {
+   "name": "Cheval Blanc",
+   "siteID": 1292,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, אפשרות לארוחת בוקר או חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "Cheval Blanc (allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Cheval+Blanc.html?siteID=1292"
+  },
+  {
+   "name": "Oxalys Residence",
+   "siteID": 1402,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, יחידות לעד 8 אורחים",
+   "commitment": true,
+   "commitment_names": [
+    "Residence Oxalys"
+   ],
+   "page": "https://www.pingwin.co.il/Oxalys+Residence.html?siteID=1402"
+  },
+  {
+   "name": "Les Balcons Val Thorens",
+   "siteID": 1386,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "דירות לאירוח של עד 18 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Les+Balcons+Val+Thorens.html?siteID=1386"
+  },
+  {
+   "name": "Hotel 3 Vallees",
+   "siteID": 1299,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "ארוחת בוקר, עד 4 בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+3+Vallees.html?siteID=1299"
+  },
+  {
+   "name": "Fitz Roy",
+   "siteID": 919,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "חצי פנסיון, עד 4 בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Fitz+Roy.html?siteID=919"
+  },
+  {
+   "name": "Tourotel Appart",
+   "siteID": 817,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, יחידות לעד 6 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Tourotel+Appart.html?siteID=817"
+  },
+  {
+   "name": "Pashmina",
+   "siteID": 1439,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "חדרים עד 6 אורחים ודירות עד 10",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Pashmina.html?siteID=1439"
+  },
+  {
+   "name": "Le Val Thorens",
+   "siteID": 1451,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "חצי פנסיון, חדרים לעד 4 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Le+Val+Thorens.html?siteID=1451"
+  },
+  {
+   "name": "Le Sherpa",
+   "siteID": 1478,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "ארוחת בוקר, חצי פנסיון או פנסיון מלא",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Le+Sherpa.html?siteID=1478"
+  },
+  {
+   "name": "Fahrenheit 7",
+   "siteID": 1502,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Fahrenheit+7.html?siteID=1502"
+  },
+  {
+   "name": "Club Belambra Val claret",
+   "siteID": 2152,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Tignes Val Claret",
+    "Belambra Val Claret"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Val+claret.html?siteID=2152"
+  },
+  {
+   "name": "Residence Ynycio",
+   "siteID": 1973,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "מלון דירות, לינה בלבד",
+   "commitment": true,
+   "commitment_names": [
+    "Ynycio"
+   ],
+   "page": "https://www.pingwin.co.il/Residence+Ynycio.html?siteID=1973"
+  },
+  {
+   "name": "Hameau du Borsat",
+   "siteID": 454,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "לינה בלבד, עד 6 בדירה",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hameau+du+Borsat.html?siteID=454"
+  },
+  {
+   "name": "Residence Le Taos",
+   "siteID": 1992,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Residence+Le+Taos.html?siteID=1992"
+  },
+  {
+   "name": "CGH La Ferme du Val Claret",
+   "siteID": 1791,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+La+Ferme+du+Val+Claret.html?siteID=1791"
+  },
+  {
+   "name": "CGH Le Nevada",
+   "siteID": 1788,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Le+Nevada.html?siteID=1788"
+  },
+  {
+   "name": "CGH Telemark",
+   "siteID": 1775,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Telemark.html?siteID=1775"
+  },
+  {
+   "name": "Hotel Le Taos",
+   "siteID": 1460,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Le+Taos.html?siteID=1460"
+  },
+  {
+   "name": "Diva",
+   "siteID": 898,
+   "resort": "Tignes",
+   "resort_he": "טיניי",
+   "country": "france",
+   "board_he": "חצי פנסיון כולל יין בארוחות",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Diva.html?siteID=898"
+  },
+  {
+   "name": "Club Du Soleil L.M",
+   "siteID": 1195,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "פנסיון מלא ויין בארוחות",
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Les Menuires"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+L.M.html?siteID=1195"
+  },
+  {
+   "name": "Club Belambra Neige Et Ciel",
+   "siteID": 1289,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "חצי פנסיון, חדרים לעד 5 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Club+Belambra+Neige+Et+Ciel.html?siteID=1289"
+  },
+  {
+   "name": "Club Belambra Les Bruyeres",
+   "siteID": 1436,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "חצי פנסיון, חדרים ל-3 מבוגרים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Club+Belambra+Les+Bruyeres.html?siteID=1436"
+  },
+  {
+   "name": "Chalet Hotel Kaya",
+   "siteID": 1433,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Chalet+Hotel+Kaya.html?siteID=1433"
+  },
+  {
+   "name": "Res' Prestige Edenarc",
+   "siteID": 1513,
+   "resort": "Les Arcs",
+   "resort_he": "לה ארק",
+   "country": "france",
+   "board_he": "יחידות של 2 עד 8 אורחים",
+   "commitment": true,
+   "commitment_names": [
+    "Edenarc - Arc 1800"
+   ],
+   "page": "https://www.pingwin.co.il/Res'+Prestige+Edenarc.html?siteID=1513"
+  },
+  {
+   "name": "Club Belambra Du Golf",
+   "siteID": 1440,
+   "resort": "Les Arcs",
+   "resort_he": "לה ארק",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "commitment": true,
+   "commitment_names": [
+    "Golf"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Du+Golf.html?siteID=1440"
+  },
+  {
+   "name": "Residence Prestige l'Eclose",
+   "siteID": 1962,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "לינה בלבד",
+   "commitment": true,
+   "commitment_names": [
+    "l'Eclose Alpe d'Huez"
+   ],
+   "page": "https://www.pingwin.co.il/Residence+Prestige+l'Eclose.html?siteID=1962"
+  },
+  {
+   "name": "Royal Ours Blanc",
+   "siteID": 1605,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "ארוחת בוקר, עד זוג + 2 ילדים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Royal+Ours+Blanc.html?siteID=1605"
+  },
+  {
+   "name": "Prestige Residence Phoenix",
+   "siteID": 2099,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "חדרים עד 8 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Prestige+Residence+Phoenix.html?siteID=2099"
+  },
+  {
+   "name": "CGH Le Cristal de l'Alpe",
+   "siteID": 1790,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Le+Cristal+de+l'Alpe.html?siteID=1790"
+  },
+  {
+   "name": "Pic Blanc",
+   "siteID": 1600,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "ארוחת בוקר, אפשרות לחצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Pic+Blanc.html?siteID=1600"
+  },
+  {
+   "name": "Club Du Soleil L2A",
+   "siteID": 1673,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "פנסיון מלא כולל יין בארוחות",
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Les 2 Alpes"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+L2A.html?siteID=1673"
+  },
+  {
+   "name": "Club Belambra Les Cretes",
+   "siteID": 1844,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Les Cretes L2A 1800"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Les+Cretes.html?siteID=1844"
+  },
+  {
+   "name": "Belambra L'Oree des Pistes",
+   "siteID": 1963,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "Belambra L'Oree des Pistes"
+   ],
+   "page": "https://www.pingwin.co.il/Belambra+L'Oree+des+Pistes.html?siteID=1963"
+  },
+  {
+   "name": "Hotel Les Melezes",
+   "siteID": 1783,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "חצי פנסיון, אפשרות לפנסיון מלא",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Les+Melezes.html?siteID=1783"
+  },
+  {
+   "name": "Kandahar Val D'isere",
+   "siteID": 2014,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Kandahar+Val+D'isere.html?siteID=2014"
+  },
+  {
+   "name": "Hotel Ski Lodge",
+   "siteID": 1916,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "חדרים לזוג ולשלושה, חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Ski+Lodge.html?siteID=1916"
+  },
+  {
+   "name": "Hotel Ormelune",
+   "siteID": 1785,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Ormelune.html?siteID=1785"
+  },
+  {
+   "name": "Hotel Avenue Lodge",
+   "siteID": 1577,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "ארוחת בוקר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Avenue+Lodge.html?siteID=1577"
+  },
+  {
+   "name": "Res. Prestige Front de Neige",
+   "siteID": 2098,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Res.+Prestige+Front+de+Neige.html?siteID=2098"
+  },
+  {
+   "name": "CGH White Pearl Lodge & Spa",
+   "siteID": 1981,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "דירות עד 8 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+White+Pearl+Lodge+%26+Spa.html?siteID=1981"
+  },
+  {
+   "name": "CGH Les Granges du Soleil",
+   "siteID": 1980,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "דירות עד 8 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Les+Granges+du+Soleil.html?siteID=1980"
+  },
+  {
+   "name": "Les Balcons Belle Plagne",
+   "siteID": 1514,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "לינה בלבד, אפשרות לחצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Les+Balcons+Belle+Plagne.html?siteID=1514"
+  },
+  {
+   "name": "Terra Nova",
+   "siteID": 903,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Terra+Nova.html?siteID=903"
+  },
+  {
+   "name": "Club Du Soleil - Oz",
+   "siteID": 1278,
+   "resort": "Oz en Oisans",
+   "resort_he": "עוז אן אואזאן",
+   "country": "france",
+   "board_he": "פנסיון מלא ויין בארוחות",
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Oz"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+-+Oz.html?siteID=1278"
+  },
+  {
+   "name": "Club Belambra - Panorama",
+   "siteID": 2048,
+   "resort": "Flaine Grand Massif",
+   "resort_he": "פליין",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Grand Massif"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+-+Panorama.html?siteID=2048"
+  },
+  {
+   "name": "Club Belambra Les Cimes",
+   "siteID": 1949,
+   "resort": "Avoriaz",
+   "resort_he": "אבוריאז",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Avoriaz"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Les+Cimes.html?siteID=1949"
+  },
+  {
+   "name": "Club Du Soleil - Montgenevre",
+   "siteID": 2115,
+   "resort": "Montgenevre",
+   "resort_he": "מונז'נבר",
+   "country": "france",
+   "board_he": "חדרים ל-1-4 אורחים, פנסיון מלא",
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Montgenevre"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+-+Montgenevre.html?siteID=2115"
+  },
+  {
+   "name": "Font D'argent Pas",
+   "siteID": 984,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, אפשרות ל-3 אורחים בחדר",
+   "commitment": true,
+   "commitment_names": [
+    "FONT PAS"
+   ],
+   "page": "https://www.pingwin.co.il/Font+D'argent+Pas.html?siteID=984"
+  },
+  {
+   "name": "Magic Pas",
+   "siteID": 444,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, עד 4 אורחים בחדר",
+   "commitment": true,
+   "commitment_names": [
+    "MAGIC PAS"
+   ],
+   "page": "https://www.pingwin.co.il/Magic+Pas.html?siteID=444"
+  },
+  {
+   "name": "Hotel Grand Pas",
+   "siteID": 445,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "GRAND PAS"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Grand+Pas.html?siteID=445"
+  },
+  {
+   "name": "Kandahar",
+   "siteID": 1045,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "ארוחת בוקר, עד 4 אורחים בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Kandahar.html?siteID=1045"
+  },
+  {
+   "name": "Camel Lot",
+   "siteID": 1294,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Camel+Lot.html?siteID=1294"
+  },
+  {
+   "name": "Frontera Blanca Apart",
+   "siteID": 1661,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "דירות, לינה בלבד",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Frontera+Blanca+Apart.html?siteID=1661"
+  },
+  {
+   "name": "Lodge Park Hotel",
+   "siteID": 243,
+   "resort": "Soldeu",
+   "resort_he": "סולדו",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, עד 3 אורחים בחדר או זוג + שני ילדים",
+   "commitment": true,
+   "commitment_names": [
+    "LODGE PARK (Allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Lodge+Park+Hotel.html?siteID=243"
+  },
+  {
+   "name": "Font D'argent Canillo",
+   "siteID": 857,
+   "resort": "Soldeu",
+   "resort_he": "סולדו",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, עד 3 בחדר",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Font+D'argent+Canillo.html?siteID=857"
+  },
+  {
+   "name": "Vihren Royal Palace spa",
+   "siteID": 1107,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר, סקי פס מקומי",
+   "commitment": true,
+   "commitment_names": [
+    "Vihren"
+   ],
+   "page": "https://www.pingwin.co.il/Vihren+Royal+Palace+spa.html?siteID=1107"
+  },
+  {
+   "name": "Casa Karina",
+   "siteID": 1435,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון + כיבוד קל ושתייה חופשית אחה\"צ, חדרים לעד 5",
+   "commitment": true,
+   "commitment_names": [
+    "Casa Karina"
+   ],
+   "page": "https://www.pingwin.co.il/Casa+Karina.html?siteID=1435"
+  },
+  {
+   "name": "Casa Karina Short Stay",
+   "siteID": 1445,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון + כיבוד קל ושתייה חופשית אחה\"צ",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Casa+Karina+Short+Stay.html?siteID=1445"
+  },
+  {
+   "name": "Regnum Ski hotel & Spa",
+   "siteID": 1765,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר, חדרים לעד 5, סקי פס מקומי",
+   "commitment": true,
+   "commitment_names": [
+    "Regnum"
+   ],
+   "page": "https://www.pingwin.co.il/Regnum+Ski+hotel+%26+Spa.html?siteID=1765"
+  },
+  {
+   "name": "Riverside Boutique Hotel",
+   "siteID": 1819,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון, חדרים לזוג עד זוג + שני ילדים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Riverside+Boutique+Hotel.html?siteID=1819"
+  },
+  {
+   "name": "MPM Sport Hotel",
+   "siteID": 2077,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר או חצי פנסיון, חדרים עד 4 אורחים",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/MPM+Sport+Hotel.html?siteID=2077"
+  },
+  {
+   "name": "Grand Hotel Therme - Banya",
+   "siteID": 2078,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חדרים זוגיים ודירות עד 8 אורחים, חצי פנסיון או הכל כלול",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Grand+Hotel+Therme+-+Banya.html?siteID=2078"
+  },
+  {
+   "name": "Amira Hotel",
+   "siteID": 1503,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חדרים וסוויטות לעד 3 מבוגרים, ארוחת בוקר או חצי פנסיון",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Amira+Hotel.html?siteID=1503"
+  },
+  {
+   "name": "Hotel MPM Guiness",
+   "siteID": 1571,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון, חדרים לשניים ועד שישה",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+MPM+Guiness.html?siteID=1571"
+  },
+  {
+   "name": "Ores Boutique Hotel",
+   "siteID": 1914,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר או חצי פנסיון, סקי פס מקומי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Ores+Boutique+Hotel.html?siteID=1914"
+  },
+  {
+   "name": "Friends hotel",
+   "siteID": 2071,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון, סקי פס מקומי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Friends+hotel.html?siteID=2071"
+  },
+  {
+   "name": "Four Points by Sheraton",
+   "siteID": 2074,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "סקי פס מקומי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Four+Points+by+Sheraton.html?siteID=2074"
+  },
+  {
+   "name": "Iceberg Hotel",
+   "siteID": 16,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "לינה וארוחת בוקר, סקי פס מקומי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Iceberg+Hotel.html?siteID=16"
+  },
+  {
+   "name": "Hotel Rila",
+   "siteID": 1161,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר או חצי פנסיון",
+   "commitment": true,
+   "commitment_names": [
+    "Rila"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Rila.html?siteID=1161"
+  },
+  {
+   "name": "Hotel Iglika",
+   "siteID": 19,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון וכיבוד אפרה סקי קל, סקי פס מקומי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Iglika.html?siteID=19"
+  },
+  {
+   "name": "Flora Hotel",
+   "siteID": 20,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "סקי פס מקומי",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Flora+Hotel.html?siteID=20"
+  }
+ ]
+}
