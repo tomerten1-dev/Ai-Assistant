@@ -5,6 +5,7 @@
 //   node tests/test-bank.js                 whole bank, summary per cluster
 //   node tests/test-bank.js --cluster=promises --show
 //   node tests/test-bank.js --grep=קייטנה --show
+//   node tests/test-bank.js --typical --sample=100 --live --watch
 //
 // Writes tests/bank-results.json (one row per question) for review.
 // Exit code 1 only when a hard rule is broken: an invented number, or a
@@ -113,6 +114,17 @@ async function ask(q) {
     list = list.filter(e => stuck.has(e.q));
     console.log(`--stuck: ${list.length} questions that dead-ended offline`);
   }
+  // --typical: only what an ordinary customer types. The bank deliberately
+  // contains traps — prompt injection, promise-extraction, provocations, typos
+  // and off-topic B2B — because the bot must survive them. But a run meant to
+  // answer "how does the bot serve a normal customer?" should not be graded on
+  // them (Tomer, 26/08: "שאלות שלקוחות רגילים שואלים, לא להקשות בכוונה").
+  const NOT_TYPICAL = new Set(['adversarial', 'promises', 'b2b_offtopic', 'format_emotional']);
+  if (args.typical) {
+    const before = list.length;
+    list = list.filter(e => !NOT_TYPICAL.has(e.cluster));
+    console.log(`--typical: ${list.length} customer questions (${before - list.length} traps and off-topic left out)`);
+  }
   if (args.sample) {
     // deterministic slice, so two runs compare like for like
     const n = Math.max(1, Math.min(list.length, parseInt(args.sample, 10) || 100));
@@ -202,7 +214,10 @@ async function ask(q) {
 function report(partial) {
   // a live run writes its own file: bank-results.json is the offline baseline
   // that --stuck reads, and overwriting it would erase the comparison
-  const outFile = LIVE ? 'bank-results-live.json' : 'bank-results.json';
+  // a typical-customer live run is a different measurement from the hard-150:
+  // keeping them in separate files means neither overwrites the other's baseline
+  const outFile = LIVE ? (args.typical ? 'bank-results-live-typical.json' : 'bank-results-live.json')
+    : 'bank-results.json';
   if (!ROWS.length) { console.log('\nnothing measured yet'); process.exit(1); }
   fs.writeFileSync(path.join(__dirname, outFile), JSON.stringify(ROWS, null, 1));
   const rows = ROWS;

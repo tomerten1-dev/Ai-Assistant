@@ -9,6 +9,8 @@
     "start": "node server/server.js",
     "dev": "node tools/dev.js",
     "test:ui": "node tests/test-widget.js",
+    "bank": "node tests/test-bank.js",
+    "bank:live": "node tests/test-bank.js --typical --sample=100 --live --watch",
     "stress": "node tests/stress.js",
     "review": "node tools/review-log.js",
     "build:site": "node tools/fetch-hotel-images.js && node tools/fetch-inclusions.js"
