@@ -418,12 +418,18 @@ function parseText(text, slots) {
     // a bare answer to "מתי בחודש?"
     s.month_part = /תחילת/.test(t) ? 'early' : (/אמצע/.test(t) ? 'mid' : 'late');
   }
+  // The Israeli calendar, not only the month: חנוכה תשפ"ז is 5–12.12.2026 and
+  // פורים is 23–24.3.2027. A family that says "בחנוכה" means that week, and
+  // was being shown the whole of December.
+  if (/חנוכה/.test(t) && !partMatch) { s.month = 12; s.month_part = 'early'; s.holiday = 'חנוכה'; }
+  else if (/פורים/.test(t) && !partMatch) { s.month = 3; s.month_part = 'late'; s.holiday = 'פורים'; }
+  else if (s.month !== (slots || {}).month) s.holiday = null;   // moved on to a plain month
 
   // "גמיש בתאריך" said on its own RELEASES the month rather than merely filling
   // it in when empty — that is what a customer means by flexible, and until now
   // they kept being shown February after explicitly letting go of it.
   if (/גמיש[יי]?[םמ]? בתארי|לא משנה התארי|לא משנה מתי|כל תאריך|מתי שיש/.test(t)) {
-    s.month = 'any'; s.flexible_dates = true; s.month_part = null; s.exact_day = null;
+    s.month = 'any'; s.flexible_dates = true; s.month_part = null; s.exact_day = null; s.holiday = null;
   } else if (/לא משנה|גמיש|אין העדפה/.test(t)) {
     if (s.month == null) s.month = 'any';
     s.flexible_dates = true;
@@ -869,9 +875,11 @@ function relaxationLines(result, slots) {
         'Pas de la Casa': 'פאס דה לה קאסה', 'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל' };
       const place = slots && ((slots.destination && (DEST_HE2[slots.destination] || null)) ||
         ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[slots.country]) || null;
+      // asked for a holiday by name — answer about the holiday, not the month
+      const fromHe = (slots && slots.holiday && slots.holiday !== 'any') ? slots.holiday : (MONTH_HE[r.from] || r.from);
       out.push(place
-        ? `ב${place} אין לי יציאות פנויות ב${MONTH_HE[r.from] || r.from}; הקרוב ביותר — ${MONTH_HE[r.to] || r.to}:`
-        : `לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
+        ? `ב${place} אין לי יציאות פנויות ב${fromHe}; הקרוב ביותר — ${MONTH_HE[r.to] || r.to}:`
+        : `לא מצאתי בדיוק ב${fromHe}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
     }
     if (r.type === 'location') {
       const sat = (result.notes || []).some(n => n.type === 'saturday_only');
@@ -961,11 +969,23 @@ function phrase(result, slots, cards) {
     // month / location / two_rooms / nights are printed by the server, verbatim
     // — see relaxationLines() above. Everything else below still belongs to the
     // model's paragraph, because it is detail rather than a correction.
+    // "קבוצת הגיל של הילד" with two children in two groups left the parent
+    // guessing which child has no group — name the groups when there are two
+    const groupsHe = (() => {
+      const g = [...SkiSearch.neededAgeGroups(slots.children_ages)].map(x => x === '6*' ? '6-13' : x);
+      const u = [...new Set(g)];
+      return u.length > 1 ? { s: `קבוצות ${u.join(' ו-')}`, v: 'פועלות', p: 'הן' } : { s: 'קבוצת הגיל של הילד', v: 'פועלת', p: 'היא' };
+    })();
     if (r.type === 'camp_month') {
-      lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו פועלת קבוצת הגיל של הילד, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם היא כן פועלת:`);
+      lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו ${groupsHe.v} ${groupsHe.s}, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם ${groupsHe.p} כן ${groupsHe.v}:`);
     }
     if (r.type === 'camp_location') {
-      lines.push('ביעד שביקשתם אין שבוע שבו פועלת קבוצת הגיל של הילד. הנה יעדים שבהם היא כן פועלת:');
+      const CH = { austria: 'אוסטריה', france: 'צרפת', andorra: 'אנדורה', bulgaria: 'בולגריה' };
+      const from = CH[r.from_country] || 'היעד שביקשתם';
+      const to = (r.to_countries || []).map(c => CH[c] || c).filter(Boolean);
+      const where = to.length ? to.join(' ו-') : 'יעדים אחרים';
+      const month = r.to && MONTH_HE[r.to] ? ` ב${MONTH_HE[r.to]}` : '';
+      lines.push(`ב${from} אין שבוע שבו ${groupsHe.v} ${groupsHe.s}, אז הצגתי את ${where}${month} — שם ${groupsHe.p} כן ${groupsHe.v}:`);
     }
     if (r.type === 'exact_day') {
       lines.push(`אין יציאה ב-${r.wanted}.${r.month} בדיוק — היציאות שלנו שבועיות. הנה הקרובות אליה:`);

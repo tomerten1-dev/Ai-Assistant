@@ -191,6 +191,14 @@ const splitNights = engine.search({ adults: 6, month: 1, country: 'france', nigh
 t('two-room splits respect the requested nights',
   (splitNights.two_room_splits || []).every(s => s.nights === 7));
 
+console.log('\n[camp_location] says where the club runs, for which groups');
+const moved = engine.search({ adults: 2, children_ages: [5, 9], month: 1, country: 'austria', needs_hebrew_kids_club: true });
+const loc = (moved.relaxed || []).find(r => r.type === 'camp_location');
+t('Austria + club in January is widened by location', !!loc);
+t('the note names the countries it moved to', !!loc && Array.isArray(loc.to_countries) && loc.to_countries.length > 0 && !loc.to_countries.includes('austria'));
+t('the note names both age groups', !!loc && loc.groups.includes('4-6') && loc.groups.includes('6-13'));
+t('the note remembers where the customer asked for', !!loc && loc.from_country === 'austria');
+
 console.log('\n[party] children without ages still count, everywhere');
 const noAges = engine.search({ adults: 2, children_count: 2, month: 1, country: 'austria', needs_hebrew_kids_club: true });
 t('no camp_age_mismatch before the ages are known',

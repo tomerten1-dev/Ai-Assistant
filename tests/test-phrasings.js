@@ -300,6 +300,11 @@ check('niqqud is stripped before matching', null, 'זוּג בּפברואר', {
 check('releasing the airport', { departure_airport: 'haifa' }, 'לא חייב מחיפה', { departure_airport: 'any' });
 check('releasing the Sabbath constraint', { no_saturday_flights: true }, 'אפשר גם בשבת', { no_saturday_flights: false });
 check('naming Haifa still sets it', null, 'זוג מחיפה בפברואר', { departure_airport: 'haifa' });
+// the Israeli calendar: a holiday is a week, not a month
+check('חנוכה is early December', null, 'משפחה בחנוכה', { month: 12, month_part: 'early', holiday: 'חנוכה' });
+check('פורים is late March', null, 'זוג בפורים', { month: 3, month_part: 'late', holiday: 'פורים' });
+check('moving on to a plain month drops the holiday', { month: 12, month_part: 'early', holiday: 'חנוכה' }, 'בעצם ינואר', { month: 1, holiday: null });
+check('"תחילת דצמבר" is not overwritten by the holiday word', null, 'תחילת דצמבר, לא חנוכה', { month: 12, month_part: 'early' });
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

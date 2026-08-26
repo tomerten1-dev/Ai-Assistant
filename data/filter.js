@@ -341,7 +341,13 @@ class SkiSearch {
       if (!found && (slots.country || slots.destination)) {
         for (const m of [+slots.month, ...months].filter(x => x != null)) {
           const alt = this._filter(slots, party, { month: m, country: null, destination: null });
-          if (covers(alt)) { found = { list: alt, note: { type: 'camp_location', to: m } }; break; }
+          if (covers(alt)) {
+            // name where the club actually runs — "יעדים אחרים" told a family
+            // that asked for Austria nothing about where they were being sent
+            const to_countries = [...new Set(alt.filter(c => c.camps && !(c.camps.missing || []).length).map(c => c.country))];
+            found = { list: alt, note: { type: 'camp_location', to: m, from_country: slots.country || null, to_countries, groups: [...SkiSearch.neededAgeGroups(slots.children_ages)] } };
+            break;
+          }
         }
       }
       if (found) {

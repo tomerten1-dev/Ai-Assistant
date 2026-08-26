@@ -45,7 +45,7 @@ const EMPTY_SLOTS = {
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
-  month_alt: null,
+  month_alt: null, holiday: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
   wrong_year: null,
@@ -69,6 +69,21 @@ function requiredMissing(slots) {
   const kidsInRange = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
   if (kidsInRange && slots.needs_hebrew_kids_club == null) missing.push('kids_club');
   return missing;
+}
+
+// Three offers read faster as a ladder: which is the cheapest, which is the
+// premium. Derived only from the symbolic price band, only when the bands
+// actually differ — three identical ₪₪₪ cards get no labels rather than
+// invented ones. Never "מומלץ": that word belongs to the hotel data.
+function tierLabel(card, cards) {
+  const rank = p => (String(p || '').match(/₪/g) || []).length;
+  const ranks = cards.map(c => rank(c.price_range));
+  const lo = Math.min(...ranks), hi = Math.max(...ranks);
+  if (cards.length < 2 || lo === hi) return null;
+  const r = rank(card.price_range);
+  if (r === lo && ranks.filter(x => x === lo).length === 1) return 'המשתלם ביותר';
+  if (r === hi && ranks.filter(x => x === hi).length === 1) return 'הפרימיום';
+  return null;
 }
 
 // the widget's "[הוצגו N הצעות: …]" marker — context for the models, never a reply
@@ -268,6 +283,11 @@ function presentCards(result, slots, skip) {
     // supplement, ski pass or not — so a generic sentence would be wrong.
     package_includes_he: engine.hotelInfo(c.hotel).package_includes_he || null,
     count_available: c.count_available,
+    // soft, factual urgency: the workbook says how many rooms of this type we
+    // still hold. "נשארו 2 חדרים" is true; a countdown timer would not be.
+    // only the last room of its type earns the line — a third of the workbook
+    // is 2–3 rooms, and a badge on every card is noise, not information
+    rooms_left_he: c.count_available === 1 ? 'נשאר חדר אחד מהסוג הזה' : null,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,
     // Everything the hotel pages taught us about THIS unit. This list used to
@@ -283,7 +303,7 @@ function presentCards(result, slots, skip) {
     separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
     // the hotel's own page — the customer clicked this hotel, not the home page
     booking_url: buildBookingUrl(engine.hotelInfo(c.hotel)),
-  }));
+  })).map((card, i, arr) => ({ ...card, tier_he: tierLabel(card, arr) }));
 }
 
 /* ---------- chat orchestration ---------- */
@@ -804,7 +824,9 @@ async function handleChat(body) {
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
     gapChips.push('בלי ילדים');
   }
-  if (slots.month == null) gapChips.push('דצמבר', 'ינואר', 'פברואר', 'מרץ');
+  // the school calendar is how families think about dates — Hanukkah and
+  // Purim are one tap, the bare months stay for everyone else
+  if (slots.month == null) gapChips.push('חנוכה', 'ינואר', 'פברואר', 'פורים');
   if (slots.departure_airport == null) gapChips.push('טיסה מנתב"ג', 'טיסה מחיפה');
   if (slots.country == null && slots.destination == null) {
     const ex = slots.excluded_countries || [];

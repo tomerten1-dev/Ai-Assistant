@@ -159,6 +159,8 @@
     + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
     + '.tag.warn{background:#f7f1e3;color:#7a5c1e;border:1px solid #e5d9bd}'
     + '.tag.rec{background:#e8eef4;color:' + THEME.primaryDark + ';border:1px solid #cfdae4}'
+    + '.tag.tier{background:' + THEME.primaryDark + ';color:#fff;border:1px solid ' + THEME.primaryDark + ';font-weight:600}'
+    + '.tag.left{background:#fbeeea;color:#8a3b2a;border:1px solid #efcfc6}'
     + '.card .price{font-size:14.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px}'
     + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:8px;flex-wrap:wrap}'
     + '.btn{flex:1 1 0;min-width:112px;padding:10px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
@@ -465,7 +467,9 @@
     }
 
     var tags = el('div', 'tags');
+    if (c.tier_he) tags.appendChild(el('span', 'tag tier', c.tier_he));
     if (c.recommended) tags.appendChild(el('span', 'tag rec', 'מומלץ'));
+    if (c.rooms_left_he) tags.appendChild(el('span', 'tag left', c.rooms_left_he));
     if (c.camps && c.camps.running && c.camps.running.length) {
       tags.appendChild(el('span', 'tag', 'קייטנה בעברית'));
       if (!c.camps.full) tags.appendChild(el('span', 'tag warn', 'קייטנה חלקית — ראו פירוט'));
