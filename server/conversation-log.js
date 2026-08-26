@@ -42,7 +42,7 @@ function signals({ cards, result, slots, reply, notUnderstood, answeredBy }) {
     asked: /\?/.test(reply || ''),
     // the three shapes worth reviewing weekly
     dead_end: cards.length === 0 && !(result && result.two_room_splits || []).length,
-    deferred: /נציג יאמת|נציג יבדוק|נציג ימסור/.test(reply || ''),
+    deferred: /נציג (אנושי )?(יאמת|יבדוק|ימסור|יחזור|יסביר|יאשר|יסדיר|יטפל|יעביר)|השאירו שם וטלפון/.test(reply || ''),
     // read from the notes, not the slot: the slot is cleared once handled
     objection: notes.includes('cheaper_found') || notes.includes('no_cheaper'),
     widened: relaxed.length > 0,
