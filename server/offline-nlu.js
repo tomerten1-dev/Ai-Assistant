@@ -1454,6 +1454,34 @@ function unknownAnswer() {
 // turns this into an actual form rather than telling the customer where to
 // find a button.
 const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג/;
+/* ---- who is writing? ----
+   Not every message is a customer looking for a holiday. A travel agent, a
+   company, a school, a journalist, someone who already booked, someone who
+   simply pasted their phone number — each used to get "כמה תהיו?" back.
+   Returns {kind, he, prefill?} or null. Wording lives in config/guidance.json. */
+const PHONE_RE = /(?:\+972|0)5\d[-\s]?\d{3}[-\s]?\d{4}/;
+function leadIntent(text) {
+  const raw = String(text || '').trim();
+  const t = ' ' + raw.replace(/\s+/g, ' ') + ' ';
+  const L = kind => ({ kind, he: guidance.leadIntentText(kind) });
+  // a phone number with at most a name around it — the customer skipped the form
+  const ph = raw.match(PHONE_RE);
+  if (ph && raw.replace(PHONE_RE, '').replace(/[\s,.:;\-|]/g, '').length <= 25 && !/\?/.test(raw)) {
+    const name = raw.replace(PHONE_RE, '').replace(/[,.:;|\-]/g, ' ').replace(/\s+/g, ' ').trim();
+    return { ...L('phone_only'), prefill: { phone: ph[0], name: name || '' } };
+  }
+  if (/אני סוכן|סוכנת נסיעות|סוכן נסיעות|משרד נסיעות|תנאי סוכנים|עמלת סוכן|עמלה לסוכנים|נטו לסוכן|מחיר נטו/.test(t)) return L('agent');
+  if (/נופש חברה|ועד עובדים|ועד ה?עובדים|לעובדים שלנו|החברה שלנו רוצה|הצעת מחיר רשמית|לחברה של|גיבוש (חברה|צוות)|כנס חברה|\d{2,3} עובדים/.test(t)) return L('corporate');
+  if (/תנועת נוער|משלחת|בית ספר|תיכון|חניכים|כיתה [א-יא-ת]|מורים ותלמידים|תלמידים/.test(t) && !/הילדים מפסידים|ימי בית ספר|חופשת|חופש/.test(t)) return L('school');
+  if (/בר מצווה|בת מצווה|בר-מצווה|בת-מצווה|שבת חתן|חתונה באתר|חתונה ב|אירוע משפחתי של|\d{2,3} איש/.test(t) && !/עוגה/.test(t)) return L('celebration_group');
+  if (/עיתונא|כתבה|כתב ב|בלוגר|משפיענ|שת"פ|שיתוף פעולה|נסיעה במימון|ynet|וואלה|כלכליסט|דה מרקר/.test(t)) return L('press');
+  if (/מחפש עבודה|מחפשת עבודה|קורות חיים|לעבוד אצלכם|לעבוד איתכם|מדריך מוסמך|משרה|דרושים|מה השכר|לעבוד בקייטנה/.test(t)) return L('job');
+  if (/אנחנו מלון|רשת מלונות|hotel chain|ספק ביטוח|להיכנס למאגר|רוצה לפרסם אצלכם|תכנית שותפים|אפיליי|משקיעים|בניתי מערכת|contracting/i.test(t)) return L('partnership');
+  if (/סקי מותאם|סקי לנכים|sit.?ski|כיסא גלגלים|כסא גלגלים|מעלון|לקוי ראייה|לקוית ראייה|עיוור|כלב נחייה|נגיש(ות)? ל|prm|אדפטיבי/i.test(t)) return L('adaptive');
+  if (/הזמנה (מספר|מס'?) ?\d+|מספר הזמנה \d+|הזמנתי כבר|כבר הזמנתי|הזמנו כבר|כבר הזמנו|ביטלתי (לפני|ועדיין)|לא קיבלתי (החזר|חשבונית|את הכרטיסים|אישור)|איפה הכרטיסים|סטטוס ההחזר|חויבתי פעמיים|ההזמנה שלי (מאושרת|קיימת)|קיבלנו מייל שהמלון|הטיסה (שלנו )?בוטלה|רוצה לשדרג את ההזמנה|הזמנ(ו|תי) ל[א-ת]+ ורוצ(ים|ה) |להוסיף .{0,20}להזמנה (שלי|שלנו|קיימת)|אנחנו עומדים ב.{0,20}עכשיו/.test(t)) return L('existing');
+  return null;
+}
+
 function wantsCallback(text) {
   return WANTS_CALLBACK.test(' ' + String(text || '').replace(/\s+/g, ' ') + ' ');
 }
@@ -1635,4 +1663,4 @@ module.exports = {
   hotelNamed,
   wantsCallback,
   unknownAnswer,
-  noMatchAnswer, parseText, nextQuestion, phrase, deflect };
+  noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent };

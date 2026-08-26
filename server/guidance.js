@@ -138,4 +138,10 @@ function guardText(key) {
   return (typeof g[key] === 'string' && g[key].trim()) ? g[key] : GUARD_DEFAULTS[key];
 }
 
-module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, load, FILE };
+function leadIntentText(kind) {
+  const g = load().lead_intents_he || {};
+  return (typeof g[kind] === 'string' && g[kind].trim()) ? g[kind]
+    : 'זו פנייה שנציג מטפל בה — השאירו שם וטלפון ונחזור אליכם, או התקשרו ל-04-8557722.';
+}
+
+module.exports = { forAsking, forAnswering, objection, officeOpen, handoffLine, closing, guardText, leadIntentText, load, FILE };

@@ -306,6 +306,30 @@ function presentCards(result, slots, skip) {
   })).map((card, i, arr) => ({ ...card, tier_he: tierLabel(card, arr) }));
 }
 
+/* ---------- lead delivery ----------
+   A lead nobody saw is a customer lost. LEAD_WEBHOOK_URL (Make/Zapier/Sheets/
+   CRM) receives every lead as JSON, signed with LEAD_WEBHOOK_SECRET when set;
+   three attempts with backoff, and the JSONL on disk is the record of truth
+   either way. Email/WhatsApp delivery plugs in here once Pingwin says where. */
+async function notifyLead(record) {
+  const url = process.env.LEAD_WEBHOOK_URL;
+  if (!url) return;
+  const body = JSON.stringify(record);
+  const headers = { 'content-type': 'application/json', 'x-lead-id': record.id };
+  if (process.env.LEAD_WEBHOOK_SECRET) {
+    headers['x-signature'] = require('crypto').createHmac('sha256', process.env.LEAD_WEBHOOK_SECRET).update(body).digest('hex');
+  }
+  const delays = [0, 2000, 10000];
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+    try {
+      const r = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(8000) });
+      if (r.ok) return;
+      if (r.status >= 400 && r.status < 500 && r.status !== 429) throw new Error('rejected ' + r.status);
+    } catch (e) { if (i === delays.length - 1) throw e; }
+  }
+}
+
 /* ---------- chat orchestration ---------- */
 async function handleChat(body) {
   const startedAt = Date.now();
@@ -323,6 +347,29 @@ async function handleChat(body) {
   let slots = offline.parseText(lastUser, prevSlots);
   let replyIfNotReady = null;
   let modelUsed = false;
+
+  // ---- step 1b: is this even a customer looking for a holiday? ----
+  // A travel agent, a company, a school, a journalist, someone who already
+  // booked, someone who pasted a phone number — one sentence and the form,
+  // tagged with who they are, instead of "כמה תהיו?".
+  const leadIntent = !offline.guard(lastUser) && offline.leadIntent(lastUser);
+  if (leadIntent) {
+    // a phone number typed after "אני סוכן" is still the agent's lead
+    slots._lead_kind = (leadIntent.kind === 'phone_only' && prevSlots._lead_kind) ? prevSlots._lead_kind : leadIntent.kind;
+    if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+    chatLog.logTurn({
+      conversationId: body.conversationId || slots._cid, userText: lastUser, reply: leadIntent.he,
+      cards: [], result: { notes: [], relaxed: [] }, slots, modelUsed: false, ms: Date.now() - startedAt,
+      notUnderstood: false, answeredBy: 'lead:' + leadIntent.kind,
+    });
+    return {
+      open_lead_form: leadIntent.kind !== 'job' && leadIntent.kind !== 'partnership',
+      lead_kind: leadIntent.kind, lead_prefill: leadIntent.prefill || null,
+      reply_he: leadIntent.he, model_used: false, pending_parameter: null,
+      slots, cards: [], two_room_splits: [], notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'lead', lead_kind: leadIntent.kind, faq_ids: [], guard: null, off_topic: false, not_understood: false, pending: null } } : {}),
+    };
+  }
 
   // ---- step 2: escalate to the model ONLY if step 1 learned nothing ----
   if (aiMode() !== 'offline' && shouldAskModel(prevSlots, slots, lastUser)) {
@@ -1098,19 +1145,25 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(400, { 'content-type': 'application/json' });
         res.end(JSON.stringify({ ok: false })); return;
       }
-      // leads contain PII (name+phone) — stored server-side only, dir is gitignored
+      // leads contain PII (name+phone) — stored server-side only, dir is gitignored.
+      // Append-only JSONL: the old read-modify-write of one JSON array lost a
+      // lead whenever two arrived together.
       const dir = path.join(ROOT, 'server-data');
       fs.mkdirSync(dir, { recursive: true });
-      const leadsPath = path.join(dir, 'leads.json');
-      let leads = [];
-      try { leads = JSON.parse(fs.readFileSync(leadsPath, 'utf8')); } catch { }
-      leads.push({ ...lead, at: new Date().toISOString() });
-      fs.writeFileSync(leadsPath, JSON.stringify(leads, null, 1));
-      // a lead with no hotel is legitimate: "תחזרו אליי" before choosing one
       const ctx = lead.context || {};
-      console.log(`lead: ${lead.name} (${lead.phone}) → ${ctx.hotel || 'ללא הצעה ספציפית'} ${ctx.date || ''}`.trim());
+      const record = {
+        id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        at: new Date().toISOString(),
+        name: String(lead.name).slice(0, 80), phone: String(lead.phone).slice(0, 30),
+        kind: String(ctx.kind || 'customer').slice(0, 30),
+        context: ctx,
+      };
+      fs.appendFileSync(path.join(dir, 'leads.jsonl'), JSON.stringify(record) + '\n');
+      // no PII on stdout — only that a lead landed and what kind
+      console.log(`lead ${record.id} [${record.kind}] → ${ctx.hotel || 'ללא הצעה ספציפית'} ${ctx.date || ''}`.trim());
+      notifyLead(record).catch(e => console.error('lead notify failed:', e.message));
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ ok: true }));
+      res.end(JSON.stringify({ ok: true, id: record.id }));
       return;
     }
     // static

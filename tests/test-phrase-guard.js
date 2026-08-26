@@ -186,5 +186,30 @@ t('guard wording comes from config/guidance.json', () => {
   assert.ok(g.profanity && guard('בן זונה, תענה כבר') === g.profanity);
 });
 
+// ---- who is writing: lead intents ----
+const { leadIntent } = require('../server/offline-nlu.js');
+console.log('\n[lead intents]');
+const kind = (q, k) => t(`${k}: ${q}`, () => assert.strictEqual((leadIntent(q) || {}).kind, k));
+const none = (q) => t(`customer: ${q}`, () => assert.strictEqual(leadIntent(q), null));
+kind('אני סוכן נסיעות, יש תנאי סוכנים / עמלה?', 'agent');
+kind('נופש חברה ל-60 עובדים בפברואר', 'corporate');
+kind('תנועת נוער, 45 חניכים + מדריכים', 'school');
+kind('בר מצווה לבן, רוצים 25 איש בשאלה, סקי', 'celebration_group');
+kind('אני עיתונאית מ-ynet, רוצה תגובה לכתבה', 'press');
+kind('מחפש עבודה כמדריך במועדון ילדים, מה השכר?', 'job');
+kind('אנחנו מלון בבנסקו ורוצים להיכנס למאגר שלכם', 'partnership');
+kind('יש אפשרות לסקי לנכים / סקי מותאם?', 'adaptive');
+kind('הזמנתי כבר חבילה לסולדן, רוצה להוסיף עוד ילד', 'existing');
+kind('מה סטטוס ההחזר שלי? הזמנה 48213', 'existing');
+kind('054-1234567 יוסי', 'phone_only');
+t('phone_only prefills name and phone', () => {
+  const r = leadIntent('054-1234567 יוסי');
+  assert.strictEqual(r.prefill.phone, '054-1234567'); assert.strictEqual(r.prefill.name, 'יוסי');
+});
+none('זוג עם 2 ילדים, הילדים מפסידים בית ספר, יש תאריכים בחופש?');
+none('אפשר לחגוג בר מצווה במלון? עוגה?');
+none('אני מארגן קבוצה של 12 חברים, יש מחיר קבוצתי?');
+none('תתקשרו אליי ל-054-1234567 לגבי ההצעה הזו, יש שאלה על הקייטנה?');
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

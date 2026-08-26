@@ -21,7 +21,7 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
 const PORT = 8799;
 const GREETING = 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.';
 // a handoff, not the routine closing line ("או שאשאיר לנציג לחזור אליכם")
-const PHONE = /04-8557722|052-6543262|נציג (יבדוק|יחזור|ימסור|יאשר|יטפל|ישמח)|אעביר לנציג|השאירו שם וטלפון|WhatsApp|וואטסאפ/;
+const PHONE = /04-8557722|052-6543262|info@pingwin|נציג (יבדוק|יחזור|ימסור|יאשר|יטפל|ישמח)|אעביר לנציג|השאירו שם וטלפון|WhatsApp|וואטסאפ/;
 // a number that reads like a price, a percentage or a date-fee — allowed only
 // inside approved text
 const NUMBERISH = /\d+\s*(€|יורו|₪|ש"ח|שקל|%|אחוז)|(€|₪)\s*\d+/;

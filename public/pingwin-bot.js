@@ -559,7 +559,8 @@
   /* lead form — שם + טלפון בלבד (חוק אדום 8) */
   // `card` is optional: someone who simply types "תחזרו אליי" has not picked an
   // offer yet, and should still get the form rather than a pointer to a button.
-  function openLeadForm(card) {
+  function openLeadForm(card, opts) {
+    opts = opts || {};
     // one open form at a time — pressing "תחזרו אליי" twice stacked two forms
     var prev = msgs.querySelectorAll('.form');
     for (var pi = 0; pi < prev.length; pi++) prev[pi].remove();
@@ -572,9 +573,12 @@
       f.appendChild(el('div', 'hname', 'נציג יחזור אליכם'));
       f.appendChild(el('div', 'note', 'השאירו שם וטלפון ונציג פינגווין יחזור אליכם.'));
     }
+    var leadKind = opts.kind || (state.slots && state.slots._lead_kind) || 'customer';
     var lName = el('label', null, 'שם'); var iName = document.createElement('input');
     iName.setAttribute('aria-label', 'שם'); iName.name = 'name'; iName.autocomplete = 'name'; lName.htmlFor = iName.id = 'pw-lead-name';
+    if (opts.prefill && opts.prefill.name) iName.value = opts.prefill.name;
     var lPhone = el('label', null, 'טלפון'); var iPhone = document.createElement('input');
+    if (opts.prefill && opts.prefill.phone) iPhone.value = opts.prefill.phone;
     iPhone.type = 'tel'; iPhone.setAttribute('aria-label', 'טלפון'); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
     var go = el('button', 'btn pri', 'שלחו לנציג'); go.type = 'submit';
     var note = el('div', 'note', 'רק שם וטלפון — בלי התחייבות. ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.');
@@ -604,6 +608,7 @@
             date: card ? card.date : null, nights: card ? card.nights : null,
             room: card ? card.room : null,
             party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null,
+            kind: leadKind,
             conversation_id: state.slots ? state.slots._cid : null,
             // the rep should see what the customer asked, not only a hotel name
             transcript: state.messages.slice(-12).map(function (m) { return (m.role === 'user' ? 'לקוח: ' : 'בוט: ') + m.content; }).join('\n')
@@ -668,7 +673,8 @@
       // at, or a blank one if they have not chosen yet
       if (data.open_lead_form) {
         var lc = state.lastCards || [];
-        if (lc.length === 1) openLeadForm(lc[0]);
+        if (data.lead_kind) openLeadForm(null, { kind: data.lead_kind, prefill: data.lead_prefill || null });
+        else if (lc.length === 1) openLeadForm(lc[0]);
         else if (lc.length > 1) openLeadPicker(lc);   // "על איזו הצעה?" — not "ללא הצעה ספציפית"
         else openLeadForm(null);
       } else if (data.chips && data.chips.length) addChips(data.chips);
