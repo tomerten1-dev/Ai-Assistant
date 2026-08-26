@@ -38,6 +38,13 @@
   var API_BASE = (script && script.getAttribute('data-api')) ||
     (script && script.src ? new URL(script.src).origin : '') || '';
   var WHATSAPP = (script && script.getAttribute('data-whatsapp')) || THEME.whatsapp;
+  // פינגי — הדמות של פינגווין (תומר אישר את האיור, 26/08). מוגש מאותו שרת
+  // כמו הווידג'ט, עם הגרסה בכתובת כדי שהדפדפן יוכל לשמור אותו במטמון.
+  var PINGI = API_BASE + '/pingi.png';
+  var SEEN_KEY = 'pw_seen';
+  var BOT_NAME = 'פינגי';
+  var LAUNCH_T = 'מתלבטים איפה לגלוש?';
+  var LAUNCH_S = 'פינגי כאן, ועונה תוך שנייה';
 
   /* ============== analytics — dataLayer (GTM/GA4) ==============
      Every event carries event:'pw_bot' + action, so one GA4 tag in GTM catches
@@ -68,6 +75,13 @@
     .then(function (r) { return r.json(); })
     .then(function (c) {
       if (c) { CONFIG.turnstile = c.turnstile; CONFIG.version = c.version; CONFIG.messages = c.messages || {}; if (c.phone) CONFIG.phone = c.phone; }
+      // the launcher rendered before this arrived; swap in Tomer's wording
+      try {
+        var l1 = fab.querySelector('.l1'), l2 = fab.querySelector('.l2');
+        if (l1) l1.textContent = say('launcher_title', LAUNCH_T);
+        if (l2) l2.textContent = say('launcher_sub', LAUNCH_S);
+        fab.setAttribute('aria-label', say('launcher_title', LAUNCH_T) + ' — ' + say('launcher_sub', LAUNCH_S));
+      } catch (e) { }
       if (CONFIG.turnstile) loadTurnstile();
     })
     .catch(function () { });
@@ -129,10 +143,32 @@
     + ':host{all:initial}'
     + '*{box-sizing:border-box;margin:0;padding:0}'
     + '.wrap{position:fixed;bottom:20px;' + THEME.position + ':20px;z-index:' + THEME.zIndex + ';font-family:' + THEME.font + ';direction:rtl}'
-    + '.fab{width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;background:' + THEME.grad + ';color:#fff;'
-    + 'box-shadow:0 6px 18px rgba(28,61,90,.35),0 0 0 4px rgba(28,61,90,.08);display:flex;align-items:center;justify-content:center;transition:transform .18s,box-shadow .18s}'
-    + '.fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 24px rgba(28,61,90,.4),0 0 0 6px rgba(28,61,90,.08)}'
-    + '.fab:focus-visible{outline:3px solid ' + THEME.accent + '}'
+    // הכפתור הוא "דלפק קבלה": פינגי, שאלה, ומי עונה עליה (תומר, 26/08).
+    // הלקוח לא צריך לנחש מה קורה כשלוחצים.
+    + '.fab{display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border:none;cursor:pointer;'
+    + 'background:' + THEME.grad + ';color:#fff;border-radius:18px;font-family:inherit;text-align:start;'
+    + 'box-shadow:0 10px 24px rgba(28,61,90,.32),0 0 0 4px rgba(28,61,90,.06);transition:transform .18s,box-shadow .18s}'
+    + '.fab:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(28,61,90,.4),0 0 0 6px rgba(28,61,90,.07)}'
+    + '.fab:focus-visible{outline:3px solid ' + THEME.accent + ';outline-offset:3px}'
+    + '.fab .av{width:50px;height:50px;border-radius:14px;flex:none;position:relative;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}'
+    + '.fab .av img{width:44px;height:44px;display:block;object-fit:contain}'
+    // נקודה אדומה בלי מספר: "יש כאן משהו". נעלמת ברגע שפותחים, וחוזרת בביקור הבא
+    + '.fab .dot{position:absolute;top:-4px;inset-inline-end:-4px;width:14px;height:14px;border-radius:50%;background:#e0392b;box-shadow:0 0 0 3px ' + THEME.primary + '}'
+    + '.fab .dot::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:#e0392b;opacity:.5;animation:pwPing 2.4s ease-out infinite}'
+    + '.fab.seen .dot{display:none}'
+    + '@keyframes pwPing{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(2.3);opacity:0}}'
+    + '.fab .txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;gap:1px}'
+    + '.fab .txt b{font-size:15px;font-weight:700}'
+    + '.fab .txt span{font-size:12.5px;opacity:.85}'
+    + '.fab .go{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:none}'
+    // במובייל הדלפק מתכווץ לעיגול: שורת טקסט בפינת מסך טלפון מסתירה חצי עמוד
+    // ובעיגול הקטן הרקע בהיר: פינגי שחור על כחול כהה מאבד את המתאר שלו
+    + '@media (max-width:560px){.fab{padding:5px;border-radius:50%;gap:0;background:' + THEME.bg + ';'
+    + 'box-shadow:0 8px 20px rgba(28,61,90,.28),0 0 0 3px rgba(28,61,90,.10)}'
+    + '.fab .txt,.fab .go{display:none}'
+    + '.fab .av{background:transparent;width:54px;height:54px}.fab .av img{width:52px;height:52px}'
+    + '.fab .dot{box-shadow:0 0 0 3px ' + THEME.bg + '}}'
+    + '@media (prefers-reduced-motion:reduce){.fab .dot::after{animation:none}}'
     + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
     + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
@@ -147,7 +183,8 @@
     + '.hdr .sub{display:none}.hdr .ttl{font-size:14px;white-space:nowrap}.hdr .ttl .long{display:none}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
     + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:12px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #e8edf1}'
-    + '.hdr .mark{width:36px;height:36px;border-radius:11px;background:' + THEME.grad + ';color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none;position:relative;box-shadow:0 2px 6px rgba(28,61,90,.25)}'
+    + '.hdr .mark{width:38px;height:38px;border-radius:12px;background:' + THEME.ice + ';display:flex;align-items:center;justify-content:center;flex:none;position:relative}'
+    + '.hdr .mark img{width:34px;height:34px;display:block;object-fit:contain}'
     + '.hdr .mark::after{content:"";position:absolute;inset-inline-end:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;background:#2fb26a;border:2px solid ' + THEME.bg + '}'
     + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
     + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
@@ -176,11 +213,11 @@
     + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.ice + ';color:' + THEME.text + ';'
     + 'border:1px solid #d9e6f0;border-radius:16px 16px 16px 4px;padding:10px 15px}'
     + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:32px;position:relative}'
-    + '.m.bot::before{content:"P";position:absolute;inset-inline-start:0;top:2px;width:22px;height:22px;border-radius:7px;'
-    + 'background:' + THEME.grad + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:.3px}'
+    + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:1px;width:24px;height:24px;border-radius:8px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/20px 20px no-repeat}'
     + '.typing{align-self:stretch;padding:2px 0 2px 32px;padding-inline-start:32px;display:flex;gap:5px;align-items:center;position:relative}'
-    + '.typing::before{content:"P";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:6px;'
-    + 'background:' + THEME.primary + ';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}'
+    + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:7px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/18px 18px no-repeat}'
     + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
@@ -310,14 +347,23 @@
 
   var wrap = el('div', 'wrap');
   var fab = el('button', 'fab');
-  fab.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
-  fab.setAttribute('aria-label', 'פתיחת ייעוץ חופשות סקי');
+  fab.innerHTML =
+    '<span class="av"><img src="' + PINGI + '" alt="" aria-hidden="true"><span class="dot" aria-hidden="true"></span></span>' +
+    '<span class="txt"><b class="l1">' + LAUNCH_T + '</b><span class="l2">' + LAUNCH_S + '</span></span>' +
+    '<span class="go" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none">' +
+    '<path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+  fab.setAttribute('aria-label', LAUNCH_T + ' — ' + LAUNCH_S);
+  // הנקודה האדומה מופיעה פעם אחת לביקור. אדומה קבועה מאבדת את הכוח שלה
+  // תוך יומיים — אפקט שמתרגלים אליו כבר לא מושך.
+  try { if (sessionStorage.getItem(SEEN_KEY)) fab.classList.add('seen'); } catch (e) { }
   var win = el('div', 'win');
   win.setAttribute('role', 'dialog');
   win.setAttribute('aria-label', 'צ׳אט פינגווין');
 
   var hdr = el('div', 'hdr');
-  hdr.appendChild(el('div', 'mark', 'P'));
+  var mark = el('div', 'mark');
+  mark.innerHTML = '<img src="' + PINGI + '" alt="" aria-hidden="true">';
+  hdr.appendChild(mark);
   var hTxt = el('div');
   var ttl = el('div', 'ttl', 'פינגווין');
   ttl.appendChild(el('span', 'long', ' | ייעוץ חופשות סקי'));
@@ -422,7 +468,13 @@
     try {
       // ?pwreset=1 in the URL (or #pwreset) forces a clean chat — the switch
       // testers reach for when a hard refresh keeps replaying the old session
-      if (/[?&#]pwreset\b/.test(location.href)) { sessionStorage.removeItem(STORE_KEY); return null; }
+      // a clean chat means clean all the way: the red dot comes back too,
+      // otherwise a tester can never see the launcher as a first-time visitor
+      if (/[?&#]pwreset\b/.test(location.href)) {
+        sessionStorage.removeItem(STORE_KEY);
+        try { sessionStorage.removeItem(SEEN_KEY); fab.classList.remove('seen'); } catch (e) { }
+        return null;
+      }
       var raw = sessionStorage.getItem(STORE_KEY);
       if (!raw) return null;
       var d = JSON.parse(raw);
@@ -922,10 +974,14 @@
   function openWin() {
     state.open = true; win.classList.add('open');
     fab.setAttribute('aria-expanded', 'true');
+    // the red dot has done its job — it does not come back this visit
+    fab.classList.add('seen');
+    try { sessionStorage.setItem(SEEN_KEY, '1'); } catch (e) { }
     track('open', { first: !state.booted });
     if (!state.booted) {
       state.booted = true;
-      addMsg('bot', 'שלום, אני העוזר האוטומטי של ' + THEME.brand + ' — מציג רק חופשות שבאמת פנויות אצלנו, ונציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.');
+      addMsg('bot', say('greeting_widget',
+        'היי, אני ' + BOT_NAME + ' — העוזר של ' + THEME.brand + '. מציג רק חופשות שבאמת פנויות אצלנו, ונציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.'));
       state.messages.push({ role: 'assistant', content: 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.' });
       addChips(STARTERS);
     }

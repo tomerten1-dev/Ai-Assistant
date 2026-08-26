@@ -67,6 +67,45 @@ function startServer() {
     const stored = await page.evaluate(`sessionStorage.getItem('pingwin_bot_session_v1')`);
     t('?pwreset clears the stored session', () => assert.strictEqual(stored, null));
 
+    // Pingi — the character Tomer approved on 26/08. The launcher is a reception
+    // desk: his face, a question, and who answers it. The red dot carries no
+    // number and disappears the moment the chat is opened.
+    await page.goto(URL + '?pwreset=1'); await page.waitForTimeout(700);
+    const pingi = await page.evaluate(`(() => {
+      const r = ${SHADOW};
+      const fab = r.querySelector('.fab');
+      const img = fab.querySelector('.av img');
+      return {
+        src: img ? img.getAttribute('src') : null,
+        title: (fab.querySelector('.l1') || {}).textContent,
+        sub: (fab.querySelector('.l2') || {}).textContent,
+        dot: !!fab.querySelector('.dot'),
+        seen: fab.classList.contains('seen'),
+        headerImg: !!r.querySelector('.hdr .mark img'),
+      };
+    })()`);
+    t('the launcher wears Pingi', () => assert.ok(/pingi\.png$/.test(pingi.src || ''), String(pingi.src)));
+    t('it says what it is and who answers', () => {
+      assert.ok(/לגלוש/.test(pingi.title || ''), 'title: ' + pingi.title);
+      assert.ok(/פינגי/.test(pingi.sub || ''), 'sub: ' + pingi.sub);
+    });
+    t('the red dot is there on a first visit, and carries no number', () => {
+      assert.ok(pingi.dot && !pingi.seen);
+    });
+    t('the chat header wears the same face', () => assert.ok(pingi.headerImg));
+
+    await page.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+    await page.waitForTimeout(400);
+    const after = await page.evaluate(`(() => {
+      const r = ${SHADOW};
+      return {
+        seen: r.querySelector('.fab').classList.contains('seen'),
+        greeting: (r.querySelector('.m.bot') || {}).textContent || '',
+      };
+    })()`);
+    t('the dot goes away once the chat is opened', () => assert.ok(after.seen));
+    t('Pingi introduces himself by name', () => assert.ok(/פינגי/.test(after.greeting), after.greeting.slice(0, 60)));
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     await browser.close(); srv.kill();

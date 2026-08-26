@@ -1323,6 +1323,10 @@ const server = http.createServer(async (req, res) => {
         messages: {
           send_error: guidance.msg('widget_send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}'),
           chat_error: guidance.msg('widget_chat_error', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו {phone}.'),
+          // the launcher's two lines — the first thing anyone reads
+          launcher_title: guidance.msg('launcher_title', 'מתלבטים איפה לגלוש?'),
+          launcher_sub: guidance.msg('launcher_sub', 'פינגי כאן, ועונה תוך שנייה'),
+          greeting_widget: guidance.msg('greeting_widget', ''),
         },
       }, { 'cache-control': 'no-store' });
     }
