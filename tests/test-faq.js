@@ -190,5 +190,21 @@ t('a teenager merely mentioned in a search is not lectured about camps', () => {
   }
 });
 
+/* ---- phrasings the first live bank run exposed (26/08) ---- */
+t('two-word questions reach the answer that already exists', () => {
+  // Every one of these had an approved answer; only the pattern was missing,
+  // so the customer got "לא בטוח שהבנתי" instead.
+  for (const [q, id] of [
+    ['מקבלים שקלים?', 'currency'],
+    ['להעביר לחבר?', 'name_change'],
+    ['אפשר לדחות?', 'change_date'],
+    ['איך מגיעים?', 'flight_route'],
+    ['משקפי סקי?', 'clothing'],
+  ]) {
+    const a = nlu.faq(q);
+    assert.ok(a && a.id === id, `${q} → ${a ? a.id : 'nothing'} (expected ${id})`);
+  }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
