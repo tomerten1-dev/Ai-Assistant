@@ -116,9 +116,23 @@ async function ask(q) {
   }
 
   const rows = [];
+  // A silent loop over 1,215 questions is indistinguishable from a hung one.
+  // One line every 25 questions, with the rate and an estimate of what is left,
+  // so a live run can be watched instead of guessed at.
+  const startedAt = Date.now();
+  let done = 0, passing = 0, errored = 0;
+  const progress = () => {
+    const secs = (Date.now() - startedAt) / 1000;
+    const perSec = done / Math.max(secs, 0.001);
+    const left = Math.round((list.length - done) / Math.max(perSec, 0.001));
+    const mm = String(Math.floor(left / 60)).padStart(2, '0'), ss = String(left % 60).padStart(2, '0');
+    process.stdout.write(`  ${String(done).padStart(4)}/${list.length}  ${Math.round(100 * passing / done)}% pass` +
+      `${errored ? `  ${errored} errors` : ''}  ~${mm}:${ss} left\n`);
+  };
   for (const e of list) {
     let res;
     try { res = await ask(e.q); } catch (err) { res = { reply_he: '', debug: {}, error: String(err) }; }
+    if (res.error) errored++;
     const observed = classify(res);
     const d = res.debug || {};
     const invented = NUMBERISH.test(res.reply_he || '') && !['faq', 'router', 'deflect', 'guard'].includes(d.answered_by);
@@ -126,6 +140,8 @@ async function ask(q) {
     const ignored = observed.size === 1 && observed.has('ask') && INFORMATIONAL.test(e.q);
     rows.push({ q: e.q, cluster: e.cluster, expect: e.expect, observed: [...observed], faq_ids: d.faq_ids || [],
       invented_number: invented, ignored, pass, reply: (res.reply_he || '').slice(0, 220) });
+    done++; if (pass) passing++;
+    if (!args.show && (done % 25 === 0 || done === list.length)) progress();
     if (args.show) {
       console.log(`${pass ? '✓' : '✗'} [${e.cluster}] ${e.q}`);
       console.log(`    → ${[...observed].join(',')}${d.faq_ids && d.faq_ids.length ? ' ' + d.faq_ids.join('+') : ''}${invented ? '  ⚠ INVENTED NUMBER' : ''}`);
