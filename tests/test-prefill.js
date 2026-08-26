@@ -1,0 +1,114 @@
+'use strict';
+/* The booking-form prefill, in a real browser, against a page that behaves the
+   way pingwin.co.il's does (tests/fixtures/mock-hotel.html — same ids, same
+   global, same timing: the room list only arrives after the dates are set).
+
+   Run: npm run test:prefill   (needs playwright; skipped if absent)
+
+   What this pins is the promise the customer is given by the "המשך להזמנה"
+   button: their dates and party are already in the form. And the promise made
+   to Pingwin: on any ordinary page view this script does nothing at all. */
+const assert = require('assert');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+let chromium;
+try { ({ chromium } = require('playwright')); }
+catch { console.log('prefill: skipped (playwright not installed)'); process.exit(0); }
+
+const PORT = 8804;
+const ROOT = path.join(__dirname, '..');
+const FILES = {
+  '/': path.join(__dirname, 'fixtures', 'mock-hotel.html'),
+  '/pingwin-prefill.js': path.join(ROOT, 'public', 'pingwin-prefill.js'),
+};
+
+(async () => {
+  let pass = 0, fail = 0;
+  const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); } catch (e) { fail++; console.error('  ✗ ' + name + '\n      ' + e.message); } };
+
+  const srv = http.createServer((req, res) => {
+    const file = FILES[req.url.split('?')[0]];
+    if (!file) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'content-type': file.endsWith('.js') ? 'application/javascript' : 'text/html; charset=utf-8' });
+    res.end(fs.readFileSync(file));
+  }).listen(PORT);
+
+  const browser = await chromium.launch();
+  const errors = [];
+  const open = async query => {
+    const page = await browser.newPage();
+    page.on('pageerror', e => errors.push(String(e)));
+    await page.goto(`http://127.0.0.1:${PORT}/${query}`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1600);   // instance appears at 400ms, rooms at +250ms
+    return page;
+  };
+  const read = page => page.evaluate(`(() => ({
+    from: document.getElementById('orderFrom').value,
+    till: document.getElementById('orderTill').value,
+    room: document.querySelector('#roomsBlock select.roomSelect').value,
+    adults: document.querySelector('#roomsBlock .travels select').value,
+    pans: document.querySelector('#roomsBlock select.panSelect').value,
+    note: (document.getElementById('pw-prefill-note') || {}).textContent || null,
+    calls: window.__calls.map(c => c[0]),
+  }))()`);
+
+  try {
+    // 1 · the whole thing, the way the widget builds it
+    let p = await open('?siteID=1288&tab=20&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3&pwroom=' +
+      encodeURIComponent('2 ח"ש וסלון 2-4 אורחים') + '&pwpans=1');
+    let r = await read(p);
+    t('the dates the customer chose in the chat are in the form', () => {
+      assert.strictEqual(r.from, '30.01.2027');
+      assert.strictEqual(r.till, '06.02.2027');
+    });
+    t('so are the room, the party and the board', () => {
+      assert.strictEqual(r.room, '811', 'the room was not matched by name');
+      assert.strictEqual(r.adults, '3');
+      assert.strictEqual(r.pans, '1');
+    });
+    t('and the customer is told why the form is already filled', () => {
+      assert.ok(/מולאו/.test(r.note || ''), 'no explanation: ' + r.note);
+      assert.ok(/לשנות/.test(r.note || ''), 'does not say it can be changed');
+    });
+    await p.close();
+
+    // 2 · a room name the site spells differently — dates still land
+    p = await open('?siteID=1288&pwfrom=09.01.2027&pwtill=16.01.2027&pwad=2&pwroom=' +
+      encodeURIComponent('CONN Premium with View 5 pax'));
+    r = await read(p);
+    t('a room we cannot match is left to the customer, and never guessed', () => {
+      assert.strictEqual(r.room, '0', 'picked a room it could not identify: ' + r.room);
+      assert.strictEqual(r.from, '09.01.2027', 'gave up on the dates too');
+      assert.strictEqual(r.adults, '2', 'the party was dropped with the room');
+      assert.ok(/סוג החדר אפשר לבחור/.test(r.note || ''), r.note);
+    });
+    await p.close();
+
+    // 3 · the promise to Pingwin: an ordinary visitor sees nothing
+    p = await open('?siteID=1288&tab=20');
+    r = await read(p);
+    t('on an ordinary page view it does nothing at all', () => {
+      assert.strictEqual(r.from, '');
+      assert.strictEqual(r.room, '0');
+      assert.strictEqual(r.note, null);
+      assert.deepStrictEqual(r.calls, [], 'it touched the booking form uninvited');
+    });
+    await p.close();
+
+    // 4 · a broken link must not break their page
+    p = await open('?siteID=1288&pwfrom=נונסנס&pwtill=06.02.2027&pwad=3');
+    r = await read(p);
+    t('a malformed date is ignored rather than typed into the form', () => {
+      assert.strictEqual(r.from, '');
+      assert.deepStrictEqual(r.calls, []);
+    });
+    await p.close();
+
+    t('no page errors anywhere', () => assert.deepStrictEqual(errors, []));
+  } finally {
+    await browser.close(); srv.close();
+  }
+  console.log(`prefill: ${pass} passed, ${fail} failed`);
+  process.exit(fail ? 1 : 0);
+})();

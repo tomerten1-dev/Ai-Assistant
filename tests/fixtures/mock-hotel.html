@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><title>מוק — דף מלון עם טופס הזמנה</title></head>
+<body>
+<!-- A stand-in for a pingwin.co.il hotel page, built from the real
+     order_odyssea.js: the same element ids, the same global, the same two
+     methods, and the same timing — the room list arrives from the server only
+     after the dates are set. Nothing here is copied from their code; it is the
+     contract our prefill script depends on, written down so it can be tested. -->
+<div id="step1">
+  <label for="orderFrom">מתאריך</label>
+  <input name="fromDate" id="orderFrom" readonly type="text" value="">
+  <label for="orderTill">עד תאריך</label>
+  <input name="toDate" id="orderTill" readonly type="text" value="">
+  <div class="nights" id="tripNights"></div>
+</div>
+
+<div class="step" id="step2">
+  <div class="orderForm" id="roomsBlock">
+    <div class="room" id="room0">
+      <select class="roomSelect" name="roomID[]"><option value="0">בחר חדר</option></select>
+      <span class="travels"><select name="adults[]"><option value="0">מס מבוגרים</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></span>
+      <span class="pension"><select class="panSelect" name="pansion[]"><option value="0">בסיס</option><option value="1">לינה בלבד</option><option value="2">ארוחת בוקר</option><option value="3">חצי פנסיון</option></select></span>
+    </div>
+    <div class="addRoom">הוספת חדר</div>
+  </div>
+</div>
+
+<script>
+  // the page's own instance, with the two methods our script calls
+  window.__calls = [];
+  var orderMan = null;
+  setTimeout(function () {                       // it is not there on load
+    orderMan = window.orderMan = {
+      setDates: function (from, till) {
+        window.__calls.push(['setDates', from, till]);
+        document.getElementById('orderFrom').value = from;
+        document.getElementById('orderTill').value = till;
+        // the room list comes back from the server a moment later
+        return new Promise(function (res) {
+          setTimeout(function () {
+            var sel = document.querySelector('#roomsBlock select.roomSelect');
+            [['0', 'בחר חדר'], ['811', '2 ח"ש וסלון 2-4 אורחים'], ['812', 'סטודיו 2-3 אורחים'],
+             ['813', '1 bdrm apt 2-4 pax']].forEach(function (r) {
+              if (sel.querySelector('option[value="' + r[0] + '"]')) return;
+              var o = document.createElement('option');
+              o.value = r[0]; o.textContent = r[1];
+              sel.appendChild(o);
+            });
+            res(true);
+          }, 250);
+        });
+      },
+      loadRoom: function (index, roomID, people, pans) {
+        window.__calls.push(['loadRoom', index, roomID, people, pans]);
+        var room = document.querySelectorAll('#roomsBlock .room')[index];
+        if (!room) return Promise.resolve();
+        room.querySelector('select.roomSelect').value = roomID;
+        if (people && people.adults) room.querySelector('.travels select').value = String(people.adults);
+        if (pans) room.querySelector('select.panSelect').value = String(pans);
+        return Promise.resolve(1);
+      },
+    };
+  }, 400);
+</script>
+<script src="/pingwin-prefill.js"></script>
+</body>
+</html>
