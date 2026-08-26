@@ -266,7 +266,7 @@
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
     + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
     + '.cards-row .card{flex:1 1 270px;min-width:0}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #e1e8ef;border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 3px rgba(16,32,48,.05);'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #e1e8ef;border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(16,32,48,.05);'
     + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
     + '.card:hover{box-shadow:0 10px 26px rgba(16,32,48,.12);transform:translateY(-2px);border-color:#c8d5e2}'
     // gallery: the photo fills the top of the card, arrows sit on it
@@ -275,12 +275,29 @@
     + '.card .gal .galb,.card .gal .galn,.card .gal .tier{z-index:1}'
     // 112px: three cards with their date, room, price and both buttons fit a
     // laptop screen without scrolling — the photo is the first thing to give
-    + '.card .photo{width:100%;height:104px;object-fit:cover;display:block}'
+    + '.card .photo{width:100%;height:72px;object-fit:cover;display:block;transition:height .18s ease}'
+    + '.card.open .photo{height:132px}'
     + '.card .gal .tier{position:absolute;top:8px;inset-inline-start:8px;box-shadow:0 1px 4px rgba(0,0,0,.25)}'
     // everything that is nice to know but not needed to choose lives behind one toggle
     + '.card .details{display:none;flex-direction:column;gap:6px}'
     + '.card.open .details{display:flex}'
-    + '.card .dtog{align-self:flex-start;background:none;border:none;padding:2px 0;font-family:inherit;font-size:12.5px;color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600}'
+    // Closed, a card shows only what helps to CHOOSE between three of them:
+    // the hotel, where it is, one line of when/what, and the button. Everything
+    // else is one click away. Three cards used to be 807px — two mobile screens
+    // for a single answer (Tomer, 26/08).
+    + '.card .brief{font-size:13px;color:' + THEME.text + ';display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}'
+    + '.card .brief b{font-weight:600}'
+    + '.card .brief .bprice{color:' + THEME.primaryDark + ';font-weight:600}'
+    + '.card:not(.open) .cfoot{display:none}'
+    + '.card .chead{row-gap:0}'
+    + '.card .brief .sep{color:#c3ccd6}'
+    + '.card.open .brief{display:none}'
+    + '.card:not(.open) .rows,.card:not(.open) .rpanel,.card:not(.open) .facts{display:none}'
+    + '.card .gal .galb,.card:not(.open) .gal .galn{opacity:0}'
+    + '.card.open .gal .galb{opacity:.9}'
+    + '.card:not(.open) .tags .tag:not(.tier):not(.rec):not(.left){display:none}'
+    + '.card .dtog{align-self:flex-start;background:none;border:none;padding:2px 0;font-family:inherit;font-size:12.5px;color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600;order:8}'
+    + '.card .details{order:9}.card .facts{order:7}.card .acts,.card .cta{order:10}'
     + '.card .dtog:hover{text-decoration:underline}'
     + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;'
     + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';line-height:0;cursor:pointer;padding:0;'
@@ -351,7 +368,18 @@
     + '.btn.pri:hover{filter:brightness(1.08);box-shadow:0 4px 12px rgba(28,61,90,.3)}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
     + '.btn.sec:hover{background:' + THEME.bgAlt + '}'
-    + '.chips{display:flex;flex-wrap:wrap;gap:7px;align-self:stretch;padding-inline-start:32px}'
+    // One row that scrolls sideways, not four rows that push the offers off the
+    // screen. Eight chips wrapping was 173px on a phone — the second largest
+    // thing in the conversation after the offers themselves (measured 26/08).
+    + '.chips{display:flex;flex-wrap:nowrap;gap:7px;align-self:stretch;padding-inline-start:32px;'
+    + 'overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
+    + 'scroll-snap-type:x proximity;padding-bottom:2px;'
+    // flex:none is load-bearing. A scroll container's automatic minimum size is
+    // 0, not its content — so as a flex item in the scrolling message column it
+    // squashed to nothing the moment the conversation overflowed.
+    + 'flex:none;min-width:0;max-width:100%}'
+    + '.chips::-webkit-scrollbar{height:0}'
+    + '.chip{scroll-snap-align:start;flex:none}'
     + '.chip{border:1px solid #d8dfe6;background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:99px;'
     // min-height 36px: a 30px chip is below the comfortable tap target on a
     // phone, and chips are the main way a customer refines on mobile
@@ -696,6 +724,22 @@
     head.appendChild(el('div', 'cwhere', c.country_he + (c.resort ? ' · ' + c.resort : '')));
     card.appendChild(head);
 
+    // The closed card's whole body: when, how long, which room. Everything the
+    // customer needs to tell three offers apart, on one line.
+    var brief = el('div', 'brief');
+    brief.appendChild(el('b', '', fmtDate(c.date, c.date_label, true)));
+    brief.appendChild(el('span', 'sep', '·'));
+    brief.appendChild(el('span', '', c.nights + ' לילות'));
+    if (c.room) {
+      brief.appendChild(el('span', 'sep', '·'));
+      brief.appendChild(el('span', '', c.room));
+    }
+    if (c.price_range) {
+      brief.appendChild(el('span', 'sep', '·'));
+      brief.appendChild(el('span', 'bprice', c.price_range));
+    }
+    card.appendChild(brief);
+
     var rows = el('div', 'rows');
     var row = function (label, value, node) {
       var r = el('div', 'row');
@@ -769,17 +813,18 @@
 
     if (c.desc_he) details.appendChild(el('div', 'cdesc', c.desc_he));
     if (c.lift_he) details.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
-    if (details.childNodes.length) {
-      var dtog = el('button', 'dtog', 'מה כלול ופרטי המלון ▾');
-      dtog.setAttribute('aria-expanded', 'false');
-      dtog.addEventListener('click', function () {
-        var open = card.classList.toggle('open');
-        dtog.textContent = open ? 'פחות פרטים ▴' : 'מה כלול ופרטי המלון ▾';
-        dtog.setAttribute('aria-expanded', String(open));
-      });
-      card.appendChild(dtog);
-      card.appendChild(details);
-    }
+    // One toggle for the whole card, not one per section. Closed it is the
+    // hotel, one line and the button; open it is everything we know.
+    var dtog = el('button', 'dtog', 'פרטים ▾');
+    dtog.setAttribute('aria-expanded', 'false');
+    dtog.addEventListener('click', function () {
+      var open = card.classList.toggle('open');
+      dtog.textContent = open ? 'פחות ▴' : 'פרטים ▾';
+      dtog.setAttribute('aria-expanded', String(open));
+      track('card_expand', { hotel: c.hotel, open: open, cid: cid() });
+    });
+    card.appendChild(dtog);
+    if (details.childNodes.length) card.appendChild(details);
 
     // answers to what THIS customer asked about (beds, board, ski pass, ...)
     if (c.facts_he && c.facts_he.length) {
@@ -1087,8 +1132,17 @@
       ? ['ילדים בני 5 ו-9, מתי יש קייטנה?', 'מאיזה גיל הקייטנה?', 'משפחה עם ילדים בחנוכה', 'מה כלול בחבילה?']
       : ['זוג בפברואר', 'משפחה עם ילדים', 'מה כלול בחבילה?', 'מתאים למתחילים'];
 
+  // How wide the panel opens. Three offers side by side need the wide panel;
+  // in the narrow one they stack, and a single answer ran past the bottom of a
+  // laptop screen (Tomer, 26/08 — "צריך לגלול הרבה"). Below 1180px there is no
+  // room for it beside the page, so it stays narrow and widens when it must.
+  var WIDE = 1180;
+  function fitWidth() {
+    try { if (window.innerWidth >= WIDE) win.classList.add('big'); } catch (e) {}
+  }
   function openWin() {
     state.open = true; win.classList.add('open'); wrap.classList.add('chatting');
+    fitWidth();
     fab.setAttribute('aria-expanded', 'true');
     // the red dot has done its job — it does not come back this visit
     fab.classList.add('seen');
@@ -1121,6 +1175,7 @@
     replay(saved);
     if (saved.open) {
       state.open = true; win.classList.add('open'); wrap.classList.add('chatting');
+      fitWidth();
       fab.setAttribute('aria-expanded', 'true');
     }
   })();

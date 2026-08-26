@@ -163,6 +163,52 @@ function startServer() {
     });
     t('it is said once, not with every message', () => assert.strictEqual(fine.count, 1));
 
+    // ── How much scrolling one answer costs ──────────────────────────────
+    // Tomer, 26/08: "הבוט לא נוח מבחינה ui צריך לגלול הרבה". Measured then:
+    // a single answer with three offers was 1.95 screens on a phone and 1.31
+    // on a 1366 laptop. The card, the chips and the panel width were all
+    // changed to fix it, and this is what stops any of it creeping back — it
+    // measures the real thing in a real browser instead of trusting the CSS.
+    for (const vp of [{ w: 1366, h: 768, max: 1.35, name: 'לפטופ 1366×768' },
+                      { w: 390, h: 844, max: 1.65, name: 'מובייל 390×844' }]) {
+      const p2 = await browser.newPage({ viewport: { width: vp.w, height: vp.h } });
+      let m = null;
+      try {
+        await p2.goto(URL + '?pwreset=1');
+        await p2.waitForTimeout(500);
+        await p2.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p2.waitForTimeout(400);
+        await p2.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+          ta.value = '4 מבוגרים בינואר בצרפת'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+          r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
+        await p2.waitForTimeout(3500);
+        m = await p2.evaluate(`(() => { const r = ${SHADOW}; const msgs = r.querySelector('.msgs');
+          const chips = r.querySelector('.chips');
+          return { scrollH: msgs.scrollHeight, viewH: msgs.clientHeight,
+            cards: r.querySelectorAll('.card').length,
+            cardH: Math.round((r.querySelector('.card') || {}).getBoundingClientRect
+              ? r.querySelector('.card').getBoundingClientRect().height : 0),
+            chipsH: chips ? Math.round(chips.getBoundingClientRect().height) : 0,
+            chipRows: chips ? new Set([...chips.children].map(c =>
+              Math.round(c.getBoundingClientRect().top))).size : 0 }; })()`);
+      } finally { await p2.close(); }
+      t(`${vp.name}: תשובה אחת עם 3 הצעות לא עולה על ${vp.max} מסכים`, () => {
+        assert.ok(m.cards === 3, 'לא הוצגו 3 הצעות, אז המדידה חסרת משמעות: ' + m.cards);
+        const screens = m.scrollH / m.viewH;
+        assert.ok(screens <= vp.max,
+          `${screens.toFixed(2)} מסכים (${m.scrollH}px בתוך ${m.viewH}px) — כרטיס ${m.cardH}px, צ'יפים ${m.chipsH}px`);
+      });
+      t(`${vp.name}: הצ'יפים בשורה אחת`, () => {
+        // eight chips wrapping to four rows was 173px on a phone — more than
+        // half a card, above the offers the customer came for
+        assert.strictEqual(m.chipRows, 1, m.chipRows + ' שורות של צ\'יפים, ' + m.chipsH + 'px');
+        assert.ok(m.chipsH > 20, 'שורת הצ\'יפים נמעכה ל-' + m.chipsH + 'px — היא לא נראית');
+      });
+      t(`${vp.name}: כרטיס סגור הוא כותרת, שורה וכפתור`, () => {
+        assert.ok(m.cardH <= 230, 'כרטיס סגור ' + m.cardH + 'px');
+      });
+    }
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     await browser.close(); srv.kill();
