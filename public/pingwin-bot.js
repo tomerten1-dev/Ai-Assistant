@@ -70,6 +70,7 @@
   // pingi-plain.png נשאר בתיקייה לשימוש עתידי — תומר ביקש (26/08) שגם ליד
   // ההודעות יופיע פינגי עם בגדי החורף, בגודל גדול יותר
   var PINGI_WAVE = API_BASE + '/pingi-wave.png';
+  var PRIVACY_URL = (script && script.getAttribute('data-privacy')) || THEME.privacyUrl;
   var BOT_NAME = 'פינגי';
   var LAUNCH_T = 'מתלבטים איפה לגלוש?';
   var LAUNCH_S = 'פינגי כאן, ועונה תוך שנייה';
@@ -320,6 +321,11 @@
     + '.m.bot.wave::before{width:64px;height:64px;border-radius:16px;top:-6px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/60px 60px no-repeat}'
     + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
     + '.m.bot.after::before{display:none}'
+    // גילוי נאות: הערת שוליים, לא הודעה של פינגי — ולכן בלי הפרצוף שלו,
+    // ובלי המחלקה .m, שסופרת הודעות בשיחה
+    + '.fine{align-self:stretch;max-width:min(100%,640px);font-size:12px;line-height:1.55;'
+    + 'color:' + THEME.textLight + ';margin-top:-6px;padding-inline-start:46px}'
+    + '.fine a{color:' + THEME.primary + ';text-decoration:underline}'
     + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
     + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
@@ -544,6 +550,27 @@
     var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), shown);
     msgs.appendChild(m); scrollDown();
     if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text });
+    return m;
+  }
+
+  // The fine print every AI assistant owes the person reading it. Kept to two
+  // short sentences: a wall of legal text at the top of a chat is not read, and
+  // the parts that matter here are that it can be wrong and that a human
+  // confirms. תומר, 26/08 — לפי מה שאיסתא מציגים בבוט שלהם.
+  function addDisclosure() {
+    var txt = say('ai_disclosure',
+      'השיחה מבוססת בינה מלאכותית — ייתכנו אי-דיוקים, וכל הזמנה מאושרת סופית על ידי נציג. המידע נשמר לשיפור השירות, בהתאם ל{privacy}.');
+    var m = el('div', 'fine');
+    var parts = String(txt).split('{privacy}');
+    m.appendChild(document.createTextNode(parts[0]));
+    if (parts.length > 1) {
+      var a = document.createElement('a');
+      a.href = PRIVACY_URL; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'מדיניות הפרטיות';
+      m.appendChild(a);
+      m.appendChild(document.createTextNode(parts.slice(1).join('{privacy}')));
+    }
+    msgs.appendChild(m); scrollDown();
     return m;
   }
 
@@ -1012,6 +1039,10 @@
       state.booted = true;
       addMsg('bot', say('greeting_widget',
         'היי, אני ' + BOT_NAME + ' — העוזר של ' + THEME.brand + '. מציג רק חופשות שבאמת פנויות אצלנו, ונציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.'));
+      // Disclosure, once, under the greeting: this is an AI, it can be wrong,
+      // and a person confirms everything. {privacy} becomes a real link.
+      // Not logged and not sent to the model — it is a notice, not a turn.
+      addDisclosure();
       state.messages.push({ role: 'assistant', content: 'שלום, ספרו לנו כמה נוסעים, גילאי ילדים אם יש, ומתי תרצו לצאת.' });
       addChips(STARTERS);
     }

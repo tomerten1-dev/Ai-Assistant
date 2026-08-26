@@ -138,6 +138,31 @@ function startServer() {
     const backAgain = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.fab')).opacity`);
     t('and it comes back when the chat is closed', () => assert.strictEqual(backAgain, '1'));
 
+    // Tomer, 26/08 (Issta's bot): say plainly that this is an AI, that it can
+    // be wrong, and where the privacy policy is — once, under the greeting.
+    await page.goto(URL + '?pwreset=1'); await page.waitForTimeout(600);
+    await page.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+    await page.waitForTimeout(600);
+    const fine = await page.evaluate(`(() => {
+      const r = ${SHADOW}, f = r.querySelector('.fine');
+      return {
+        text: f ? f.textContent : null,
+        href: f && f.querySelector('a') ? f.querySelector('a').getAttribute('href') : null,
+        target: f && f.querySelector('a') ? f.querySelector('a').getAttribute('target') : null,
+        count: r.querySelectorAll('.fine').length,
+      };
+    })()`);
+    t('the opening says it is an AI, that it can be wrong, and who confirms', () => {
+      assert.ok(/בינה מלאכותית/.test(fine.text || ''), String(fine.text));
+      assert.ok(/אי-דיוקים/.test(fine.text || ''), 'no inaccuracy notice');
+      assert.ok(/נציג/.test(fine.text || ''), 'does not say a person confirms');
+    });
+    t('the privacy policy is a real link, opening in a new tab', () => {
+      assert.ok(/pingwin\.co\.il/.test(fine.href || ''), String(fine.href));
+      assert.strictEqual(fine.target, '_blank');
+    });
+    t('it is said once, not with every message', () => assert.strictEqual(fine.count, 1));
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     await browser.close(); srv.kill();

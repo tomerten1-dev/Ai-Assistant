@@ -1329,6 +1329,7 @@ const server = http.createServer(async (req, res) => {
           launcher_title: guidance.msg('launcher_title', 'מתלבטים איפה לגלוש?'),
           launcher_sub: guidance.msg('launcher_sub', 'פינגי כאן, ועונה תוך שנייה'),
           greeting_widget: guidance.msg('greeting_widget', ''),
+          ai_disclosure: guidance.msg('ai_disclosure', ''),
         },
       }, { 'cache-control': 'no-store' });
     }
