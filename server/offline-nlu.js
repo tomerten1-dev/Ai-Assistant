@@ -1571,6 +1571,8 @@ function guard(text) {
   // Red rule 3. This lived in deflect(), which is skipped when the message also
   // fills a slot — and "רק רוצה לדעת כמה עולה שבוע לזוג" fills one. A guard
   // that protects a rule cannot be conditional on what else the sentence did.
+  // "בשקלים או ביורו? לפי איזה שער?" asks about the currency, not for a sum
+  if (/שער|מטבע|או ביורו|או בשקלים|בשקלים או|ביורו או|לשלם ב(שקל|יורו|דולר)/.test(t)) return null;
   if (/כמה (זה )?עולה|מה המחיר|המחיר המדויק|מחיר מדויק|כמה יעלה|בשקלים|ביורו|תן לי מחיר|תגיד לי מחיר|תגידו לי מחיר|כמה כסף|מה העלות|בכמה (זה )?יוצא|כמה זה יוצא|כמה עולות/.test(t)) {
     return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
   }
