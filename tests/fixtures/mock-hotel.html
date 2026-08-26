@@ -46,8 +46,14 @@
         return new Promise(function (res) {
           setTimeout(function () {
             var sel = document.querySelector('#roomsBlock select.roomSelect');
-            [['0', 'בחר חדר'], ['811', '2 ח"ש וסלון 2-4 אורחים'], ['812', 'סטודיו 2-3 אורחים'],
-             ['813', '1 bdrm apt 2-4 pax']].forEach(function (r) {
+            // a real Belambra week, spelled the way their engine spells it —
+            // nothing here shares a substring with the workbook's own names
+            var list = from === '20.02.2027'
+              ? [['0', 'בחר חדר'], ['5582', 'Premium Amazing View 2-5 pax'],
+                 ['5588', 'Premium with View 4-5 pax']]
+              : [['0', 'בחר חדר'], ['811', '2 ח"ש וסלון 2-4 אורחים'], ['812', 'סטודיו 2-3 אורחים'],
+                 ['813', '1 bdrm apt 2-4 pax']];
+            list.forEach(function (r) {
               if (sel.querySelector('option[value="' + r[0] + '"]')) return;
               var o = document.createElement('option');
               o.value = r[0]; o.textContent = r[1];

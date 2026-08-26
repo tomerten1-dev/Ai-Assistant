@@ -55,19 +55,19 @@ const list = [...seen.values()].slice(0, all ? 200 : 3);
     }
     console.log(`   האתר מחזיר ${rooms.length} חדרים:`);
     rooms.forEach(r => console.log(`     ${String(r.roomID).padEnd(8)} ${r.roomName}`));
-    // which of OUR room names for this hotel+date would be matched
-    const ours = [...new Set(units.filter(x => x.hotel === u.hotel && x.date === u.date).map(x => x.room))];
+    // which of OUR rooms for this hotel+date the server would identify —
+    // the same call server.js makes when it builds the link
+    const ours = [];
+    for (const x of units.filter(y => y.hotel === u.hotel && y.date === u.date)) {
+      if (!ours.some(o => o.room === x.room)) ours.push(x);
+    }
     console.log('   החדרים שלנו לאותה יציאה:');
-    for (const room of ours) {
-      const want = siteRooms.norm(room);
-      const hit = rooms.filter(r => {
-        const n = siteRooms.norm(r.roomName);
-        return n === want || n.indexOf(want) >= 0 || want.indexOf(n) >= 0;
-      });
-      const verdict = hit.length === 1 ? `✓ ${hit[0].roomID} (${hit[0].roomName})`
-        : hit.length ? `? ${hit.length} התאמות — לא נבחר` : '✗ אין התאמה';
-      if (hit.length === 1) matched++;
-      console.log(`     ${room}\n        → ${verdict}`);
+    for (const x of ours) {
+      const id = siteRooms.match(rooms, x.room,
+        { type: x.room_type, occMin: x.occ_min, occMax: x.occ_max });
+      const hit = id && rooms.find(r => String(r.roomID) === String(id));
+      if (hit) matched++;
+      console.log(`     ${x.room}\n        → ${hit ? `✓ ${hit.roomID} (${hit.roomName})` : '✗ אין התאמה'}`);
     }
     console.log('');
   }

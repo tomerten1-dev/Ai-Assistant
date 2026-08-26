@@ -125,6 +125,31 @@ const FILES = {
     });
     await p.close();
 
+    // 4b · the same room, spelled by two systems that share no words
+    p = await open('?siteID=1288&pwfrom=20.02.2027&pwtill=27.02.2027&pwad=5&pwroom=' +
+      encodeURIComponent('CONN Premium with View 5 pax'));
+    r = await read(p);
+    t('a room described differently on each side is still matched', () => {
+      assert.strictEqual(r.room, '5588', 'ours "…with View 5 pax" vs theirs "…with View 4-5 pax"');
+    });
+    await p.close();
+
+    p = await open('?siteID=1288&pwfrom=20.02.2027&pwtill=27.02.2027&pwad=5&pwroom=' +
+      encodeURIComponent('Premium Amazing View 5 pax'));
+    r = await read(p);
+    t('and its neighbour, one word apart, is not confused with it', () => {
+      assert.strictEqual(r.room, '5582');
+    });
+    await p.close();
+
+    p = await open('?siteID=1288&pwfrom=20.02.2027&pwtill=27.02.2027&pwad=5&pwroom=' +
+      encodeURIComponent('Premium 5 pax'));
+    r = await read(p);
+    t('a description that fits both rooms picks neither', () => {
+      assert.strictEqual(r.room, '0', 'guessed between two Premium rooms: ' + r.room);
+    });
+    await p.close();
+
     // 5 · the promise to Pingwin: an ordinary visitor sees nothing
     p = await open('?siteID=1288&tab=20');
     r = await read(p);

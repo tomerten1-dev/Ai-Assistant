@@ -131,6 +131,61 @@
       .replace(/["'׳״]/g, '').replace(/[֑-ׇ]/g, '')
       .replace(/[^א-תa-z0-9]+/g, ' ').trim();
   }
+  // The same two-axis match the server does (server/site-rooms.js): what the
+  // room IS, reduced to tokens in one language, and how many people it holds.
+  // The site writes "Premium with View 4-5 pax" where the workbook writes
+  // "CONN Premium with View 5 pax" — same room, no shared substring.
+  var OCC = /(\d+)\s*(?:[-–]\s*(\d+)|\+\s*(\d+))?\s*(?:pax|ppl|people|אורחים|נופשים|אנשים)/i;
+  function occOf(s) {
+    var m = OCC.exec(String(s || ''));
+    if (!m) return null;
+    var a = parseInt(m[1], 10);
+    var b = m[2] ? parseInt(m[2], 10) : (m[3] ? a + parseInt(m[3], 10) : a);
+    return { min: Math.min(a, b), max: Math.max(a, b) };
+  }
+  function overlaps(x, y) { return !x || !y || (x.min <= y.max && y.min <= x.max); }
+  var SAME = { bdrm: 'bdrm', bedroom: 'bdrm', bedrooms: 'bdrm', 'חש': 'bdrm', 'חדרי': 'bdrm',
+    'שינה': '', 'ח': '', 'ש': '', view: 'view', 'נוף': 'view',
+    balcony: 'balcony', 'מרפסת': 'balcony', studio: 'studio', 'סטודיו': 'studio',
+    pmr: 'pmr', 'נכים': 'pmr', 'נגיש': 'pmr', suite: 'suite', 'סוויטה': 'suite',
+    family: 'family', 'משפחתי': 'family' };
+  var NOISE = { apt: 1, apartment: 1, appartement: 1, 'דירה': 1, 'דירת': 1, room: 1, rooms: 1,
+    'חדר': 1, 'חדרים': 1, 'וסלון': 1, 'סלון': 1, living: 1, lounge: 1, with: 1, and: 1,
+    the: 1, of: 1, pax: 1, ppl: 1, people: 1, 'אורחים': 1, 'נופשים': 1, 'אנשים': 1,
+    'עם': 1, 'ו': 1, conn: 1, connecting: 1, 'מחוברים': 1 };
+  function tokens(s) {
+    // the occupancy goes BEFORE normalising: norm() deletes the hyphen, and
+    // then "2-5 pax" stops looking like a range and leaves a stray "2"
+    var words = norm(String(s || '').replace(OCC, ' ')).split(/\s+/);
+    var out = [];
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
+      if (!w) continue;
+      if (Object.prototype.hasOwnProperty.call(SAME, w)) w = SAME[w];
+      if (!w || NOISE[w] === 1 || out.indexOf(w) >= 0) continue;
+      out.push(w);
+    }
+    return out;
+  }
+  function subset(a, b) {
+    for (var i = 0; i < a.length; i++) if (b.indexOf(a[i]) < 0) return false;
+    return true;
+  }
+  function sameSet(a, b) { return a.length === b.length && subset(a, b); }
+  // one unambiguous candidate, or nothing — a guess books the wrong room
+  function byDescription(opts, want) {
+    var ours = tokens(want), ourOcc = occOf(want);
+    if (!ours.length) return null;
+    var live = [], i;
+    for (i = 0; i < opts.length; i++) {
+      var name = opts[i].textContent;
+      if (overlaps(ourOcc, occOf(name))) live.push({ o: opts[i], tk: tokens(name) });
+    }
+    var same = live.filter(function (x) { return sameSet(ours, x.tk); });
+    if (same.length === 1) return same[0].o.value;
+    var near = live.filter(function (x) { return subset(ours, x.tk) || subset(x.tk, ours); });
+    return near.length === 1 ? near[0].o.value : null;
+  }
   function waitForRooms() {
     if (!q.room && !q.roomid) return Promise.resolve(null);
     var want = norm(q.room);
@@ -158,7 +213,9 @@
           var n = norm(o.textContent);
           return n.indexOf(want) >= 0 || want.indexOf(n) >= 0;
         });
-        resolve(partial.length === 1 ? partial[0].value : null);
+        if (partial.length === 1) return resolve(partial[0].value);
+        // no shared text — the two sides describe the same room differently
+        resolve(byDescription(opts, q.room));
       }, 150);
     });
   }

@@ -50,7 +50,7 @@ const okFetch = (seen) => async (url) => {
 
   await t('a cold cache costs the customer nothing — no id, no waiting', () => {
     const started = Date.now();
-    const id = sr.idFor(1288, '2027-01-30', '2027-02-06', 'anything', { fetch: okFetch() });
+    const id = sr.idFor(1288, '2027-01-30', '2027-02-06', 'anything', {}, { fetch: okFetch() });
     assert.strictEqual(id, null);
     assert.ok(Date.now() - started < 50, 'idFor blocked while it fetched');
   });
@@ -61,6 +61,9 @@ const okFetch = (seen) => async (url) => {
     assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', '2 ח"ש וסלון 2-4 אורחים'), '811');
     // and a near-miss in spelling still lands
     assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', '1 BDRM APT 2-4 PAX'), '813');
+    // and the workbook's own columns can carry the description instead
+    assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', 'whatever',
+      { type: '1 bdrm apt', occMin: 2, occMax: 4 }), '813');
   });
 
   await t('two candidates, or none, means no room is chosen', async () => {
@@ -80,8 +83,8 @@ const okFetch = (seen) => async (url) => {
     let calls = 0;
     const bad = async () => { calls++; return { ok: false, status: 403 }; };
     await sr.warm(3, '2027-01-30', '2027-02-06', { fetch: bad });
-    sr.idFor(3, '2027-01-30', '2027-02-06', 'x', { fetch: bad });
-    sr.idFor(3, '2027-01-30', '2027-02-06', 'x', { fetch: bad });
+    sr.idFor(3, '2027-01-30', '2027-02-06', 'x', {}, { fetch: bad });
+    sr.idFor(3, '2027-01-30', '2027-02-06', 'x', {}, { fetch: bad });
     await new Promise(r => setTimeout(r, 30));
     assert.strictEqual(calls, 1, 'hammered a site that said no: ' + calls);
   });
@@ -95,6 +98,38 @@ const okFetch = (seen) => async (url) => {
     const fresh = require('../server/site-rooms.js');
     assert.strictEqual(fresh.idFor(1288, '2027-01-30', '2027-02-06', 'CONN Premium with View 5 pax'), '999');
     if (before) require.cache[map] = before; else delete require.cache[map];
+  });
+
+  // The three cases from Tomer's own run against the live engine (26/08). The
+  // first two returned null for a week: norm() ate the hyphen in "2-5 pax", so
+  // the range stopped looking like one and left a stray "2" in the tokens.
+  await t('the real Belambra rooms, as both sides actually spell them', () => {
+    const live = [
+      { roomID: '5582', roomName: 'Premium Amazing View 2-5 pax' },
+      { roomID: '5588', roomName: 'Premium with View 4-5 pax' },
+      { roomID: '3721', roomName: '2 ח&quot;ש וסלון 2-4 אורחים' },
+    ];
+    assert.strictEqual(sr.match(live, 'CONN Premium with View 5 pax',
+      { type: 'CONN Premium with View', occMin: 5, occMax: 5 }), '5588');
+    assert.strictEqual(sr.match(live, 'Premium Amazing View 5 pax',
+      { type: 'Premium Amazing View', occMin: 5, occMax: 5 }), '5582');
+    assert.strictEqual(sr.match(live, '2 bedroom apt 2-4 pax',
+      { type: '2 bedroom apt', occMin: 2, occMax: 4 }), '3721', 'Hebrew against English');
+  });
+
+  await t('a room that holds fewer people than the workbook sells is not it', () => {
+    const live = [{ roomID: '3721', roomName: '2 ח"ש וסלון 2-4 אורחים' }];
+    assert.strictEqual(sr.match(live, '2 bedroom apt 5-6 pax',
+      { type: '2 bedroom apt', occMin: 5, occMax: 6 }), null);
+  });
+
+  await t('one room too few beds apart is never mistaken for the other', () => {
+    const live = [
+      { roomID: '1', roomName: '1 ח"ש וסלון 2-4 אורחים' },
+      { roomID: '2', roomName: '2 ח"ש וסלון 2-4 אורחים' },
+    ];
+    assert.strictEqual(sr.match(live, '2 bdrm apt 2-4 pax', {}), '2');
+    assert.strictEqual(sr.match(live, '3 bdrm apt 2-4 pax', {}), null);
   });
 
   await t('SITE_ROOMS=off turns the whole thing into nothing', () => {
