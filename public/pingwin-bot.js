@@ -64,7 +64,8 @@
     : PAGE.country ? (API_BASE + '/pingi-ski.png')
       : PAGE.camp ? (API_BASE + '/pingi-wave.png')
         : PINGI;
-  var PINGI_PLAIN = API_BASE + '/pingi-plain.png';
+  // pingi-plain.png נשאר בתיקייה לשימוש עתידי — תומר ביקש (26/08) שגם ליד
+  // ההודעות יופיע פינגי עם בגדי החורף, בגודל גדול יותר
   var PINGI_WAVE = API_BASE + '/pingi-wave.png';
   var BOT_NAME = 'פינגי';
   var LAUNCH_T = 'מתלבטים איפה לגלוש?';
@@ -174,6 +175,11 @@
     + 'box-shadow:0 10px 24px rgba(28,61,90,.32),0 0 0 4px rgba(28,61,90,.06);transition:transform .18s,box-shadow .18s}'
     + '.fab:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(28,61,90,.4),0 0 0 6px rgba(28,61,90,.07)}'
     + '.fab:focus-visible{outline:3px solid ' + THEME.accent + ';outline-offset:3px}'
+    // While the chat is open the launcher has nothing left to say, and the
+    // expanded window reaches down over the same corner — which is how Pingi
+    // ended up floating on top of the message box (תומר, 26/08). The window
+    // closes with its own ✕.
+    + '.wrap.chatting .fab{opacity:0;transform:translateY(10px) scale(.92);pointer-events:none}'
     + '.fab .av{width:50px;height:50px;border-radius:14px;flex:none;position:relative;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}'
     + '.fab .av img{width:44px;height:44px;display:block;object-fit:contain}'
     // נקודה אדומה בלי מספר: "יש כאן משהו". נעלמת ברגע שפותחים, וחוזרת בביקור הבא
@@ -236,12 +242,12 @@
     + '.m{font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word}'
     + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.ice + ';color:' + THEME.text + ';'
     + 'border:1px solid #d9e6f0;border-radius:16px 16px 16px 4px;padding:10px 15px}'
-    + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:32px;position:relative}'
-    + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:1px;width:24px;height:24px;border-radius:8px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI_PLAIN + ') center/22px 22px no-repeat}'
-    + '.typing{align-self:stretch;padding:2px 0 2px 32px;padding-inline-start:32px;display:flex;gap:5px;align-items:center;position:relative}'
-    + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:0;width:22px;height:22px;border-radius:7px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI_PLAIN + ') center/20px 20px no-repeat}'
+    + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:46px;position:relative;min-height:36px}'
+    + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:-2px;width:36px;height:36px;border-radius:11px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
+    + '.typing{align-self:stretch;padding:4px 0 4px 46px;padding-inline-start:46px;min-height:34px;display:flex;gap:5px;align-items:center;position:relative}'
+    + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:-1px;width:36px;height:36px;border-radius:11px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
     + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
@@ -307,8 +313,8 @@
     + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
-    + '.m.bot.wave{padding-inline-start:60px;min-height:52px}'
-    + '.m.bot.wave::before{width:52px;height:52px;border-radius:14px;top:-4px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/48px 48px no-repeat}'
+    + '.m.bot.wave{padding-inline-start:74px;min-height:64px}'
+    + '.m.bot.wave::before{width:64px;height:64px;border-radius:16px;top:-6px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/60px 60px no-repeat}'
     + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
     + '.m.bot.after::before{display:none}'
     + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
@@ -529,7 +535,10 @@
 
   function addMsg(role, text, silent) {
     if (!text) return null;
-    var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), text);
+    // a phone number that wraps mid-way reads as a typo ("04--8557722"): show
+    // it with a non-breaking hyphen so it always stays on one line
+    var shown = String(text).replace(/(\d{2,3})-(\d{7})/g, '$1\u2011$2');
+    var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), shown);
     msgs.appendChild(m); scrollDown();
     if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text });
     return m;
@@ -990,7 +999,7 @@
       : ['זוג בפברואר', 'משפחה עם ילדים', 'מה כלול בחבילה?', 'מתאים למתחילים'];
 
   function openWin() {
-    state.open = true; win.classList.add('open');
+    state.open = true; win.classList.add('open'); wrap.classList.add('chatting');
     fab.setAttribute('aria-expanded', 'true');
     // the red dot has done its job — it does not come back this visit
     fab.classList.add('seen');
@@ -1007,7 +1016,7 @@
     persist();
   }
   function closeWin() {
-    state.open = false; win.classList.remove('open');
+    state.open = false; win.classList.remove('open'); wrap.classList.remove('chatting');
     fab.setAttribute('aria-expanded', 'false'); fab.focus();
     persist();
   }
@@ -1017,7 +1026,10 @@
     var saved = restore();
     if (!saved || !saved.booted) return;
     replay(saved);
-    if (saved.open) { state.open = true; win.classList.add('open'); fab.setAttribute('aria-expanded', 'true'); }
+    if (saved.open) {
+      state.open = true; win.classList.add('open'); wrap.classList.add('chatting');
+      fab.setAttribute('aria-expanded', 'true');
+    }
   })();
   hX.addEventListener('click', closeWin);
   win.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWin(); });

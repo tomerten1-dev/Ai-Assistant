@@ -114,8 +114,29 @@ function startServer() {
     await page.evaluate(`${SHADOW}.querySelector('.fab').click()`);
     await page.waitForTimeout(400);
     const tiny = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.m.bot'), '::before').backgroundImage`);
-    t('the 24px avatar stays the plain penguin, which is the one that survives that size',
-      () => assert.ok(/pingi-plain\.png/.test(tiny), String(tiny)));
+    t('the avatar beside every answer is Pingi in his winter clothes',
+      () => assert.ok(/pingi\.png/.test(tiny) && !/plain|ski|board/.test(tiny), String(tiny)));
+
+    // Tomer, 26/08 (screenshot): with the chat open and text typed, the window
+    // grows over the same corner and Pingi floated on top of the message box.
+    await page.goto(URL + '?pwreset=1'); await page.waitForTimeout(600);
+    const closedState = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.fab')).opacity`);
+    await page.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+    await page.waitForTimeout(500);
+    const openState = await page.evaluate(`(() => {
+      const cs = getComputedStyle(${SHADOW}.querySelector('.fab'));
+      return { opacity: cs.opacity, pointer: cs.pointerEvents };
+    })()`);
+    t('the launcher is out of the way while the chat is open', () => {
+      assert.strictEqual(closedState, '1', 'hidden before it was opened');
+      assert.strictEqual(openState.opacity, '0', 'still visible over the chat');
+      assert.strictEqual(openState.pointer, 'none', 'still clickable under the chat');
+    });
+    // .x is worn by both the close button and "שיחה חדשה" — take the ✕ itself
+    await page.evaluate(`[...${SHADOW}.querySelectorAll('.hdr .x')].find(b => b.textContent.trim() === '✕').click()`);
+    await page.waitForTimeout(500);
+    const backAgain = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.fab')).opacity`);
+    t('and it comes back when the chat is closed', () => assert.strictEqual(backAgain, '1'));
 
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
