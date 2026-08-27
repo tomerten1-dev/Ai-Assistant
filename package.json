@@ -17,7 +17,9 @@
     "review": "node tools/review-log.js",
     "build:site": "node tools/fetch-hotel-images.js && node tools/fetch-inclusions.js",
     "match": "node tools/match-score.js",
-    "inventory": "node tools/build-availability.js"
+    "inventory": "node tools/build-availability.js",
+    "push": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/push-availability.ps1 -VerboseLog",
+    "inventory:local": "node tools/build-availability.js"
   },
   "dependencies": {
     "nodemailer": "^9.0.5"
