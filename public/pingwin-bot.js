@@ -7,21 +7,26 @@
   window.__pingwinBotLoaded = true;
 
   /* ============== THEME — פלייסהולדרים להחלפה לצבעי פינגווין ============== */
+  /* The design system, for real this time. Every colour, shadow, radius and
+     easing the CSS uses comes from here — swapping the official Pingwin blue
+     is now an edit to primary/primaryLight/brandRGB, not an archaeology dig
+     through ~90 literals (design audit, 27/08). */
   var THEME = {
     primary: '#1c3d5a',        // TODO: להחליף לכחול פינגווין הרשמי
     primaryDark: '#132c42',
+    primaryLight: '#2b5f86',   // הקצה הבהיר של הגרדיאנט
+    brandRGB: '28,61,90',      // primary כ-RGB, לטבעות פוקוס ולצללים מותגיים
+    shadowRGB: '16,32,48',     // בסיס אחד לכל הצללים (היו 5)
     accent: '#8a9bab',         // אפור-כחול מאופק
     ice: '#eaf2f8',            // רקע "קרח" עדין להדגשות
-    grad: 'linear-gradient(135deg,#1c3d5a 0%,#2b5f86 100%)',  // כפתורים ראשיים ובועה
+    grad: 'linear-gradient(135deg,#1c3d5a 0%,#2b5f86 100%)',  // נגזר מ-primary/primaryLight — לשנות יחד איתם
     bg: '#ffffff',
     bgAlt: '#f5f7f9',
+    border: '#dde5ec',         // קו גבול רגיל (היו ~8 גוונים)
+    borderSoft: '#edf1f5',     // קו הפרדה עדין
+    fill: '#eef2f6',           // מילוי אפרפר לצ'יפים/פאנלים (היו ~8)
     text: '#212b33',
     textLight: '#5e6b76',
-    bubbleUser: '#1c3d5a',
-    bubbleUserText: '#ffffff',
-    bubbleBot: '#eef1f4',
-    bubbleBotText: '#212b33',
-    radius: '10px',
     font: "'Assistant','Rubik','Segoe UI',system-ui,sans-serif", // TODO: פונט המותג
     zIndex: 2147483000,
     position: 'left',          // 'left' | 'right' — פינת הבועה
@@ -180,16 +185,16 @@
     // הכפתור הוא "דלפק קבלה": פינגי, שאלה, ומי עונה עליה (תומר, 26/08).
     // הלקוח לא צריך לנחש מה קורה כשלוחצים.
     + '.fab{display:flex;align-items:center;gap:12px;padding:10px;padding-inline:10px 18px;border:none;cursor:pointer;'
-    + 'background:' + THEME.grad + ';color:#fff;border-radius:18px;font-family:inherit;text-align:start;'
-    + 'box-shadow:0 10px 24px rgba(28,61,90,.32),0 0 0 4px rgba(28,61,90,.06);transition:transform .18s,box-shadow .18s}'
-    + '.fab:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(28,61,90,.4),0 0 0 6px rgba(28,61,90,.07)}'
-    + '.fab:focus-visible{outline:3px solid ' + THEME.accent + ';outline-offset:3px}'
+    + 'background:' + THEME.grad + ';color:#fff;border-radius:16px;font-family:inherit;text-align:start;'
+    + 'box-shadow:0 10px 24px rgba(' + THEME.brandRGB + ',.32),0 0 0 4px rgba(' + THEME.brandRGB + ',.06);transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s cubic-bezier(.2,.8,.2,1)}'
+    + '.fab:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(' + THEME.brandRGB + ',.4),0 0 0 6px rgba(' + THEME.brandRGB + ',.07)}'
+    + '.fab:focus-visible{outline:2px solid ' + THEME.primaryDark + ';outline-offset:3px}'
     // While the chat is open the launcher has nothing left to say, and the
     // expanded window reaches down over the same corner — which is how Pingi
     // ended up floating on top of the message box (תומר, 26/08). The window
     // closes with its own ✕.
     + '.wrap.chatting .fab{opacity:0;transform:translateY(10px) scale(.92);pointer-events:none}'
-    + '.fab .av{width:50px;height:50px;border-radius:14px;flex:none;position:relative;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}'
+    + '.fab .av{width:50px;height:50px;border-radius:12px;flex:none;position:relative;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}'
     + '.fab .av img{width:44px;height:44px;display:block;object-fit:contain}'
     // נקודה אדומה בלי מספר: "יש כאן משהו". נעלמת ברגע שפותחים, וחוזרת בביקור הבא
     + '.fab .dot{position:absolute;top:-4px;inset-inline-end:-4px;width:14px;height:14px;border-radius:50%;background:#e0392b;box-shadow:0 0 0 2px #fff}'
@@ -198,20 +203,20 @@
     + '@keyframes pwPing{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(2.3);opacity:0}}'
     + '.fab .txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;gap:1px}'
     + '.fab .txt b{font-size:15px;font-weight:700}'
-    + '.fab .txt span{font-size:12.5px;opacity:.85}'
+    + '.fab .txt span{font-size:12px;opacity:.85}'
     + '.fab .go{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:none}'
     // במובייל הדלפק מתכווץ לעיגול: שורת טקסט בפינת מסך טלפון מסתירה חצי עמוד
     // ובעיגול הקטן הרקע בהיר: פינגי שחור על כחול כהה מאבד את המתאר שלו
     + '@media (max-width:560px){.fab{padding:5px;border-radius:50%;gap:0;background:' + THEME.bg + ';'
-    + 'box-shadow:0 8px 20px rgba(28,61,90,.28),0 0 0 3px rgba(28,61,90,.10)}'
+    + 'box-shadow:0 8px 20px rgba(' + THEME.brandRGB + ',.28),0 0 0 3px rgba(' + THEME.brandRGB + ',.10)}'
     + '.fab .txt,.fab .go{display:none}'
     + '.fab .av{background:transparent;width:54px;height:54px}.fab .av img{width:52px;height:52px}'
     + '.fab .dot{box-shadow:0 0 0 3px ' + THEME.bg + '}}'
     // מי שביקש פחות תנועה מקבל אפס תנועה — לא רק בנקודה האדומה
     + '@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.msgs{scroll-behavior:auto!important}}'
     + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
-    + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;display:none;flex-direction:column;overflow:hidden;'
-    + 'transition:width .25s ease,height .25s ease}'
+    + 'background:' + THEME.bg + ';border-radius:16px;box-shadow:0 24px 64px rgba(' + THEME.shadowRGB + ',.26),0 2px 8px rgba(' + THEME.shadowRGB + ',.08);border:1px solid ' + THEME.border + ';display:none;flex-direction:column;overflow:hidden;'
+    + 'transition:width .25s cubic-bezier(.2,.8,.2,1),height .25s cubic-bezier(.2,.8,.2,1)}'
     + '.win.open{display:flex;animation:pwWin .22s cubic-bezier(.05,.7,.1,1);transform-origin:bottom ' + THEME.position + '}'
     + '@keyframes pwWin{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
@@ -221,45 +226,56 @@
     // on a phone the window is the screen, whatever .big/.max say — those two
     // used to win on specificity and leave a lopsided box with a 32px gap
     + '@media (max-width:480px){.win,.win.big,.win.max{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0;margin:0}'
-    + '.hdr .sub{display:none}.hdr .ttl{font-size:14px;white-space:nowrap}.hdr .ttl .long{display:none}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
+    + '.hdr .sub{display:none}.hdr .ttl{font-size:13px;white-space:nowrap}.hdr .ttl .long{display:none}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
-    + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:12px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #e8edf1}'
+    + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:12px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid ' + THEME.fill + '}'
     + '.hdr .mark{width:38px;height:38px;border-radius:12px;background:' + THEME.ice + ';display:flex;align-items:center;justify-content:center;flex:none;position:relative}'
     + '.hdr .mark img{width:34px;height:34px;display:block;object-fit:contain}'
     + '.hdr .mark::after{content:"";position:absolute;inset-inline-end:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;background:#2fb26a;border:2px solid ' + THEME.bg + '}'
-    + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
-    + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
-    + '.form .consent{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:' + THEME.textLight + ';margin:10px 0 4px;line-height:1.4;cursor:pointer}'
+    + '.hdr .ttl{font-weight:700;font-size:15px;letter-spacing:.01em}'
+    + '.hdr .sub{font-size:12px;color:' + THEME.textLight + '}'
+    + '.form .consent{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:' + THEME.textLight + ';margin:10px 0 4px;line-height:1.4;cursor:pointer}'
     + '.form .consent input{margin-top:3px;flex:none;width:16px;height:16px;accent-color:' + THEME.primaryDark + '}'
     + '.form .consent a{color:' + THEME.primaryDark + ';text-decoration:underline}'
-    + '.hdr .wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;background:#e7f6ec;color:#1b6b3a;border:1px solid #cfe9d8;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}'
+    + '.hdr .wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;background:#e7f6ec;color:#1b6b3a;border:1px solid #cfe9d8;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}'
     + '.hdr .wa:hover{background:#d9f0e1}'
-    + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.accent + ';outline-offset:2px}'
+    + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.primaryDark + ';outline-offset:2px}'
     + '.hdr .wa + .newc,.hdr .wa + .exp{margin-inline-start:0}'
-    + '.hdr .newc{margin-inline-start:auto;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:10px}'
+    + '.hdr .newc{margin-inline-start:auto;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:12px}'
     + '.hdr .newc + .exp,.hdr .exp + .x{margin-inline-start:0}'
-    + '.hdr .exp{margin-inline-start:auto;font-size:16px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px}'
+    + '.hdr .exp{margin-inline-start:auto;font-size:16px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px}'
     + '.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;'
-    + 'min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;line-height:1}'
-    + '.hdr .x:focus-visible,.hdr .newc:focus-visible,.hdr .exp:focus-visible,.send:focus-visible,.chip:focus-visible,.btn:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
+    + 'min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;line-height:1}'
+    /* one focus ring for every focusable thing in the widget — there were
+       three different rings, and seven interactive elements with none at all */
+    + '.hdr .x:focus-visible,.hdr .newc:focus-visible,.hdr .exp:focus-visible,.send:focus-visible,'
+    + '.chip:focus-visible,.btn:focus-visible,.dtog:focus-visible,.rlink:focus-visible,'
+    + '.imore:focus-visible,.galb:focus-visible,.fine a:focus-visible,.consent a:focus-visible,'
+    + '.form input:focus-visible,.galn:focus-visible'
+    + '{outline:2px solid ' + THEME.primaryDark + ';outline-offset:2px}'
+    /* pressed state: the 100ms feedback rule — the oldest number in HCI, and
+       the widget had zero :active styles */
+    + '.btn:active,.chip:active,.send:active,.hdr .x:active,.hdr .newc:active,.hdr .exp:active,'
+    + '.galb:active,.dtog:active,.wa:active{transform:scale(.96)}'
+    + '.btn:disabled,.chip:disabled{opacity:.55;cursor:default;transform:none}'
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
     // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
     + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:22px 20px 18px;background:linear-gradient(180deg,#fbfcfd 0%,#f4f7fa 100%);display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth}'
     // the default Windows scrollbar is a slab down the side of a small window
     + '.msgs::-webkit-scrollbar{width:8px}'
-    + '.msgs::-webkit-scrollbar-thumb{background:#d3dae1;border-radius:99px;border:2px solid ' + THEME.bg + '}'
-    + '.msgs::-webkit-scrollbar-thumb:hover{background:#b9c4ce}'
+    + '.msgs::-webkit-scrollbar-thumb{background:' + THEME.border + ';border-radius:999px;border:2px solid ' + THEME.bg + '}'
+    + '.msgs::-webkit-scrollbar-thumb:hover{background:' + THEME.accent + '}'
     + '.msgs::-webkit-scrollbar-track{background:transparent}'
     + '.m{font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word}'
     + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.ice + ';color:' + THEME.text + ';'
-    + 'border:1px solid #d9e6f0;border-radius:16px 16px 16px 4px;padding:10px 15px}'
+    + 'border:1px solid ' + THEME.border + ';border-radius:16px 16px 16px 4px;padding:10px 15px}'
     + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:46px;position:relative;min-height:36px}'
-    + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:-2px;width:36px;height:36px;border-radius:11px;'
+    + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:-2px;width:36px;height:36px;border-radius:12px;'
     + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
     + '.typing{align-self:stretch;padding:4px 0;padding-inline-start:46px;min-height:34px;display:flex;gap:5px;align-items:center;position:relative}'
-    + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:-1px;width:36px;height:36px;border-radius:11px;'
+    + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:-1px;width:36px;height:36px;border-radius:12px;'
     + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
     + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
@@ -267,9 +283,9 @@
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
     + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
     + '.cards-row .card{flex:1 1 270px;min-width:0}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #e1e8ef;border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(16,32,48,.05);'
-    + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
-    + '.card:hover{box-shadow:0 10px 26px rgba(16,32,48,.12);transform:translateY(-2px);border-color:#c8d5e2}'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid ' + THEME.border + ';border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:4px;'
+    + 'box-shadow:0 1px 3px rgba(' + THEME.shadowRGB + ',.05);transition:box-shadow .18s cubic-bezier(.2,.8,.2,1),transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s cubic-bezier(.2,.8,.2,1)}'
+    + '.card:hover{box-shadow:0 10px 26px rgba(' + THEME.shadowRGB + ',.12);transform:translateY(-2px);border-color:' + THEME.border + '}'
     /* ---- variant: the photo IS the card (?pwcard=photo) ----
        Closed, the hotel's own photograph fills the card and the text sits on a
        scrim over it. Opened, it hands back to the ordinary white card: the
@@ -288,8 +304,8 @@
     /* A ski photograph is mostly snow and sky, so the contrast is the scrim's
        job, not the picture's — and once the scrim really carries it, the type
        needs no outline. Outlined white text is what made this look homemade. */
-    + 'background:linear-gradient(to top,rgba(6,14,26,.95) 0%,rgba(6,14,26,.90) 30%,'
-    + 'rgba(6,14,26,.62) 52%,rgba(6,14,26,.24) 72%,rgba(6,14,26,.10) 86%,rgba(6,14,26,.30) 100%)}'
+    + 'background:linear-gradient(to top,rgba(' + THEME.shadowRGB + ',.95) 0%,rgba(' + THEME.shadowRGB + ',.90) 30%,'
+    + 'rgba(' + THEME.shadowRGB + ',.62) 52%,rgba(' + THEME.shadowRGB + ',.24) 72%,rgba(' + THEME.shadowRGB + ',.10) 86%,rgba(' + THEME.shadowRGB + ',.30) 100%)}'
     + '.card.pbg:not(.open) > *{position:relative;z-index:1}'
     /* the hotel's other photographs, over the whole card instead of inside a
        strip at the top of it */
@@ -305,20 +321,20 @@
     /* Glass, not white bubbles: at this size a solid white circle is the single
        most toy-like thing on the card. */
     + '.card.pbg:not(.open) .galb{opacity:1;top:auto;bottom:10px;transform:none;width:29px;height:29px;'
-    + 'background:rgba(10,20,34,.42);color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.28);'
+    + 'background:rgba(' + THEME.shadowRGB + ',.42);color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.28);'
     + 'box-shadow:none;backdrop-filter:blur(6px)}'
-    + '.card.pbg:not(.open) .galb:hover{background:rgba(10,20,34,.72);border-color:rgba(255,255,255,.5)}'
+    + '.card.pbg:not(.open) .galb:hover{background:rgba(' + THEME.shadowRGB + ',.72);border-color:rgba(255,255,255,.5)}'
     + '.card.pbg:not(.open) .galb.next{inset-inline-end:12px;inset-inline-start:auto}'
     + '.card.pbg:not(.open) .galb.prev{inset-inline-end:82px;inset-inline-start:auto}'
     /* .card:not(.open) .galn is hidden on the plain card — here it is the only
        thing telling you there are more photographs */
     + '.card.pbg:not(.open) .gal .galn{opacity:1;bottom:18px;top:auto;inset-inline-end:45px;inset-inline-start:auto;'
     + 'transform:none;background:none;padding:0;font-size:11px;font-weight:500;letter-spacing:.06em;'
-    + 'color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(6,14,26,.7)}'
+    + 'color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(' + THEME.shadowRGB + ',.7)}'
     /* One shadow, soft and short — enough to lift the type off a busy picture,
        not enough to be seen as an effect. */
     + '.card.pbg:not(.open) .chead,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .why'
-    + '{text-shadow:0 1px 3px rgba(6,14,26,.55)}'
+    + '{text-shadow:0 1px 3px rgba(' + THEME.shadowRGB + ',.55)}'
     /* the place first and small, then the name — the order a hotel's own
        material uses, and the one that reads as a masthead and not a label */
     + '.card.pbg:not(.open) .chead{flex-direction:column;align-items:flex-start;gap:1px}'
@@ -335,7 +351,7 @@
        the gradient instead of from its width. */
     + '.card.pbg:not(.open) .brief::before{content:"";flex-basis:100%;height:1px;margin:7px 0 2px;'
     + 'background:linear-gradient(to left,rgba(255,255,255,.34) 0 26px,transparent 26px)}'
-    + '.card.pbg:not(.open) .brief{font-size:12.5px;gap:3px 7px;color:rgba(255,255,255,.9)}'
+    + '.card.pbg:not(.open) .brief{font-size:12px;gap:3px 7px;color:rgba(255,255,255,.9)}'
     + '.card.pbg:not(.open) .brief b{font-weight:600;color:#fff}'
     + '.card.pbg:not(.open) .brief .sep{color:rgba(255,255,255,.34)}'
     /* the price band is information, not an accent — one weight up, no colour.
@@ -354,7 +370,7 @@
     + '.card.pbg:not(.open) > .topbar{display:flex;gap:6px;align-items:center;'
     + 'position:absolute;top:12px;inset-inline-end:12px;z-index:3}'
     + '.card.pbg:not(.open) .topbar .bprice{font-size:11px;font-weight:600;letter-spacing:.08em;color:#fff;'
-    + 'padding:3px 9px;border-radius:999px;background:rgba(10,20,34,.42);'
+    + 'padding:3px 9px;border-radius:999px;background:rgba(' + THEME.shadowRGB + ',.42);'
     + 'border:1px solid rgba(255,255,255,.26);backdrop-filter:blur(6px);text-shadow:none}'
     + '.card.pbg:not(.open) .topbar .tier{position:static;font-size:11px;font-weight:600;letter-spacing:.04em;'
     + 'padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.9);color:' + THEME.primaryDark + ';'
@@ -370,19 +386,19 @@
     /* the buttons carry their own contrast — they must never depend on the
        photograph behind them. One filled, one outlined; a 1px border, not 1.5. */
     + '.card.pbg:not(.open) .btn{font-weight:600;letter-spacing:.01em}'
-    + '.card.pbg:not(.open) .btn.sec{background:rgba(10,20,34,.34);color:#fff;'
+    + '.card.pbg:not(.open) .btn.sec{background:rgba(' + THEME.shadowRGB + ',.34);color:#fff;'
     + 'border:1px solid rgba(255,255,255,.46);backdrop-filter:blur(6px)}'
-    + '.card.pbg:not(.open) .btn.sec:hover{background:rgba(10,20,34,.6);border-color:rgba(255,255,255,.75)}'
-    + '.card.pbg:not(.open) .btn.pri{box-shadow:0 2px 12px rgba(6,14,26,.45)}'
-    + '.card.pbg:hover{box-shadow:0 14px 30px rgba(9,20,35,.28)}'
-    + '.card.pbg.open{background-image:none!important;border-color:#e1e8ef}'
+    + '.card.pbg:not(.open) .btn.sec:hover{background:rgba(' + THEME.shadowRGB + ',.6);border-color:rgba(255,255,255,.75)}'
+    + '.card.pbg:not(.open) .btn.pri{box-shadow:0 2px 12px rgba(' + THEME.shadowRGB + ',.45)}'
+    + '.card.pbg:hover{box-shadow:0 14px 30px rgba(' + THEME.shadowRGB + ',.28)}'
+    + '.card.pbg.open{background-image:none!important;border-color:' + THEME.border + '}'
     // gallery: the photo fills the top of the card, arrows sit on it
-    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:15px 15px 0 0;overflow:hidden;background:#e8edf1}'
-    + '.card .gal::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(16,32,48,.35) 100%);pointer-events:none}'
+    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:16px 15px 0 0;overflow:hidden;background:' + THEME.fill + '}'
+    + '.card .gal::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(' + THEME.shadowRGB + ',.35) 100%);pointer-events:none}'
     + '.card .gal .galb,.card .gal .galn,.card .gal .tier{z-index:1}'
     // 112px: three cards with their date, room, price and both buttons fit a
     // laptop screen without scrolling — the photo is the first thing to give
-    + '.card .photo{width:100%;height:72px;object-fit:cover;display:block;transition:height .18s ease}'
+    + '.card .photo{width:100%;height:72px;object-fit:cover;display:block;transition:height .18s cubic-bezier(.2,.8,.2,1)}'
     + '.card.open .photo{height:92px}'
     + '.card .gal .tier{position:absolute;top:8px;inset-inline-start:8px;box-shadow:0 1px 4px rgba(0,0,0,.25)}'
     // everything that is nice to know but not needed to choose lives behind one toggle
@@ -397,37 +413,37 @@
     + '.card .brief .bprice{color:' + THEME.primaryDark + ';font-weight:600}'
     + '.card:not(.open) .cfoot{display:none}'
     + '.card .chead{row-gap:0}'
-    + '.card .brief .sep{color:#c3ccd6}'
+    + '.card .brief .sep{color:' + THEME.accent + '}'
     + '.card.open .brief{display:none}'
     + '.card:not(.open) .rows,.card:not(.open) .rpanel,.card:not(.open) .facts{display:none}'
     + '.card .gal .galb,.card:not(.open) .gal .galn{opacity:0}'
     + '.card.open .gal .galb{opacity:.9}'
     + '.card:not(.open) .tags .tag:not(.tier):not(.rec):not(.left){display:none}'
-    + '.card .dtog{align-self:flex-start;background:none;border:none;padding:2px 0;font-family:inherit;font-size:12.5px;color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600;order:8}'
+    + '.card .dtog{align-self:flex-start;background:none;border:none;padding:2px 0;font-family:inherit;font-size:12px;color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600;order:8}'
     + '.card .details{order:9}.card .facts{order:7}.card .acts,.card .cta{order:10}'
     + '.card .dtog:hover{text-decoration:underline}'
     + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;'
     + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';line-height:0;cursor:pointer;padding:0;'
-    + 'display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(16,32,48,.25);opacity:0;transition:opacity .15s}'
+    + 'display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(' + THEME.shadowRGB + ',.25);opacity:0;transition:opacity .15s cubic-bezier(.2,.8,.2,1)}'
     + '.card:hover .galb,.card:focus-within .galb{opacity:1}'
     // always reachable on a touch screen, where there is no hover
     + '@media (hover:none){.card .galb{opacity:1}}'
     + '.card .galb:hover{background:#fff}'
     + '.card .galb.prev{inset-inline-start:8px}'
     + '.card .galb.next{inset-inline-end:8px}'
-    + '.card .galn{position:absolute;bottom:8px;inset-inline-end:10px;background:rgba(16,32,48,.62);color:#fff;'
-    + 'font-size:11.5px;padding:2px 8px;border-radius:99px;letter-spacing:.4px}'
+    + '.card .galn{position:absolute;bottom:8px;inset-inline-end:10px;background:rgba(' + THEME.shadowRGB + ',.62);color:#fff;'
+    + 'font-size:12px;padding:2px 8px;border-radius:999px;letter-spacing:.04em}'
 
     // name and country on one line, so the eye finds the hotel first
     + '.card .chead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}'
     + '.card .cwhere{font-size:13px;color:' + THEME.textLight + '}'
 
     // labelled rows: label in grey, value in ink — readable at a glance
-    + '.card .rows{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-top:1px solid #edf1f5;border-bottom:1px solid #edf1f5}'
+    + '.card .rows{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-top:1px solid ' + THEME.borderSoft + ';border-bottom:1px solid ' + THEME.borderSoft + '}'
     + '.card .row{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}'
-    + '.card .rlab{font-size:12.5px;color:' + THEME.textLight + ';flex:none}'
-    + '.card .rval{font-size:13.5px;color:' + THEME.text + ';font-weight:600}'
-    + '.card .rlink{font-size:13.5px;color:' + THEME.primaryDark + ';font-weight:600;background:none;border:none;'
+    + '.card .rlab{font-size:12px;color:' + THEME.textLight + ';flex:none}'
+    + '.card .rval{font-size:13px;color:' + THEME.text + ';font-weight:600}'
+    + '.card .rlink{font-size:13px;color:' + THEME.primaryDark + ';font-weight:600;background:none;border:none;'
     + 'padding:0;cursor:pointer;font-family:inherit;text-align:start;text-decoration:underline;text-underline-offset:3px}'
     + '.card .rlink:hover{color:' + THEME.primary + '}'
     + '.card .rpanel{display:flex;flex-direction:column;gap:4px;background:' + THEME.bgAlt + ';border-radius:8px;padding:9px 11px;margin-top:2px}'
@@ -435,23 +451,23 @@
     + '.card .rline .rval{font-weight:500;font-size:13px}'
     + '.card .rnote{font-size:12px;color:' + THEME.textLight + ';padding-top:2px}'
 
-    + '.card .inc{background:#f2f6f9;border:1px solid #e0e9f0;border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}'
-    + '.card .ilab{font-size:12px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.2px}'
+    + '.card .inc{background:' + THEME.borderSoft + ';border:1px solid ' + THEME.border + ';border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}'
+    + '.card .ilab{font-size:12px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.02em}'
     + '.card .itxt{font-size:13px;color:' + THEME.text + ';line-height:1.55}'
     + '.card .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'
-    + '.card .imore{align-self:flex-start;background:none;border:none;padding:0;font-family:inherit;font-size:12.5px;'
+    + '.card .imore{align-self:flex-start;background:none;border:none;padding:0;font-family:inherit;font-size:12px;'
     + 'color:' + THEME.primary + ';cursor:pointer;text-decoration:underline;text-underline-offset:3px}'
-    + '.card .cdesc{font-size:13.5px;color:' + THEME.text + ';line-height:1.55}'
+    + '.card .cdesc{font-size:13px;color:' + THEME.text + ';line-height:1.55}'
     + '.card .cfoot{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:2px}'
     + '.card .fits{font-size:13px;color:' + THEME.textLight + '}'
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
-    + '.card .hname{font-weight:700;font-size:15px;color:' + THEME.text + ';line-height:1.25;letter-spacing:-.2px}'
+    + '.card .hname{font-weight:700;font-size:15px;color:' + THEME.text + ';line-height:1.25;letter-spacing:-.012em}'
     + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
     + '.m.bot.wave{padding-inline-start:74px;min-height:64px}'
     + '.m.bot.wave::before{width:64px;height:64px;border-radius:16px;top:-6px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/60px 60px no-repeat}'
-    + '.ts{display:block;font-size:10.5px;line-height:1.4;color:' + THEME.textLight + ';opacity:.75;margin-top:3px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}'
+    + '.ts{display:block;font-size:11px;line-height:1.4;color:' + THEME.textLight + ';opacity:.75;margin-top:3px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}'
     + '.m.after .ts,.m.wave .ts{display:none}'
     + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
     + '.m.bot.after::before{display:none}'
@@ -462,16 +478,16 @@
     + '.fine a{color:' + THEME.primary + ';text-decoration:underline}'
     + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
-    + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
+    + '.tag{font-size:12px;padding:4px 10px;border-radius:999px;background:' + THEME.fill + ';color:#33475b;border:1px solid ' + THEME.border + '}'
     + '.tag.warn{background:#f7f1e3;color:#7a5c1e;border:1px solid #e5d9bd}'
-    + '.tag.rec{background:#e8eef4;color:' + THEME.primaryDark + ';border:1px solid #cfdae4}'
+    + '.tag.rec{background:' + THEME.fill + ';color:' + THEME.primaryDark + ';border:1px solid ' + THEME.border + '}'
     + '.tag.tier{background:' + THEME.primaryDark + ';color:#fff;border:1px solid ' + THEME.primaryDark + ';font-weight:600}'
     + '.tag.left{background:#fbeeea;color:#8a3b2a;border:1px solid #efcfc6}'
-    + '.card .price{font-size:13.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px;background:' + THEME.ice + ';border-radius:8px;padding:4px 10px}'
+    + '.card .price{font-size:13px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.03em;background:' + THEME.ice + ';border-radius:8px;padding:4px 10px}'
     + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:6px;flex-wrap:wrap}'
-    + '.btn{flex:1 1 0;min-width:112px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
-    + '.btn.pri{background:' + THEME.grad + ';color:#fff;box-shadow:0 2px 6px rgba(28,61,90,.25)}'
-    + '.btn.pri:hover{filter:brightness(1.08);box-shadow:0 4px 12px rgba(28,61,90,.3)}'
+    + '.btn{flex:1 1 0;min-width:112px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s cubic-bezier(.2,.8,.2,1),border-color .15s cubic-bezier(.2,.8,.2,1),filter .15s cubic-bezier(.2,.8,.2,1),box-shadow .15s cubic-bezier(.2,.8,.2,1),transform .1s cubic-bezier(.2,.8,.2,1)}'
+    + '.btn.pri{background:' + THEME.grad + ';color:#fff;box-shadow:0 2px 6px rgba(' + THEME.brandRGB + ',.25)}'
+    + '.btn.pri:hover{filter:brightness(1.08);box-shadow:0 4px 12px rgba(' + THEME.brandRGB + ',.3)}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
     + '.btn.sec:hover{background:' + THEME.bgAlt + '}'
     // One row that scrolls sideways, not four rows that push the offers off the
@@ -486,28 +502,28 @@
     + 'flex:none;min-width:0;max-width:100%}'
     + '.chips::-webkit-scrollbar{height:0}'
     + '.chip{scroll-snap-align:start;flex:none}'
-    + '.chip{border:1px solid #d8dfe6;background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:99px;'
+    + '.chip{border:1px solid ' + THEME.border + ';background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:999px;'
     // min-height 36px: a 30px chip is below the comfortable tap target on a
     // phone, and chips are the main way a customer refines on mobile
-    + 'padding:9px 15px;min-height:38px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
+    + 'padding:9px 15px;min-height:38px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:background .15s cubic-bezier(.2,.8,.2,1),border-color .15s cubic-bezier(.2,.8,.2,1),transform .1s cubic-bezier(.2,.8,.2,1)}'
     + '.chip:hover{background:' + THEME.primary + ';color:#fff;border-color:' + THEME.primary + '}'
     // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
-    + '.inp{display:flex;gap:8px;padding:12px 16px 16px;background:' + THEME.bg + ';align-items:flex-end;border-top:1px solid #eef2f5}'
-    + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #d8dfe6;border-radius:14px;'
-    + 'padding:5px;padding-inline:12px 6px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
-    + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
+    + '.inp{display:flex;gap:8px;padding:12px 16px 16px;background:' + THEME.bg + ';align-items:flex-end;border-top:1px solid ' + THEME.borderSoft + '}'
+    + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid ' + THEME.border + ';border-radius:12px;'
+    + 'padding:5px;padding-inline:12px 6px;background:' + THEME.bg + ';transition:border-color .15s cubic-bezier(.2,.8,.2,1),box-shadow .15s cubic-bezier(.2,.8,.2,1)}'
+    + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(' + THEME.brandRGB + ',.08)}'
     + '.inp textarea{flex:1;border:none;background:none;padding:9px 4px;font-size:15px;font-family:inherit;direction:rtl;'
     + 'resize:none;overflow-y:auto;line-height:1.5;max-height:96px;min-height:32px;color:' + THEME.text + '}'
     + '.inp textarea:focus{outline:none}'
     + '.send:hover:not(:disabled){filter:brightness(1.1)}'
     + '.send{background:' + THEME.grad + ';border:none;color:#fff;border-radius:12px;width:44px;height:44px;flex:none;'
-    + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
+    + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s cubic-bezier(.2,.8,.2,1),filter .15s cubic-bezier(.2,.8,.2,1),transform .1s cubic-bezier(.2,.8,.2,1)}'
     + '.send:disabled{opacity:.5;cursor:default}'
     + '.form .ftitle{font-size:15px;font-weight:700;color:' + THEME.text + ';line-height:1.35}'
-    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
-    + '.form label{font-size:12.5px;color:' + THEME.textLight + '}'
-    + '.form input{border:1.5px solid #cfdae4;border-radius:9px;padding:8px 12px;font-size:14px;font-family:inherit;direction:rtl}'
-    + '.form .note{font-size:11.5px;color:' + THEME.textLight + '}'
+    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}'
+    + '.form label{font-size:12px;color:' + THEME.textLight + '}'
+    + '.form input{border:1.5px solid ' + THEME.border + ';border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;direction:rtl}'
+    + '.form .note{font-size:12px;color:' + THEME.textLight + '}'
     + '.srhint{font-size:11px;color:' + THEME.textLight + ';text-align:center;padding:2px 0 6px;background:' + THEME.bg + '}';
 
   var style = document.createElement('style');
@@ -556,15 +572,24 @@
   ttl.appendChild(el('span', 'long', ' | ייעוץ חופשות סקי'));
   hTxt.appendChild(ttl);
   hTxt.appendChild(el('div', 'sub', 'זמינות בזמן אמת מתוך המלאי שלנו'));
+  // the green dot claims presence; give it words instead of implication
   // Let the customer decide how much room the chat gets. A fixed box the
   // page cannot escape is the most common complaint about widgets like this,
   // and three offers side by side need real width to be readable.
-  var hExp = el('button', 'x exp', '⤡');
+  // one icon language: the header mixed a text ✕, arrow glyphs that render as
+  // emoji or tofu depending on the OS, and SVGs — three systems side by side
+  var ICON = {
+    expand: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>',
+    shrink: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>',
+    close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  };
+  var hExp = el('button', 'x exp');
+  hExp.innerHTML = ICON.expand;
   hExp.title = 'הגדלת החלון';
   hExp.setAttribute('aria-label', hExp.title);
   function setExpanded(max) {
     win.classList.toggle('max', max);
-    hExp.textContent = max ? '⤢' : '⤡';
+    hExp.innerHTML = max ? ICON.shrink : ICON.expand;
     hExp.title = max ? 'הקטנת החלון' : 'הגדלת החלון';
     hExp.setAttribute('aria-label', hExp.title);
     try { localStorage.setItem('pingwin_bot_max', max ? '1' : '0'); } catch (e) {}
@@ -577,8 +602,10 @@
   hNew.title = 'שיחה חדשה';
   hNew.setAttribute('aria-label', hNew.title);
   hNew.addEventListener('click', function () { resetChat(); });
-  var hX = el('button', 'x', '✕');
+  var hX = el('button', 'x');
+  hX.innerHTML = ICON.close;
   hX.setAttribute('aria-label', 'סגירת הצ׳אט');
+  hX.setAttribute('data-close', '1');
   // a human is one tap away from every state — the research is unambiguous
   // that customers who cannot find the exit stop trusting the bot
   var hWa = null;

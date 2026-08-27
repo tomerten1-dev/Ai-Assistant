@@ -133,7 +133,7 @@ function startServer() {
       assert.strictEqual(openState.pointer, 'none', 'still clickable under the chat');
     });
     // .x is worn by both the close button and "שיחה חדשה" — take the ✕ itself
-    await page.evaluate(`[...${SHADOW}.querySelectorAll('.hdr .x')].find(b => b.textContent.trim() === '✕').click()`);
+    await page.evaluate(`${SHADOW}.querySelector('.hdr .x[data-close]').click()`);
     await page.waitForTimeout(500);
     const backAgain = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.fab')).opacity`);
     t('and it comes back when the chat is closed', () => assert.strictEqual(backAgain, '1'));
