@@ -214,7 +214,7 @@
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
-    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 116px);height:calc(100dvh - 116px)}'
+    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 92px);height:calc(100dvh - 92px)}'
     + '.win.max{width:calc(100vw - 32px);height:calc(100vh - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
     + '.win.max .msgs{padding:20px 24px}'
     // on a phone the window is the screen, whatever .big/.max say — those two
@@ -314,7 +314,6 @@
     + '.card.pbg:not(.open) .gal .galn{opacity:1;bottom:18px;top:auto;inset-inline-end:45px;inset-inline-start:auto;'
     + 'transform:none;background:none;padding:0;font-size:11px;font-weight:500;letter-spacing:.06em;'
     + 'color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(6,14,26,.7)}'
-    + '.card.pbg:not(.open) .gal .tier{top:10px;bottom:auto;inset-inline-start:10px}'
     /* One shadow, soft and short — enough to lift the type off a busy picture,
        not enough to be seen as an effect. */
     + '.card.pbg:not(.open) .chead,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .why'
@@ -343,15 +342,22 @@
        selector; it stayed navy on the photograph before this. */
     /* the price band leaves the sentence: on a phone it wrapped onto a line of
        its own and sat there orphaned. Same glass as the photo controls. */
-    /* exactly one of the two is ever visible */
-    + '.bprice.corner{display:none}'
+    /* exactly one of each pair is ever visible */
+    + '.topbar{display:none}'
     + '.card.pbg:not(.open) .brief .bprice,.card.pbg:not(.open) .brief .bsep{display:none}'
-    /* the top END corner, which is the only one with nothing in it — the place
-       and the name both start at the top start */
-    + '.card.pbg:not(.open) > .bprice.corner{display:block;position:absolute;top:12px;inset-inline-end:12px;'
-    + 'font-size:11px;font-weight:600;letter-spacing:.08em;color:#fff;padding:3px 9px;border-radius:999px;'
-    + 'background:rgba(10,20,34,.42);border:1px solid rgba(255,255,255,.26);backdrop-filter:blur(6px);'
-    + 'text-shadow:none;z-index:3}'
+    + '.card.pbg:not(.open) .gal .tier{display:none}'
+    /* the top END corner, the only one with nothing in it — the resort and the
+       hotel name both start at the top start. No direction:ltr here: the
+       property resolves against the ELEMENT's own direction, so setting it
+       moved the whole cluster to the other corner, on top of the resort. */
+    + '.card.pbg:not(.open) > .topbar{display:flex;gap:6px;align-items:center;'
+    + 'position:absolute;top:12px;inset-inline-end:12px;z-index:3}'
+    + '.card.pbg:not(.open) .topbar .bprice{font-size:11px;font-weight:600;letter-spacing:.08em;color:#fff;'
+    + 'padding:3px 9px;border-radius:999px;background:rgba(10,20,34,.42);'
+    + 'border:1px solid rgba(255,255,255,.26);backdrop-filter:blur(6px);text-shadow:none}'
+    + '.card.pbg:not(.open) .topbar .tier{position:static;font-size:11px;font-weight:600;letter-spacing:.04em;'
+    + 'padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.9);color:' + THEME.primaryDark + ';'
+    + 'border:1px solid rgba(255,255,255,.35);text-transform:none;box-shadow:none;white-space:nowrap}'
     + '.card.pbg:not(.open) .dtog{color:rgba(255,255,255,.78);font-size:12px;font-weight:500;letter-spacing:.03em}'
     + '.card.pbg:not(.open) .dtog:hover{color:#fff;text-decoration:none}'
     /* no panel around the reason: a translucent box over a picture reads as an
@@ -376,11 +382,11 @@
     // 112px: three cards with their date, room, price and both buttons fit a
     // laptop screen without scrolling — the photo is the first thing to give
     + '.card .photo{width:100%;height:72px;object-fit:cover;display:block;transition:height .18s ease}'
-    + '.card.open .photo{height:132px}'
+    + '.card.open .photo{height:92px}'
     + '.card .gal .tier{position:absolute;top:8px;inset-inline-start:8px;box-shadow:0 1px 4px rgba(0,0,0,.25)}'
     // everything that is nice to know but not needed to choose lives behind one toggle
     + '.card .details{display:none;flex-direction:column;gap:6px}'
-    + '.card.open .details{display:flex}'
+    + '.card.open .details{display:flex;gap:5px}'
     // Closed, a card shows only what helps to CHOOSE between three of them:
     // the hotel, where it is, one line of when/what, and the button. Everything
     // else is one click away. Three cards used to be 807px — two mobile screens
@@ -428,7 +434,7 @@
     + '.card .rline .rval{font-weight:500;font-size:13px}'
     + '.card .rnote{font-size:12px;color:' + THEME.textLight + ';padding-top:2px}'
 
-    + '.card .inc{background:#f2f6f9;border:1px solid #e0e9f0;border-radius:9px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}'
+    + '.card .inc{background:#f2f6f9;border:1px solid #e0e9f0;border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}'
     + '.card .ilab{font-size:12px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.2px}'
     + '.card .itxt{font-size:13px;color:' + THEME.text + ';line-height:1.55}'
     + '.card .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'
@@ -873,8 +879,15 @@
       // and an absolute badge inside it positioned against the line instead.
       brief.appendChild(el('span', 'sep bsep', '·'));
       brief.appendChild(el('span', 'bprice', c.price_range));
-      card.appendChild(el('span', 'bprice corner', c.price_range));
     }
+    // The badges live together in the one corner the card has free. The tier
+    // used to sit at the top start, straight on top of the resort and the
+    // hotel name (Tomer, 26/08). Always built, shown by CSS only on a photo
+    // card — deciding in JS breaks when a failed photo flips the card back.
+    var topbar = el('div', 'topbar');
+    if (c.tier_he) topbar.appendChild(el('span', 'tag tier', c.tier_he));
+    if (c.price_range) topbar.appendChild(el('span', 'bprice corner', c.price_range));
+    if (topbar.childNodes.length) card.appendChild(topbar);
     card.appendChild(brief);
 
     var rows = el('div', 'rows');
@@ -959,6 +972,25 @@
       dtog.textContent = open ? 'פחות ▴' : 'פרטים ▾';
       dtog.setAttribute('aria-expanded', String(open));
       track('card_expand', { hotel: c.hotel, open: open, cid: cid() });
+      // Opening a card adds a screenful of text below the fold, and the
+      // customer had to scroll to read what they just asked for (Tomer,
+      // 26/08). Bring the card to the top of the panel instead — the details
+      // are then the first thing under their thumb, not the last.
+      if (!open) return;
+      try {
+        var pane = card.closest ? card.closest('.msgs') : null;
+        if (!pane) return;
+        // after the layout settles, or we scroll to where the card used to end
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            var cb = card.getBoundingClientRect(), pb = pane.getBoundingClientRect();
+            // a card taller than the panel gives up its top margin so that as
+            // much of the detail as possible lands above the fold
+            var pad = (cb.height + 12) > pb.height ? 4 : 12;
+            pane.scrollTo({ top: pane.scrollTop + (cb.top - pb.top) - pad, behavior: 'smooth' });
+          });
+        });
+      } catch (e) { /* a card that will not scroll is still a card that opened */ }
     });
     card.appendChild(dtog);
     if (details.childNodes.length) card.appendChild(details);

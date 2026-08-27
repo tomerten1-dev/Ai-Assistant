@@ -230,6 +230,72 @@ function startServer() {
       });
     }
 
+    // ── The badges, and the card you just opened ──────────────────────────
+    {
+      const pic = require('fs').readFileSync(require('path').join(__dirname, 'fixtures', 'stand-in.jpg'));
+      for (const vp of [{ w: 430, h: 920, name: 'מובייל 430×920' },
+                        { w: 1366, h: 768, name: 'לפטופ 1366×768' }]) {
+        const p4 = await browser.newPage({ viewport: { width: vp.w, height: vp.h } });
+        let m = null;
+        try {
+          await p4.route('**pingwin.co.il/**', r => (/thumbMini|\.jpe?g|\.png/i.test(r.request().url())
+            ? r.fulfill({ status: 200, contentType: 'image/jpeg', body: pic }) : r.continue()));
+          await p4.goto(URL + '?pwreset=1');
+          await p4.waitForTimeout(500);
+          await p4.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+          await p4.waitForTimeout(400);
+          // this query is the one that produces a tier badge and a "last room"
+          await p4.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+            ta.value = '2 מבוגרים בפברואר'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+            r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
+          await p4.waitForTimeout(3500);
+          const badges = await p4.evaluate(`(() => { const r = ${SHADOW};
+            const c = [...r.querySelectorAll('.card')].find(x => x.querySelector('.topbar .tier'));
+            if (!c) return null;
+            const bar = c.querySelector('.topbar').getBoundingClientRect();
+            // the TEXT, not the boxes: .chead stretches the full card width, and
+            // .cwhere reserves room for the badges as inline-end padding, so
+            // comparing boxes would report an overlap that is not there
+            const hit = el => {
+              const r = el.getBoundingClientRect(), st = getComputedStyle(el);
+              const l = r.left + parseFloat(st.paddingLeft || 0);
+              const rt = r.right - parseFloat(st.paddingRight || 0);
+              if (r.bottom < bar.top || r.top > bar.bottom) return 0;   // different rows
+              return Math.round(Math.min(bar.right, rt) - Math.max(bar.left, l));
+            };
+            return { tier: !!c.querySelector('.topbar .tier'), price: !!c.querySelector('.topbar .bprice'),
+              onName: hit(c.querySelector('.hname')), onWhere: hit(c.querySelector('.cwhere')),
+              galTier: getComputedStyle(c.querySelector('.gal .tier')).display }; })()`);
+          // open the LAST card — the one furthest down, the worst case
+          await p4.evaluate(`(() => { const r = ${SHADOW}; const t = [...r.querySelectorAll('.card .dtog')];
+            t[t.length - 1].click(); })()`);
+          await p4.waitForTimeout(1200);
+          const opened = await p4.evaluate(`(() => { const r = ${SHADOW};
+            const pane = r.querySelector('.msgs'), c = [...r.querySelectorAll('.card')].pop();
+            const pb = pane.getBoundingClientRect(), cb = c.getBoundingClientRect();
+            return { cardH: Math.round(cb.height), paneH: Math.round(pb.height),
+              above: Math.round(pb.top - cb.top), below: Math.round(cb.bottom - pb.bottom),
+              detail: !!c.querySelector('.details') && getComputedStyle(c.querySelector('.details')).display }; })()`);
+          m = { badges, opened };
+        } finally { await p4.close(); }
+
+        t(`${vp.name}: התג והמחיר יושבים יחד בפינה, לא על הכותרת`, () => {
+          assert.ok(m.badges, 'no card with a tier badge — the fixture stopped producing one');
+          assert.ok(m.badges.tier && m.badges.price, 'the two badges are not in one cluster');
+          assert.ok(m.badges.onName <= 0, 'the badges cover the hotel name by ' + m.badges.onName + 'px');
+          assert.ok(m.badges.onWhere <= 0, 'the badges cover the resort by ' + m.badges.onWhere + 'px');
+          assert.strictEqual(m.badges.galTier, 'none', 'the tier is drawn twice');
+        });
+        t(`${vp.name}: כרטיס שנפתח נראה כולו, בלי לגלול`, () => {
+          assert.strictEqual(m.opened.detail, 'flex', 'the card did not open');
+          assert.ok(m.opened.below <= 0,
+            m.opened.below + 'px של הכרטיס מתחת לקיפול (כרטיס ' + m.opened.cardH +
+            'px, אזור ' + m.opened.paneH + 'px)');
+          assert.ok(m.opened.above <= 0, 'the top of the card is above the fold');
+        });
+      }
+    }
+
     // ── How much scrolling one answer costs ──────────────────────────────
     // Tomer, 26/08: "הבוט לא נוח מבחינה ui צריך לגלול הרבה". Measured then:
     // a single answer with three offers was 1.95 screens on a phone and 1.31
