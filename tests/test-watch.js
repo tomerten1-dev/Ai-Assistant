@@ -151,9 +151,47 @@ const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); }
       fs.rmSync(dir, { recursive: true, force: true });
     }
   } finally {
-    w.kill(); srv.close();
+    w.kill();
     try { fs.unlinkSync(copy); } catch (e) { /* gone already */ }
   }
+  /* ── pointed at the ROOT of a share ──────────────────────────────────────
+     Which is what actually gets typed. The workbook sits in a Hebrew-named
+     folder inside it, and a Hebrew path typed into a Windows console does not
+     survive the code page — so being told the root and finding the rest is the
+     difference between this working and not. */
+  {
+    const share = fs.mkdtempSync(path.join(os.tmpdir(), 'share-'));
+    const deep = path.join(share, 'מלאי', 'חורף 2027');
+    fs.mkdirSync(deep, { recursive: true });
+    fs.mkdirSync(path.join(share, 'חשבונות'));
+    fs.mkdirSync(path.join(share, 'תמונות', '2026'), { recursive: true });
+    fs.copyFileSync(WB, path.join(deep, 'טבלת התחייבויות חדרים חורף 2027.xlsm'));
+    fs.writeFileSync(path.join(deep, '~$טבלת התחייבויות חדרים חורף 2027.xlsm'), 'lock');
+    fs.writeFileSync(path.join(share, 'חשבונות', 'קטן.xlsx'), 'x');   // too small to be a season
+
+    const n0 = pushes.length;
+    const w3 = spawn(process.execPath, [path.join(__dirname, '..', 'tools', 'watch-inventory.js'), share], {
+      env: { ...process.env, PINGWIN_BOT_URL: `http://127.0.0.1:${PORT}`, PINGWIN_WATCH_SECONDS: '2' },
+      stdio: ['ignore', 'pipe', 'pipe'] });
+    let log3 = '';
+    w3.stdout.on('data', d => { log3 += d; }); w3.stderr.on('data', d => { log3 += d; });
+    try {
+      await waitFor(n0 + 1, 25000);
+      t('given only the share it finds the workbook, folders down and in Hebrew', () => {
+        assert.ok(pushes.length > n0, log3);
+        assert.ok(/נמצא בתוך/.test(log3), 'did not say where it found it: ' + log3);
+        assert.ok(/טבלת התחייבויות חדרים חורף 2027\.xlsm/.test(log3), log3);
+        assert.ok(pushes[pushes.length - 1].units.length > 500);
+      });
+      t('and does not mistake a 1-byte xlsx for the season', () => {
+        assert.ok(!/קטן\.xlsx/.test(log3), log3);
+      });
+    } finally {
+      w3.kill();
+      fs.rmSync(share, { recursive: true, force: true });
+    }
+  }
+
   // ── the two failures that look identical and are not ──
   {
     const run = target => new Promise(ok => {
@@ -174,7 +212,7 @@ const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); }
       assert.strictEqual(missing.code, 1);
       assert.ok(/הנתיב לא קיים/.test(missing.out), missing.out);
       assert.strictEqual(noBook.code, 1);
-      assert.ok(/לא נמצא בנתיב הזה קובץ אקסל/.test(noBook.out), noBook.out);
+      assert.ok(/לא נמצא קובץ אקסל/.test(noBook.out), noBook.out);
       assert.ok(!/הנתיב לא קיים/.test(noBook.out), 'told him the path was wrong when it was not');
     });
     t('and both say what to type instead', () => {
@@ -182,6 +220,7 @@ const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); }
     });
   }
 
+  srv.close();
   console.log(`watch: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();

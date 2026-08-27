@@ -37,6 +37,12 @@ const { parseInventory, stats } = require('../data/inventory.js');
 const { toAvailability } = require('./../data/aggregate.js');
 const gate = require('../data/pii-gate.js');
 
+/* The console this prints into is a Windows one, and its default code page is
+   not UTF-8 — so every Hebrew line here, and every Hebrew file name, arrives as
+   gibberish. Node writes UTF-8 regardless; it is the window that has to be told. */
+if (process.platform === 'win32') {
+  try { require('child_process').execSync('chcp 65001', { stdio: 'ignore' }); } catch (e) { /* older shell */ }
+}
 const clock = () => new Date().toLocaleTimeString('he-IL', { hour12: false });
 const say = (...a) => console.log(clock(), ...a);
 
@@ -68,26 +74,71 @@ function explain(e) {
   }
   return (e && e.message) || String(e);
 }
+const DEPTH = Number(process.env.PINGWIN_WATCH_DEPTH || 3);
+
+// the newest real workbook directly inside one folder
+function bestIn(dir) {
+  let best = null, bestAt = -1, names;
+  try { names = fs.readdirSync(dir); }
+  catch (e) { lastError = explain(e); return null; }
+  for (const name of names) {
+    if (LOCK.test(name) || !BOOK.test(name)) continue;
+    const full = path.join(dir, name);
+    let s2;
+    try { s2 = fs.statSync(full); } catch (e) { continue; }
+    // an Excel lock file is a few hundred bytes; so is a stub left behind
+    if (!s2.isFile() || s2.size < 20000) continue;
+    if (s2.mtimeMs > bestAt) { bestAt = s2.mtimeMs; best = full; }
+  }
+  return best;
+}
+
+/* Given the root of a share, look inside it.
+   The folder is named in Hebrew, and a Hebrew path typed into a Windows console
+   does not survive the code page — so finding the file rather than being told
+   where it is is not a convenience here, it is the difference between working
+   and not. Bounded, and only until something is found: after that one folder is
+   watched, once a minute, which is a single stat over the network. */
+let searched = null;
+function findAnywhere(root, depth) {
+  const here = bestIn(root);
+  if (here) return here;
+  if (depth <= 0) return null;
+  let names;
+  try { names = fs.readdirSync(root, { withFileTypes: true }); } catch (e) { return null; }
+  let best = null, bestAt = -1;
+  for (const d of names) {
+    if (!d.isDirectory() || d.name.startsWith('.') || d.name.startsWith('$')) continue;
+    const hit = findAnywhere(path.join(root, d.name), depth - 1);
+    if (!hit) continue;
+    let s2; try { s2 = fs.statSync(hit); } catch (e) { continue; }
+    if (s2.mtimeMs > bestAt) { bestAt = s2.mtimeMs; best = hit; }
+  }
+  return best;
+}
+
 function pick() {
   let st;
   try { st = fs.statSync(TARGET); lastError = null; }
   catch (e) { lastError = explain(e); return null; }
   if (st.isFile()) return TARGET;
-  let best = null, bestAt = -1;
-  let names;
-  try { names = fs.readdirSync(TARGET); }
-  catch (e) { lastError = explain(e); return null; }
-  for (const name of names) {
-    if (LOCK.test(name) || !BOOK.test(name)) continue;
-    const full = path.join(TARGET, name);
-    let s2;
-    try { s2 = fs.statSync(full); } catch (e) { continue; }
-    if (!s2.isFile()) continue;
-    // an Excel lock file is tiny; so is a stub someone left behind
-    if (s2.size < 20000) continue;
-    if (s2.mtimeMs > bestAt) { bestAt = s2.mtimeMs; best = full; }
+  // the folder we settled on last time, while it still holds a workbook
+  if (searched) {
+    const again = bestIn(searched);
+    if (again) return again;
   }
-  return best;
+  const found = findAnywhere(TARGET, DEPTH);
+  if (found) {
+    const dir = path.dirname(found);
+    if (dir !== searched) {
+      searched = dir;
+      if (dir !== TARGET) say('נמצא בתוך:', dir);
+    }
+  }
+  if (!found && !lastError) {
+    lastError = 'לא נמצא קובץ אקסל (xlsx/xlsm) גדול מ-20KB בנתיב הזה ולא בתת-תיקיות (' + DEPTH + ' רמות)';
+  }
+  return found;
 }
 
 let WB = null;
