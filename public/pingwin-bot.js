@@ -192,7 +192,7 @@
     + '.fab .av{width:50px;height:50px;border-radius:14px;flex:none;position:relative;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}'
     + '.fab .av img{width:44px;height:44px;display:block;object-fit:contain}'
     // נקודה אדומה בלי מספר: "יש כאן משהו". נעלמת ברגע שפותחים, וחוזרת בביקור הבא
-    + '.fab .dot{position:absolute;top:-4px;inset-inline-end:-4px;width:14px;height:14px;border-radius:50%;background:#e0392b;box-shadow:0 0 0 3px ' + THEME.primary + '}'
+    + '.fab .dot{position:absolute;top:-4px;inset-inline-end:-4px;width:14px;height:14px;border-radius:50%;background:#e0392b;box-shadow:0 0 0 2px #fff}'
     + '.fab .dot::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:#e0392b;opacity:.5;animation:pwPing 2.4s ease-out infinite}'
     + '.fab.seen .dot{display:none}'
     + '@keyframes pwPing{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(2.3);opacity:0}}'
@@ -212,7 +212,8 @@
     + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
     + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
-    + '.win.open{display:flex}'
+    + '.win.open{display:flex;animation:pwWin .22s cubic-bezier(.05,.7,.1,1);transform-origin:bottom ' + THEME.position + '}'
+    + '@keyframes pwWin{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
     + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 92px);height:calc(100dvh - 92px)}'
     + '.win.max{width:calc(100vw - 32px);height:calc(100vh - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
@@ -313,7 +314,7 @@
        thing telling you there are more photographs */
     + '.card.pbg:not(.open) .gal .galn{opacity:1;bottom:18px;top:auto;inset-inline-end:45px;inset-inline-start:auto;'
     + 'transform:none;background:none;padding:0;font-size:11px;font-weight:500;letter-spacing:.06em;'
-    + 'color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(6,14,26,.7)}'
+    + 'color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(6,14,26,.7)}'
     /* One shadow, soft and short — enough to lift the type off a busy picture,
        not enough to be seen as an effect. */
     + '.card.pbg:not(.open) .chead,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .why'
@@ -324,7 +325,7 @@
     /* only the place line makes room for the badge — the hotel name gets the
        full width, or a long one wraps and the card grows for nothing */
     + '.card.pbg:not(.open) .cwhere{order:-1;font-size:11px;font-weight:600;letter-spacing:.09em;'
-    + 'text-transform:uppercase;color:rgba(255,255,255,.66);padding-inline-end:58px;line-height:1.35}'
+    + 'color:rgba(255,255,255,.78);padding-inline-end:58px;line-height:1.35}'
     + '.card.pbg:not(.open) .hname{font-size:19px;font-weight:600;line-height:1.18;'
     + 'letter-spacing:-.012em;color:#fff}'
     /* a short rule between the name and the facts — the oldest way to say
@@ -362,7 +363,7 @@
     + '.card.pbg:not(.open) .dtog:hover{color:#fff;text-decoration:none}'
     /* no panel around the reason: a translucent box over a picture reads as an
        empty grey bar, and the scrim already carries the text */
-    + '.card.pbg:not(.open) .why{background:none;color:rgba(255,255,255,.62);padding:2px 0;font-size:12px;line-height:1.45}'
+    + '.card.pbg:not(.open) .why{background:none;color:rgba(255,255,255,.8);padding:2px 0;font-size:12px;line-height:1.45}'
     + '.card.pbg:not(.open) .tag{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.24);'
     + 'font-size:11px;font-weight:600;letter-spacing:.05em;padding:3px 8px}'
     + '.card.pbg:not(.open) .tag.rec{background:rgba(255,255,255,.92);color:' + THEME.primaryDark + '}'
@@ -451,7 +452,6 @@
     + '.m.bot.wave{padding-inline-start:74px;min-height:64px}'
     + '.m.bot.wave::before{width:64px;height:64px;border-radius:16px;top:-6px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/60px 60px no-repeat}'
     + '.ts{display:block;font-size:10.5px;line-height:1.4;color:' + THEME.textLight + ';opacity:.75;margin-top:3px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}'
-    + '.m.user .ts{color:rgba(255,255,255,.75)}'
     + '.m.after .ts,.m.wave .ts{display:none}'
     + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
     + '.m.bot.after::before{display:none}'
@@ -497,13 +497,13 @@
     + 'padding:5px;padding-inline:12px 6px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
     + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
     + '.inp textarea{flex:1;border:none;background:none;padding:9px 4px;font-size:15px;font-family:inherit;direction:rtl;'
-    + 'resize:none;overflow-y:auto;line-height:1.5;max-height:110px;min-height:32px;color:' + THEME.text + '}'
+    + 'resize:none;overflow-y:auto;line-height:1.5;max-height:96px;min-height:32px;color:' + THEME.text + '}'
     + '.inp textarea:focus{outline:none}'
-    + '.inp .box:focus-within{outline:3px solid ' + THEME.primaryDark + ';outline-offset:1px}'
     + '.send:hover:not(:disabled){filter:brightness(1.1)}'
     + '.send{background:' + THEME.grad + ';border:none;color:#fff;border-radius:12px;width:44px;height:44px;flex:none;'
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
     + '.send:disabled{opacity:.5;cursor:default}'
+    + '.form .ftitle{font-size:15px;font-weight:700;color:' + THEME.text + ';line-height:1.35}'
     + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
     + '.form label{font-size:12.5px;color:' + THEME.textLight + '}'
     + '.form input{border:1.5px solid #cfdae4;border-radius:9px;padding:8px 12px;font-size:14px;font-family:inherit;direction:rtl}'
@@ -519,7 +519,7 @@
     if (!document.querySelector('link[data-pw-font]')) {
       var fl = document.createElement('link');
       fl.rel = 'stylesheet'; fl.setAttribute('data-pw-font', '');
-      fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap';
+      fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&display=swap';
       document.head.appendChild(fl);
     }
   } catch (e) { }
@@ -624,7 +624,6 @@
   input.addEventListener('input', function () {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 96) + 'px';
-    if (input.value.length > 0) win.classList.add('big');
   });
   var send = el('button', 'send');
   send.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
@@ -1114,10 +1113,10 @@
     var f = document.createElement('form'); f.className = 'form';
     f.setAttribute('novalidate', '');
     if (card) {
-      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + iso(card.hotel)));
+      f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם על: ' + iso(card.hotel)));
       f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
     } else {
-      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם'));
+      f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם'));
       f.appendChild(el('div', 'note', 'השאירו שם וטלפון ונציג פינגווין יחזור אליכם.'));
     }
     var leadKind = opts.kind || (state.slots && state.slots._lead_kind) || 'customer';
