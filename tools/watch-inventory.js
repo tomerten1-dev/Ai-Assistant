@@ -102,8 +102,14 @@ async function settled() {
 
 async function push(out) {
   if (!URL_) {
-    fs.writeFileSync(path.join(ROOT, 'data', 'availability.json'), JSON.stringify(out, null, 1));
-    say('נכתב מקומית: data/availability.json');
+    // written to a neighbour and renamed: the bot re-reads this file whenever
+    // it changes, and reading it half-written is the one way this could take
+    // the search down for a moment
+    const dest = path.join(ROOT, 'data', 'availability.json');
+    const tmp = dest + '.' + process.pid + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(out, null, 1));
+    fs.renameSync(tmp, dest);
+    say('נכתב מקומית: data/availability.json — הבוט יקלוט את זה מיד');
     return true;
   }
   const res = await fetch(URL_ + '/api/inventory', {
