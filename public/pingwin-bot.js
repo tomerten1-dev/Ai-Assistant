@@ -284,10 +284,11 @@
     + 'color:#fff;padding-bottom:48px}'
     + '.card.pbg:not(.open) .dtog{position:absolute;bottom:15px;inset-inline-start:14px;margin:0;z-index:3}'
     + '.card.pbg:not(.open)::before{content:"";position:absolute;inset:0;pointer-events:none;'
-    /* A ski photograph is mostly snow and sky, so the floor has to be set by
-       the scrim rather than hoped for from the picture. */
-    + 'background:linear-gradient(180deg,rgba(9,20,35,.34) 0%,rgba(9,20,35,.16) 26%,'
-    + 'rgba(9,20,35,.62) 58%,rgba(9,20,35,.88) 82%,rgba(9,20,35,.95) 100%)}'
+    /* A ski photograph is mostly snow and sky, so the contrast is the scrim's
+       job, not the picture's — and once the scrim really carries it, the type
+       needs no outline. Outlined white text is what made this look homemade. */
+    + 'background:linear-gradient(to top,rgba(6,14,26,.95) 0%,rgba(6,14,26,.90) 30%,'
+    + 'rgba(6,14,26,.62) 52%,rgba(6,14,26,.24) 72%,rgba(6,14,26,.10) 86%,rgba(6,14,26,.30) 100%)}'
     + '.card.pbg:not(.open) > *{position:relative;z-index:1}'
     /* the hotel's other photographs, over the whole card instead of inside a
        strip at the top of it */
@@ -300,41 +301,72 @@
        Centred, they sat on the room name; at the top, on the hotel name. The
        one corner with nothing in it is the bottom end — "פרטים" is at the
        bottom start — so they cluster there as ‹ 3/12 ›. */
-    + '.card.pbg:not(.open) .galb{opacity:1;top:auto;bottom:7px;transform:none;width:34px;height:34px;'
-    + 'background:rgba(255,255,255,.9);color:#16283d;box-shadow:0 1px 5px rgba(9,20,35,.4)}'
-    + '.card.pbg:not(.open) .galb:hover{background:#fff}'
-    + '.card.pbg:not(.open) .galb.next{inset-inline-end:8px;inset-inline-start:auto}'
-    + '.card.pbg:not(.open) .galb.prev{inset-inline-end:84px;inset-inline-start:auto}'
+    /* Glass, not white bubbles: at this size a solid white circle is the single
+       most toy-like thing on the card. */
+    + '.card.pbg:not(.open) .galb{opacity:1;top:auto;bottom:10px;transform:none;width:29px;height:29px;'
+    + 'background:rgba(10,20,34,.42);color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.28);'
+    + 'box-shadow:none;backdrop-filter:blur(6px)}'
+    + '.card.pbg:not(.open) .galb:hover{background:rgba(10,20,34,.72);border-color:rgba(255,255,255,.5)}'
+    + '.card.pbg:not(.open) .galb.next{inset-inline-end:12px;inset-inline-start:auto}'
+    + '.card.pbg:not(.open) .galb.prev{inset-inline-end:82px;inset-inline-start:auto}'
     /* .card:not(.open) .galn is hidden on the plain card — here it is the only
        thing telling you there are more photographs */
-    + '.card.pbg:not(.open) .gal .galn{opacity:1;bottom:17px;top:auto;inset-inline-end:46px;inset-inline-start:auto;'
-    + 'transform:none;background:rgba(9,20,35,.72);font-variant-numeric:tabular-nums}'
+    + '.card.pbg:not(.open) .gal .galn{opacity:1;bottom:18px;top:auto;inset-inline-end:45px;inset-inline-start:auto;'
+    + 'transform:none;background:none;padding:0;font-size:11px;font-weight:500;letter-spacing:.06em;'
+    + 'color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(6,14,26,.7)}'
     + '.card.pbg:not(.open) .gal .tier{top:10px;bottom:auto;inset-inline-start:10px}'
-    /* An outline, drawn as four hard shadows plus two soft ones. -webkit-text
-       -stroke paints the stroke OVER the glyph and thins it; this does not, and
-       it works in every browser we care about. */
-    + '.card.pbg:not(.open) .hname,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .brief b,'
-    + '.card.pbg:not(.open) .cwhere,.card.pbg:not(.open) .why,.card.pbg:not(.open) .dtog'
-    + '{text-shadow:1px 1px 0 rgba(9,20,35,.55),-1px 1px 0 rgba(9,20,35,.55),'
-    + '1px -1px 0 rgba(9,20,35,.55),-1px -1px 0 rgba(9,20,35,.55),'
-    + '0 1px 3px rgba(9,20,35,.95),0 0 10px rgba(9,20,35,.7)}'
-    + '.card.pbg:not(.open) .hname,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .brief b{color:#fff}'
-    + '.card.pbg:not(.open) .cwhere{color:rgba(255,255,255,.92)}'
-    + '.card.pbg:not(.open) .brief .sep{color:rgba(255,255,255,.45)}'
-    /* .card .brief .bprice outranks .card.pbg .bprice, so the price band stayed
-       navy — unreadable against the photograph */
-    + '.card.pbg:not(.open) .brief .bprice{color:#9fd4ff}'
-    + '.card.pbg:not(.open) .dtog{color:#fff;opacity:.9}'
+    /* One shadow, soft and short — enough to lift the type off a busy picture,
+       not enough to be seen as an effect. */
+    + '.card.pbg:not(.open) .chead,.card.pbg:not(.open) .brief,.card.pbg:not(.open) .why'
+    + '{text-shadow:0 1px 3px rgba(6,14,26,.55)}'
+    /* the place first and small, then the name — the order a hotel's own
+       material uses, and the one that reads as a masthead and not a label */
+    + '.card.pbg:not(.open) .chead{flex-direction:column;align-items:flex-start;gap:1px}'
+    /* only the place line makes room for the badge — the hotel name gets the
+       full width, or a long one wraps and the card grows for nothing */
+    + '.card.pbg:not(.open) .cwhere{order:-1;font-size:11px;font-weight:600;letter-spacing:.09em;'
+    + 'text-transform:uppercase;color:rgba(255,255,255,.66);padding-inline-end:58px;line-height:1.35}'
+    + '.card.pbg:not(.open) .hname{font-size:19px;font-weight:600;line-height:1.18;'
+    + 'letter-spacing:-.012em;color:#fff}'
+    /* a short rule between the name and the facts — the oldest way to say
+       "the heading ends here" without adding another weight or colour */
+    /* A short rule, not a divider across the card. The pseudo has to be a
+       full-width flex row to break the line at all, so the length comes from
+       the gradient instead of from its width. */
+    + '.card.pbg:not(.open) .brief::before{content:"";flex-basis:100%;height:1px;margin:7px 0 2px;'
+    + 'background:linear-gradient(to left,rgba(255,255,255,.34) 0 26px,transparent 26px)}'
+    + '.card.pbg:not(.open) .brief{font-size:12.5px;gap:3px 7px;color:rgba(255,255,255,.9)}'
+    + '.card.pbg:not(.open) .brief b{font-weight:600;color:#fff}'
+    + '.card.pbg:not(.open) .brief .sep{color:rgba(255,255,255,.34)}'
+    /* the price band is information, not an accent — one weight up, no colour.
+       .card .brief .bprice outranks .card.pbg .bprice, hence the longer
+       selector; it stayed navy on the photograph before this. */
+    /* the price band leaves the sentence: on a phone it wrapped onto a line of
+       its own and sat there orphaned. Same glass as the photo controls. */
+    /* exactly one of the two is ever visible */
+    + '.bprice.corner{display:none}'
+    + '.card.pbg:not(.open) .brief .bprice,.card.pbg:not(.open) .brief .bsep{display:none}'
+    /* the top END corner, which is the only one with nothing in it — the place
+       and the name both start at the top start */
+    + '.card.pbg:not(.open) > .bprice.corner{display:block;position:absolute;top:12px;inset-inline-end:12px;'
+    + 'font-size:11px;font-weight:600;letter-spacing:.08em;color:#fff;padding:3px 9px;border-radius:999px;'
+    + 'background:rgba(10,20,34,.42);border:1px solid rgba(255,255,255,.26);backdrop-filter:blur(6px);'
+    + 'text-shadow:none;z-index:3}'
+    + '.card.pbg:not(.open) .dtog{color:rgba(255,255,255,.78);font-size:12px;font-weight:500;letter-spacing:.03em}'
+    + '.card.pbg:not(.open) .dtog:hover{color:#fff;text-decoration:none}'
     /* no panel around the reason: a translucent box over a picture reads as an
        empty grey bar, and the scrim already carries the text */
-    + '.card.pbg:not(.open) .why{background:none;color:#fff;padding:2px 0}'
-    + '.card.pbg:not(.open) .tag{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.25)}'
+    + '.card.pbg:not(.open) .why{background:none;color:rgba(255,255,255,.62);padding:2px 0;font-size:12px;line-height:1.45}'
+    + '.card.pbg:not(.open) .tag{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.24);'
+    + 'font-size:11px;font-weight:600;letter-spacing:.05em;padding:3px 8px}'
     + '.card.pbg:not(.open) .tag.rec{background:rgba(255,255,255,.92);color:' + THEME.primaryDark + '}'
     /* the buttons carry their own contrast — they must never depend on the
-       photograph behind them */
-    + '.card.pbg:not(.open) .btn.sec{background:rgba(9,20,35,.55);color:#fff;'
-    + 'border-color:rgba(255,255,255,.8);backdrop-filter:blur(3px)}'
-    + '.card.pbg:not(.open) .btn.pri{box-shadow:0 2px 10px rgba(9,20,35,.5)}'
+       photograph behind them. One filled, one outlined; a 1px border, not 1.5. */
+    + '.card.pbg:not(.open) .btn{font-weight:600;letter-spacing:.01em}'
+    + '.card.pbg:not(.open) .btn.sec{background:rgba(10,20,34,.34);color:#fff;'
+    + 'border:1px solid rgba(255,255,255,.46);backdrop-filter:blur(6px)}'
+    + '.card.pbg:not(.open) .btn.sec:hover{background:rgba(10,20,34,.6);border-color:rgba(255,255,255,.75)}'
+    + '.card.pbg:not(.open) .btn.pri{box-shadow:0 2px 12px rgba(6,14,26,.45)}'
     + '.card.pbg:hover{box-shadow:0 14px 30px rgba(9,20,35,.28)}'
     + '.card.pbg.open{background-image:none!important;border-color:#e1e8ef}'
     // gallery: the photo fills the top of the card, arrows sit on it
@@ -831,8 +863,17 @@
       brief.appendChild(el('span', '', c.room));
     }
     if (c.price_range) {
-      brief.appendChild(el('span', 'sep', '·'));
+      // Both are drawn and CSS shows one: inline in the sentence on the white
+      // card, a badge in the corner on the photo card. Deciding here in JS was
+      // wrong — a photo that fails to load flips the card back to white AFTER
+      // this runs, and the badge stayed, in the flow, 19px tall.
+      //
+      // The badge is a direct child of the card because
+      // `.card.pbg > *{position:relative}` makes this line a containing block,
+      // and an absolute badge inside it positioned against the line instead.
+      brief.appendChild(el('span', 'sep bsep', '·'));
       brief.appendChild(el('span', 'bprice', c.price_range));
+      card.appendChild(el('span', 'bprice corner', c.price_range));
     }
     card.appendChild(brief);
 

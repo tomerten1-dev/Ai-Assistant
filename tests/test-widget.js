@@ -192,7 +192,11 @@ function startServer() {
           return { pbg: c.classList.contains('pbg'), bg: c.style.backgroundImage,
             counter: n && n.textContent, counterShown: n && getComputedStyle(n).opacity !== '0',
             arrowShown: b && getComputedStyle(b).opacity !== '0',
-            nameColour: st.color, outline: st.textShadow.split('rgba').length - 1 }; })()`;
+            nameColour: st.color,
+            // the scrim is what makes white text legible on a snow photograph;
+            // the type carries one soft shadow, not an outline
+            scrim: getComputedStyle(c, '::before').backgroundImage,
+            shadowLayers: st.textShadow.split('rgba').length - 1 }; })()`;
         m = await p3.evaluate(read);
         await p3.evaluate(`${SHADOW}.querySelector('.card .galb.next').click()`);
         await p3.waitForTimeout(400);
@@ -210,10 +214,19 @@ function startServer() {
         assert.ok(/^2\//.test(after.counter || ''), 'the arrow did not page: ' + after.counter);
         assert.notStrictEqual(after.bg, m.bg, 'the card kept the same photograph');
       });
-      t('white text on a photograph carries its own outline', () => {
+      t('white text sits on a scrim dark enough to carry it', () => {
         assert.strictEqual(m.nameColour, 'rgb(255, 255, 255)');
-        // four hard shadows for the outline, two soft ones for the lift
-        assert.ok(m.outline >= 5, 'only ' + m.outline + ' shadow layers — a snow photo will swallow it');
+        // Contrast is the scrim's job. Outlined text reads as homemade
+        // (Tomer, 26/08: "שהכיתוב ייראה מקצועי ולא ילדותי"), so the type keeps
+        // one soft shadow and the gradient has to do the rest — its darkest
+        // stop must be nearly opaque or a snow photograph swallows the text.
+        const alphas = (m.scrim.match(/rgba\([^)]*\)/g) || [])
+          .map(c => Number(c.split(',').pop().replace(')', '')));
+        assert.ok(alphas.length >= 3, 'no gradient scrim at all: ' + m.scrim);
+        assert.ok(Math.max(...alphas) >= 0.88,
+          'the darkest point of the scrim is only ' + Math.max(...alphas));
+        assert.ok(m.shadowLayers >= 1 && m.shadowLayers <= 2,
+          m.shadowLayers + ' shadow layers on the hotel name — that is an outline, not a lift');
       });
     }
 
