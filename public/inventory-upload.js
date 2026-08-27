@@ -76,6 +76,7 @@
 
   var payload = null;
 
+
   async function handle(file) {
     steps.innerHTML = ''; steps.hidden = true;
     $('result').hidden = true; $('sent').textContent = ''; payload = null;
@@ -154,21 +155,44 @@
     }
   }).catch(function () {});
 
-  /* ---------- drop target ---------- */
+  /* ---------- drop target ----------
+     The WHOLE window takes the file, not just the dashed box. Dropping a file
+     on a page that has not cancelled the event makes the browser navigate to
+     it — so a drop that lands a few pixels outside the box used to open the
+     workbook in a new tab and look exactly like "nothing happened". */
   var drop = $('drop'), input = $('file');
   drop.addEventListener('click', function () { input.click(); });
   drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') input.click(); });
   input.addEventListener('change', function () { if (input.files[0]) handle(input.files[0]); });
+
   ['dragenter', 'dragover'].forEach(function (n) {
-    drop.addEventListener(n, function (e) { e.preventDefault(); drop.classList.add('over'); });
+    window.addEventListener(n, function (e) { e.preventDefault(); drop.classList.add('over'); });
   });
-  ['dragleave', 'drop'].forEach(function (n) {
-    drop.addEventListener(n, function (e) { e.preventDefault(); drop.classList.remove('over'); });
+  ['dragleave', 'dragend'].forEach(function (n) {
+    window.addEventListener(n, function (e) {
+      if (e.relatedTarget) return;            // still inside the page
+      drop.classList.remove('over');
+    });
   });
-  drop.addEventListener('drop', function (e) {
-    var f = e.dataTransfer.files[0];
+  window.addEventListener('drop', function (e) {
+    e.preventDefault();
+    drop.classList.remove('over');
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) handle(f);
+    else step('לא זיהיתי קובץ בגרירה — אפשר ללחוץ על המסגרת ולבחור אותו', 'bad');
   });
+
+  // If /mod/... did not load, dropping a file would fail silently deep inside
+  // handle() and the page would just sit there. Say it at the top instead.
+  (function selfCheck() {
+    var need = ['tools/xlsx-read.js', 'data/inventory.js', 'data/aggregate.js', 'data/pii-gate.js'];
+    var missing = need.filter(function (m) { return !window.__mods || !window.__mods[m]; });
+    if (!missing.length) return;
+    drop.style.pointerEvents = 'none';
+    drop.style.opacity = '.4';
+    step('הדף לא נטען במלואו — חסר: ' + missing.join(', '), 'bad');
+    step('כנראה שהשרת רץ מגרסה ישנה. לעצור אותו, git pull, ו-npm run dev.', 'bad');
+  })();
 
   $('token').addEventListener('input', function () {
     $('send').disabled = !payload || (needsToken && !$('token').value.trim());

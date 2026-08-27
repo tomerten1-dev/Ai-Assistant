@@ -105,6 +105,44 @@ const AV = path.join(__dirname, '..', 'data', 'availability.json');
       assert.ok(JSON.stringify(seen).length < fs.statSync(WB).size * 2);
       assert.ok(!('file' in seen) && !('workbook' in seen));
     });
+    // ── a real drag-and-drop, not setInputFiles ──
+    {
+      const p2 = await browser.newPage({ viewport: { width: 900, height: 1100 } });
+      p2.on('pageerror', e => errors.push(String(e)));
+      await p2.goto(`http://127.0.0.1:${PORT}/inventory`);
+      const buf = fs.readFileSync(WB);
+      await p2.evaluate(`window.__dt = new DataTransfer()`);
+      // build a File in the page and drop it on the BODY, not on the box —
+      // a near-miss used to make Chrome navigate to the workbook instead
+      await p2.evaluate(([bytes, name]) => {
+        const f = new File([new Uint8Array(bytes)], name,
+          { type: 'application/vnd.ms-excel.sheet.macroEnabled.12' });
+        window.__dt.items.add(f);
+        document.body.dispatchEvent(new DragEvent('drop', {
+          dataTransfer: window.__dt, bubbles: true, cancelable: true }));
+      }, [Array.from(buf), path.basename(WB)]);
+      await p2.waitForSelector('#result:not([hidden])', { timeout: 60000 });
+      const url = p2.url();
+      t('a file dropped anywhere on the page is taken, and the page stays put', () => {
+        assert.ok(url.endsWith('/inventory'), 'the browser navigated away: ' + url);
+      });
+      await p2.close();
+    }
+
+    // ── and when the shared modules are missing, it says so ──
+    {
+      const p3 = await browser.newPage({ viewport: { width: 900, height: 700 } });
+      await p3.route('**/mod/**', r => r.fulfill({ status: 404, body: '' }));
+      await p3.goto(`http://127.0.0.1:${PORT}/inventory`);
+      await p3.waitForTimeout(600);
+      const said = await p3.evaluate(`document.getElementById('progress').textContent`);
+      t('a half-loaded page says so instead of doing nothing on drop', () => {
+        assert.ok(/לא נטען במלואו/.test(said), JSON.stringify(said));
+        assert.ok(/npm run dev/.test(said), 'no idea what to do about it: ' + said);
+      });
+      await p3.close();
+    }
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     await browser.close(); srv.kill();
