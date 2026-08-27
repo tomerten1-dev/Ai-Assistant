@@ -1473,8 +1473,42 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ ok: true, id: record.id }));
       return;
     }
+    /* The four modules the inventory page needs, wrapped so a browser can load
+       server code unchanged. An allowlist and nothing else — a route that
+       served any path under the repo would be a way to read .env.
+       Why not a copy of the parser written for the browser: because then a
+       workbook parsed in Chrome and one parsed by the build could disagree,
+       and whichever the office happened to use that morning would decide what
+       the bot sells. */
+    const BROWSER_MODULES = ['tools/xlsx-read.js', 'data/inventory.js',
+      'data/aggregate.js', 'data/pii-gate.js'];
+    if (req.method === 'GET' && url.pathname.startsWith('/mod/')) {
+      const id = url.pathname.slice(5);
+      if (!BROWSER_MODULES.includes(id)) { res.writeHead(404); res.end(); return; }
+      let src;
+      try { src = fs.readFileSync(path.join(ROOT, id), 'utf8'); }
+      catch (e) { res.writeHead(404); res.end(); return; }
+      // a CommonJS shim: node's own ids resolved against this small map, and
+      // fs/zlib/path stubbed because the browser never reaches the code paths
+      // that use them (it brings its own unzip)
+      const wrapped = 'window.__mods[' + JSON.stringify(id) + '] = (function(){\n'
+        + 'var module={exports:{}},exports=module.exports;\n'
+        + 'function require(id){\n'
+        + '  if(id==="path")return{join:function(){return Array.prototype.join.call(arguments,"/")},'
+        + 'basename:function(p){return String(p).split(/[\\\\/]/).pop()}};\n'
+        + '  if(id==="fs"||id==="zlib")return{};\n'
+        + '  var k=String(id).replace(/^\\.\\.\\//,"").replace(/^\\.\\//,"");\n'
+        + '  for(var m in window.__mods){if(m===k||m.endsWith("/"+k))return window.__mods[m];}\n'
+        + '  throw new Error("no module "+id);\n'
+        + '}\n' + src + '\nreturn module.exports;})();\n';
+      res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-store' });
+      res.end(wrapped);
+      return;
+    }
+
     // static
-    let file = url.pathname === '/' ? '/public/demo.html'
+    let file = url.pathname === '/inventory' ? '/public/inventory-upload.html'
+      : url.pathname === '/' ? '/public/demo.html'
       : url.pathname === '/pingwin-bot.js' ? '/public/pingwin-bot.js'
         : '/public' + url.pathname;
     const full = path.join(ROOT, path.normalize(file));

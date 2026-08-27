@@ -19,7 +19,8 @@
     "match": "node tools/match-score.js",
     "inventory": "node tools/build-availability.js",
     "push": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/push-availability.ps1 -VerboseLog",
-    "inventory:local": "node tools/build-availability.js"
+    "inventory:local": "node tools/build-availability.js",
+    "test:page": "node tests/test-inventory-page.js"
   },
   "dependencies": {
     "nodemailer": "^9.0.5"

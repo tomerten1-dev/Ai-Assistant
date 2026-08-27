@@ -7,7 +7,7 @@
 // the room cell. We use that cached code as primary status signal and
 // cross-check with the cell's actual fill RGB + text rules.
 const path = require('path');
-const { readWorkbook } = require('../tools/xlsx-read.js');
+const { readWorkbook, readWorkbookFiles } = require('../tools/xlsx-read.js');
 
 /* ================= sheet configuration ================= */
 // nights per product family (spec 3.4 — pending Tomer's confirmation)
@@ -258,7 +258,18 @@ function parseHanukkahSheet(sheet, cfg) {
 
 /* ================= entry point ================= */
 function parseInventory(xlsmPath) {
-  const wb = readWorkbook(xlsmPath);
+  return parseWorkbook(readWorkbook(xlsmPath));
+}
+
+// The same parse, from an already-unzipped workbook. This is the entry point
+// the browser uses (public/inventory-upload.html): the office can turn the
+// workbook into free-room counts without installing anything and without the
+// file leaving the machine.
+function parseWorkbookFiles(files) {
+  return parseWorkbook(readWorkbookFiles(files));
+}
+
+function parseWorkbook(wb) {
   const all = [];
   for (const sheet of wb) {
     const cfg = SHEETS[sheet.name];
@@ -285,7 +296,7 @@ function stats(rows) {
   };
 }
 
-module.exports = { parseInventory, stats, sanitizeRoomText, parseOccupancy, parseDateLabel };
+module.exports = { parseInventory, parseWorkbookFiles, stats, sanitizeRoomText, parseOccupancy, parseDateLabel };
 
 if (require.main === module) {
   const p = process.argv[2] || path.join(__dirname, '..', 'source-data', 'commitments-winter-2027.xlsm');

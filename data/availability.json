@@ -8,6 +8,7 @@
   "parsed_rows": 3804,
   "free_rows": 2282
  },
+ "generated_at": "2026-08-27T07:27:21.244Z",
  "units": [
   {
    "sheet": "חנוכה בלמברה טין 5-12.12",
@@ -11574,6 +11575,5 @@
    "needs_hotel_rule": false,
    "count": 8
   }
- ],
- "generated_at": "2026-08-27T07:04:11.783Z"
+ ]
 }
