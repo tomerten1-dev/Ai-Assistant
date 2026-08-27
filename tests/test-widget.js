@@ -342,6 +342,61 @@ function startServer() {
       });
     }
 
+    // ── stage-ג craft: the pieces that separate professional from amateur ──
+    {
+      const p5 = await browser.newPage({ viewport: { width: 430, height: 920 } });
+      p5.on('pageerror', e => errors.push(String(e)));
+      let m = null;
+      try {
+        await p5.goto(URL + '?pwreset=1');
+        await p5.waitForTimeout(500);
+        await p5.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p5.waitForTimeout(400);
+        await p5.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+          ta.value = '2 מבוגרים בפברואר'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+          r.querySelector('.send').click(); })()`);
+        await p5.waitForTimeout(3500);
+        // open the lead form and submit it empty
+        await p5.evaluate(`(() => { const r = ${SHADOW};
+          [...r.querySelectorAll('.card .btn.sec')][0].click(); })()`);
+        await p5.waitForTimeout(400);
+        await p5.evaluate(`${SHADOW}.querySelector('.form button[type=submit], .form .btn.pri').click()`);
+        await p5.waitForTimeout(300);
+        m = await p5.evaluate(`(() => { const r = ${SHADOW};
+          // the form holds two .note elements — the offer recap at the top and
+          // the status line by the button; the error lands on the second
+          const notes = [...r.querySelectorAll('.form .note')]; const note = notes[notes.length - 1];
+          const chips = r.querySelector('.chips');
+          const name = r.querySelector('.form input');
+          return {
+            pill: !!r.querySelector('.newmsg'),
+            log: r.querySelector('.msgs').getAttribute('role'),
+            err: note && note.className.includes('err'),
+            alert: note && note.getAttribute('role') === 'alert',
+            invalid: name && name.getAttribute('aria-invalid') === 'true',
+            noteText: note && note.textContent,
+            chipsPad: chips ? getComputedStyle(chips).paddingInlineStart : null,
+            closeSvg: !!r.querySelector('.hdr .x[data-close] svg'),
+            formTitleWeight: getComputedStyle(r.querySelector('.form .ftitle')).fontWeight,
+          }; })()`);
+      } finally { await p5.close(); }
+
+      t('an empty lead-form submit is refused OUT LOUD', () => {
+        assert.ok(m.err, 'the note did not turn into an error: ' + m.noteText);
+        assert.strictEqual(m.alert, true, 'no role=alert — a screen reader hears nothing');
+        assert.ok(m.invalid, 'the offending field is not marked aria-invalid');
+      });
+      t('the form heading is styled, the close icon is SVG, the pill exists', () => {
+        assert.strictEqual(m.formTitleWeight, '700', 'form title weight: ' + m.formTitleWeight);
+        assert.ok(m.closeSvg, 'the ✕ is still a text glyph');
+        assert.ok(m.pill, 'no "הודעות חדשות" pill in the DOM');
+        assert.strictEqual(m.log, 'log', 'the message list is not role=log');
+      });
+      t('the chips row is aligned to the message column', () => {
+        assert.strictEqual(m.chipsPad, '46px', m.chipsPad);
+      });
+    }
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     await browser.close(); srv.kill();

@@ -213,6 +213,18 @@
     + '.fab .av{background:transparent;width:54px;height:54px}.fab .av img{width:52px;height:52px}'
     + '.fab .dot{box-shadow:0 0 0 3px ' + THEME.bg + '}}'
     // מי שביקש פחות תנועה מקבל אפס תנועה — לא רק בנקודה האדומה
+    /* everything that enters the conversation rises 8px and fades in over
+       180ms, decelerating — the single strongest "professional chat" tell in
+       the research (200–300ms decelerate entrances; amateur = none, or 500ms) */
+    + '.m,.cards-row,.form,.typing,.chips,.fine{animation:pwIn .18s cubic-bezier(.05,.7,.1,1) both}'
+    + '@keyframes pwIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'
+    /* the "new messages" pill: shown when a reply lands while the customer has
+       scrolled up to re-read — yanking their viewport is the #1 amateur tell */
+    + '.newmsg{position:absolute;bottom:12px;inset-inline-start:50%;transform:translateX(50%);z-index:5;'
+    + 'background:' + THEME.primaryDark + ';color:#fff;border:none;border-radius:999px;padding:8px 16px;'
+    + 'font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:none;'
+    + 'box-shadow:0 4px 14px rgba(' + THEME.shadowRGB + ',.35);animation:pwIn .18s cubic-bezier(.05,.7,.1,1)}'
+    + '.newmsg.on{display:block}'
     + '@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.msgs{scroll-behavior:auto!important}}'
     + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
     + 'background:' + THEME.bg + ';border-radius:16px;box-shadow:0 24px 64px rgba(' + THEME.shadowRGB + ',.26),0 2px 8px rgba(' + THEME.shadowRGB + ',.08);border:1px solid ' + THEME.border + ';display:none;flex-direction:column;overflow:hidden;'
@@ -493,7 +505,12 @@
     // One row that scrolls sideways, not four rows that push the offers off the
     // screen. Eight chips wrapping was 173px on a phone — the second largest
     // thing in the conversation after the offers themselves (measured 26/08).
-    + '.chips{display:flex;flex-wrap:nowrap;gap:7px;align-self:stretch;padding-inline-start:32px;'
+    /* aligned to the message column (46px, not 32 — it sat 14px off), and a
+       soft fade on the trailing edge so the row reads as "there is more this
+       way" instead of a list that happens to be cut off */
+    + '.chips{display:flex;flex-wrap:nowrap;gap:7px;align-self:stretch;padding-inline-start:46px;'
+    + 'mask-image:linear-gradient(to left,transparent 0,#000 28px);'
+    + '-webkit-mask-image:linear-gradient(to left,transparent 0,#000 28px);'
     + 'overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
     + 'scroll-snap-type:x proximity;padding-bottom:2px;'
     // flex:none is load-bearing. A scroll container's automatic minimum size is
@@ -520,10 +537,22 @@
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s cubic-bezier(.2,.8,.2,1),filter .15s cubic-bezier(.2,.8,.2,1),transform .1s cubic-bezier(.2,.8,.2,1)}'
     + '.send:disabled{opacity:.5;cursor:default}'
     + '.form .ftitle{font-size:15px;font-weight:700;color:' + THEME.text + ';line-height:1.35}'
-    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}'
+    /* the conversion moment gets the same visual language as the rest of the
+       widget: card border + elevation instead of a heavy primary frame, inputs
+       styled like the composer, and a real focus ring. It used to look pasted
+       from another product (design audit, 27/08). */
+    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1px solid ' + THEME.border + ';'
+    + 'border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;'
+    + 'box-shadow:0 1px 3px rgba(' + THEME.shadowRGB + ',.05)}'
     + '.form label{font-size:12px;color:' + THEME.textLight + '}'
-    + '.form input{border:1.5px solid ' + THEME.border + ';border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;direction:rtl}'
+    + '.form input{border:1px solid ' + THEME.border + ';border-radius:12px;padding:9px 12px;'
+    + 'font-size:16px;font-family:inherit;direction:rtl;color:' + THEME.text + ';'
+    + 'transition:border-color .15s cubic-bezier(.2,.8,.2,1),box-shadow .15s cubic-bezier(.2,.8,.2,1)}'
+    + '.form input:focus{outline:none;border-color:' + THEME.primary + ';'
+    + 'box-shadow:0 0 0 3px rgba(' + THEME.brandRGB + ',.08)}'
+    + '.form input[aria-invalid="true"]{border-color:#b3261e}'
     + '.form .note{font-size:12px;color:' + THEME.textLight + '}'
+    + '.form .note.err{color:#b3261e;font-weight:600}'
     + '.srhint{font-size:11px;color:' + THEME.textLight + ';text-align:center;padding:2px 0 6px;background:' + THEME.bg + '}';
 
   var style = document.createElement('style');
@@ -639,7 +668,18 @@
   hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hNew); hdr.appendChild(hExp); hdr.appendChild(hX);
 
   var msgs = el('div', 'msgs');
-  msgs.setAttribute('aria-live', 'polite');
+  // role=log: implicit polite live region that announces only APPENDED content
+  // — aria-live on the container re-announces the whole scrollback
+  msgs.setAttribute('role', 'log');
+  msgs.setAttribute('aria-label', 'שיחה');
+  var newPill = el('button', 'newmsg', 'הודעות חדשות ↓');
+  newPill.addEventListener('click', function () {
+    msgs.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+    newPill.classList.remove('on');
+  });
+  msgs.addEventListener('scroll', function () {
+    if (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 150) newPill.classList.remove('on');
+  });
 
   var inp = el('div', 'inp');
   var input = document.createElement('textarea');
@@ -659,12 +699,22 @@
   inpBox.appendChild(input); inpBox.appendChild(send);
   inp.appendChild(inpBox);
 
-  win.appendChild(hdr); win.appendChild(msgs); win.appendChild(inp);
+  win.appendChild(hdr); win.appendChild(msgs); win.appendChild(newPill); win.appendChild(inp);
   wrap.appendChild(win); wrap.appendChild(fab);
   root.appendChild(wrap);
 
   /* ============== ui helpers ============== */
-  function scrollDown() { msgs.scrollTop = msgs.scrollHeight; }
+  /* Stick to the bottom only when the customer is already there (±150px).
+     If they scrolled up to re-read the offers, a new reply must not yank the
+     viewport — it lights the "הודעות חדשות" pill instead. force=true is for
+     the customer's own actions (sending, opening), which always scroll. */
+  function nearBottom() {
+    return msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 150;
+  }
+  function scrollDown(force) {
+    if (force || nearBottom()) { msgs.scrollTop = msgs.scrollHeight; newPill.classList.remove('on'); }
+    else newPill.classList.add('on');
+  }
   // a hung request must not lock the chat forever
   function fetchWithTimeout(url, opts, ms) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -758,7 +808,16 @@
     var ts = el('span', 'ts', clockOf(at));
     ts.setAttribute('aria-hidden', 'true');   // the time is decoration for a screen reader
     m.appendChild(ts);
-    msgs.appendChild(m); scrollDown();
+    /* timestamp grouping: consecutive messages from the same side within two
+       minutes carry ONE timestamp, on the last of the group — stamping every
+       bubble is the #1 amateur tell in the craft research */
+    var prev = msgs.lastElementChild;
+    if (prev && prev.classList && prev.classList.contains(role === 'user' ? 'user' : 'bot')) {
+      var prevTs = prev.querySelector('.ts');
+      var now = at ? new Date(at) : new Date();
+      if (prevTs && prevTs.textContent === clockOf(at) && !isNaN(now.getTime())) prevTs.remove();
+    }
+    msgs.appendChild(m); scrollDown(role === 'user');
     if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text, at: at || new Date().toISOString() });
     return m;
   }
@@ -991,6 +1050,13 @@
     if (c.lift_he) details.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
     // One toggle for the whole card, not one per section. Closed it is the
     // hotel, one line and the button; open it is everything we know.
+    // the hover lift promised the card was clickable; now it is — anywhere on
+    // the card that is not a control toggles the details, same as "פרטים"
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function (ev) {
+      if (ev.target.closest && ev.target.closest('button, a, select, input')) return;
+      dtog.click();
+    });
     var dtog = el('button', 'dtog', 'פרטים ▾');
     dtog.setAttribute('aria-expanded', 'false');
     dtog.addEventListener('click', function () {
@@ -1179,24 +1245,50 @@
     f.appendChild(consent);
     f.appendChild(note); f.appendChild(go);
     msgs.appendChild(f); scrollDown();
+    /* Errors are SAID, not whispered: the note goes red and bold, the field is
+       marked aria-invalid, and a screen reader hears it (role=alert). The
+       reassuring default text comes back the moment the problem is fixed —
+       the old code destroyed it permanently on the first slip. */
+    var noteDefault = note.textContent;
+    var complain = function (msg, field) {
+      note.textContent = msg;
+      note.classList.add('err');
+      note.setAttribute('role', 'alert');
+      if (field && field.setAttribute) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
+    };
+    var calm = function () {
+      note.classList.remove('err');
+      note.removeAttribute('role');
+      [iName, iPhone, iMail].forEach(function (i) { i.removeAttribute('aria-invalid'); });
+    };
+    [iName, iPhone, iMail].forEach(function (i) {
+      i.addEventListener('input', function () {
+        if (note.classList.contains('err')) { calm(); note.textContent = noteDefault; }
+      });
+    });
     f.addEventListener('submit', function (ev) {
       ev.preventDefault();
+      calm();
       var nameVal = iName.value.trim();
       var phoneVal = iPhone.value.trim();
-      if (!nameVal || !phoneVal) { note.textContent = 'נדרשים שם וטלפון ליצירת קשר.'; return; }
+      if (!nameVal || !phoneVal) { complain('נדרשים שם וטלפון ליצירת קשר.', !nameVal ? iName : iPhone); return; }
       // a rep can do nothing with "אבג" — require a real Israeli-length number
       var digits = phoneVal.replace(/\D/g, '');
       if (digits.length < 9 || digits.length > 15) {
-        note.textContent = 'מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567';
+        complain('מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567', iPhone);
         return;
       }
-      if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
+      if (nameVal.length < 2) { complain('נשמח לשם מלא ליצירת קשר.', iName); return; }
       var mailVal = iMail.value.trim();
       if (mailVal && !/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(mailVal)) {
-        note.textContent = 'כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.'; iMail.focus(); return;
+        complain('כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.', iMail); return;
       }
-      if (!iConsent.checked) { note.textContent = 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'; iConsent.focus(); return; }
+      if (!iConsent.checked) { complain('כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'); iConsent.focus(); return; }
+      // the tap is acknowledged INSTANTLY: label swaps, button dims. Up to 15
+      // seconds of network with a mute button read as a broken form.
       go.disabled = true;
+      var goLabel = go.textContent;
+      go.textContent = 'שולח…';
       turnstileToken().then(function (tok) { return fetchWithTimeout(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -1224,7 +1316,8 @@
           : 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         track('error', { where: 'lead' });
-        go.disabled = false; note.textContent = say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}');
+        go.disabled = false; go.textContent = goLabel;
+        complain(say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}'));
       });
     });
   }
