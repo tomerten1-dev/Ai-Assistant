@@ -20,6 +20,7 @@ const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl, deepLink, pageFor, addNights } = require('../config/booking-url.js');
 const siteRooms = require('./site-rooms.js');
+const inventory = require('./inventory.js');
 const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
 const recommend = require('./recommend.js');
@@ -312,7 +313,13 @@ function presentCards(result, slots, skip, opts = {}) {
     // still hold. "נשארו 2 חדרים" is true; a countdown timer would not be.
     // only the last room of its type earns the line — a third of the workbook
     // is 2–3 rooms, and a badge on every card is noise, not information
-    rooms_left_he: c.count_available === 1 ? 'נשאר חדר אחד מהסוג הזה' : null,
+    // ...and only while we can still believe it. This is the line that goes
+    // stale fastest — the last room of a type is the first thing to sell — and
+    // it is also the line that pushes a customer to decide. Past
+    // INVENTORY_STALE_HOURS since the workbook was read, it is withheld
+    // (Tomer, 26/08). Everything else on the card survives.
+    rooms_left_he: (c.count_available === 1 && !inventory.stale(engine.av))
+      ? 'נשאר חדר אחד מהסוג הזה' : null,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,
     // Everything the hotel pages taught us about THIS unit. This list used to
@@ -1170,6 +1177,15 @@ async function handleChat(body) {
     // the widget prints the closing UNDER the offers, where the buttons it
     // refers to are; above three cards it pushed them below the fold
     if (close && anyOffer) slots._after_cards = close;
+    // When the workbook has not reached us for a while, say so in the customer's
+    // terms rather than in ours: the rooms were free at the last update and
+    // availability moves (Tomer, 26/08). One line, only with offers on screen,
+    // and only when it is actually true — a line the customer sees every time
+    // is a line they stop reading.
+    if (anyOffer && inventory.stale(engine.av)) {
+      const moving = (guidance.load().messages_he || {}).inventory_moving_he;
+      if (moving && !parts.some(x => String(x).includes(moving.slice(0, 20)))) parts.push(moving);
+    }
     // A last trim on the assembled reply. phrase() caps its own lines, but a
     // FAQ answer, a question and a closing arrive from here — a kosher-keeping
     // family asking about camps got six paragraphs. The softer lines go first.
@@ -1339,6 +1355,27 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     if (!applyCors(req, res)) { res.writeHead(403); res.end('origin not allowed'); return; }
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+    // The office pushes a new inventory file here. Not a browser request: no
+    // Origin, no CORS, no rate limit by IP — it is authorised by a token and
+    // by what it contains (server/inventory.js). Answered before the
+    // origin-required rule below, which exists for the widget.
+    if (req.method === 'POST' && url.pathname === '/api/inventory') {
+      const body = await readJson(req, 8_000_000);
+      if (!body) return;
+      const r = inventory.accept(req, body);
+      return json(res, r.status, r.body);
+    }
+    if (req.method === 'GET' && url.pathname === '/api/inventory') {
+      // for the push script and for a human: how old is what we are selling
+      const av = inventory.current();
+      const h = inventory.ageHours(av);
+      return json(res, 200, {
+        generated_at: (av && av.generated_at) || null,
+        age_hours: h == null ? null : Math.round(h * 10) / 10,
+        stale: inventory.stale(av), stale_after_hours: inventory.STALE_HOURS,
+        units: (av && av.units || []).length, last_push: inventory.lastPush(),
+      });
+    }
     // in production every browser POST carries an Origin; one without it is not the widget
     if (STRICT_ORIGIN && req.method === 'POST' && !req.headers.origin) { res.writeHead(403); res.end('origin required'); return; }
     if (req.method === 'GET' && url.pathname === '/healthz') {

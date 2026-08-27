@@ -7,12 +7,18 @@ const { roomFacts } = require('./room-match');
 
 const DATA_DIR = __dirname;
 function loadJSON(p) { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, p), 'utf8')); }
+function stampOf(p) {
+  try { return fs.statSync(path.join(DATA_DIR, p)).mtimeMs; } catch (e) { return 0; }
+}
 
 const MONTHS = { 12: '12', 1: '01', 2: '02', 3: '03' };
 
 class SkiSearch {
   constructor({ availability, resorts, camps, pricing, departures } = {}) {
     this.av = availability || loadJSON('availability.json');
+    // remember which file we read, so a push can replace it under us
+    this._avFixed = !!availability;
+    this._avStamp = this._avFixed ? 0 : stampOf('availability.json');
     this.resorts = resorts || loadJSON('resorts.json');
     this.camps = camps || loadJSON('camps.json');
     this.pricing = pricing || loadJSON('pricing.json');
@@ -141,7 +147,32 @@ class SkiSearch {
   /* =============== main search =============== */
   // slots: {adults, children_ages, month, flexible_dates, country, destination,
   //         needs_hebrew_kids_club, preferences}
+  // The office pushes a new inventory file every few hours (server/inventory.js).
+  // Re-read it when it changes instead of holding the copy this process started
+  // with — a restart to pick up new stock is a restart nobody will remember to
+  // do, and the stock going stale is exactly the failure this is all about.
+  refreshIfChanged() {
+    if (this._avFixed) return false;
+    const now = stampOf('availability.json');
+    if (!now || now === this._avStamp) return false;
+    try {
+      const next = loadJSON('availability.json');
+      if (next && Array.isArray(next.units) && next.units.length) {
+        this.av = next;
+        this._avStamp = now;
+        console.log('inventory reloaded — %d unit groups', next.units.length);
+        return true;
+      }
+    } catch (e) {
+      // a file mid-write, or briefly unreadable: keep what we have and try
+      // again next time rather than serving nothing
+      console.error('inventory reload failed (%s) — keeping the previous file', e.message);
+    }
+    return false;
+  }
+
   search(slots) {
+    this.refreshIfChanged();
     // children whose ages we do not know yet still take seats: "עם 3 נכדים"
     // was a party of two by this arithmetic, and five people were offered
     // rooms for three

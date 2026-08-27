@@ -38,19 +38,17 @@ const out = {
   generated_note: 'derived from commitments workbook — free units only, PII stripped',
   season: { first_date: st.firstDate, last_date: st.lastDate },
   source_stats: { parsed_rows: st.total, free_rows: st.status.free || 0 },
+  // when the workbook was read. Everything downstream — the staleness rule,
+  // the alert, the line the customer sees — hangs off this one field.
+  generated_at: new Date().toISOString(),
   units,
 };
 
 /* ---------- PII gate ---------- */
+// the same check the server runs on whatever it is handed — one file, so the
+// two can never drift apart (data/pii-gate.js)
+const problems = require('../data/pii-gate.js').check(out);
 const json = JSON.stringify(out, null, 1);
-const problems = [];
-for (const u of units) {
-  for (const f of ['hotel', 'room', 'room_type', 'occ_notation']) {
-    if (u[f] && /[֐-׿]/.test(String(u[f]))) problems.push(`Hebrew in ${f}: ${JSON.stringify(u[f])}`);
-  }
-}
-const digitHits = json.match(/\d{6,}/g) || [];
-for (const h of digitHits) problems.push('6+ digit sequence: ' + h);
 
 if (problems.length) {
   console.error('PII GATE FAILED — output NOT written:');
