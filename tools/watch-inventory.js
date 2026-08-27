@@ -54,13 +54,29 @@ const say = (...a) => console.log(clock(), ...a);
    a person opens the file, the bot stops being updated. */
 const LOCK = /^~\$/;
 const BOOK = /\.xls[xm]$/i;
+// why the target could not be read, in the caller's words — over a network
+// share "not found" and "not allowed" are different problems with different
+// fixes, and errno is the only thing that tells them apart
+let lastError = null;
+function explain(e) {
+  const c = e && e.code;
+  if (c === 'ENOENT') return 'הנתיב לא קיים — לבדוק אותיות ורווחים, ושהתיקייה היא הנכונה';
+  if (c === 'EACCES' || c === 'EPERM') return 'אין הרשאה לקרוא מהנתיב הזה מהמחשב הזה';
+  if (c === 'ENOTDIR') return 'זה לא נתיב לתיקייה';
+  if (c === 'EBUSY' || c === 'ETIMEDOUT' || c === 'ENETUNREACH' || c === 'EHOSTUNREACH') {
+    return 'הרשת לא זמינה כרגע — כונן רשת שנפל, או המחשב לא מחובר';
+  }
+  return (e && e.message) || String(e);
+}
 function pick() {
   let st;
-  try { st = fs.statSync(TARGET); } catch (e) { return null; }
+  try { st = fs.statSync(TARGET); lastError = null; }
+  catch (e) { lastError = explain(e); return null; }
   if (st.isFile()) return TARGET;
   let best = null, bestAt = -1;
   let names;
-  try { names = fs.readdirSync(TARGET); } catch (e) { return null; }
+  try { names = fs.readdirSync(TARGET); }
+  catch (e) { lastError = explain(e); return null; }
   for (const name of names) {
     if (LOCK.test(name) || !BOOK.test(name)) continue;
     const full = path.join(TARGET, name);
@@ -153,9 +169,12 @@ async function once(why) {
   say('מסתכל על', TARGET);
   say(URL_ ? 'מעדכן את ' + URL_ : 'כותב מקומית (בלי PINGWIN_BOT_URL)');
   if (!snapshot()) {
-    console.error(clock(), 'לא נמצא קובץ אקסל בנתיב הזה.');
-    console.error('   אפשר להעביר נתיב לקובץ או לתיקייה:  npm run watch -- "F:\\...\\<שם>.xlsm"');
-    console.error('   או להגדיר PINGWIN_WORKBOOK.');
+    console.error(clock(), lastError || 'לא נמצא בנתיב הזה קובץ אקסל (xlsx/xlsm) גדול מ-20KB.');
+    console.error('   נתיב לתיקייה או לקובץ:  npm run watch -- "\\\\<שרת>\\<שיתוף>\\<תיקייה>"');
+    console.error('   כונן ממופה עובד גם:     npm run watch -- "F:\\<תיקייה>"');
+    if (/הרשאה/.test(lastError || '')) {
+      console.error('   לחיבור עם משתמש אחר:   net use \\\\<שרת>\\<שיתוף> /user:<domain>\\<user>');
+    }
     process.exit(1);
   }
   say('הקובץ:', path.basename(WB));
@@ -166,7 +185,7 @@ async function once(why) {
   let quiet = 0;
   setInterval(async () => {
     const now = snapshot();
-    if (!now) { say('הקובץ לא נגיש כרגע — ממשיך לנסות'); return; }
+    if (!now) { say('לא נגיש כרגע (' + (lastError || '') + ') — ממשיך לנסות'); return; }
     if (now === seen) {
       // one line an hour, so the window shows it is alive without filling up
       if (++quiet >= Math.max(1, Math.round(3600000 / EVERY))) { quiet = 0; say('אין שינוי'); }

@@ -154,6 +154,34 @@ const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); }
     w.kill(); srv.close();
     try { fs.unlinkSync(copy); } catch (e) { /* gone already */ }
   }
+  // ── the two failures that look identical and are not ──
+  {
+    const run = target => new Promise(ok => {
+      const c = spawn(process.execPath, [path.join(__dirname, '..', 'tools', 'watch-inventory.js'), target],
+        { stdio: ['ignore', 'pipe', 'pipe'] });
+      let out = '';
+      c.stdout.on('data', d => { out += d; }); c.stderr.on('data', d => { out += d; });
+      c.on('exit', code => ok({ code, out }));
+    });
+    const missing = await run(path.join(os.tmpdir(), 'no-such-folder-' + Date.now()));
+    const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'wb-empty-'));
+    const noBook = await run(empty);
+    fs.rmSync(empty, { recursive: true, force: true });
+
+    t('a wrong path and a folder with no workbook say different things', () => {
+      // over a network share these have different fixes — one is a typo, the
+      // other is "you are looking in the right place, the file is not there"
+      assert.strictEqual(missing.code, 1);
+      assert.ok(/הנתיב לא קיים/.test(missing.out), missing.out);
+      assert.strictEqual(noBook.code, 1);
+      assert.ok(/לא נמצא בנתיב הזה קובץ אקסל/.test(noBook.out), noBook.out);
+      assert.ok(!/הנתיב לא קיים/.test(noBook.out), 'told him the path was wrong when it was not');
+    });
+    t('and both say what to type instead', () => {
+      for (const r of [missing, noBook]) assert.ok(/npm run watch --/.test(r.out), r.out);
+    });
+  }
+
   console.log(`watch: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
