@@ -4,6 +4,10 @@
 // COST: zero by default. Both providers are pinned to placeholder keys, so
 // every case runs on the free deterministic layer. Pass --live to send only
 // the handful of cases marked `live: true` to the real model.
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-stress';
 if (!process.argv.includes('--live')) process.env.OPENAI_API_KEY = 'sk-proj-xxxx-stress';
 process.env.MAX_QUESTIONS = '3';

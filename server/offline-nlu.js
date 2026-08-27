@@ -4,6 +4,9 @@
 // Not as flexible as Claude, but honors the exact same slot schema and the
 // same conversation policy (max 2 questions, one per message).
 
+const guidance = require('./guidance.js');   // the fixed sentences and the office phone live there
+const { SkiSearch } = require('../data/filter.js');
+
 const HE_NUM = {
   'אחד': 1, 'אחת': 1, 'שניים': 2, 'שתיים': 2, 'שני': 2, 'שתי': 2,
   'שלושה': 3, 'שלוש': 3, 'שלושת': 3, 'ארבעה': 4, 'ארבע': 4, 'ארבעת': 4,
@@ -26,16 +29,16 @@ const COUNTRIES = [
   [/אנדור[הא]/, 'andorra'], [/בולגרי+[הא]/, 'bulgaria'],
 ];
 const DESTS = [
-  [/מ[אי]?יי?רהופן|מאירהופן/, 'Mayrhofen', 'austria'], [/אישגי?ל/, 'Ischgl', 'austria'],
-  [/ו?ואל ?טורנס/, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
-  [/לה ?דוז|לה ?דו ?אלפ|לה 2|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?/, 'Bansko', 'bulgaria'],
-  [/בורוב[ץץז]/, 'Borovets', 'bulgaria'], [/אבורי?אז/, 'Avoriaz', 'france'],
-  [/לז ?ארק|לה ?ארק/, 'Les Arcs', 'france'], [/פליין|גרנד ?מסיף/, 'Flaine Grand Massif', 'france'],
-  [/אלפ ד|אלף ד/, "Alpe d'Huez", 'france'], [/מונט?ז['׳״"]?נבר/, 'Montgenevre', 'france'],
+  [/מ[אי]?יי?רהופן|מאירהופן|mayrhofen/i, 'Mayrhofen', 'austria'], [/אישגי?ל|ischgl/i, 'Ischgl', 'austria'],
+  [/ו?ואל ?טורנס|val ?thorens/i, 'Val Thorens', 'france'], [/טין(?![א-ת])|טיניי|Tignes/i, 'Tignes', 'france'],
+  [/לה ?דוז|לה ?דו ?אלפ|לה 2|les ?2 ?alpes|les 2/i, 'Les 2 Alpes', 'france'], [/בנסק[וו]?|bansko/i, 'Bansko', 'bulgaria'],
+  [/בורוב[ץץז]|borovets/i, 'Borovets', 'bulgaria'], [/אבורי?אז|avoriaz/i, 'Avoriaz', 'france'],
+  [/לז ?ארק|לה ?ארק|les ?arcs/i, 'Les Arcs', 'france'], [/פליין|גרנד ?מסיף|flaine/i, 'Flaine Grand Massif', 'france'],
+  [/אלפ ד|אלף ד|alpe ?d'?huez/i, "Alpe d'Huez", 'france'], [/מונט?ז['׳״"]?נבר|montgen[eè]vre/i, 'Montgenevre', 'france'],
   // Les Menuires was missing entirely — "לה מנואר" named a resort we sell and
   // the bot heard nothing, so it could be neither asked for nor ruled out
   [/לה ?מנו[אי]?ר|מנואר|les ?menuires/i, 'Les Menuires', 'france'],
-  [/סולדאו/, 'Soldeu', 'andorra'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])/, 'Pas de la Casa', 'andorra'],
+  [/סולד[אי]?ו|soldeu/i, 'Soldeu', 'andorra'], [/עוז אן|oz.?en/i, 'Oz en Oisans', 'france'], [/פ[א]?ס ?דה ?לה ?קאסה|פאס(?![א-ת])|pas ?de ?la ?casa/i, 'Pas de la Casa', 'andorra'],
 ];
 // Resorts and brands pingwin sells, but which carry NO room commitments in
 // the winter 26/27 workbook.
@@ -46,9 +49,15 @@ const DESTS = [
 // not quote availability for them either: it says what it has on commitment,
 // and hands the rest to a rep.
 const OFF_COMMITMENT = [
-  [/זאלבאך|סאלבאך/, 'זאלבאך', 'austria'], [/צל אם ?זה|צל ?אם|zell/i, 'צל אם זה', 'austria'],
-  [/סנט ?אנטון|st\.? ?anton/i, 'סנט אנטון', 'austria'], [/הינטרגלם/, 'הינטרגלם', 'austria'],
-  [/קצברג/, 'קצברג', 'austria'],
+  // spelling variants matter more here than anywhere else in the file: a resort
+  // we did not RECOGNISE is a resort we silently replace with its country.
+  // Tomer, 26/08: he wrote "סן אנטון", the pattern knew only "סנט אנטון", and
+  // the bot answered with Ischgl and Mayrhofen as if he had asked for Austria.
+  [/זאלבא?ך|סאלבא?ך|זלבך|saalbach/i, 'זאלבאך', 'austria'],
+  [/צל אם ?זה|זל אם ?זה|צל ?אם|zell ?am/i, 'צל אם זה', 'austria'],
+  [/סנט ?אנטון|סן ?אנטון|סאנט ?אנטון|סנטאנטון|st\.? ?anton/i, 'סנט אנטון', 'austria'],
+  [/הינטרגל[םא]?ם?|hinterglemm/i, 'הינטרגלם', 'austria'],
+  [/קצברג|קפרון|kaprun/i, 'קצברג', 'austria'],
   [/ואל ?ד'?יזר|val ?d/i, "ואל ד'יזר", 'france'], [/לה ?פלאן|la ?plagne/i, 'לה פלאן', 'france'],
   [/קלאב ?מד|club ?med/i, 'קלאב מד', null],
   [/פראגלטו|פרגלטו/, 'פראגלטו', null], [/סוצ'?י/, "סוצ'י", null],
@@ -88,6 +97,8 @@ function parseText(text, slots) {
   // same word to a reader and two different strings to a regex.
   const t = ' ' + text
     .replace(/[\u0591-\u05C7]/g, '')
+    // "3 ו-10 חודשים" is one age, not two numbers
+    .replace(/(\d{1,2})\s*ו-?\s*\d{1,2}\s*חודשים/g, '$1 וחצי')
     .replace(/[\u05F4\u201C\u201D]/g, '"')
     .replace(/[\u05F3\u2018\u2019]/g, "'")
     .replace(/([א-ת])[-–—]([א-ת])/g, '$1 $2')
@@ -126,11 +137,20 @@ function parseText(text, slots) {
     // The age words need Hebrew boundaries. Without them "לא בשבת" matched the
     // "בת" inside "שבת" and invented a 2-year-old out of "יש 2 חברים שומרים",
     // which then cost the party an adult. JS \b does not work here.
-    const ageChunk = t.match(/(?:^|[^א-ת])(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת)(?![א-ת])[^.!?]{0,45}/g);
+    // a decimal ("12.5") is not a sentence end; "נהיה 13" states an age too
+    const ageChunk = t.match(/(?:^|[^א-ת])(?:בני|בנות|בגילאי|גילאי|בגיל|בן|בת|(?:הבן|הבת|הילד|הילדה|הוא|היא) (?:נהיה|נהיית|יהיה|תהיה))(?![א-ת])(?:[^.!?]|\.(?=\d)){0,45}/g);
     let ages = [], grownUps = 0;
     if (ageChunk) {
       for (let chunk of ageChunk) {
-        chunk = chunk.split(/ינואר|פברואר|מרץ|מארס|דצמבר|חנוכה|פורים/)[0];
+        // stop at a month, and at "קייטנה של 4" — that 4 is a club, not a child
+        chunk = chunk.split(/ינואר|פברואר|מרץ|מארס|דצמבר|חנוכה|פורים|קייטנה|קבוצה|מועדון|קיטנה/)[0];
+        // "3 ו-10 חודשים", "בת שלוש וחצי", "3.5" — the whole years count now,
+        // and the boundary is flagged so the bot says how the age is reckoned
+        chunk = chunk.replace(/(\d{1,2})\s*ו-?\s*\d{1,2}\s*חודשים/g, (m0, y) => { s.age_boundary = +y; return y; })
+          .replace(/(\d{1,2})\s*וחצי/g, (m0, y) => { s.age_boundary = +y; return y; })
+          .replace(/(\d{1,2})[.,]5(?![\d])/g, (m0, y) => { s.age_boundary = +y; return y; })
+          .replace(/(שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|אחת עשרה|שתים עשרה) וחצי/g, (m0, w) => { s.age_boundary = HE_NUM[w] != null ? HE_NUM[w] : null; return w; });
+        if (/(נהיה|תהיה|יהיה|יגיע|תגיע|ימלאו|חוגג|חוגגת) .{0,12}(לפני|עד|ב) ?(הטיסה|היציאה|הנסיעה|חודש|קרוב)/.test(chunk)) s.age_boundary = s.age_boundary ?? -1;
         for (const m of chunk.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)) {
           const n = +m[1];
           if (n >= 0 && n <= 17) ages.push(n);
@@ -285,7 +305,9 @@ function parseText(text, slots) {
       if (total >= 3 && total <= 8) { s.adults = 2; s.children_count = total - 2; s.no_children = false; }
     }
   }
-  m = t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2}|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה)(?![א-ת])/) ||
+  // "הבן נהיה 13" is a birthday, not thirteen travellers
+  const childTurns = /(הבן|הבת|הילד|הילדה|הוא|היא|הקטן|הקטנה|הגדול|הגדולה) (נהיה|נהיית|יהיה|תהיה) ?\d/.test(t);
+  m = (childTurns ? null : t.match(/(?:אנחנו|נהיה|סה"כ|סהכ)\s*(\d{1,2}|שניים|שתיים|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה)(?![א-ת])/)) ||
       t.match(/(\d{1,2}|[א-ת]+)\s*(?:אנשים|נוסעים|אורחים|חברים|חברות|בחורים|בחורות|גברים|נשים)(?![א-ת])/);
   if (m) {
     const total = +m[1] || heNum(m[1]);
@@ -307,7 +329,7 @@ function parseText(text, slots) {
   }
   // "משפחה של 4" / "4 נפשות" with known kids
   if (s.adults == null) {
-    m = t.match(/(?:משפחה של|של)\s*(\d{1,2})/);
+    m = t.match(/(?<!קייטנה |קבוצה |מועדון |קיטנה |בגיל |גיל )(?:משפחה של|של)\s*(\d{1,2})/);
     if (m) {
       const total = +m[1], kids = (s.children_ages || []).length;
       // "משפחה של 5, הילדים בני 6 ו-9" → three adults.
@@ -416,12 +438,18 @@ function parseText(text, slots) {
     // a bare answer to "מתי בחודש?"
     s.month_part = /תחילת/.test(t) ? 'early' : (/אמצע/.test(t) ? 'mid' : 'late');
   }
+  // The Israeli calendar, not only the month: חנוכה תשפ"ז is 5–12.12.2026 and
+  // פורים is 23–24.3.2027. A family that says "בחנוכה" means that week, and
+  // was being shown the whole of December.
+  if (/חנוכה/.test(t) && !partMatch) { s.month = 12; s.month_part = 'early'; s.holiday = 'חנוכה'; }
+  else if (/פורים/.test(t) && !partMatch) { s.month = 3; s.month_part = 'late'; s.holiday = 'פורים'; }
+  else if (s.month !== (slots || {}).month) s.holiday = null;   // moved on to a plain month
 
   // "גמיש בתאריך" said on its own RELEASES the month rather than merely filling
   // it in when empty — that is what a customer means by flexible, and until now
   // they kept being shown February after explicitly letting go of it.
   if (/גמיש[יי]?[םמ]? בתארי|לא משנה התארי|לא משנה מתי|כל תאריך|מתי שיש/.test(t)) {
-    s.month = 'any'; s.flexible_dates = true; s.month_part = null; s.exact_day = null;
+    s.month = 'any'; s.flexible_dates = true; s.month_part = null; s.exact_day = null; s.holiday = null;
   } else if (/לא משנה|גמיש|אין העדפה/.test(t)) {
     if (s.month == null) s.month = 'any';
     s.flexible_dates = true;
@@ -446,7 +474,21 @@ function parseText(text, slots) {
     [/חדר גדול|חדר מרווח|סוויטה|חדרי שינה|כמה חדרים|דירה גדולה|כמה מ"ר|גודל החדר/, 'גודל החדר'],
     [/מקלח|אמבטי|שירותים בחדר|חדרי רחצה|כמה שירותים/, 'חדרי רחצה'],
     [/wifi|וויפי|ויי ?פיי|אינטרנט/i, 'WIFI'],
-    [/ספא|בריכה|סאונה|ג'קוזי|חמאם/, 'ספא ובריכה'],
+    [/ספא|סאונה|ג'קוזי|חמאם|וולנס|wellness/i, 'ספא ובריכה'],
+    // hotel-page facts (data/hotel-facts.json): quoted, never inferred
+    [/בריכ/, 'בריכה'],
+    [/נוף|עם נוף|נוף להר|נוף למסלול/, 'נוף'],
+    [/מרפסת|בלקון/, 'מרפסת'],
+    [/מיקום|במרכז העיירה|במרכז הכפר|מרכז העיירה|שקט בלילה|רועש|רחוב ראשי|קרוב לחנויות|ליד המסעדות|מרחק מהמרכז|מהמרכז/, 'מיקום'],
+    [/מרחק מהמעלית|רחוק מהמעלית|קרוב למעלית|ליד המעלית|כמה מטר למעלית|צמוד למסלול|על המסלול|סקי.?אין|ski.?in|הליכה למסלול|ללכת ברגל למסלול|מרחק מהמסלול/i, 'מרחק מהמעלית'],
+    [/שאטל|סקי ?באס|אוטובוס למסלול|הסעה למסלול/, 'שאטל למסלולים'],
+    [/מסעדה במלון|מסעדת המלון|אוכל במלון|בר במלון|חדר אוכל|ארוחת ערב במלון|יש מסעדה|האוכל טוב|אוכל טוב/, 'מסעדה במלון'],
+    [/חדר משחקים|מועדון ילדים|פינת ילדים|קידס קלאב|kids ?club|לילדים במלון|משחקייה/i, 'מתקנים לילדים במלון'],
+    [/חדר סקי|מייבש נעליים|מייבש מגפיים|לוקר|אחסון ציוד|איפה שמים את הסקי/, 'חדר סקי'],
+    [/חניה|חנייה/, 'חניה'],
+    [/מעלית במלון|יש מעלית|בלי מדרגות|מדרגות/, 'מעלית במלון'],
+    [/שופץ|שיפוץ|משופץ|מתי נבנה|ישן|חדש/, 'שיפוץ'],
+    [/כוכבים|דירוג המלון|איזה רמה המלון|רמת המלון/, 'דירוג המלון'],
   ];
   s.unverifiable = [];
   for (const [re, label] of UNVERIFIABLE) if (re.test(t) && !s.unverifiable.includes(label)) s.unverifiable.push(label);
@@ -843,12 +885,33 @@ function offCommitmentLine(result, slots) {
   const cfg = OFF_COMMITMENT_COPY;
   const tpl = (cfg.constraint_by_country || {})[offComm.country] || cfg.constraint_default;
   const dates = (offComm.open_dates || []).map(fmtDay);
+  // Name the hotels we actually work with there. Until the catalogue existed
+  // the bot could only say "there are limited seats" about a resort it could
+  // not name a single hotel in — which is how "סן אנטון" came back as Ischgl
+  // and Mayrhofen (Tomer, 26/08).
+  const catalogue = require('./catalogue.js');
+  const there = catalogue.inResortHe(offComm.name);
+  const hotelsLine = there.length && cfg.hotels_he
+    ? cfg.hotels_he.replace('{hotels}', catalogue.names(there)) : null;
   return [
     tpl.replace('{resort}', offComm.name),
+    hotelsLine,
     dates.length ? cfg.with_dates_he.replace('{dates}', dates.join(', '))
       : (slots.month == null || slots.month === 'any' ? cfg.no_dates_no_month_he : cfg.no_dates_he),
     cfg.caveat_he,
-  ].join(' ');
+  ].filter(Boolean).join(' ');
+}
+
+// The customer named a hotel by name. If it is one we sell but hold no rooms
+// for, saying "we do not have it" would be false and saying nothing would be
+// worse — this says yes, and hands it to a person without inventing a date.
+function catalogueHotelLine(text) {
+  const catalogue = require('./catalogue.js');
+  const h = catalogue.catalogueOnly(text);
+  if (!h) return null;
+  const tpl = OFF_COMMITMENT_COPY.hotel_only_he;
+  if (!tpl) return null;
+  return tpl.replace('{hotel}', h.name).replace('{resort}', h.resort_he);
 }
 
 // What the search had to give up on, in fixed words. Printed above anything the
@@ -867,9 +930,11 @@ function relaxationLines(result, slots) {
         'Pas de la Casa': 'פאס דה לה קאסה', 'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל' };
       const place = slots && ((slots.destination && (DEST_HE2[slots.destination] || null)) ||
         ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[slots.country]) || null;
+      // asked for a holiday by name — answer about the holiday, not the month
+      const fromHe = (slots && slots.holiday && slots.holiday !== 'any') ? slots.holiday : (MONTH_HE[r.from] || r.from);
       out.push(place
-        ? `ב${place} אין לי יציאות פנויות ב${MONTH_HE[r.from] || r.from}; הקרוב ביותר — ${MONTH_HE[r.to] || r.to}:`
-        : `לא מצאתי בדיוק ב${MONTH_HE[r.from] || r.from}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
+        ? `ב${place} אין לי יציאות פנויות ב${fromHe}; הקרוב ביותר — ${MONTH_HE[r.to] || r.to}:`
+        : `לא מצאתי בדיוק ב${fromHe}, אז הרחבתי ל${MONTH_HE[r.to] || r.to}:`);
     }
     if (r.type === 'location') {
       const sat = (result.notes || []).some(n => n.type === 'saturday_only');
@@ -922,7 +987,7 @@ function phrase(result, slots, cards) {
   const partial = note('camp_age_partial');
   if (partial && partial.ages.length) {
     const ages = partial.ages.join(', ');
-    lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-13, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
+    lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-14, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
   }
 
   if (slots.wrong_year) {
@@ -934,8 +999,8 @@ function phrase(result, slots, cards) {
     const a = (campAge.ages || []);
     const ages = a.length > 1 ? a.slice(0, -1).join(', ') + ' ו-' + a[a.length - 1] : a.join('');
     lines.push(ages
-      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-13, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
-      : 'הקייטנות שלנו מיועדות לגילאי 4-13. הנה מה שפנוי:');
+      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-14, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
+      : 'הקייטנות שלנו מיועדות לגילאי 4-14. הנה מה שפנוי:');
   }
 
   const airportNote = (result.notes || []).find(n => n.type === 'airport_cannot_reach');
@@ -952,18 +1017,39 @@ function phrase(result, slots, cards) {
     // Don't announce "הנה מה שפנוי" when a relaxation line is about to explain
     // what was actually shown — two openings in a row read as two answers.
     const willExplain = (result.relaxed || []).length > 0;
+    // and the reason, which is the part a customer actually wants: February is
+    // the French school holiday. Tomer, 26/08 — he saw the bot answer "why is
+    // there nothing in February" with a generic line about our stock.
+    const why = (guidance.load().messages_he || {}).france_february_he || '';
     lines.push('שימו לב: אין לנו יציאות לצרפת בפברואר (מדלגים מ-30.1 ל-6.3)' +
       (cards.length && !willExplain ? ' — אבל באוסטריה, אנדורה ובולגריה דווקא יש! הנה מה שפנוי:' : '.'));
+    // The reason earns its place when February IS the story. When the airport,
+    // the kids' club and the destination all had something to say first, a
+    // paragraph about French school holidays is the fifth thing the customer
+    // reads — and the line above already told them what happened.
+    if (why && lines.length <= 2) lines.push(why);
   }
   for (const r of result.relaxed || []) {
     // month / location / two_rooms / nights are printed by the server, verbatim
     // — see relaxationLines() above. Everything else below still belongs to the
     // model's paragraph, because it is detail rather than a correction.
+    // "קבוצת הגיל של הילד" with two children in two groups left the parent
+    // guessing which child has no group — name the groups when there are two
+    const groupsHe = (() => {
+      const g = [...SkiSearch.neededAgeGroups(slots.children_ages)];
+      const u = [...new Set(g)];
+      return u.length > 1 ? { s: `קבוצות ${u.join(' ו-')}`, v: 'פועלות', p: 'הן' } : { s: 'קבוצת הגיל של הילד', v: 'פועלת', p: 'היא' };
+    })();
     if (r.type === 'camp_month') {
-      lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו פועלת קבוצת הגיל של הילד, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם היא כן פועלת:`);
+      lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו ${groupsHe.v} ${groupsHe.s}, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם ${groupsHe.p} כן ${groupsHe.v}:`);
     }
     if (r.type === 'camp_location') {
-      lines.push('ביעד שביקשתם אין שבוע שבו פועלת קבוצת הגיל של הילד. הנה יעדים שבהם היא כן פועלת:');
+      const CH = { austria: 'אוסטריה', france: 'צרפת', andorra: 'אנדורה', bulgaria: 'בולגריה' };
+      const from = CH[r.from_country] || 'היעד שביקשתם';
+      const to = (r.to_countries || []).map(c => CH[c] || c).filter(Boolean);
+      const where = to.length ? to.join(' ו-') : 'יעדים אחרים';
+      const month = r.to && MONTH_HE[r.to] ? ` ב${MONTH_HE[r.to]}` : '';
+      lines.push(`ב${from} אין שבוע שבו ${groupsHe.v} ${groupsHe.s}, אז הצגתי את ${where}${month} — שם ${groupsHe.p} כן ${groupsHe.v}:`);
     }
     if (r.type === 'exact_day') {
       lines.push(`אין יציאה ב-${r.wanted}.${r.month} בדיוק — היציאות שלנו שבועיות. הנה הקרובות אליה:`);
@@ -992,13 +1078,13 @@ function phrase(result, slots, cards) {
   // Nine travellers and up is a group booking: flight seats and hotel rooms
   // are checked together, by a person. A two-room split for twelve is not an
   // answer, and offering one quietly wastes the customer's time.
-  const partySize = (slots.adults || 0) + (slots.children_ages || []).length;
+  const partySize = SkiSearch.partyOf(slots);
   if (partySize >= 9) {
     lines.push(note('group_rooms_by_rep')
       ? 'אלה המלונות והתאריכים הפנויים בתנאים שביקשתם. בחבורה בגודל הזה החלוקה לחדרים ' +
-        'ומקומות הטיסה נסגרים מול נציג — השאירו שם וטלפון או התקשרו ל-04-8557722.'
+        'ומקומות הטיסה נסגרים מול נציג — השאירו שם וטלפון או התקשרו ל-' + guidance.phone() + '.'
       : 'בחבורה בגודל הזה החלוקה לחדרים ומקומות הטיסה נסגרים מול נציג. ' +
-        'השאירו שם וטלפון ונציג ישלים אתכם את ההצעה, או התקשרו ל-04-8557722.');
+        'השאירו שם וטלפון ונציג ישלים אתכם את ההצעה, או התקשרו ל-' + guidance.phone() + '.');
   }
 
   // The answer to "יקר לי", in Tomer's own words from config/guidance.json.
@@ -1006,6 +1092,24 @@ function phrase(result, slots, cards) {
   if (obj && note('cheaper_found')) lines.push(obj.cheaper);
   if (obj && note('no_cheaper')) lines.push(obj.none);
 
+  // acknowledge an active preference, so a refine chip visibly does something
+  const prefs = slots.preferences || [];
+  if (cards.length && prefs.length && !lines.length) {
+    const budget = /תקציב/.test(prefs.join(' '));
+    const others = prefs.filter(p => !/תקציב/.test(p));
+    const bits = [];
+    if (budget) bits.push('החסכוניות קודם');
+    if (others.length) bits.push('לפי ' + others.join(', '));
+    lines.push('סידרתי לפי מה שביקשתם — ' + bits.join(', ') + ' (הנציג יאשר סופית):');
+  }
+  // say out loud what was taken into account, then what a rep must confirm
+  const applied = note('applied_requirements');
+  if (cards.length && applied && applied.items.length >= 2) {
+    lines.push('לקחתי בחשבון: ' + applied.items.join(', ') + '.');
+  }
+  if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
+  // the trade-off is advice about the offers, so it follows their introduction —
+  // it used to be the first and only sentence above three cards
   // What one bend would open up. Said once, for the single best trade — a list
   // of alternatives is a menu, and a menu is not advice.
   const trade = note('tradeoffs');
@@ -1027,22 +1131,6 @@ function phrase(result, slots, cards) {
     }
   }
 
-  // acknowledge an active preference, so a refine chip visibly does something
-  const prefs = slots.preferences || [];
-  if (cards.length && prefs.length && !lines.length) {
-    const budget = /תקציב/.test(prefs.join(' '));
-    const others = prefs.filter(p => !/תקציב/.test(p));
-    const bits = [];
-    if (budget) bits.push('החסכוניות קודם');
-    if (others.length) bits.push('לפי ' + others.join(', '));
-    lines.push('סידרתי לפי מה שביקשתם — ' + bits.join(', ') + ' (הנציג יאשר סופית):');
-  }
-  // say out loud what was taken into account, then what a rep must confirm
-  const applied = note('applied_requirements');
-  if (cards.length && applied && applied.items.length >= 2) {
-    lines.push('לקחתי בחשבון: ' + applied.items.join(', ') + '.');
-  }
-  if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
   // Requirements the customer named. Most of them now HAVE an answer, taken
   // from the hotel's own page on pingwin.co.il (data/rooms-raw.json), so the
   // bot answers instead of handing everything to a rep. Only what the page
@@ -1062,7 +1150,7 @@ function phrase(result, slots, cards) {
 
   for (const c of cards) {
     const why = [];
-    if (c.occ && c.occ.max != null) why.push(`מתאים ל-${slots.adults != null ? (slots.adults + (slots.children_ages || []).length) : c.occ.max} נוסעים`);
+    if (c.occ && c.occ.max != null) why.push(`מתאים ל-${slots.adults != null ? SkiSearch.partyOf(slots) : c.occ.max} נוסעים`);
     if (c.camps && c.camps.full && (slots.children_ages || []).length) why.push('קייטנה בעברית לכל הילדים באותו שבוע');
     else if (c.camps && !c.camps.full && c.camps.missing.length) why.push(`שימו לב: פועלת רק קבוצת ${c.camps.running.join(' + ')} — אין קבוצת ${c.camps.missing.join(', ')} בשבוע זה`);
     else if (c.camps && c.camps.waitlist_only && c.camps.waitlist_only.length) why.push(`קבוצת ${c.camps.waitlist_only.join(',')} בהרשמת המתנה (ללא חיוב)`);
@@ -1095,6 +1183,7 @@ function phrase(result, slots, cards) {
 // what really is unknown.
 function cardFacts(c, asked, open) {
   const rf = c.room_facts || {};
+  const pf = c.page_facts || {};
   const out = [];
   const say = (topic, text) => { if (text) { out.push(text); open.delete(topic); } };
   // this card cannot answer it, but another card might — so it is named here
@@ -1152,6 +1241,62 @@ function cardFacts(c, asked, open) {
         if (rf.bath_he) say(topic, 'חדרי רחצה: ' + rf.bath_he);
         else defer('חדרי הרחצה');
         break;
+      // --- verbatim from the hotel page on pingwin.co.il (data/hotel-facts.json).
+      // Present on the page → quoted. Absent → "נציג יאמת", never a guess.
+      case 'בריכה':
+        if (pf.pool_he) say(topic, 'בריכה: ' + pf.pool_he);
+        else if (c.spa_access === 'none') say(topic, 'אין בריכה או ספא במלון הזה');
+        else defer('בריכה');
+        break;
+      case 'נוף':
+        if (pf.view_he) say(topic, 'נוף: ' + pf.view_he);
+        else defer('הנוף מהחדר');
+        break;
+      case 'מרפסת':
+        if (pf.balcony_he) say(topic, 'מרפסת: ' + pf.balcony_he);
+        else defer('מרפסת');
+        break;
+      case 'מיקום':
+        if (pf.location_he) say(topic, 'מיקום: ' + pf.location_he + (pf.center_he ? ' ' + pf.center_he : ''));
+        else defer('המיקום בעיירה');
+        break;
+      case 'מרחק מהמעלית':
+        if (pf.lift_page_he || c.lift_he) say(topic, 'מהמעלית: ' + (pf.lift_page_he || c.lift_he));
+        else defer('המרחק מהמעלית');
+        break;
+      case 'שאטל למסלולים':
+        if (pf.shuttle_he) say(topic, 'שאטל: ' + pf.shuttle_he);
+        else if (pf.lift_page_he || c.lift_he) say(topic, 'מהמעלית: ' + (pf.lift_page_he || c.lift_he));
+        else defer('שאטל למסלולים');
+        break;
+      case 'מסעדה במלון':
+        if (pf.restaurant_he) say(topic, 'אוכל במלון: ' + pf.restaurant_he);
+        else defer('המסעדה במלון');
+        break;
+      case 'מתקנים לילדים במלון':
+        if (pf.kids_he) say(topic, 'לילדים במלון: ' + pf.kids_he);
+        else defer('מתקנים לילדים במלון');
+        break;
+      case 'חדר סקי':
+        if (pf.ski_room_he) say(topic, 'חדר סקי: ' + pf.ski_room_he);
+        else defer('חדר סקי');
+        break;
+      case 'חניה':
+        if (pf.parking_he) say(topic, 'חניה: ' + pf.parking_he);
+        else defer('חניה');
+        break;
+      case 'מעלית במלון':
+        if (pf.elevator_he) say(topic, 'מעלית במלון: ' + pf.elevator_he);
+        else defer('מעלית במלון');
+        break;
+      case 'שיפוץ':
+        if (pf.renovated_he) say(topic, 'שיפוץ: ' + pf.renovated_he);
+        else defer('מועד השיפוץ האחרון');
+        break;
+      case 'דירוג המלון':
+        if (pf.stars_he) say(topic, 'דירוג: ' + pf.stars_he);
+        else defer('דירוג המלון');
+        break;
       // Distance in km only, never a duration (Tomer, 24/08): the time
       // depends on weather, traffic and snow on the road, and a number we
       // cannot honour is worse than no number at all.
@@ -1201,12 +1346,16 @@ const HOTEL_HE = [
 // Returns a hotel only when EXACTLY one is named. "מה עדיף קאזה קארינה או
 // רגנום?" names two, and locking the search to whichever matched first answers
 // a question the customer did not ask.
-function hotelNamed(text) {
+function hotelsNamed(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   const found = new Set();
   for (const [re, name] of HOTEL_HE) if (re.test(t)) found.add(name);
   for (const [name, re] of HOTEL_NAMES) if (name.length >= 5 && re.test(t)) found.add(name);
-  return found.size === 1 ? [...found][0] : null;
+  return [...found];
+}
+function hotelNamed(text) {
+  const found = hotelsNamed(text);
+  return found.length === 1 ? found[0] : null;
 }
 
 // "יש עוד?" is a request for the NEXT options, not a topic to discuss. It used
@@ -1254,7 +1403,15 @@ function notUnderstood(text) {
   const tokens = t.split(/\s+/);
   if (!t || tokens.length > 2 || t.length > 14) return null;
   if (/\d/.test(t) || COURTESY.test(t)) return null;
-  return 'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.';
+  // A two-word fragment that ends in a question mark is a question, not noise
+  // ("עד מתי?", "כמה זמן?"). Answering it with "כמה אתם נוסעים" reads as
+  // ignoring the question; asking what they meant is what a person would do.
+  if (/[?？]\s*$/.test(t)) {
+    return guidance.msg('not_understood_question',
+      'לא בטוח שהבנתי למה הכוונה — אפשר לכתוב את השאלה במשפט אחד ואענה. ובינתיים, כמה אתם נוסעים ומתי בערך?');
+  }
+  return guidance.msg('not_understood',
+    'לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות.');
 }
 
 const ASK_LEXICON = [
@@ -1312,13 +1469,15 @@ const PAUSE = /עזבו? רגע|צריך לבדוק עם|צריכה לבדוק �
 function isPause(text) {
   return PAUSE.test(String(text || ''));
 }
-const PAUSE_HE = 'בכיף, קחו את הזמן — ההצעות לא בורחות ואני כאן כשתחזרו. ואם נוח יותר, השאירו שם וטלפון ונציג יחזור אליכם מתי שתבחרו.';
+const pauseHe = () => guidance.msg('pause', 'בכיף, קחו את הזמן — ההצעות לא בורחות ואני כאן כשתחזרו. ואם נוח יותר, השאירו שם וטלפון ונציג יחזור אליכם מתי שתבחרו.');
 
-const FAREWELL = /תפסיק לשלוח|תפסיקו לשלוח|די עם ההצעות|עזוב אותי|תפסיק להציע|לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|תודה רבה ביי|^ ?(ביי|להתראות|תודה וביי)[\s!.]*$/;
+// "תודה, ביי" is how people actually end a chat, and it used to get
+// "לא בטוח שהבנתי" — the last thing a customer reads before closing the tab.
+const FAREWELL = /תפסיק לשלוח|תפסיקו לשלוח|די עם ההצעות|עזוב אותי|תפסיק להציע|לא רוצה כלום|סתם בדקתי|סתם הסתכלתי|רק מסתכל|לא מעוניין|לא רלוונטי כרגע|אולי בפעם הבאה|^ ?(לא,? ?תודה|תודה,? ?לא)[\s!.]*$|^ ?(תודה רבה|תודה|אוקיי|אוקי|סבבה)?[,\s]*(ביי|להתראות|נתראה|יום טוב|שבוע טוב|לילה טוב|תודה וביי|ביי ביי)[\s!.]*$/;
 function isFarewell(text) {
   return FAREWELL.test(String(text || '').trim());
 }
-const FAREWELL_HE = 'אין בעיה בכלל. אם בהמשך תרצו לבדוק — אני כאן, ואפשר גם להתקשר ל-04-8557722. חורף נעים!';
+const farewellHe = () => guidance.msg('farewell', 'אין בעיה בכלל. אם בהמשך תרצו לבדוק — אני כאן, ואפשר גם להתקשר ל-{phone}. חורף נעים!');
 
 // A resort a customer knows from elsewhere and we do not sell this season.
 // "מתלבטים בין בנסקו לזולדן" used to be answered about Bansko alone, as if
@@ -1345,20 +1504,59 @@ function isGreeting(text) {
 // Before this, anything with a question mark and no ski vocabulary in it got
 // "אני כאן בעיקר להתאמת חופשות סקי" — i.e. a customer asking about
 // cancellation or kosher food was told that is not our subject.
-const guidance = require('./guidance.js');
 
-const FAQ = (() => {
-  const raw = JSON.parse(require('fs').readFileSync(
-    require('path').join(__dirname, '..', 'config', 'faq.json'), 'utf8'));
-  return raw.entries.map(e => ({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match }));
-})();
+// config/faq.json is Tomer's file: he edits answers there without a developer.
+// So a mistake in it must cost one answer, never the site. Previously a stray
+// comma or an unbalanced bracket in a pattern threw at require time and the
+// server would not boot at all — the one file the business owner is invited to
+// edit was the one file that could take the bot down.
+//
+// Now: the file is read on demand and re-read when its mtime changes (same
+// contract as guidance.js, so an edit is live without a restart), each pattern
+// is compiled in its own try, and a bad entry is dropped with a line in the
+// log while every other answer keeps working.
+const FAQ_FILE = require('path').join(__dirname, '..', 'config', 'faq.json');
+let faqCache = null, faqStamp = -1, faqComplained = '';
+function loadFaq() {
+  let stamp = 0;
+  try { stamp = require('fs').statSync(FAQ_FILE).mtimeMs; } catch (e) { stamp = 0; }
+  if (faqCache && stamp === faqStamp) return faqCache;
+  let raw;
+  try {
+    raw = JSON.parse(require('fs').readFileSync(FAQ_FILE, 'utf8'));
+  } catch (e) {
+    if (faqComplained !== 'file:' + e.message) {
+      console.error('faq.json unreadable (%s) — keeping the previous answers', e.message);
+      faqComplained = 'file:' + e.message;
+    }
+    faqStamp = stamp;
+    return (faqCache = faqCache || []);      // last good set, or nothing at all
+  }
+  const out = [], bad = [];
+  for (const e of (raw.entries || [])) {
+    if (!e || !e.id || !e.match || !e.answer_he) { bad.push((e && e.id) || '(ללא id)'); continue; }
+    try {
+      out.push({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match,
+        // a specific answer can silence a general one it already covers:
+        // "למה אין בפברואר" is answered by france_february, and why_none's
+        // paragraph about our stock after it reads as a second, vaguer answer
+        suppresses: Array.isArray(e.suppresses) ? e.suppresses : [] });
+    } catch (err) {
+      bad.push(`${e.id} (${err.message})`);
+    }
+  }
+  if (bad.length) console.error('faq.json: %d entries skipped — %s', bad.length, bad.join('; '));
+  faqCache = out; faqStamp = stamp; faqComplained = '';
+  return out;
+}
+loadFaq();   // fail loudly at startup if the whole file is broken, but still boot
 
 // Order matters: the file lists the more specific patterns first, and the
 // first match wins. Returns {id, he} so callers can log which answer fired.
 // The approved answers, for the semantic router in server/answer-router.js.
 // Same list the regex layer uses — one source, two ways of reaching it.
 function faqEntries() {
-  return FAQ.map(e => ({ id: e.id, answer_he: e.he, match: e.match }));
+  return loadFaq().map(e => ({ id: e.id, answer_he: fillPlaceholders(e.he), match: e.match }));
 }
 
 // Two questions in one message, both of which the patterns know. Free and
@@ -1384,15 +1582,21 @@ function faqMulti(text) {
   }
   if (hits.length < 3) {
     const whole = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-    for (const e of FAQ) {
+    for (const e of loadFaq()) {
       if (hits.length >= 3) break;
       if (hits.some(h => h.id === e.id)) continue;
-      if (e.re.test(whole)) hits.push({ id: e.id, he: e.he });
+      if (e.re.test(whole)) hits.push({ id: e.id, he: fillPlaceholders(e.he) });
     }
   }
   if (!hits.length) return null;
-  return { id: hits[0].id, he: hits.map(h => h.he).join(String.fromCharCode(10)),
-    all: hits.map(h => ({ id: h.id, he: h.he })) };
+  // drop what a more specific answer already said
+  const byId = new Map(loadFaq().map(e => [e.id, e]));
+  const silenced = new Set();
+  for (const h of hits) for (const id of ((byId.get(h.id) || {}).suppresses || [])) silenced.add(id);
+  const kept = hits.filter(h => !silenced.has(h.id));
+  const final = kept.length ? kept : hits;
+  return { id: final[0].id, he: final.map(h => h.he).join(String.fromCharCode(10)),
+    all: final.map(h => ({ id: h.id, he: h.he })) };
 }
 
 function faq(text) {
@@ -1402,7 +1606,7 @@ function faq(text) {
     .replace(/[׳‘’]/g, "'")
     .replace(/[״“”]/g, '"')
     .replace(/\s+/g, ' ') + ' ';
-  for (const e of FAQ) if (e.re.test(t)) return { id: e.id, he: e.he };
+  for (const e of loadFaq()) if (e.re.test(t)) return { id: e.id, he: fillPlaceholders(e.he) };
   return null;
 }
 
@@ -1431,7 +1635,54 @@ function unknownAnswer() {
 // "תחזרו אליי" is a request to be called, not a topic to discuss. The widget
 // turns this into an actual form rather than telling the customer where to
 // find a button.
-const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג/;
+// "אפשר לדבר עם נציג?" is one of the commonest things a customer types, and
+// it used to fall through to the off-topic line instead of opening the form.
+const WANTS_CALLBACK = /תחזרו אליי|תחזור אליי|שיחזרו אליי|תתקשרו אליי|רוצה שיחזרו|רוצה שתחזרו|תשאיר.{0,10}נציג|שנציג יחזור|שידברו איתי|רוצה לדבר עם נציג|רוצה נציג|לדבר עם נציג|לדבר עם בן ?אדם|לדבר עם מישהו|לדבר עם איש|נציג אנושי|בן ?אדם אמיתי|מישהו אנושי|אפשר נציג|תעביר.{0,10}לנציג|העבר.{0,10}לנציג|להעביר.{0,10}לנציג|לעבור לנציג|לשוחח עם נציג|לדבר עם אדם/;
+/* ---- which language? ----
+   A Cyrillic, Arabic or French/English sentence gets one fixed sentence in
+   that language and the form; Hebrew typed in Latin letters ("yesh lachem
+   chavilot") gets a Hebrew invitation to write Hebrew. Anything the English
+   floor above can already parse (month, country, ages) still counts. */
+const TRANSLIT = /\b(yesh|lachem|lecha|lach|ani|anachnu|anahnu|rotze|rotza|rotzim|chavila|chavilot|havila|havilot|kama|ma\b|mah\b|mechir|hamechir|yeladim|zug|mishpacha|efshar|shalom|toda|todah|bevakasha|matai|eifo|sheli|shelanu)\b/i;
+function foreignLanguage(text) {
+  const raw = String(text || '');
+  if (/[א-ת]/.test(raw)) return null;                       // any Hebrew — it is a Hebrew message
+  if (/[\u0400-\u04FF]{3}/.test(raw)) return 'ru';
+  if (/[\u0600-\u06FF]{3}/.test(raw)) return 'ar';
+  if (!/[a-z]{3}/i.test(raw)) return null;                  // digits, emoji, punctuation
+  if (TRANSLIT.test(raw)) return 'translit';
+  if (/\b(bonjour|vous|avez|séjour|sejour|nous|est-ce|merci|semaine|enfants)\b/i.test(raw)) return 'fr';
+  return 'en';
+}
+
+/* ---- who is writing? ----
+   Not every message is a customer looking for a holiday. A travel agent, a
+   company, a school, a journalist, someone who already booked, someone who
+   simply pasted their phone number — each used to get "כמה תהיו?" back.
+   Returns {kind, he, prefill?} or null. Wording lives in config/guidance.json. */
+const PHONE_RE = /(?:\+972|0)5\d[-\s]?\d{3}[-\s]?\d{4}/;
+function leadIntent(text) {
+  const raw = String(text || '').trim();
+  const t = ' ' + raw.replace(/\s+/g, ' ') + ' ';
+  const L = kind => ({ kind, he: guidance.leadIntentText(kind) });
+  // a phone number with at most a name around it — the customer skipped the form
+  const ph = raw.match(PHONE_RE);
+  if (ph && raw.replace(PHONE_RE, '').replace(/[\s,.:;\-|]/g, '').length <= 25 && !/\?/.test(raw)) {
+    const name = raw.replace(PHONE_RE, '').replace(/[,.:;|\-]/g, ' ').replace(/\s+/g, ' ').trim();
+    return { ...L('phone_only'), prefill: { phone: ph[0], name: name || '' } };
+  }
+  if (/אני סוכן|סוכנת נסיעות|סוכן נסיעות|משרד נסיעות|תנאי סוכנים|עמלת סוכן|עמלה לסוכנים|נטו לסוכן|מחיר נטו/.test(t)) return L('agent');
+  if (/נופש חברה|ועד עובדים|ועד ה?עובדים|לעובדים שלנו|החברה שלנו רוצה|הצעת מחיר רשמית|לחברה של|גיבוש (חברה|צוות)|כנס חברה|\d{2,3} עובדים/.test(t)) return L('corporate');
+  if (/תנועת נוער|משלחת|בית ספר|תיכון|חניכים|כיתה [א-יא-ת]|מורים ותלמידים|תלמידים/.test(t) && !/הילדים מפסידים|ימי בית ספר|חופשת|חופש/.test(t)) return L('school');
+  if (/בר מצווה|בת מצווה|בר-מצווה|בת-מצווה|שבת חתן|חתונה באתר|חתונה ב|אירוע משפחתי של|\d{2,3} איש/.test(t) && !/עוגה/.test(t)) return L('celebration_group');
+  if (/עיתונא|כתבה|כתב ב|בלוגר|משפיענ|שת"פ|שיתוף פעולה|נסיעה במימון|ynet|וואלה|כלכליסט|דה מרקר/.test(t)) return L('press');
+  if (/מחפש עבודה|מחפשת עבודה|קורות חיים|לעבוד אצלכם|לעבוד איתכם|מדריך מוסמך|משרה|דרושים|מה השכר|לעבוד בקייטנה/.test(t)) return L('job');
+  if (/אנחנו מלון|רשת מלונות|hotel chain|ספק ביטוח|להיכנס למאגר|רוצה לפרסם אצלכם|תכנית שותפים|אפיליי|משקיעים|בניתי מערכת|contracting/i.test(t)) return L('partnership');
+  if (/סקי מותאם|סקי לנכים|sit.?ski|כיסא גלגלים|כסא גלגלים|מעלון|לקוי ראייה|לקוית ראייה|עיוור|כלב נחייה|נגיש(ות)? ל|prm|אדפטיבי/i.test(t)) return L('adaptive');
+  if (/הזמנה (מספר|מס'?) ?\d+|מספר הזמנה \d+|הזמנתי כבר|כבר הזמנתי|הזמנו כבר|כבר הזמנו|ביטלתי (לפני|ועדיין)|לא קיבלתי (החזר|חשבונית|את הכרטיסים|אישור)|איפה הכרטיסים|סטטוס ההחזר|חויבתי פעמיים|ההזמנה שלי (מאושרת|קיימת)|קיבלנו מייל שהמלון|הטיסה (שלנו )?בוטלה|רוצה לשדרג את ההזמנה|להוסיף .{0,20}להזמנה (שלי|שלנו|קיימת)|אנחנו עומדים ב.{0,20}עכשיו/.test(t)) return L('existing');
+  return null;
+}
+
 function wantsCallback(text) {
   return WANTS_CALLBACK.test(' ' + String(text || '').replace(/\s+/g, ' ') + ' ');
 }
@@ -1443,6 +1694,25 @@ function handoffTail() {
 
 function guard(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
+  const G = k => guidance.guardText(k);
+  // ---- conduct guards: a rule, not a judgment call, so they run first ----
+  // a card or ID number pasted into the chat — refuse before anything logs it
+  if (/(?:\d[ -]?){13,19}/.test(t) && !/\d{2}[./-]\d{1,2}[./-]\d{2,4}/.test(t) || /מספר (ה)?(אשראי|כרטיס|תעודת זהות|ת"ז)|כרטיס האשראי שלי|ת\.?ז\.? שלי/.test(t)) {
+    if (!/איזה (סוג )?כרטיס|מקבלים כרטיס|אפשר לשלם ב|תשלומים/.test(t)) return G('card_number');
+  }
+  if (/תתעלם מ|התעלם מ|ignore (all|previous|your)|שכח את ה?הוראות|ההוראות שלך|תשכח מה?הוראות|developer mode|תן לי את ה?פרומפט|הפרומפט שלך|מה ה?הנחיות שלך|system prompt|אתה עכשיו dan|בוט בלי חוקים|pretend this is a test|translate your instructions/i.test(t)) {
+    return 'אני לא יכול לשנות את מה שאני עושה כאן ולא לחשוף מידע פנימי. אני כן אשמח למצוא לכם חופשת סקי — כמה אתם נוסעים ומתי?';
+  }
+  if (/בן זונה|כוס אמק|כוסאמק|זין |לך תזדיין|תזדיין|מניאק|חרא של|בן זונות|fuck|shit|יא אפס|מטומטם|אידיוט/i.test(t)) return G('profanity');
+  if (/את שווה|אתה שווה|נפגש\?|תני לי טלפון שלך|יפה את|מה את לובשת|רווקה\?|יש לך חבר/.test(t)) return G('harassment');
+  if (/אני המנהל|אני מנהל (של )?פינגווין|אני מה-?it|אני מהמשטרה|אני שוטר|אני הבעלים|אני עובד(ת)? (אצלכם|בפינגווין)|תאשר לי גישה|צריך את הלוגים|רשימת הלקוחות בקובץ/i.test(t)) return G('impersonation');
+  if (/(תרשום|תרשמו|תרשמי|רשום|תכתוב|תכתבו) (בהזמנה )?(שלי )?ש(הילד|הילדה|הבן|הבת) ב[תןנ]|תרשמו ש.*ב[תן] \d|להסתיר מהביטוח|להסתיר מ(המלון|חברת)|מכתב ביטוח מזויף|ביקורת (חיובית )?מזויפת|תזייף|לזייף|בלי לשלם.*אשלם אחר כך|לרשום גיל אחר/.test(t)) return G('fraud');
+  if (/בטוח לטוס|מסוכן לטוס|המצב הביטחוני|אם תהיה מלחמה|בגלל המלחמה|טילים|חות'ים|יסגרו את השמיים|לסגור את השמיים|מלחמה עם איראן|אזעק/.test(t) &&
+      !/גרנטי|guarantee|הגנת מלחמה|החזר|מבטלים|ביטול/.test(t)) return G('security');
+  if (/אנטישמי|שונאים ישראלים|מסוכן לישראלים|בטוח לישראלים|יהודים לא רצויים|לדבר עברית שם זה בסדר/.test(t)) return G('antisemitism');
+  if (/ביבי|נתניהו|בנט|לפיד|גנץ|בן גביר|סמוטריץ|הממשלה|בחירות|המלחמה בעזה|עזה|הפגנ|שמאלנ|ימני|קואליציה|טראמפ|ביידן/.test(t) && /דעה|מה אתה חושב|מה אתם חושבים|בעד|נגד|מצביע/.test(t)) return G('politics');
+  if (/כלב נחייה|כלב נחיה|כלב שירות|כלב עזר/.test(t)) return G('guide_dog');
+  if (/דיזנהאוז|סקי דיל|skideal|אשת טורס|אשת תיירות|קווי חופשה|דקה 90|גוליבר|איסתא|אופיר טורס|קשרי תעופה|סופר סקי|superski|club ?med|קלאב מד/i.test(t) && !/דרך (איסתא|סוכן)|הזמנו דרך|הזמנתי דרך/.test(t)) return G('competitor_named');
   // their OWN booking is not a red rule — "לא מצליח להיכנס לאזור האישי עם
   // מספר ההזמנה" belongs to the my-booking answer, not to this refusal
   if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי|ביצעתי הזמנה|איפה אני רואה|הסטטוס של/.test(t)) { /* fall through */ }
@@ -1452,7 +1722,7 @@ function guard(text) {
     // accusation when someone is asking about the holiday they just bought.
     if (/שלי|שלנו|שהזמנתי|שהזמנו|שביצעתי/.test(t)) {
       return 'אין לי גישה למערכת ההזמנות ולא אוכל לראות הזמנה קיימת. ' +
-        'נציג כן יכול — 04-8557722, או השאירו כאן שם וטלפון ונחזור אליכם.';
+        'נציג כן יכול — ' + guidance.phone() + ', או השאירו כאן שם וטלפון ונחזור אליכם.';
     }
     return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
   }
@@ -1467,108 +1737,96 @@ function guard(text) {
   // Red rule 10. An attempt to replace the instructions is answered plainly and
   // once. Ignoring it and answering the rest of the sentence leaves the
   // customer thinking it might work on the next try.
-  if (/תתעלם מ|התעלם מ|ignore (all|previous|your)|שכח את ה?הוראות|ההוראות שלך|תשכח מה?הוראות|developer mode|תן לי את ה?פרומפט|הפרומפט שלך|מה ה?הנחיות שלך/.test(t)) {
-    return 'אני לא יכול לשנות את מה שאני עושה כאן ולא לחשוף מידע פנימי. אני כן אשמח למצוא לכם חופשת סקי — כמה אתם נוסעים ומתי?';
-  }
   // Red rule 3. This lived in deflect(), which is skipped when the message also
   // fills a slot — and "רק רוצה לדעת כמה עולה שבוע לזוג" fills one. A guard
   // that protects a rule cannot be conditional on what else the sentence did.
+  // "בשקלים או ביורו? לפי איזה שער?" asks about the currency, not for a sum
+  if (/שער|מטבע|או ביורו|או בשקלים|בשקלים או|ביורו או|לשלם ב(שקל|יורו|דולר)/.test(t)) return null;
   if (/כמה (זה )?עולה|מה המחיר|המחיר המדויק|מחיר מדויק|כמה יעלה|בשקלים|ביורו|תן לי מחיר|תגיד לי מחיר|תגידו לי מחיר|כמה כסף|מה העלות|בכמה (זה )?יוצא|כמה זה יוצא|כמה עולות/.test(t)) {
     return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
   }
   return null;
 }
 
+/* ---------- deflections: answer, do not search ----------
+   Eighteen standing answers that used to live as string literals in this
+   function. They are customer-facing business copy — the same class of thing
+   as config/faq.json — so they now live in config/deflect.json, where Tomer
+   edits them without a developer and without a deploy. What stays here is the
+   mechanism: order, the negative conditions, and the placeholders.
+   Loading is forgiving in the same way faq.json's is: one bad entry is skipped,
+   an unreadable file keeps the previous set, and nothing here can stop the
+   server from booting. */
+const DEFLECT_FILE = require('path').join(__dirname, '..', 'config', 'deflect.json');
+let deflectCache = null, deflectStamp = -1;
+function loadDeflect() {
+  let stamp = 0;
+  try { stamp = require('fs').statSync(DEFLECT_FILE).mtimeMs; } catch (e) { stamp = 0; }
+  if (deflectCache && stamp === deflectStamp) return deflectCache;
+  let raw;
+  try {
+    raw = JSON.parse(require('fs').readFileSync(DEFLECT_FILE, 'utf8'));
+  } catch (e) {
+    console.error('deflect.json unreadable (%s) — keeping the previous answers', e.message);
+    deflectStamp = stamp;
+    return (deflectCache = deflectCache || []);
+  }
+  const out = [], bad = [];
+  for (const e of (raw.entries || [])) {
+    if (!e || !e.id || !e.match || !e.answer_he) { bad.push((e && e.id) || '(ללא id)'); continue; }
+    try {
+      out.push({
+        id: e.id,
+        // the callback intent is recognised by the same expression that opens
+        // the lead form in the widget, so it cannot drift apart from it
+        re: e.match === '__WANTS_CALLBACK__' ? WANTS_CALLBACK : new RegExp(e.match),
+        no: e.not ? new RegExp(e.not) : null,
+        he: e.answer_he,
+      });
+    } catch (err) { bad.push(`${e.id} (${err.message})`); }
+  }
+  if (bad.length) console.error('deflect.json: %d entries skipped — %s', bad.length, bad.join('; '));
+  deflectCache = out; deflectStamp = stamp;
+  return out;
+}
+loadDeflect();
+
+// {phone} and {handoff} come from guidance.json, so the office number lives in
+// exactly one place. A missing phone drops its clause rather than printing "{phone}".
+function fillPlaceholders(text) {
+  const h = guidance.load().handoff_he || {};
+  let out = String(text);
+  if (out.includes('{phone}')) {
+    out = h.phone ? out.split('{phone}').join(h.phone)
+      : out.replace(/,?\s*[^,.]*\{phone\}[^,.]*/g, '');
+  }
+  if (out.includes('{handoff}')) out = out.split('{handoff}').join(handoffTail()).trim();
+  // {france_february} — why we do not go to France in February. One sentence,
+  // in guidance.json, so the search path and the FAQ answer cannot drift apart.
+  if (out.includes('{france_february}')) {
+    const m = guidance.load().messages_he || {};
+    out = out.split('{france_february}').join(m.france_february_he || '').replace(/\s{2,}/g, ' ').trim();
+  }
+  // {office_status} — "כרגע המשרד פתוח" / "כרגע המשרד סגור ונפתח מחר ב-9:00",
+  // decided by the clock in Israel at the moment the customer wrote.
+  if (out.includes('{office_status}')) {
+    const st = guidance.officeState();
+    const m = guidance.load().messages_he || {};
+    const txt = !st ? ''
+      : st.open ? (m.office_open_now || 'כרגע המשרד פתוח')
+        : (m.office_closed_now || 'כרגע המשרד סגור ונפתח {opens}').split('{opens}').join(st.opens_he);
+    out = txt ? out.split('{office_status}').join(txt)
+      : out.replace(/\s*\{office_status\}\s*\.?/g, ' ');
+  }
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
 function deflect(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
-  // "מספר ההזמנה" with the definite article was walking straight past this
-  if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת לקוחות|פרטי לקוח|פרטיו של לקוח|מי תפס/.test(t)) {
-    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
-  }
-  // any request for a number in money — "מה המחיר המדויק" and "מחיר בשקלים"
-  // were slipping past and reaching the offers instead of the red-rule answer
-  if (/כמה (זה )?עולה|מחיר מדויק|המחיר המדויק|בכמה|כמה יעלה|בשקלים|ביורו|מה המחיר|תן לי מחיר|תן לי הנחה|הנחה של|בחינם/.test(t)) {
-    return 'המחיר המדויק לחדר ולתאריך שלכם מוצג במסך ההזמנה, ונציג יאשר אותו סופית. כאן אני מציג טווח בלבד.';
-  }
-  // Common follow-ups that were being answered by silently re-showing the same
-  // three cards — which reads as a bot that did not listen.
-  // not "כמה זמן הטיסה" — that is a different question with its own answer
-  if (/כמה לילות|כמה ימים|כמה זמן.{0,12}חופשה|משך החופשה/.test(t) && !/טיסה|נסיעה/.test(t)) {
-    return 'מספר הלילות מופיע על כל כרטיס — הוא משתנה לפי המוצר (7 לילות ברוב היעדים, ובבנסקו יש גם סופי שבוע קצרים).';
-  }
-  // "למה דווקא את אלה?" — the reason is already computed per card (why_he);
-  // this points at it rather than leaving the customer to guess.
-  if (/למה דווקא|למה אלה|למה בחרת|על סמך מה|איך בחרת|למה הצעת/.test(t)) {
-    return 'בחרתי לפי מה שאמרתם: גודל החבורה, החודש, היעד ומה שציינתם שחשוב לכם. ' +
-      'על כל הצעה כתוב למטה למה היא מתאימה. אם משהו לא מדויק — תגידו לי מה לשנות.';
-  }
-
-  // "אם זה לא סגור באמת תגידו לי" — a customer who wants to know whether what
-  // they are looking at is firm. The honest answer is the whole architecture.
-  if (/לא סגור באמת|זה סגור\?|באמת פנוי|זה ודאי|תגידו לי עכשיו|לא רציני/.test(t)) {
-    return 'אני מציג רק מה שרשום אצלנו כפנוי בפועל — לא פרסום. מה שאני לא יכול הוא לשריין: ' +
-      'ההזמנה נסגרת מול נציג, והוא זה שמאשר סופית מול המלון והטיסה. ' +
-      'אם חשוב לכם לנעול תאריך, השאירו שם וטלפון ונציג יחזור אליכם מהר.';
-  }
-
-  // "זה לא עונה לי" — a refusal without a reason. Asking what to change beats
-  // repeating the same three offers with a different sentence above them.
-  if (/לא עונה לי|לא מתאים לי|לא זה|לא אהבתי|משהו אחר לגמרי|לא בא לי אף אחד/.test(t)) {
-    return 'תגידו לי מה לשנות — יעד אחר, חודש אחר, קרוב יותר למסלול או תקציב נמוך יותר — ואביא הצעות אחרות.';
-  }
-
-  // Ski pass and transfers are package-wide rules we know, so answer them
-  // instead of pointing at the booking screen. Handled per offer as well, on
-  // the card, where the pass area (local vs extended) is stated.
-  if (/סקי ?פס/.test(t)) {
-    return 'סקי פס כלול בחבילות לאוסטריה, צרפת ואנדורה. בבולגריה הוא נרכש בנפרד. ' +
-      'היקף הפס (מקומי או מרחבי) משתנה בין היעדים ומצוין על כל הצעה.';
-  }
-  if (/מה כלול|כלול במחיר|מה מקבלים|כולל טיסה|כולל טיסות|מה כולל|כולל המחיר|החבילה כוללת|מה יש בחבילה|זה עם טיסות/.test(t)) {
-    return 'בכל החבילות כלולות טיסות הלוך ושוב והסעות משדה התעופה למלון ובחזרה. ' +
-      'סקי פס כלול בכל היעדים למעט בולגריה, והשכרת ציוד היא תוספת בתשלום (במועדוני השמש היא כלולה). ' +
-      'בסיס האירוח משתנה בין המלונות ומצוין על כל הצעה.';
-  }
-  if (/שעה|שעות טיסה|מתי ממריא|מתי הטיסה|לוח טיסות/.test(t)) {
-    return 'שעות הטיסה אינן סופיות ועשויות להשתנות, ולכן לא אציין אותן כאן. נציג ימסור לכם את הפרטים המעודכנים.';
-  }
-  // "תחזרו אליי" is a request, not small talk. It used to fall through to the
-  // offers and be ignored entirely.
-  if (WANTS_CALLBACK.test(t)) {
-    // the widget opens the form itself (see wantsCallback below), so this only
-    // has to say what is about to happen
-    // the form is about to open, so do not also explain where to find a button
-    const h = (guidance.load().handoff_he || {});
-    return `בשמחה — השאירו כאן שם וטלפון ונציג יחזור אליכם${h.phone ? `, או שאפשר להתקשר ל-${h.phone}` : ''}.`;
-  }
-  // An existing booking is never something this bot should touch.
-  if (/הזמנה קיימת|כבר הזמנתי|ההזמנה שלי|לשנות תאריך.{0,15}הזמנה|לבטל את ההזמנה|שינוי בהזמנה/.test(t)) {
-    return 'שינוי בהזמנה קיימת נעשה מול נציג ולא דרכי. ' + handoffTail();
-  }
-  // Dissatisfaction is on topic by definition. It used to get "I only handle
-  // ski holidays", which is the worst possible answer to an unhappy customer.
-  if (/לא מה שחיפשתי|לא מה שרציתי|לא מתאים לי|לא אהבתי|משהו אחר|לא זה/.test(t)) {
-    return 'סליחה, בואו נדייק — מה לשנות? תאריך, יעד, גודל החדר או משהו אחר?';
-  }
-  // Travelling with a pet is an ordinary travel question, not off topic.
-  if (/כלב|חתול|חיית מחמד|בעל ?חיים/.test(t)) {
-    return 'מדיניות בעלי חיים נקבעת על ידי המלון וחברת התעופה ומשתנה ביניהם. ' + handoffTail();
-  }
-  if (/רוצה להזמין|אני מזמין|לסגור|נסגור|איך מזמינים|רוצה לקחת|קח את|ניקח את|בוא ניקח|נלך על|אני בוחר|אנחנו בוחרים|זה נראה לי|מתאים לנו/.test(t)
-      && !/לא מצליח|לא מצליחה|מנסה כבר|כבר שבוע|אף אחד לא|בעיה/.test(t)) {
-    return 'מצוין. לחצו "המשך להזמנה" בכרטיס שבחרתם כדי לראות את המחיר המדויק, או "תחזרו אליי" ונציג יסגור איתכם — ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.';
-  }
-  if (/הכי משתלם|הכי זול|מתי זול|איפה זול|הכי כדאי מבחינת מחיר/.test(t)) {
-    return 'המחיר משתנה לפי יעד, מלון ותאריך. אמרו לי מתי נוח לכם ואציג את האפשרויות מהזול ליקר — או לחצו "תקציב חסכוני" אחרי שתראו הצעות.';
-  }
-  if (/מה ההבדל|במה שונ|להשוות|השוואה|איזה עדיף|מה ממליץ|מה הכי טוב/.test(t)) {
-    return 'ההבדלים המרכזיים מופיעים על כל כרטיס — היישוב, המרחק מהמעלית, מה יש במלון וטווח המחיר. נציג ישמח לעבור איתכם על ההבדלים לעומק.';
-  }
-  if (/לא מה שביקשתי|לא התאים|לא רלוונטי|לא זה|לא מדויק/.test(t)) {
-    return 'סליחה על כך. אפשר לחדד — יעד אחר, חודש אחר, או תקציב? אפשר גם ללחוץ על אחד הצ׳יפים למטה.';
-  }
-  if (/^ ?(תודה|תודה רבה|מעולה|מגניב|סבבה|יופי)[!. ]* ?$/.test(t)) {
-    return 'בשמחה. אם תרצו לחדד משהו — יעד, חודש או תקציב — אני כאן.';
+  for (const e of loadDeflect()) {
+    if (!e.re.test(t)) continue;
+    if (e.no && e.no.test(t)) continue;
+    return fillPlaceholders(e.he);
   }
   return null;
 }
@@ -1578,7 +1836,7 @@ module.exports = {
   faqMulti,
   faqEntries,
   isPause,
-  PAUSE_HE,
+  get PAUSE_HE() { return pauseHe(); },
   comparingLine,
   bothMonthsLine,
   isRequirementNote,
@@ -1587,14 +1845,16 @@ module.exports = {
   relaxationLines,
   guard,
   offCommitmentLine,
+  catalogueHotelLine,
   canonicalDestination,
   notUnderstood,
   isFarewell,
-  FAREWELL_HE,
+  get FAREWELL_HE() { return farewellHe(); },
   unknownHotel,
   isGreeting,
   wantsMore,
   hotelNamed,
+  hotelsNamed,
   wantsCallback,
   unknownAnswer,
-  noMatchAnswer, parseText, nextQuestion, phrase, deflect };
+  noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent, foreignLanguage };

@@ -18,13 +18,20 @@ const guidance = require('./guidance.js');
 const router = require('./answer-router.js');
 const chatLog = require('./conversation-log.js');
 const { SkiSearch } = require('../data/filter.js');
-const { buildBookingUrl } = require('../config/booking-url.js');
+const { buildBookingUrl, deepLink, pageFor, addNights } = require('../config/booking-url.js');
+const siteRooms = require('./site-rooms.js');
+const inventory = require('./inventory.js');
+const limits = require('./limits.js');
+const leadMail = require('./lead-mail.js');
+const recommend = require('./recommend.js');
 
 loadEnv();
 const has = k => process.env[k] && !process.env[k].includes('xxxx');
 // Provider is chosen by whichever key is present. With none, the bot still
 // works fully on the deterministic Hebrew layer — free, no account.
 function aiMode() {
+  // over the daily budget the bot keeps answering — on the free Hebrew layer
+  if (limits.budgetExceeded(openaiSpend.usd)) return 'offline';
   if (has('OPENAI_API_KEY')) return 'openai';
   if (has('ANTHROPIC_API_KEY')) return 'claude';
   return 'offline';
@@ -36,6 +43,7 @@ const MAX_QUESTIONS = +(process.env.MAX_QUESTIONS || 3);
 // even fit, so it is never merely informative.
 const SKIPPABLE = new Set(['month', 'country', 'airport', 'kids_club']);
 const PORT = +(process.env.PORT || 8787);
+const BOT_VERSION = require('../package.json').version;
 const ROOT = path.join(__dirname, '..');
 const engine = new SkiSearch();
 
@@ -45,7 +53,7 @@ const EMPTY_SLOTS = {
   departure_airport: null, needs_hebrew_kids_club: null, preferences: [],
   excluded_countries: [], excluded_destinations: [], notes_from_customer: [],
   price_objection: false, shown_price_min: null, month_part: null, exact_day: null, hotel: null,
-  month_alt: null,
+  month_alt: null, holiday: null, age_boundary: null,
   off_commitment_destination: null, off_commitment_country: null, out_of_season: false,
   no_saturday_flights: null, nights_wanted: null, unverifiable: [], wants_two_rooms: null,
   wrong_year: null,
@@ -58,7 +66,11 @@ const CHIP_TO_PREF = {
   'מתאים למתחילים': 'מתחילים', 'תקציב חסכוני': 'תקציב',
 };
 
-const FALLBACK_HE = 'סליחה, משהו השתבש לרגע. אפשר לנסח שוב? לחלופין, נציג זמין בטלפון 04-8557722.';
+// Every fixed sentence the bot says comes from config/guidance.json
+// (messages_he), with the wording below as the built-in floor. The office
+// phone number lives in exactly one place: handoff_he.phone.
+const FALLBACK_HE = () => guidance.msg('fallback',
+  'סליחה, משהו השתבש לרגע. אפשר לנסח שוב? לחלופין, נציג זמין בטלפון {phone}.');
 
 /* ---------- helpers ---------- */
 function requiredMissing(slots) {
@@ -71,8 +83,29 @@ function requiredMissing(slots) {
   return missing;
 }
 
+// Three offers read faster as a ladder: which is the cheapest, which is the
+// premium. Derived only from the symbolic price band, only when the bands
+// actually differ — three identical ₪₪₪ cards get no labels rather than
+// invented ones. Never "מומלץ": that word belongs to the hotel data.
+function tierLabel(card, cards) {
+  const rank = p => (String(p || '').match(/₪/g) || []).length;
+  const ranks = cards.map(c => rank(c.price_range));
+  const lo = Math.min(...ranks), hi = Math.max(...ranks);
+  if (cards.length < 2 || lo === hi) return null;
+  const r = rank(card.price_range);
+  if (r === lo && ranks.filter(x => x === lo).length === 1) return 'המשתלם ביותר';
+  if (r === hi && ranks.filter(x => x === hi).length === 1) return 'הפרימיום';
+  return null;
+}
+
+// the widget's "[הוצגו N הצעות: …]" marker — context for the models, never a reply
+function isBookkeeping(content) {
+  return /^\s*\[הוצגו \d+ הצעות/.test(String(content || ''));
+}
+
 function assistantQuestionCount(messages) {
-  return messages.filter(m => m.role === 'assistant' && /\?/.test(String(m.content))).length;
+  return messages.filter(m => m.role === 'assistant' && !isBookkeeping(m.content) &&
+    /\?/.test(String(m.content))).length;
 }
 
 function toSearchSlots(slots) {
@@ -226,7 +259,21 @@ function displayHotel(name) {
   return String(name || '').replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim();
 }
 
-function presentCards(result, slots, skip) {
+// How many people are actually travelling. The site sells one apartment as two
+// products — "2 ח\"ש וסלון 2-4 אורחים" and "2 ח\"ש וסלון 5 אורחים" — and only
+// this number tells them apart.
+function partySize(slots) {
+  const s = slots || {};
+  const kids = Array.isArray(s.children_ages) ? s.children_ages.length : (Number(s.children) || 0);
+  const total = (Number(s.adults) || 0) + kids;
+  return total > 0 ? total : null;
+}
+
+// `opts.noTier` drops the "המשתלם ביותר" / "הפרימיום" badge. The badge ranks
+// two hotels by price band, which is right when the customer is choosing among
+// offers and wrong when they asked us to compare two RESORTS — there it reads
+// as a verdict about a hotel nobody asked about (Tomer, 26/08).
+function presentCards(result, slots, skip, opts = {}) {
   // top 3 for display; ranked by the deterministic sort, but prefer showing
   // three DIFFERENT hotels before a second room of the same hotel
   // never show the same hotel on the same date twice — with only one hotel
@@ -262,6 +309,17 @@ function presentCards(result, slots, skip) {
     // supplement, ski pass or not — so a generic sentence would be wrong.
     package_includes_he: engine.hotelInfo(c.hotel).package_includes_he || null,
     count_available: c.count_available,
+    // soft, factual urgency: the workbook says how many rooms of this type we
+    // still hold. "נשארו 2 חדרים" is true; a countdown timer would not be.
+    // only the last room of its type earns the line — a third of the workbook
+    // is 2–3 rooms, and a badge on every card is noise, not information
+    // ...and only while we can still believe it. This is the line that goes
+    // stale fastest — the last room of a type is the first thing to sell — and
+    // it is also the line that pushes a customer to decide. Past
+    // INVENTORY_STALE_HOURS since the workbook was read, it is withheld
+    // (Tomer, 26/08). Everything else on the card survives.
+    rooms_left_he: (c.count_available === 1 && !inventory.stale(engine.av))
+      ? 'נשאר חדר אחד מהסוג הזה' : null,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,
     // Everything the hotel pages taught us about THIS unit. This list used to
@@ -272,12 +330,49 @@ function presentCards(result, slots, skip) {
     room_facts: c.room_facts, board_he: c.board_he, transfer_he: c.transfer_he,
     ski_pass_he: c.ski_pass_he, ski_pass_included: c.ski_pass_included,
     equipment_he: c.equipment_he, equipment_included: c.equipment_included,
-    wifi_he: c.wifi_he, spa_he: c.spa_he, spa_access: c.spa_access,
+    wifi_he: c.wifi_he, spa_he: c.spa_he, spa_access: c.spa_access, page_facts: c.page_facts || null,
     spa_access_he: c.spa_access_he, spa_note_he: c.spa_note_he, spa_min_age: c.spa_min_age,
     separate_beds: c.separate_beds, separate_beds_other_he: c.separate_beds_other_he,
     // the hotel's own page — the customer clicked this hotel, not the home page
-    booking_url: buildBookingUrl(engine.hotelInfo(c.hotel)),
-  }));
+    // the hotel's own quote form, with the dates, the party and (when we can
+    // match it) the room already filled — see config/booking-url.js
+    booking_url: deepLink(engine.hotelInfo(c.hotel), {
+      date: c.date, nights: c.nights, room: c.room, board_he: c.board_he,
+      // the hint is what the workbook knows and the room's name does not
+      // always say — the site writes "Premium with View 4-5 pax" where we
+      // write "CONN Premium with View 5 pax"
+      // the same page the link goes to — Casa Karina answers about a short
+      // stay only on its short-stay siteID
+      room_id: siteRooms.idFor(pageFor(engine.hotelInfo(c.hotel), c.nights).siteID,
+        c.date, addNights(c.date, c.nights), c.room,
+        { type: c.room_type, occMin: c.occ_min, occMax: c.occ_max,
+          party: partySize(slots), hotel: c.hotel }),
+    }, slots),
+  })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
+}
+
+/* ---------- lead delivery ----------
+   A lead nobody saw is a customer lost. LEAD_WEBHOOK_URL (Make/Zapier/Sheets/
+   CRM) receives every lead as JSON, signed with LEAD_WEBHOOK_SECRET when set;
+   three attempts with backoff, and the JSONL on disk is the record of truth
+   either way. Email/WhatsApp delivery plugs in here once Pingwin says where. */
+async function notifyLead(record) {
+  const url = process.env.LEAD_WEBHOOK_URL;
+  if (!url) return;
+  const body = JSON.stringify(record);
+  const headers = { 'content-type': 'application/json', 'x-lead-id': record.id };
+  if (process.env.LEAD_WEBHOOK_SECRET) {
+    headers['x-signature'] = require('crypto').createHmac('sha256', process.env.LEAD_WEBHOOK_SECRET).update(body).digest('hex');
+  }
+  const delays = [0, 2000, 10000];
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+    try {
+      const r = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(8000) });
+      if (r.ok) return;
+      if (r.status >= 400 && r.status < 500 && r.status !== 429) throw new Error('rejected ' + r.status);
+    } catch (e) { if (i === delays.length - 1) throw e; }
+  }
 }
 
 /* ---------- chat orchestration ---------- */
@@ -295,8 +390,58 @@ async function handleChat(body) {
 
   // ---- step 1: deterministic Hebrew parse — always runs, always free ----
   let slots = offline.parseText(lastUser, prevSlots);
+  // One conversation id, minted on the first turn and carried by every reply —
+  // including the early returns (greeting, farewell, guard, language). It is
+  // what ties a lead to the chat that produced it, and it used to be handed
+  // back only when Turnstile was on, so most leads had no chat at all.
+  if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
   let replyIfNotReady = null;
   let modelUsed = false;
+
+  // ---- step 1a: not Hebrew? one sentence in their language, and the form ----
+  const lang = offline.foreignLanguage(lastUser);
+  // transliterated Hebrew always gets the invitation (what it parsed is kept);
+  // a real foreign sentence that the English floor already understood
+  // ("family of 4 in february") goes on to the search instead
+  if (lang && (lang === 'translit' || !slotsChanged(prevSlots, slots)) && !offline.guard(lastUser)) {
+    const line = guidance.languageText(lang);
+    if (line) {
+      if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+      chatLog.logTurn({ conversationId: body.conversationId || slots._cid, userText: lastUser, reply: line,
+        cards: [], result: { notes: [], relaxed: [] }, slots, modelUsed: false, ms: Date.now() - startedAt,
+        notUnderstood: false, answeredBy: 'lang:' + lang });
+      return {
+        open_lead_form: lang !== 'translit', lead_kind: lang !== 'translit' ? 'language_' + lang : null, lead_prefill: null,
+        reply_he: line, model_used: false, pending_parameter: lang === 'translit' ? 'adults' : null,
+        slots, cards: [], two_room_splits: [], notes: [], relaxed: [],
+        chips: lang === 'translit' ? ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'] : [], chip_to_pref: CHIP_TO_PREF,
+        ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'lang', lang, faq_ids: [], guard: null, off_topic: false, not_understood: false, pending: null } } : {}),
+      };
+    }
+  }
+
+  // ---- step 1b: is this even a customer looking for a holiday? ----
+  // A travel agent, a company, a school, a journalist, someone who already
+  // booked, someone who pasted a phone number — one sentence and the form,
+  // tagged with who they are, instead of "כמה תהיו?".
+  const leadIntent = !offline.guard(lastUser) && offline.leadIntent(lastUser);
+  if (leadIntent) {
+    // a phone number typed after "אני סוכן" is still the agent's lead
+    slots._lead_kind = (leadIntent.kind === 'phone_only' && prevSlots._lead_kind) ? prevSlots._lead_kind : leadIntent.kind;
+    if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+    chatLog.logTurn({
+      conversationId: body.conversationId || slots._cid, userText: lastUser, reply: leadIntent.he,
+      cards: [], result: { notes: [], relaxed: [] }, slots, modelUsed: false, ms: Date.now() - startedAt,
+      notUnderstood: false, answeredBy: 'lead:' + leadIntent.kind,
+    });
+    return {
+      open_lead_form: leadIntent.kind !== 'job' && leadIntent.kind !== 'partnership',
+      lead_kind: leadIntent.kind, lead_prefill: leadIntent.prefill || null,
+      reply_he: leadIntent.he, model_used: false, pending_parameter: null,
+      slots, cards: [], two_room_splits: [], notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'lead', lead_kind: leadIntent.kind, faq_ids: [], guard: null, off_topic: false, not_understood: false, pending: null } } : {}),
+    };
+  }
 
   // ---- step 2: escalate to the model ONLY if step 1 learned nothing ----
   if (aiMode() !== 'offline' && shouldAskModel(prevSlots, slots, lastUser)) {
@@ -423,6 +568,15 @@ async function handleChat(body) {
   if (faqHit && faqHit.id === 'compare_countries' && (slots.compare || []).length) {
     faqHit = null;
   }
+  // Reasoned recommendation (q25): "איזה אתר מתאים למשפחה?", "טיניי או ואל
+  // טורנס?", "איפה יש קרחון?" — answered from the approved resort table with
+  // the facts as reasons. It outranks the generic compare/country lecture.
+  let recAnswer = null;
+  if (!offline.guard(lastUser)) {
+    recAnswer = recommend.answer(lastUser, slots);
+    if (recAnswer) faqHit = { id: 'recommend', he: recAnswer.he, chips: recAnswer.chips,
+      all: [{ id: 'recommend', he: recAnswer.he }] };
+  }
 
   // A pure policy question from someone who has told us nothing — cancellation
   // terms, deposits, insurance — used to be answered correctly and then buried
@@ -432,6 +586,24 @@ async function handleChat(body) {
     slots.month == null && slots.country == null && slots.destination == null &&
     !slots.children_count;
   const PER_CARD_IDS = new Set(['spa', 'wifi', 'help_me']);
+  // "על אילו שני אתרים להשוות?" is a question back to the customer. Three
+  // hotels underneath it answer something nobody asked — which is how a
+  // request to compare two resorts came back as one hotel with a price badge.
+  if (recAnswer && recAnswer.ask_only) {
+    slots._lastQuestion = 'compare_which';
+    chatLog.logTurn({
+      conversationId: body.conversationId || slots._cid || (slots._cid = 'c' + Math.random().toString(36).slice(2, 10)),
+      userText: lastUser, reply: recAnswer.he, cards: [], result: { notes: [], relaxed: [] },
+      slots, modelUsed, ms: Date.now() - startedAt, notUnderstood: false, answeredBy: 'recommend',
+    });
+    return {
+      open_lead_form: false, reply_he: recAnswer.he, model_used: false,
+      pending_parameter: null, slots, cards: [], two_room_splits: [],
+      notes: [], relaxed: [], chips: recAnswer.chips || [], chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'recommend', faq_ids: ['recommend'],
+        guard: null, off_topic: false, not_understood: false, pending: 'compare_which' } } : {}),
+    };
+  }
   if (faqHit && nothingKnownYet && !slotsChanged(prevSlots, slots) &&
       !PER_CARD_IDS.has(faqHit.id) && !offline.guard(lastUser)) {
     slots._lastQuestion = 'adults';
@@ -465,8 +637,12 @@ async function handleChat(body) {
       reply_he: replyText, model_used: modelUsed,
       pending_parameter: 'adults', slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [],
-      chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
+      chips: (faqHit.chips && faqHit.chips.length) ? faqHit.chips : ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
       chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: {
+        answered_by: faqHit.routed ? 'router' : 'faq', faq_ids: (faqHit.all || [faqHit]).map(a => a.id),
+        guard: null, off_topic: false, not_understood: false, pending: 'adults', early_return: true,
+      } } : {}),
     };
   }
 
@@ -507,8 +683,10 @@ async function handleChat(body) {
     else { pendingQuestion = q; delete slots._lastQuestion; }
   }
 
-  const OFF_TOPIC_HE = 'אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.';
-  const SEASON_HE = 'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.';
+  const OFF_TOPIC_HE = guidance.msg('off_topic',
+    'אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-{phone}.');
+  const SEASON_HE = guidance.msg('out_of_season',
+    'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.');
   // a direct answer to a direct question (exact price, other customers'
   // bookings) — showing offers again instead would read as evasion
   // A briefing is not a question. "…- סקי פס - השכרת ציוד…" inside a long
@@ -522,7 +700,7 @@ async function handleChat(body) {
   // The red-rule guard runs unconditionally — not gated on the FAQ, not gated
   // on whether the message also filled a slot.
   let guarded = offline.guard(lastUser) ||
-    offline.unknownHotel(lastUser) || offline.unknownResort(lastUser);
+    offline.unknownHotel(lastUser) || offline.catalogueHotelLine(lastUser) || offline.unknownResort(lastUser);
   // the same refusal twice running is right to repeat — and reads better as a
   // person repeating themselves on purpose
   if (guarded && guarded === prevSlots._lastGuard) guarded = 'כאמור — ' + guarded;
@@ -553,8 +731,11 @@ async function handleChat(body) {
   // when the complaint answer opens with its own, the social line yields.
   let social = offline.socialLine(lastUser);
   if (social && faqHit && /מצטער/.test(social) && /מצטער/.test(faqHit.he)) social = null;
+  // "בת 3 ו-10 חודשים" — say how the age is reckoned, once
+  const ageLine = slots.age_boundary != null && prevSlots.age_boundary == null ? guidance.languageText('age_boundary') : null;
   let preamble = [
     social,
+    ageLine,
     deflection,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     !deflection && faqSuppressed ? PER_CARD_POINTER[faqHit.id] : null,
@@ -597,8 +778,12 @@ async function handleChat(body) {
   const nothingKnown = slots.adults == null && !(slots.children_ages || []).length &&
     slots.month == null && slots.country == null && slots.destination == null;
   if (offline.isPause(lastUser)) {
+    // "אחשוב על זה" is the moment to offer the form — once. The research
+    // (delayed capture, after value) says this beats asking up front.
+    const nudge = !prevSlots._nudged && (prevSlots._shown || []).length > 0;
+    if (nudge) slots._nudged = true;
     return {
-      open_lead_form: false, reply_he: offline.PAUSE_HE, model_used: false,
+      open_lead_form: nudge, reply_he: offline.PAUSE_HE, model_used: false,
       pending_parameter: null, slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
     };
@@ -606,6 +791,8 @@ async function handleChat(body) {
   if (offline.isFarewell(lastUser)) {
     return {
       open_lead_form: false, reply_he: offline.FAREWELL_HE, model_used: false,
+      // the one moment Pingi is worth more than 24 pixels: he waves goodbye
+      mood: 'wave',
       pending_parameter: null, slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
     };
@@ -629,8 +816,8 @@ async function handleChat(body) {
     slots._lastQuestion = 'adults';
     return {
       open_lead_form: false,
-      reply_he: 'היי! אני עוזר למצוא חופשת סקי של פינגווין שבאמת פנויה.\n' +
-        'כדי להתחיל — כמה תהיו בסך הכל, ונוסעים גם ילדים? אדייק לפי זה.',
+      reply_he: guidance.msg('greeting', 'היי! אני עוזר למצוא חופשת סקי של פינגווין שבאמת פנויה.\n' +
+        'כדי להתחיל — כמה תהיו בסך הכל, ונוסעים גם ילדים? אדייק לפי זה.'),
       model_used: false, pending_parameter: 'adults', slots, cards: [],
       two_room_splits: [], notes: [], relaxed: [],
       chips: ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים', 'בלי ילדים'],
@@ -644,7 +831,10 @@ async function handleChat(body) {
   // list runs out we say so rather than silently looping.
   const more = offline.wantsMore(lastUser);
   const seenBefore = new Set(prevSlots._shown || []);
-  let cards = presentCards(result, slots, more ? seenBefore : null);
+  // a resort comparison is answered in words above; the cards below it are
+  // "what is open in each", not a ranking
+  const comparingResorts = !!(recAnswer && (recAnswer.intent.kind === 'compare' || recAnswer.intent.kind === 'countries'));
+  let cards = presentCards(result, slots, more ? seenBefore : null, { noTier: comparingResorts });
 
   // Tomer, 25/08: ask two or three questions FIRST, then show offers — unless
   // we already know enough. Showing three hotels after every message, before
@@ -678,12 +868,15 @@ async function handleChat(body) {
     wantsToSee || offline.isGreeting(lastUser) ||
     (slots.notes_from_customer || []).length > (prevSlots.notes_from_customer || []).length ||
     (slots.preferences || []).length > (prevSlots.preferences || []).length;
-  if (holdingForDetails && !understoodSomething && lastUser.trim()) {
+  // …but say it once. Step 3 already puts the line in the preamble when the
+  // message is off topic, and a customer who asked for a cake recipe got the
+  // same sentence twice, one under the other.
+  if (holdingForDetails && !understoodSomething && lastUser.trim() && !preamble.includes(OFF_TOPIC_HE)) {
     preamble = [preamble, OFF_TOPIC_HE].filter(Boolean).join(String.fromCharCode(10));
   }
   let exhausted = false;
   if (more && !cards.length) {
-    cards = presentCards(result, slots);      // start over rather than show nothing
+    cards = presentCards(result, slots, null, { noTier: comparingResorts });   // start over rather than show nothing
     exhausted = true;
   }
   slots._shown = [...seenBefore, ...cards.map(c => c.hotel + '|' + c.date)].slice(-30);
@@ -721,19 +914,28 @@ async function handleChat(body) {
   // for Italy, the model rewrote the paragraph in its own words and the reason
   // — limited flight and hotel places, and that a rep can check other dates —
   // vanished from the reply.
-  const offCommLine = offline.offCommitmentLine(result, slots);
+  // From here to the end of the turn nothing is allowed to throw away the
+  // search result. Each deterministic line is built behind `safely`, so one
+  // unexpected shape costs that sentence and not the three real offers under
+  // it. (The template, the model phrasing and the final assembly are wrapped
+  // the same way further down.)
+  const safely = (what, fn, fallback = null) => {
+    try { return fn(); }
+    catch (e) { console.error(`reply line "${what}" failed:`, e.message); return fallback; }
+  };
+  const offCommLine = safely('off-commitment', () => offline.offCommitmentLine(result, slots));
   // What the search had to widen — a different month, a different country, two
   // rooms instead of one — is the most important sentence in the reply, and the
   // model kept paraphrasing it into nothing. Asked for December, shown January,
   // and not a word about the gap: three separate audit rounds.
-  const widened = offline.relaxationLines(result, slots);
+  const widened = safely('relaxations', () => offline.relaxationLines(result, slots), []) || [];
   // ...but said once. A customer who has already read "לא מצאתי בדיוק בדצמבר,
   // אז הרחבתי לינואר" does not need it again on the next turn; they know.
   const saidFixed = new Set(prevSlots._fixed_said || []);
   // the comparison verdict rides in the same verbatim channel — the model kept
   // rewriting "באוסטריה לא מצאתי" into something friendlier and wrong
-  let cmpLine = offline.comparingLine(result, slots);
-  const monthsLine = offline.bothMonthsLine(result, slots, cards.length > 0);
+  let cmpLine = safely('comparison', () => offline.comparingLine(result, slots));
+  const monthsLine = safely('both-months', () => offline.bothMonthsLine(result, slots, cards.length > 0));
   // "אפשר בדצמבר 2025?" — a fact about their request, true whether or not we
   // are showing offers this turn
   const yearLine = slots.wrong_year
@@ -756,31 +958,53 @@ async function handleChat(body) {
   // Offers held back for now (Tomer, 25/08): the reply is the question, and
   // nothing that describes a list the customer cannot see — and certainly not
   // "לא מצאתי התאמה", which would be a lie about a search that did find some.
-  const templated = holdingForDetails ? '' :
-    (offline.phrase(result, sayingSlots, cards) ||
-      (cards.length ? 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:' :
-        offline.noMatchAnswer()));
+  const CARDS_FLOOR_HE = guidance.msg('cards_floor', 'הנה מה שנראה פנוי אצלנו — הנציג יאשר סופית:');
+  let templated;
+  try {
+    templated = holdingForDetails ? '' :
+      (offline.phrase(result, sayingSlots, cards) ||
+        (cards.length ? CARDS_FLOOR_HE : offline.noMatchAnswer()));
+  } catch (e) {
+    // the template builder is deterministic, but it reads a dozen optional
+    // shapes off the result; one unexpected null must not cost the offers
+    console.error('template phrasing failed:', e.message);
+    templated = cards.length ? CARDS_FLOOR_HE : FALLBACK_HE();
+  }
   // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
   // sees the offers the deterministic filter already chose, so it cannot
   // invent one; and anything it returns must survive validate() or we ship
   // the template unchanged. The template is therefore the floor, never a
   // regression.
-  const lastReply = [...messages].reverse().find(m => m.role === 'assistant');
+  // The widget files a bookkeeping line "[הוצגו 3 הצעות: …]" as an assistant
+  // message after every card turn. It is not a reply — comparing the new
+  // phrasing against it meant the real previous sentences were never deduped
+  // whenever cards had been shown.
+  const lastReply = [...messages].reverse().find(m => m.role === 'assistant' && !isBookkeeping(m.content));
   // A direct answer to a direct question — a price rule, a booking decision, a
   // refusal — is complete on its own. Letting the model add three sentences of
   // card facts under it turned "ניקח את הראשון" into a lecture.
   // Some standing answers are about what we will NOT do. Letting the model add
   // its own paragraph under them produced a reply that refused to rank hotels
   // and then ranked them.
-  const NO_PARAGRAPH_AFTER = new Set(['compare', 'compare_countries', 'complaint',
+  const NO_PARAGRAPH_AFTER = new Set(['compare', 'compare_countries', 'recommend', 'complaint',
     'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human']);
   const answeredOnly = !!faqHit &&
     (!slotsChanged(prevSlots, slots) || NO_PARAGRAPH_AFTER.has(faqHit.id));
-  const intro = (deflection || answeredOnly || holdingForDetails) ? templated : await phraseWithModel({
-    slots: sayingSlots, cards, result, fallback: templated,
-    lastReply: lastReply ? lastReply.content : null,
-    answered: preamble || null,
-  });
+  // The search is already done at this point — three real, available hotels are
+  // sitting in `cards`. Everything from here on is wording, and wording must
+  // never be able to throw them away: a customer who reads "משהו השתבש" instead
+  // of the offers we found is the most expensive failure this bot has.
+  let intro;
+  try {
+    intro = (deflection || answeredOnly || holdingForDetails) ? templated : await phraseWithModel({
+      slots: sayingSlots, cards, result, fallback: templated,
+      lastReply: lastReply ? lastReply.content : null,
+      answered: preamble || null,
+    });
+  } catch (e) {
+    console.error('phrasing failed, falling back to the template:', e.message);
+    intro = templated;
+  }
   slots._notes_said = [...new Set([...(prevSlots._notes_said || []),
     ...(slots.notes_from_customer || [])])].slice(-20);
 
@@ -794,13 +1018,41 @@ async function handleChat(body) {
   else if (!(slots.children_ages || []).length && slots.no_children !== true) {
     gapChips.push('בלי ילדים');
   }
-  if (slots.month == null) gapChips.push('דצמבר', 'ינואר', 'פברואר', 'מרץ');
+  // the school calendar is how families think about dates — Hanukkah and
+  // Purim are one tap, the bare months stay for everyone else
+  if (slots.month == null) gapChips.push('חנוכה', 'ינואר', 'פברואר', 'פורים');
   if (slots.departure_airport == null) gapChips.push('טיסה מנתב"ג', 'טיסה מחיפה');
   if (slots.country == null && slots.destination == null) {
     const ex = slots.excluded_countries || [];
     const byHe = { 'אוסטריה': 'austria', 'צרפת': 'france', 'אנדורה': 'andorra', 'בולגריה': 'bulgaria' };
     for (const [he, code] of Object.entries(byHe)) if (!ex.includes(code)) gapChips.push(he);
   }
+
+  // When the bot ASKS something, the chips must answer that question and
+  // nothing else. Tomer, 26/08: under "באיזה חודש תרצו לצאת?" the widget also
+  // offered "טיסה מנתב\"ג" and "טיסה מחיפה" — buttons that answer a question
+  // nobody asked, next to a question with no month buttons for December or
+  // March. Chips are the answer sheet for the question on screen.
+  const chipsForQuestion = (text) => {
+    const q = String(text || '');
+    if (/כמה תהיו|כמה נוסעים|כמה אתם|בסך הכול|בסך הכל/.test(q)) {
+      return ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'];
+    }
+    if (/גילאים|בן כמה|בת כמה|נוסעים גם ילדים|יש ילדים/.test(q)) {
+      return ['בלי ילדים', 'ילד אחד', 'שני ילדים', 'שלושה ילדים'];
+    }
+    if (/חודש|מתי תרצו|מתי לצאת|באיזה תאריך|אילו תאריכים/.test(q)) {
+      return ['חנוכה', 'דצמבר', 'ינואר', 'פברואר', 'מרץ', 'פורים', 'גמיש'];
+    }
+    if (/קייטנ/.test(q)) return ['כן, קייטנה בעברית', 'בלי קייטנה'];
+    if (/לטוס|נתב"ג|נתב״ג|שדה התעופה/.test(q)) return ['טיסה מנתב"ג', 'טיסה מחיפה'];
+    if (/יעד שמושך|איזו מדינה|אוסטריה, צרפת/.test(q)) {
+      const ex = slots.excluded_countries || [];
+      const byHe = { 'אוסטריה': 'austria', 'צרפת': 'france', 'אנדורה': 'andorra', 'בולגריה': 'bulgaria' };
+      return Object.entries(byHe).filter(([, c]) => !ex.includes(c)).map(([he]) => he);
+    }
+    return null;
+  };
 
   // The closing line goes last of all — after the question, so the reply ends
   // by moving forward rather than by asking. Skipped when the wording already
@@ -810,8 +1062,21 @@ async function handleChat(body) {
     preamble = [preamble, 'אלה כל האפשרויות שמצאתי בתנאים האלה. אם נשנה תאריך או יעד — ייפתחו נוספות.']
       .filter(Boolean).join(String.fromCharCode(10));
   }
+  // Two turns in a row the bot could not use is a bug report from a real
+  // customer — and the point to hand over, once, rather than keep guessing.
+  const lostNow = !!(lastUser && !slotsChanged(prevSlots, slots) && !modelUsed && !faqHit && !deflection &&
+    !offline.wantsMore(lastUser) && !offline.isGreeting(lastUser) && !offline.wantsCallback(lastUser) &&
+    !(slots.preferences || []).some(p => !(prevSlots.preferences || []).includes(p)));
+  slots._lost = lostNow ? (prevSlots._lost || 0) + 1 : 0;
+  const lostNudge = lostNow && slots._lost >= 2 && !prevSlots._nudged;
+  const exhaustedNudge = exhausted && !prevSlots._nudged;
+  if (lostNudge) {
+    preamble = [preamble, 'נראה שלא הצלחתי להבין — עדיף שנציג ידבר אתכם. השאירו שם וטלפון, או כתבו לנו בוואטסאפ מהכפתור למעלה.']
+      .filter(Boolean).join(String.fromCharCode(10));
+  }
+  if (lostNudge || exhaustedNudge) slots._nudged = true;
 
-  const replyText = (() => {
+  const composeReply = () => {
     // THE COVERAGE GUARANTEE. The ack lines used to live inside the template,
     // and whenever the model's wording passed validation the template — acks
     // included — was replaced whole. That is where most "חסר" rejections came
@@ -909,6 +1174,18 @@ async function handleChat(body) {
       : guidance.closing(anyOffer ? (oneOnly ? 'with_one_offer' : 'with_offers') : 'no_offers');
     const said = parts.join(String.fromCharCode(10));
     if (close && !said.includes(close.slice(0, 18))) { parts.push(close); slots._closed = true; }
+    // the widget prints the closing UNDER the offers, where the buttons it
+    // refers to are; above three cards it pushed them below the fold
+    if (close && anyOffer) slots._after_cards = close;
+    // When the workbook has not reached us for a while, say so in the customer's
+    // terms rather than in ours: the rooms were free at the last update and
+    // availability moves (Tomer, 26/08). One line, only with offers on screen,
+    // and only when it is actually true — a line the customer sees every time
+    // is a line they stop reading.
+    if (anyOffer && inventory.stale(engine.av)) {
+      const moving = (guidance.load().messages_he || {}).inventory_moving_he;
+      if (moving && !parts.some(x => String(x).includes(moving.slice(0, 20)))) parts.push(moving);
+    }
     // A last trim on the assembled reply. phrase() caps its own lines, but a
     // FAQ answer, a question and a closing arrive from here — a kosher-keeping
     // family asking about camps got six paragraphs. The softer lines go first.
@@ -966,7 +1243,18 @@ async function handleChat(body) {
     // one turn later.
     slots._lastLines = [...new Set([...alreadySaid, ...all])].slice(-24);
     return all.join(String.fromCharCode(10));
-  })();
+  };
+  // Same rule as the phrasing above: assembling the sentences is the last thing
+  // that happens, and it happens after the expensive part succeeded. If it
+  // throws, ship what we already have — the offers plus the plain template —
+  // rather than losing the turn.
+  let replyText;
+  try {
+    replyText = composeReply();
+  } catch (e) {
+    console.error('reply assembly failed, shipping the plain lines:', e.message, e.stack);
+    replyText = [preamble, intro].filter(Boolean).join(String.fromCharCode(10)) || templated || FALLBACK_HE();
+  }
 
   // One line per turn. Every defect in this project was found by a person
   // reading a reply; this is what makes that possible without waiting for a
@@ -982,24 +1270,40 @@ async function handleChat(body) {
       : faqHit ? (faqHit.routed ? 'router' : 'faq') : null,
   });
 
+  // the question this turn actually ended on: the blocking one if we held the
+  // offers back, otherwise the one that rode along under them
+  const askedNow = replyIfNotReady || tailQuestion || null;
+  const focusedChips = cards.length ? null : chipsForQuestion(askedNow);
+
   // A request to be called back opens the form, on the offer they were looking
   // at if there is one. Telling someone where to find a button is not service.
   slots._lastFaqId = faqHit ? faqHit.id : null;
   slots._lastGuard = guarded || null;
-  const askForDetails = offline.wantsCallback(lastUser);
+  const askForDetails = offline.wantsCallback(lastUser) || lostNudge || exhaustedNudge;
 
   return {
     open_lead_form: askForDetails,
     // the remaining parameters are offered as chips, not asked as a question —
     // a customer looking at three real offers should not also face an interview
     reply_he: replyText,
+    after_cards_he: (cards.length && slots._after_cards && replyText.includes(slots._after_cards)) ? slots._after_cards : null,
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
     two_room_splits: (result.two_room_splits || []).map(sp => ({ ...sp, hotel: displayHotel(sp.hotel) })),
     notes: result.notes, relaxed: result.relaxed,
-    chips: cards.length ? [...gapChips, ...CHIP_LABELS] : gapChips,
+    // with offers on screen the chips are for exploring; with a question on
+    // screen they are for answering it
+    chips: cards.length ? [...gapChips, ...CHIP_LABELS] : (focusedChips || gapChips),
     chip_to_pref: CHIP_TO_PREF,
+    // how the turn was decided — for the question-bank harness only, never
+    // shown to customers (tests/test-bank.js sets BANK_DEBUG=1)
+    ...(process.env.BANK_DEBUG ? { debug: {
+      answered_by: guarded ? 'guard' : deflection ? 'deflect' : faqHit ? (faqHit.routed ? 'router' : 'faq') : null,
+      faq_ids: faqHit ? (faqHit.all || [faqHit]).map(a => a.id) : [],
+      guard: guarded || null, off_topic: !!offTopic, not_understood: !!(offTopic && !deflection && !faqHit),
+      pending: pendingQuestion ? pendingQuestion.key : null,
+    } } : {}),
   };
 }
 
@@ -1025,58 +1329,198 @@ function applyCors(req, res) {
   return true;
 }
 
+const STRICT_ORIGIN = !ALLOWED_ORIGINS.includes('*');
+const CHAT_TIMEOUT_MS = +(process.env.CHAT_TIMEOUT_MS || 25_000);
+const SLOW_DOWN_HE = () => guidance.msg('rate_limited',
+  'קיבלנו הרבה הודעות ברצף — רגע אחד ונמשיך. אם דחוף, נשמח לעזור בטלפון {phone}.');
+const TOO_LONG_HE = () => guidance.msg('chat_too_long',
+  'השיחה התארכה — כדי לא לפספס כלום, מכאן נציג פינגווין ימשיך אתכם. השאירו טלפון ונחזור אליכם.');
+const VERIFY_HE = () => guidance.msg('verify_failed',
+  'לא הצלחנו לאמת שהבקשה הגיעה מהאתר. רעננו את הדף ונסו שוב, או חייגו {phone}.');
+
+function json(res, code, obj, extra) {
+  res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', ...(extra || {}) });
+  res.end(JSON.stringify(obj));
+}
+async function readJson(req, cap) {
+  let raw = '';
+  for await (const chunk of req) { raw += chunk; if (raw.length > cap) { req.destroy(); return null; } }
+  try { return JSON.parse(raw || '{}'); } catch { return {}; }
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
+    res.setHeader('x-content-type-options', 'nosniff');
+    res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     if (!applyCors(req, res)) { res.writeHead(403); res.end('origin not allowed'); return; }
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+    // The office pushes a new inventory file here. Not a browser request: no
+    // Origin, no CORS, no rate limit by IP — it is authorised by a token and
+    // by what it contains (server/inventory.js). Answered before the
+    // origin-required rule below, which exists for the widget.
+    if (req.method === 'POST' && url.pathname === '/api/inventory') {
+      const body = await readJson(req, 8_000_000);
+      if (!body) return;
+      const r = inventory.accept(req, body);
+      return json(res, r.status, r.body);
+    }
+    if (req.method === 'GET' && url.pathname === '/api/inventory') {
+      // for the push script and for a human: how old is what we are selling
+      const av = inventory.current();
+      const h = inventory.ageHours(av);
+      return json(res, 200, {
+        generated_at: (av && av.generated_at) || null,
+        age_hours: h == null ? null : Math.round(h * 10) / 10,
+        stale: inventory.stale(av), stale_after_hours: inventory.STALE_HOURS,
+        // no token configured: this server takes an update from its own
+        // machine only, and the page can stop asking for a key
+        local_only: inventory.localOnly(),
+        units: (av && av.units || []).length, last_push: inventory.lastPush(),
+      });
+    }
+    // in production every browser POST carries an Origin; one without it is not the widget
+    if (STRICT_ORIGIN && req.method === 'POST' && !req.headers.origin) { res.writeHead(403); res.end('origin required'); return; }
+    if (req.method === 'GET' && url.pathname === '/healthz') {
+      return json(res, 200, { ok: true, mode: aiMode(), version: BOT_VERSION });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/config') {
+      // what the widget needs to know before its first request
+      // the widget's own copy comes from here too, so guidance.json is the
+      // single place the office number is written down
+      return json(res, 200, {
+        version: BOT_VERSION,
+        turnstile: process.env.TURNSTILE_SITEKEY || null,
+        phone: guidance.phone() || null,
+        messages: {
+          send_error: guidance.msg('widget_send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}'),
+          chat_error: guidance.msg('widget_chat_error', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו {phone}.'),
+          // the launcher's two lines — the first thing anyone reads
+          launcher_title: guidance.msg('launcher_title', 'מתלבטים איפה לגלוש?'),
+          launcher_sub: guidance.msg('launcher_sub', 'פינגי כאן, ועונה תוך שנייה'),
+          greeting_widget: guidance.msg('greeting_widget', ''),
+          ai_disclosure: guidance.msg('ai_disclosure', ''),
+        },
+      }, { 'cache-control': 'no-store' });
+    }
+    const ip = limits.clientIp(req);
     if (req.method === 'POST' && url.pathname === '/api/chat') {
-      let raw = '';
-      for await (const chunk of req) { raw += chunk; if (raw.length > 100_000) { req.destroy(); return; } }
-      let body = {};
-      try { body = JSON.parse(raw || '{}'); } catch { }
-      let out;
-      try { out = await handleChat(body); }
-      catch (e) {
-        console.error('chat error:', e.message, e.detail || '');
-        out = { reply_he: e.friendly || FALLBACK_HE, slots: body.slots || EMPTY_SLOTS, cards: [], chips: [] };
+      const wait = limits.checkRate('chat', ip);
+      if (wait) return json(res, 429, { reply_he: SLOW_DOWN_HE(), slots: {}, cards: [], chips: [], retry_after: wait }, { 'retry-after': String(wait) });
+      const body = await readJson(req, 100_000);
+      if (!body) return;
+      const slots = { ...(body.slots || {}) };
+      // minted here, before anything can return early, so the id the widget
+      // gets back is the same one the log and the lead will carry
+      if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
+      if (limits.turnstileOn() && !limits.stampValid(slots)) {
+        const ok = await limits.verifyTurnstile(body.turnstile, ip);
+        if (!ok) return json(res, 403, { reply_he: VERIFY_HE(), slots: body.slots || {}, cards: [], chips: [], verify: true });
+        slots._vt = limits.stamp(slots._cid);
       }
-      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(out));
-      return;
+      if (limits.turnsExceeded(slots)) {
+        return json(res, 200, { reply_he: TOO_LONG_HE(), slots, cards: [], chips: [], open_lead_form: true });
+      }
+      body.slots = slots;
+      let out;
+      try {
+        out = await limits.withTimeout(handleChat(body), CHAT_TIMEOUT_MS, () => {
+          console.error('chat timeout after', CHAT_TIMEOUT_MS, 'ms');
+          return { reply_he: FALLBACK_HE(), slots, cards: [], chips: [], timeout: true };
+        });
+      } catch (e) {
+        console.error('chat error:', e.message, e.detail || '');
+        out = { reply_he: e.friendly || FALLBACK_HE(), slots, cards: [], chips: [] };
+      }
+      // the stamp and the turn counter must survive whatever handleChat did to the slots
+      out.slots = { ...(out.slots || {}), _turns: slots._turns, _cid: slots._cid,
+        ...(slots._vt ? { _vt: slots._vt } : {}) };
+      return json(res, 200, out);
     }
     if (req.method === 'POST' && url.pathname === '/api/lead') {
-      let raw = '';
-      for await (const chunk of req) { raw += chunk; if (raw.length > 20_000) { req.destroy(); return; } }
-      let lead = {};
-      try { lead = JSON.parse(raw || '{}'); } catch { }
-      if (!lead.name || !lead.phone) {
-        res.writeHead(400, { 'content-type': 'application/json' });
-        res.end(JSON.stringify({ ok: false })); return;
+      const wait = limits.checkRate('lead', ip);
+      if (wait) return json(res, 429, { ok: false, retry_after: wait }, { 'retry-after': String(wait) });
+      const lead = await readJson(req, 20_000);
+      if (!lead) return;
+      if (!lead.name || !lead.phone) return json(res, 400, { ok: false });
+      if (limits.turnstileOn()) {
+        const ctxSlots = (lead.context && lead.context.slots) || null;
+        const ok = limits.stampValid(ctxSlots) || await limits.verifyTurnstile(lead.turnstile, ip);
+        if (!ok) return json(res, 403, { ok: false, verify: true });
       }
-      // leads contain PII (name+phone) — stored server-side only, dir is gitignored
+      // leads contain PII (name+phone) — stored server-side only, dir is gitignored.
+      // Append-only JSONL: the old read-modify-write of one JSON array lost a
+      // lead whenever two arrived together.
       const dir = path.join(ROOT, 'server-data');
       fs.mkdirSync(dir, { recursive: true });
-      const leadsPath = path.join(dir, 'leads.json');
-      let leads = [];
-      try { leads = JSON.parse(fs.readFileSync(leadsPath, 'utf8')); } catch { }
-      leads.push({ ...lead, at: new Date().toISOString() });
-      fs.writeFileSync(leadsPath, JSON.stringify(leads, null, 1));
-      // a lead with no hotel is legitimate: "תחזרו אליי" before choosing one
       const ctx = lead.context || {};
-      console.log(`lead: ${lead.name} (${lead.phone}) → ${ctx.hotel || 'ללא הצעה ספציפית'} ${ctx.date || ''}`.trim());
+      const record = {
+        id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        at: new Date().toISOString(),
+        name: String(lead.name).slice(0, 80), phone: String(lead.phone).slice(0, 30),
+        // optional: the customer may want the offer in writing (Tomer, 26/08 —
+        // the quote itself will be sent from Pingwin's own system later)
+        email: lead.email ? String(lead.email).slice(0, 120) : null,
+        kind: String(ctx.kind || 'customer').slice(0, 30),
+        context: ctx,
+      };
+      fs.appendFileSync(path.join(dir, 'leads.jsonl'), JSON.stringify(record) + '\n');
+      // no PII on stdout — only that a lead landed and what kind
+      console.log(`lead ${record.id} [${record.kind}] → ${ctx.hotel || 'ללא הצעה ספציפית'} ${ctx.date || ''}`.trim());
+      notifyLead(record).catch(e => console.error('lead notify failed:', e.message));
+      // and the version that needs no integration: an email to a person
+      leadMail.sendLead(record).then(r => {
+        if (r.sent) console.log(`lead ${record.id} emailed`);
+      }).catch(e => console.error('lead email crashed:', e.message));
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ ok: true }));
+      res.end(JSON.stringify({ ok: true, id: record.id }));
       return;
     }
+    /* The four modules the inventory page needs, wrapped so a browser can load
+       server code unchanged. An allowlist and nothing else — a route that
+       served any path under the repo would be a way to read .env.
+       Why not a copy of the parser written for the browser: because then a
+       workbook parsed in Chrome and one parsed by the build could disagree,
+       and whichever the office happened to use that morning would decide what
+       the bot sells. */
+    const BROWSER_MODULES = ['tools/xlsx-read.js', 'data/inventory.js',
+      'data/aggregate.js', 'data/pii-gate.js'];
+    if (req.method === 'GET' && url.pathname.startsWith('/mod/')) {
+      const id = url.pathname.slice(5);
+      if (!BROWSER_MODULES.includes(id)) { res.writeHead(404); res.end(); return; }
+      let src;
+      try { src = fs.readFileSync(path.join(ROOT, id), 'utf8'); }
+      catch (e) { res.writeHead(404); res.end(); return; }
+      // a CommonJS shim: node's own ids resolved against this small map, and
+      // fs/zlib/path stubbed because the browser never reaches the code paths
+      // that use them (it brings its own unzip)
+      const wrapped = 'window.__mods[' + JSON.stringify(id) + '] = (function(){\n'
+        + 'var module={exports:{}},exports=module.exports;\n'
+        + 'function require(id){\n'
+        + '  if(id==="path")return{join:function(){return Array.prototype.join.call(arguments,"/")},'
+        + 'basename:function(p){return String(p).split(/[\\\\/]/).pop()}};\n'
+        + '  if(id==="fs"||id==="zlib")return{};\n'
+        + '  var k=String(id).replace(/^\\.\\.\\//,"").replace(/^\\.\\//,"");\n'
+        + '  for(var m in window.__mods){if(m===k||m.endsWith("/"+k))return window.__mods[m];}\n'
+        + '  throw new Error("no module "+id);\n'
+        + '}\n' + src + '\nreturn module.exports;})();\n';
+      res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-store' });
+      res.end(wrapped);
+      return;
+    }
+
     // static
-    let file = url.pathname === '/' ? '/public/demo.html'
+    let file = url.pathname === '/inventory' ? '/public/inventory-upload.html'
+      : url.pathname === '/' ? '/public/demo.html'
       : url.pathname === '/pingwin-bot.js' ? '/public/pingwin-bot.js'
         : '/public' + url.pathname;
     const full = path.join(ROOT, path.normalize(file));
     if (!full.startsWith(path.join(ROOT, 'public'))) { res.writeHead(403); res.end(); return; }
     if (!fs.existsSync(full) || !fs.statSync(full).isFile()) { res.writeHead(404); res.end('not found'); return; }
-    res.writeHead(200, { 'content-type': MIME[path.extname(full)] || 'application/octet-stream' });
+    // the GTM loader appends ?v=<version>: a versioned URL may be cached for a
+    // day, an unversioned one is re-checked every time
+    const cache = url.searchParams.get('v') ? 'public, max-age=86400' : 'no-cache';
+    res.writeHead(200, { 'content-type': MIME[path.extname(full)] || 'application/octet-stream', 'cache-control': cache });
     res.end(fs.readFileSync(full));
   } catch (e) {
     console.error(e);
@@ -1085,6 +1529,11 @@ const server = http.createServer(async (req, res) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, () => console.log(`pingwin bot server → http://localhost:${PORT}`));
+  // retention: delete conversation logs older than CHAT_LOG_DAYS (default 30)
+  { const n = chatLog.sweep(); if (n) console.log(`chat log: removed ${n} day(s) past retention`); }
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 10_000;
+  leadMail.warnIfUnwatched();
+  server.listen(PORT, () => console.log(`pingwin bot server v${BOT_VERSION} [${aiMode()}] → http://localhost:${PORT}`));
 }
 module.exports = { handleChat, server, requiredMissing };

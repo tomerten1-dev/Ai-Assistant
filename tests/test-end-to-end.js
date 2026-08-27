@@ -8,6 +8,10 @@
 // The model is disabled here — this is about what the deterministic path
 // delivers to the customer.
 // Run: node tests/test-end-to-end.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
 
@@ -400,11 +404,22 @@ t('an ordinary message does not open the form', () => {
   }).then(out => assert.ok(!out.open_lead_form, 'opened the form unasked'));
 });
 
-t('the callback line never talks the customer out of leaving details', () => {
+// Tomer, 24/08: never talk someone out of leaving their details.
+// Tomer, 26/08: and never tell someone writing at 23:00 to call now.
+// So the invitation holds at every hour; only the "call now" is hour-dependent.
+t('the callback line always invites details, and suits the hour', () => {
+  const guidance = require('../server/guidance.js');
   return handleChat({ messages: [{ role: 'user', content: 'תחזרו אליי' }], slots: {} })
     .then(out => {
-      assert.ok(!/סגור/.test(out.reply_he), 'announced the office is closed: ' + out.reply_he);
-      assert.ok(/04-8557722/.test(out.reply_he), out.reply_he);
+      assert.ok(out.open_lead_form, 'the form did not open');
+      assert.ok(/שם וטלפון/.test(out.reply_he), 'stopped inviting details: ' + out.reply_he);
+      if (guidance.officeOpen()) {
+        assert.ok(/04-8557722/.test(out.reply_he), 'open, but no number: ' + out.reply_he);
+        assert.ok(!/סגור/.test(out.reply_he), 'open, but says closed: ' + out.reply_he);
+      } else {
+        assert.ok(/נפתח/.test(out.reply_he), 'closed, but does not say when it opens: ' + out.reply_he);
+        assert.ok(!/להתקשר|התקשרו/.test(out.reply_he), 'closed, but tells them to call: ' + out.reply_he);
+      }
     });
 });
 
@@ -900,7 +915,7 @@ for (const [q, want] of [
   ['ואינטרנט?', /האינטרנט|ויי?פיי/],
   ['אני נוסע לבד, יש תוספת ליחיד?', /סינגל בחדר זוגי/],
   ['אפשר חדר מעשנים?', /עישון/],
-  ['לבן שלי יש אוטיזם, יש קייטנה שתתאים?', /נציג יענה|יבדוק מול המדריכים/],
+  ['לבן שלי יש אוטיזם, יש קייטנה שתתאים?', /נציג אנושי|יבדוק מול צוות הקייטנה/],
   ['זה לא עונה לי', /מה לשנות/],
   ['אפשר לשריין עכשיו ולשלם אחר כך?', /מקדמה|חיוב/],
   ['כמה מטרים החדר?', /שם החדר|גודל/],
@@ -1009,7 +1024,7 @@ for (const [q, want] of [
   ['אפשר לשלוח לי את זה למייל?', /נציג ישלח|שם וטלפון/],
   ['אם אני משאיר פרטים זה מחייב אותי במשהו?', /לא מחייבת/],
   ['הקייטנה כלולה במחיר?', /אינה כלולה במחיר/],
-  ['ילד בן 13, הוא בקייטנה או עם המבוגרים?', /4–13|נוער/],
+  ['ילד בן 13, הוא בקייטנה או עם המבוגרים?', /4–14|נוער/],
   ['אפשר חצי שבוע בבנסקו וחצי בבורובץ?', /מלון אחד ליציאה/],
   ['אפשר לקחת מגלשיים משלי בטיסה?', /ציוד|מזוודה|כבודה/],
   ['מתי אפשר להיכנס לחדר?', /צ'ק אין|כניסה/],
@@ -1028,8 +1043,9 @@ for (const [q, want] of [
 /* ---- Tomer's answers to the eighteen open claims (24/08) ---- */
 for (const [q, want] of [
   ['אנחנו גולשי סנובורד בלבד, יש אתרים שמתאימים?', /כל האתרים שלנו מתאימים/],
-  ['ילד בן 14, יש לו קייטנה?', /מגיל 14 אין קייטנה/],
-  ['יש סקי לילה?', /לא מופיע סקי לילה/],
+  // Tomer, 26/08 (questionnaire q4): the 6-13 group takes children up to 14
+  ['ילד בן 14, יש לו קייטנה?', /בן 13 או 14 נכנס|מגיל 15 אין קייטנה/],
+  ['יש סקי לילה?', /סקי לילה.*(בנסקו|בורובץ|פאס דה לה קאסה)/s],   // q25: the approved table now says where
   ['אפשר חצי שבוע בבנסקו וחצי בבורובץ?', /אינו אפשרי/],
   ['מה עם חליפת סקי לילדים?', /חליפת סקי במתנה|כלולה במחיר/],
   ['אפשר מדריך פרטי בעברית?', /מדריך מקומי ובאנגלית/],
@@ -1118,9 +1134,9 @@ t('a single offer is not called "one of them"', () => {
 });
 
 for (const [q, want] of [
-  ['רוצים העברות פרטיות משדה התעופה', /הסעה פרטית|הסעות בחבילה/],
+  ['רוצים העברות פרטיות משדה התעופה', /ההסעות בחבילה|הסעה משותפת|לקוחות פינגווין בלבד/],
   ['אפשר חדרים קרובים זה לזה?', /בקשה מהמלון/],
-  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /שינוי שם|חברת התעופה/],
+  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /החלפת נוסע|שינוי שם/],  // wording per the terms, Tomer 26/08
 ]) {
   t('answered rather than deflected: ' + q.slice(0, 26), () =>
     handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
@@ -1405,6 +1421,61 @@ t('holding the offers does not swallow the off-topic line', () =>
   handleChat({ messages: [{ role: 'user', content: 'תן לי מתכון לעוגה' }], slots: {} })
     .then(out => assert.ok(/אני כאן בעיקר להתאמת/.test(out.reply_he), out.reply_he)));
 
+// ---- lead nudges: once, after value, never twice ----
+async function convo(turns) {
+  const messages = []; let slots = {}; let out = null;
+  for (const u of turns) {
+    messages.push({ role: 'user', content: u });
+    out = await handleChat({ messages: messages.slice(), slots });
+    slots = out.slots; messages.push({ role: 'assistant', content: out.reply_he });
+  }
+  return out;
+}
+t('"אחשוב על זה" after offers opens the form once', async () => {
+  const a = await convo(['זוג בפברואר באוסטריה', 'אחשוב על זה']);
+  assert.strictEqual(a.open_lead_form, true);
+  const b = await convo(['זוג בפברואר באוסטריה', 'אחשוב על זה', 'אחשוב על זה שוב']);
+  assert.strictEqual(b.open_lead_form, false, 'nudged twice');
+});
+t('"אחשוב על זה" before any offer does not open the form', async () => {
+  const a = await convo(['אחשוב על זה']);
+  assert.strictEqual(a.open_lead_form, false);
+});
+t('two unusable turns in a row hand over once', async () => {
+  const a = await convo(['זוג בפברואר', 'בלה בלה בלה', 'קרקר פלפל']);
+  assert.strictEqual(a.open_lead_form, true);
+  assert.ok(/נציג/.test(a.reply_he));
+  const b = await convo(['זוג בפברואר', 'בלה בלה בלה', 'קרקר פלפל', 'עוד קשקוש']);
+  assert.strictEqual(b.open_lead_form, false, 'nudged twice');
+});
+t('a chip that changes the ranking is not an unusable turn', async () => {
+  const a = await convo(['זוג בפברואר', 'בלה בלה בלה', 'חשוב לי ספא']);
+  assert.strictEqual(a.open_lead_form, false);
+  assert.strictEqual(a.slots._lost, 0);
+});
+t('lead intents: an agent gets a tagged form, a job seeker gets an address', async () => {
+  const a = await convo(['אני סוכן נסיעות, יש תנאי סוכנים?']);
+  assert.strictEqual(a.open_lead_form, true); assert.strictEqual(a.lead_kind, 'agent');
+  const j = await convo(['מחפש עבודה כמדריך במועדון ילדים, מה השכר?']);
+  assert.strictEqual(j.open_lead_form, false); assert.ok(/info@pingwin/.test(j.reply_he));
+});
+t('a foreign-language message is answered in that language with the form', async () => {
+  const r = await convo(['Есть ли у вас пакеты в Банско на январь?']);
+  assert.ok(/Pingwin/.test(r.reply_he) && /[\u0400-\u04FF]/.test(r.reply_he));
+  assert.strictEqual(r.open_lead_form, true);
+});
+t('transliterated Hebrew gets a Hebrew invitation and keeps what it parsed', async () => {
+  const r = await convo(['Shalom, yesh lachem chavilot le Bansko?']);
+  assert.ok(/בעברית/.test(r.reply_he));
+  assert.strictEqual(r.slots.country, 'bulgaria');
+});
+t('the trade-off line never precedes the offers\' introduction', async () => {
+  const r = await convo(['זוג עם 2 ילדים בני 5 ו-9 בינואר באוסטריה']);
+  const lines = r.reply_he.split('\n');
+  const trade = lines.findIndex(l => /אם תשקלו|אם תהיו גמישים|אם תוותרו/.test(l));
+  if (trade >= 0) assert.ok(trade > 0, 'trade-off was the first line: ' + lines[0]);
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
@@ -1413,3 +1484,60 @@ t('holding the offers does not swallow the off-topic line', () =>
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();
+
+/* ---- hotel-page facts (Tomer, 26/08: "ספא ונוף אתה יכול לבדוק באתר של פינגווין") ---- */
+t('pool / view / renovation / lift distance are quoted from the hotel page, or deferred — never guessed', async () => {
+  const first = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר במאיירהופן' }], slots: {} });
+  const msgs = [{ role: 'user', content: 'זוג בפברואר במאיירהופן' }, { role: 'assistant', content: first.reply_he }];
+  const ask = q => handleChat({ messages: [...msgs, { role: 'user', content: q }], slots: first.slots });
+  const pool = await ask('יש בריכה? ונוף מהחדר?');
+  const facts = pool.cards.flatMap(c => c.facts_he || []);
+  assert.ok(facts.some(f => /^בריכה: /.test(f)), 'a hotel with a pool on its page says so: ' + facts.join(' | '));
+  assert.ok(facts.every(f => /^בריכה: |בריכה — נציג יאמת|אין בריכה|נוף: |הנוף מהחדר — נציג יאמת/.test(f)), facts.join(' | '));
+  const reno = await ask('מתי שופץ? כמה מטר למעלית?');
+  const f2 = reno.cards.flatMap(c => c.facts_he || []);
+  assert.ok(f2.some(f => /^שיפוץ: /.test(f)) && f2.some(f => /^מהמעלית: /.test(f)), f2.join(' | '));
+  assert.ok(!/\d+ ?(שעות|דק')/.test(reno.reply_he), 'no journey times');
+});
+
+/* ---- chips answer the question on screen (Tomer, 26/08, screenshot) ---- */
+// Under "באיזה חודש תרצו לצאת?" the widget also offered "טיסה מנתב"ג" and
+// "טיסה מחיפה" — buttons for a question nobody asked — and no December or March.
+t('the chips answer the question that was actually asked', async () => {
+  const first = await handleChat({ messages: [{ role: 'user', content: 'שני אנשים סן אנטון מלון 4 כוכבים' }], slots: {} });
+  assert.ok(/ילדים|גילאים/.test(first.reply_he), 'expected the children question: ' + first.reply_he);
+  assert.ok(first.chips.includes('בלי ילדים'), first.chips.join('|'));
+  assert.ok(!first.chips.some(c => /טיסה|נתב/.test(c)), 'airport chips under a children question: ' + first.chips.join('|'));
+
+  const second = await handleChat({
+    messages: [{ role: 'user', content: 'שני אנשים סן אנטון' }, { role: 'assistant', content: first.reply_he },
+      { role: 'user', content: 'בלי ילדים' }],
+    slots: first.slots,
+  });
+  assert.ok(/מתי תרצו|חודש/.test(second.reply_he), 'expected the month question: ' + second.reply_he);
+  for (const m of ['דצמבר', 'ינואר', 'פברואר', 'מרץ', 'חנוכה', 'פורים', 'גמיש']) {
+    assert.ok(second.chips.includes(m), 'missing month chip ' + m + ': ' + second.chips.join('|'));
+  }
+  assert.ok(!second.chips.some(c => /טיסה|נתב/.test(c)), 'airport chips under a month question: ' + second.chips.join('|'));
+});
+t('with offers on screen the chips stay the exploring set', async () => {
+  const out = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} });
+  assert.ok(out.cards.length, 'expected offers');
+  assert.ok(out.chips.length > 3, 'the preference chips disappeared: ' + out.chips.join('|'));
+});
+
+/* ---- Pingi says goodbye (Tomer, 26/08) ---- */
+t('a goodbye is recognised however it is written, and Pingi waves', async () => {
+  const offline = require('../server/offline-nlu.js');
+  // "תודה, ביי" used to get "לא בטוח שהבנתי" — the last thing a customer reads
+  for (const q of ['תודה, ביי', 'ביי', 'להתראות', 'תודה רבה ביי', 'לא תודה', 'יום טוב', 'נתראה']) {
+    assert.ok(offline.isFarewell(q), 'not a goodbye: ' + q);
+  }
+  for (const q of ['תודה!', 'תודה על העזרה מה עוד יש?', 'זוג בפברואר', 'יום טוב לגלוש בפברואר?']) {
+    assert.ok(!offline.isFarewell(q), 'treated as a goodbye: ' + q);
+  }
+  const out = await handleChat({ messages: [{ role: 'user', content: 'תודה, ביי' }], slots: {} });
+  assert.strictEqual(out.mood, 'wave', 'the widget is not told to show the wave');
+  assert.ok(/חורף נעים|אני כאן/.test(out.reply_he), out.reply_he);
+  assert.strictEqual(out.cards.length, 0, 'offered hotels to someone who said goodbye');
+});

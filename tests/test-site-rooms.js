@@ -1,0 +1,195 @@
+'use strict';
+// Asking pingwin.co.il's booking engine for its own room ids.
+//
+// The rule: this may improve a link, and may never delay a reply or select the
+// wrong room. Every test here is about one of those two.
+// Run: node tests/test-site-rooms.js
+process.env.CHAT_LOG = 'off';
+process.env.SITE_ROOMS_BASE = 'https://example.test';
+
+const assert = require('assert');
+const sr = require('../server/site-rooms.js');
+
+let pass = 0, fail = 0;
+function t(name, fn) {
+  return Promise.resolve().then(fn).then(() => { pass++; console.log('  ✓ ' + name); },
+    e => { fail++; console.log('  ✗ ' + name + '\n      ' + e.message); });
+}
+const clear = () => { const c = sr._cache(); for (const k of Object.keys(c)) delete c[k]; };
+const ROOMS = { rooms: [
+  { roomID: 811, roomName: '2 ח"ש וסלון 2-4 אורחים', showOrder: 1 },
+  { roomID: 812, roomName: 'סטודיו 2-3 אורחים', showOrder: 2 },
+  { roomID: 813, roomName: '1 bdrm apt 2-4 pax', showOrder: 3 },
+] };
+const okFetch = (seen) => async (url) => {
+  if (seen) seen.push(url);
+  return { ok: true, status: 200, json: async () => ROOMS };
+};
+
+(async () => {
+  await t('it asks the same question the site\'s own form asks', async () => {
+    const seen = [];
+    const rooms = await sr.fetchRooms(1288, '2027-01-30', '2027-02-06', { fetch: okFetch(seen) });
+    assert.strictEqual(seen.length, 1);
+    const u = new URL(seen[0]);
+    assert.strictEqual(u.pathname, '/ajax_order_odyssea.php');
+    assert.strictEqual(u.searchParams.get('act'), 'roomList');
+    assert.strictEqual(u.searchParams.get('sid'), '1288');
+    assert.strictEqual(u.searchParams.get('from'), '2027-01-30', 'the engine wants yyyy-mm-dd');
+    assert.strictEqual(u.searchParams.get('till'), '2027-02-06');
+    assert.strictEqual(rooms.length, 3);
+    assert.deepStrictEqual(rooms[0], { roomID: '811', roomName: '2 ח"ש וסלון 2-4 אורחים' });
+  });
+
+  await t('a response keyed by id parses the same as a list', async () => {
+    const keyed = { rooms: { 811: { roomID: 811, roomName: 'A' }, 812: { roomID: 812, roomName: 'B' } } };
+    const rooms = await sr.fetchRooms(1, '2027-01-30', '2027-02-06',
+      { fetch: async () => ({ ok: true, json: async () => keyed }) });
+    assert.deepStrictEqual(rooms.map(r => r.roomID), ['811', '812']);
+  });
+
+  await t('a cold cache costs the customer nothing — no id, no waiting', () => {
+    const started = Date.now();
+    const id = sr.idFor(1288, '2027-01-30', '2027-02-06', 'anything', {}, { fetch: okFetch() });
+    assert.strictEqual(id, null);
+    assert.ok(Date.now() - started < 50, 'idFor blocked while it fetched');
+  });
+
+  await t('once warm, our room name resolves to the site\'s own id', async () => {
+    await sr.warm(1289, '2027-01-30', '2027-02-06', { fetch: okFetch() });
+    assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', '1 bdrm apt 2-4 pax'), '813');
+    assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', '2 ח"ש וסלון 2-4 אורחים'), '811');
+    // and a near-miss in spelling still lands
+    assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', '1 BDRM APT 2-4 PAX'), '813');
+    // and the workbook's own columns can carry the description instead
+    assert.strictEqual(sr.idFor(1289, '2027-01-30', '2027-02-06', 'whatever',
+      { type: '1 bdrm apt', occMin: 2, occMax: 4 }), '813');
+  });
+
+  await t('two candidates, or none, means no room is chosen', async () => {
+    await sr.warm(2, '2027-01-30', '2027-02-06', {
+      fetch: async () => ({ ok: true, json: async () => ({ rooms: [
+        { roomID: 1, roomName: 'Standard Plus' }, { roomID: 2, roomName: 'Standard Deluxe' }] }) }),
+    });
+    // "Standard" sits inside both names — that is exactly when we must not choose
+    assert.strictEqual(sr.idFor(2, '2027-01-30', '2027-02-06', 'Standard'), null, 'picked one of two');
+    assert.strictEqual(sr.idFor(2, '2027-01-30', '2027-02-06', 'Penthouse'), null);
+    // an exact name, though, is not ambiguous at all
+    assert.strictEqual(sr.idFor(2, '2027-01-30', '2027-02-06', 'Standard Deluxe'), '2');
+  });
+
+  await t('a hotel the site refuses to answer about is not asked again immediately', async () => {
+    clear();
+    let calls = 0;
+    const bad = async () => { calls++; return { ok: false, status: 403 }; };
+    await sr.warm(3, '2027-01-30', '2027-02-06', { fetch: bad });
+    sr.idFor(3, '2027-01-30', '2027-02-06', 'x', {}, { fetch: bad });
+    sr.idFor(3, '2027-01-30', '2027-02-06', 'x', {}, { fetch: bad });
+    await new Promise(r => setTimeout(r, 30));
+    assert.strictEqual(calls, 1, 'hammered a site that said no: ' + calls);
+  });
+
+  await t('the manual bridge wins, for the rooms whose names will never match', () => {
+    clear();
+    const map = require.resolve('../config/room-map.json');
+    const before = require.cache[map];
+    require.cache[map] = { id: map, filename: map, loaded: true, exports: { 1288: { 'CONN Premium with View 5 pax': '999' } } };
+    delete require.cache[require.resolve('../server/site-rooms.js')];
+    const fresh = require('../server/site-rooms.js');
+    assert.strictEqual(fresh.idFor(1288, '2027-01-30', '2027-02-06', 'CONN Premium with View 5 pax'), '999');
+    if (before) require.cache[map] = before; else delete require.cache[map];
+  });
+
+  // The three cases from Tomer's own run against the live engine (26/08). The
+  // first two returned null for a week: norm() ate the hyphen in "2-5 pax", so
+  // the range stopped looking like one and left a stray "2" in the tokens.
+  await t('the real Belambra rooms, as both sides actually spell them', () => {
+    const live = [
+      { roomID: '5582', roomName: 'Premium Amazing View 2-5 pax' },
+      { roomID: '5588', roomName: 'Premium with View 4-5 pax' },
+      { roomID: '3721', roomName: '2 ח&quot;ש וסלון 2-4 אורחים' },
+    ];
+    assert.strictEqual(sr.match(live, 'CONN Premium with View 5 pax',
+      { type: 'CONN Premium with View', occMin: 5, occMax: 5 }), '5588');
+    assert.strictEqual(sr.match(live, 'Premium Amazing View 5 pax',
+      { type: 'Premium Amazing View', occMin: 5, occMax: 5 }), '5582');
+    assert.strictEqual(sr.match(live, '2 bedroom apt 2-4 pax',
+      { type: '2 bedroom apt', occMin: 2, occMax: 4 }), '3721', 'Hebrew against English');
+  });
+
+  await t('a room that holds fewer people than the workbook sells is not it', () => {
+    const live = [{ roomID: '3721', roomName: '2 ח"ש וסלון 2-4 אורחים' }];
+    assert.strictEqual(sr.match(live, '2 bedroom apt 5-6 pax',
+      { type: '2 bedroom apt', occMin: 5, occMax: 6 }), null);
+  });
+
+  await t('one room too few beds apart is never mistaken for the other', () => {
+    const live = [
+      { roomID: '1', roomName: '1 ח"ש וסלון 2-4 אורחים' },
+      { roomID: '2', roomName: '2 ח"ש וסלון 2-4 אורחים' },
+    ];
+    assert.strictEqual(sr.match(live, '2 bdrm apt 2-4 pax', {}), '2');
+    assert.strictEqual(sr.match(live, '3 bdrm apt 2-4 pax', {}), null);
+  });
+
+  // Every room the three hotels in Tomer's run actually returned, verbatim.
+  const TIGNES = [['5581', 'Premium Amazing View + Balcony 2 pax'], ['5582', 'Premium Amazing View 2-5 pax'],
+    ['5583', 'Premium with View + Balcony 2 pax'], ['5584', 'Premium with View 2+1 pax'],
+    ['5585', 'Premium with View 3-4 pax'], ['5586', 'Premium 2-4 pax'],
+    ['5587', 'Premium 2 bdrm Amazing View + Balcony 4-5 pax'], ['5588', 'Premium with View 4-5 pax'],
+    ['6337', 'Premium 2 pax PMR - חדר נכים']].map(([roomID, roomName]) => ({ roomID, roomName }));
+  const PLEIN = [['2882', '2 ח"ש וסלון 2-4 אורחים'], ['3721', '2 ח"ש וסלון 5 אורחים'],
+    ['5396', '3 ח"ש וסלון']].map(([roomID, roomName]) => ({ roomID, roomName }));
+  const OREE = [['5809', 'Premium Room 2-3'], ['5810', 'Premium with Balcony 3+1']]
+    .map(([roomID, roomName]) => ({ roomID, roomName }));
+
+  await t('nine Tignes rooms, and ours picks the two that are ours', () => {
+    assert.strictEqual(sr.match(TIGNES, 'CONN Premium with View 5 pax',
+      { type: 'CONN Premium with View', occMin: 5, occMax: 5, party: 5 }), '5588');
+    assert.strictEqual(sr.match(TIGNES, 'Premium Amazing View 5 pax',
+      { type: 'Premium Amazing View', occMin: 5, occMax: 5, party: 5 }), '5582');
+  });
+
+  await t('a room whose name is only a range is read as one', () => {
+    // "Premium Room 2-3" says nothing about people, and means people anyway
+    assert.deepStrictEqual([sr.occOf('Premium Room 2-3').min, sr.occOf('Premium Room 2-3').max], [2, 3]);
+    assert.deepStrictEqual([sr.occOf('Premium with Balcony 3+1').min, sr.occOf('Premium with Balcony 3+1').max], [3, 4]);
+    // but a lone number counts bedrooms, and must never be read as people
+    assert.strictEqual(sr.occOf('3 ח"ש וסלון'), null);
+    assert.strictEqual(sr.occOf('2-3 bdrm apt'), null);
+    assert.strictEqual(sr.match(OREE, 'Premium 2-3', { type: 'Premium', occMin: 2, occMax: 3 }), '5809');
+    assert.strictEqual(sr.match(OREE, 'Premium 3 +1 balcony', { type: 'Premium', occMin: 3, occMax: 4 }), '5810');
+  });
+
+  await t('the workbook\'s two columns are read together, because neither is whole', () => {
+    // room_type for "Premium 3 +1 balcony" is just "Premium" — on its own it
+    // fits both Oree rooms, and used to choose neither
+    assert.strictEqual(sr.match(OREE, 'Premium 3 +1 balcony', { type: 'Premium' }), '5810');
+  });
+
+  await t('one of our units, two of their rooms: the party decides', () => {
+    // we sell "2 bedroom apt 4-5 pax"; the site sells that apartment twice,
+    // once for up to 4 people and once for 5 — same name, different price
+    const hint = { type: '2 bedroom apt', occMin: 4, occMax: 5 };
+    assert.strictEqual(sr.match(PLEIN, '2 bedroom apt 4-5 pax', { ...hint, party: 4 }), '2882');
+    assert.strictEqual(sr.match(PLEIN, '2 bedroom apt 4-5 pax', { ...hint, party: 5 }), '3721');
+    assert.strictEqual(sr.match(PLEIN, '2 bedroom apt 4-5 pax', hint), null, 'chose without knowing the party');
+    assert.strictEqual(sr.match(PLEIN, '3 bedroom apt', { type: '3 bedroom apt' }), '5396');
+  });
+
+  await t('the party never overrules the description', () => {
+    // 3 people fit "2-4 אורחים", but a 3-bedroom apartment is not a 2-bedroom one
+    assert.strictEqual(sr.match(PLEIN, '4 bedroom apt 3 pax',
+      { type: '4 bedroom apt', occMin: 3, occMax: 3, party: 3 }), null);
+  });
+
+  await t('SITE_ROOMS=off turns the whole thing into nothing', () => {
+    process.env.SITE_ROOMS = 'off';
+    assert.strictEqual(sr.enabled(), false);
+    assert.strictEqual(sr.idFor(1288, '2027-01-30', '2027-02-06', '1 bdrm apt 2-4 pax'), null);
+    delete process.env.SITE_ROOMS;
+  });
+
+  console.log(`site-rooms: ${pass} passed, ${fail} failed`);
+  process.exit(fail ? 1 : 0);
+})();

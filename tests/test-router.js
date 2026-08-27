@@ -7,6 +7,10 @@
 //
 // Costs a model call per line, so it is not part of `npm test`:
 //   node tests/test-router.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const { loadEnv } = require('../server/env.js');
 loadEnv();
 const offline = require('../server/offline-nlu.js');

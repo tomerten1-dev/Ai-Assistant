@@ -10,6 +10,8 @@ const fs = require('fs');
 const path = require('path');
 // a scratch directory, so running the tests never touches the real log
 process.env.LOG_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'pingwin-log-'));
+// every other test file switches the log off; this one is the log's own test
+process.env.CHAT_LOG = 'on';
 
 const assert = require('assert');
 const log = require('../server/conversation-log.js');
@@ -104,10 +106,54 @@ t('an unwritable directory never breaks a conversation', () => {
 });
 
 t('logging can be switched off entirely', () => {
-  assert.strictEqual(process.env.CHAT_LOG === 'off', false, 'default is on');
+  assert.strictEqual(log.enabled(), true, 'on unless CHAT_LOG=off');
   // the flag is read at module load; this pins that the switch exists
   const src = fs.readFileSync(path.join(__dirname, '..', 'server', 'conversation-log.js'), 'utf8');
   assert.ok(/CHAT_LOG !== 'off'/.test(src), 'no way to turn the log off');
+});
+
+
+/* ---------- PII on the way in, and retention (finding 1) ---------- */
+t('a phone number a customer types is never written down', () => {
+  assert.strictEqual(log.redact('תחזרו אליי 050-123 4567'), 'תחזרו אליי [טלפון]');
+  assert.strictEqual(log.redact('הטלפון שלי 0501234567 תודה'), 'הטלפון שלי [טלפון] תודה');
+  assert.strictEqual(log.redact('+972 52 654 3262'), '[טלפון]');
+  assert.strictEqual(log.redact('כתבו לי ל a.b@x.co.il'), 'כתבו לי ל [מייל]');
+  assert.strictEqual(log.redact('4580 1234 5678 9012'), '[מספר]', 'a card is not a phone');
+});
+t('prices, years and dates survive redaction', () => {
+  for (const keep of ['נוסעים ב-2027, 4 אנשים', 'תקציב 5382 לאדם', 'בין 5.2.27 ל-12.2.27', '7 לילות ב-3 חדרים']) {
+    assert.strictEqual(log.redact(keep), keep);
+  }
+});
+t('a logged turn carries the redacted text, not the original', async () => {
+  await handleChat({ messages: [{ role: 'user', content: 'קוראים לי דנה, הטלפון 052-1234567, זוג בפברואר' }], slots: {} });
+  const rows = log.read();
+  const mine = rows.filter(r => /דנה/.test(r.user || ''));
+  assert.ok(mine.length, 'the turn was logged');
+  assert.ok(!/052|1234567/.test(mine[mine.length - 1].user), 'no phone in the log: ' + mine[mine.length - 1].user);
+  assert.ok(/\[טלפון\]/.test(mine[mine.length - 1].user), 'redacted, not deleted');
+});
+t('retention deletes days past the window and keeps the rest', () => {
+  const dir = process.env.LOG_DIR;
+  const day = (back) => new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
+  const old = path.join(dir, `chat-${day(90)}.jsonl`);
+  const recent = path.join(dir, `chat-${day(2)}.jsonl`);
+  fs.writeFileSync(old, '{}\n'); fs.writeFileSync(recent, '{}\n');
+  const removed = log.sweep(30);
+  assert.ok(removed >= 1, 'the old day was removed');
+  assert.ok(!fs.existsSync(old), 'past retention → deleted');
+  assert.ok(fs.existsSync(recent), 'inside retention → kept');
+  fs.unlinkSync(recent);
+});
+t('retention of 0 keeps everything', () => {
+  const dir = process.env.LOG_DIR;
+  const day = new Date(Date.now() - 400 * 86400000).toISOString().slice(0, 10);
+  const p2 = path.join(dir, `chat-${day}.jsonl`);
+  fs.writeFileSync(p2, '{}\n');
+  assert.strictEqual(log.sweep(0), 0);
+  assert.ok(fs.existsSync(p2), 'CHAT_LOG_DAYS=0 means keep forever');
+  fs.unlinkSync(p2);
 });
 
 (async () => {

@@ -14,21 +14,69 @@
     - "Support document.write" חייב להישאר לא מסומן
     - הסקריפט נטען אסינכרונית ולא מאט את האתר
     - טעינה כפולה (GTM לפעמים יורה פעמיים) מנוטרלת בתוך הווידג'ט
+
+  אנליטיקס (GA4 דרך GTM):
+    הווידג'ט דוחף ל-dataLayer אירוע אחד: event = 'pw_bot' עם pw_action =
+    open | message | offers | lead | error  (+ pw_turn / pw_count / pw_kind / pw_first).
+    ב-GTM: Trigger → Custom Event 'pw_bot'; Tag → GA4 Event בשם {{pw_action}}
+    עם משתני Data Layer ל-pw_*. אין בדחיפות שום מידע אישי.
+
+  אבטחה לפני פרודקשן (בשרת, קובץ .env):
+    ALLOWED_ORIGINS=https://www.pingwin.co.il,https://pingwin.co.il
+    TURNSTILE_SITEKEY / TURNSTILE_SECRET (Cloudflare Turnstile, חינם) — אופציונלי
+    RATE_* / DAILY_BUDGET_USD — ברירות מחדל סבירות, ראו server/limits.js
 -->
 <script>
   (function () {
     // כתובת השרת של הבוט — חייבת להיות HTTPS בפרודקשן
     var BOT_HOST = 'https://bot.pingwin.co.il';
+    // גרסת הווידג'ט — מעלים את המספר בכל פריסה כדי לעקוף cache של דפדפנים.
+    // (חייב להתאים ל-version ב-package.json של השרת; /healthz מציג אותה)
+    var BOT_VERSION = '0.2.0';
 
     // אל תטען פעמיים (GTM preview / SPA navigation)
     if (window.__pingwinBotTag) return;
     window.__pingwinBotTag = true;
 
     var s = document.createElement('script');
-    s.src = BOT_HOST + '/pingwin-bot.js';
+    s.src = BOT_HOST + '/pingwin-bot.js?v=' + BOT_VERSION;
     s.async = true;
     s.setAttribute('data-pingwin-bot', '');
     s.setAttribute('data-api', BOT_HOST);   // לאן לשלוח את בקשות הצ'אט
+    s.setAttribute('data-whatsapp', '972526543262'); // כפתור "וואטסאפ" בכותרת — יציאה לנציג
     (document.body || document.head || document.documentElement).appendChild(s);
+  })();
+</script>
+
+<!--
+  ============================================================
+  תג שני (חובה, כדי ש"המשך להזמנה" יגיע עם הפרטים מוכנים)
+  ============================================================
+
+  הבוט שולח את הלקוח לדף המלון עם הפרטים בכתובת:
+      …/Plein+Sud.html?siteID=1288&pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3
+
+  טופס ההזמנה באתר נבנה בדפדפן (order_odyssea.js) ולא קורא כלום מהכתובת,
+  ולכן צריך סקריפט קטן שקורא את הפרמטרים ומפעיל את הטופס. הוא לא עושה
+  שום דבר בגלישה רגילה — רק כשהכתובת מכילה pwfrom/pwtill, כלומר רק אחרי
+  לחיצה על "המשך להזמנה" בצ'אט.
+
+  התקנה:
+    1. GTM → Tags → New → Tag Configuration → Custom HTML
+    2. הדבק את בלוק ה-<script> שמתחת
+    3. החלף BOT_HOST בכתובת השרת (אותה כתובת כמו בתג הראשון)
+    4. Triggering → All Pages   (או Page View עם URL contains "siteID=")
+    5. שם התג: Pingwin Booking Prefill → Save → Submit → Publish
+
+  בדיקה: לפתוח כתובת של דף מלון עם
+     &pwfrom=30.01.2027&pwtill=06.02.2027&pwad=3
+  התאריכים צריכים להתמלא לבד, ומעל הטופס תופיע שורה שמסבירה למה.
+-->
+<script>
+  (function () {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'BOT_HOST/pingwin-prefill.js?v=BOT_VERSION';
+    document.head.appendChild(s);
   })();
 </script>

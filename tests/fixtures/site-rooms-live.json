@@ -1,0 +1,531 @@
+{
+ "_note": "Every room pingwin.co.il's own engine returned during the --coverage run of 26/08. 1445 is Casa Karina's short-stay page: same hotel, same room name, a different room id (3452, not 3395) — which is the whole reason the page has to be chosen by the length of the stay. Kept verbatim so the matcher can be worked on without asking anyone to hit their site again.",
+ "1903": [
+  [
+   "5581",
+   "Premium Amazing View + Balcony 2 pax"
+  ],
+  [
+   "5582",
+   "Premium Amazing View 2-5 pax"
+  ],
+  [
+   "5583",
+   "Premium with View + Balcony 2 pax"
+  ],
+  [
+   "5584",
+   "Premium with View 2+1 pax"
+  ],
+  [
+   "5585",
+   "Premium with View 3-4 pax"
+  ],
+  [
+   "5586",
+   "Premium 2-4 pax"
+  ],
+  [
+   "5587",
+   "Premium 2 bdrm Amazing View + Balcony 4-5 pax"
+  ],
+  [
+   "5588",
+   "Premium with View 4-5 pax"
+  ],
+  [
+   "6337",
+   "Premium 2 pax PMR - חדר נכים"
+  ]
+ ],
+ "1288": [
+  [
+   "2882",
+   "2 ח\"ש וסלון 2-4 אורחים"
+  ],
+  [
+   "3721",
+   "2 ח\"ש וסלון 5 אורחים"
+  ],
+  [
+   "5396",
+   "3 ח\"ש וסלון"
+  ]
+ ],
+ "1963": [
+  [
+   "5809",
+   "Premium Room 2-3"
+  ],
+  [
+   "5810",
+   "Premium with Balcony 3+1"
+  ]
+ ],
+ "1844": [
+  [
+   "5805",
+   "Premium Amazing View 2-4 pax"
+  ]
+ ],
+ "2152": [
+  [
+   "6331",
+   "Premium with View 2+1 pax"
+  ],
+  [
+   "6332",
+   "Premium with View 3-4 pax"
+  ],
+  [
+   "6333",
+   "Premium Amazing View 2-4 pax"
+  ],
+  [
+   "6334",
+   "Premium Amazing View + Balcony 2 pax"
+  ]
+ ],
+ "1292": [
+  [
+   "2901",
+   "חדר שינה וסלון כ-27 מ\"ר פריבילג' 2-4"
+  ],
+  [
+   "2904",
+   "3 חדרי שינה עם גלריה + סלון 6-8 כ-50 מ\"ר קלאסיק"
+  ],
+  [
+   "5965",
+   "3 חדרי שינה עם גלריה + סלון 6-8 כ-50 מ\"ר פריבילג'"
+  ],
+  [
+   "5966",
+   "חדר שינה ונישה + סלון 4-6 כ-33 מ\"ר קלאסיק"
+  ],
+  [
+   "5967",
+   "חדר שינה ונישה + סלון 4-6 כ-33 מ\"ר פריבילג'"
+  ]
+ ],
+ "1673": [
+  [
+   "4457",
+   "connected rooms 4+2"
+  ],
+  [
+   "6133",
+   "Standard 2+1"
+  ]
+ ],
+ "2115": [
+  [
+   "6132",
+   "Standard 1-5"
+  ],
+  [
+   "6140",
+   "Standard with Balcony 1-5"
+  ]
+ ],
+ "1278": [
+  [
+   "2833",
+   "חדר 1-6 אורחים"
+  ]
+ ],
+ "1513": [
+  [
+   "3750",
+   "חדר שינה + סלון 2-4 כ-36 מ\"ר"
+  ],
+  [
+   "3751",
+   "2 חדרי שינה + סלון סטנדרט 4-6 כ-50 מ\"ר"
+  ],
+  [
+   "3753",
+   "2 חדרי שינה וסלון קומפורט 4-6 כ-60 מ\"ר"
+  ]
+ ],
+ "1440": [
+  [
+   "3430",
+   "חדר זוגי Classic 2-3"
+  ],
+  [
+   "6141",
+   "Premium 2-2"
+  ]
+ ],
+ "1665": [
+  [
+   "4438",
+   "Family Suite 45M 2-4"
+  ],
+  [
+   "4439",
+   "Prestige Suite 80M 4-5"
+  ]
+ ],
+ "1962": [
+  [
+   "5524",
+   "חדר שינה + סלון 2-4 כ-31 מ\"ר"
+  ],
+  [
+   "5525",
+   "חדר שינה, נישה וסלון 3-6 כ-39 מ\"ר"
+  ],
+  [
+   "5526",
+   "2 חדרי שינה + סלון 3-6 כ-45 מ\"ר"
+  ],
+  [
+   "5528",
+   "3 חדרי שינה + סלון 4-8 כ-60 מ\"ר"
+  ],
+  [
+   "5529",
+   "3 חדרי שינה, נישה וסלון 5-10 כ65 מ\"ר"
+  ],
+  [
+   "5530",
+   "4 חדרי שינה + סלון 5-10 כ-80 מ\"ר"
+  ]
+ ],
+ "1293": [
+  [
+   "2912",
+   "חדר שינה וסלון כ-32 מ\"ר 2-3 אורחים Soleil"
+  ],
+  [
+   "2913",
+   "חדר שינה, נישה וסלון כ-35 מ\"ר 2-4 אורחים Premier"
+  ],
+  [
+   "2914",
+   "2 חדרי שינה וסלון כ-45 מ\"ר 2-4 אורחים Soleil"
+  ],
+  [
+   "2915",
+   "2 חדרי שינה, נישה, וסלון כ-49 מ\"ר 4-6 אורחים Soleil"
+  ],
+  [
+   "4503",
+   "2 חדרי שינה וסלון PREMIUM כ-45 מ\"ר 2-4 אורחים Valbel"
+  ]
+ ],
+ "1402": [
+  [
+   "3593",
+   "חדר שינה, נישה וסלון 2-4 כ-45 מ\"ר"
+  ],
+  [
+   "3594",
+   "2 חדרי שינה וסלון 4-5 כ-65 מ\"ר"
+  ],
+  [
+   "4011",
+   "4 חדרי שינה וסלון 6-8 כ-95 מ\"ר פונה דרום"
+  ]
+ ],
+ "1973": [
+  [
+   "5550",
+   "App 1 Bdrm + Cabin 40m 1-4"
+  ],
+  [
+   "5551",
+   "1-4 App 2 Bdrm + Sauna 58m"
+  ],
+  [
+   "5552",
+   "App 2Bdrm + Cabin 73m 1-6"
+  ],
+  [
+   "5553",
+   "App 2 Bdrm + Cabin \"Plus\" 60m 1-6"
+  ],
+  [
+   "5555",
+   "App 4 Bdrm 87m 1-8"
+  ]
+ ],
+ "1949": [
+  [
+   "6326",
+   "Classic 2-3"
+  ]
+ ],
+ "2048": [
+  [
+   "5872",
+   "Premium 2-2 balcony"
+  ],
+  [
+   "5873",
+   "Premium 2 bedrooms with balcony 4+1"
+  ]
+ ],
+ "1195": [
+  [
+   "5989",
+   "חדר 2-2"
+  ],
+  [
+   "5990",
+   "חדר 2-4"
+  ]
+ ],
+ "1435": [
+  [
+   "3395",
+   "Double Standard room 1-3"
+  ],
+  [
+   "3396",
+   "One Bedroom Apartment 2-4"
+  ],
+  [
+   "3397",
+   "Two-Bedroom Apartment 4-6"
+  ]
+ ],
+ "1445": [
+  [
+   "3452",
+   "Double Standard room 1-3"
+  ]
+ ],
+ "1765": [
+  [
+   "4751",
+   "Superior Suite 2-3"
+  ],
+  [
+   "4753",
+   "Superior Suite Mountain View 2-3"
+  ],
+  [
+   "4755",
+   "Deluxe Suite 2-4"
+  ],
+  [
+   "4756",
+   "Deluxe Suite Mountain View 2-4"
+  ],
+  [
+   "4757",
+   "Grand Suite 2 Bdrm 4-5"
+  ],
+  [
+   "4758",
+   "Grand Suite 2 Bdrm Mountain View 4-5"
+  ],
+  [
+   "6327",
+   "Superior Double Room 2-2"
+  ],
+  [
+   "6328",
+   "Presidential Suite"
+  ]
+ ],
+ "1107": [
+  [
+   "2180",
+   "Studio 1-3"
+  ],
+  [
+   "2182",
+   "Apartment 1 Bedroom 1-3"
+  ]
+ ],
+ "1408": [
+  [
+   "3319",
+   "Double Room 1-3"
+  ]
+ ],
+ "2093": [
+  [
+   "6037",
+   "חדר זוגי דלוקס 2-3"
+  ]
+ ],
+ "2116": [
+  [
+   "6134",
+   "DBL room type 3 1-2"
+  ],
+  [
+   "6135",
+   "DBL room type 2 1-2"
+  ],
+  [
+   "6136",
+   "DBL room type 2 1-3"
+  ],
+  [
+   "6137",
+   "DBL room type 1 2-4"
+  ],
+  [
+   "6138",
+   "Single room 1-1"
+  ],
+  [
+   "6325",
+   "TWIN room type 2 1-2"
+  ]
+ ],
+ "2079": [
+  [
+   "5971",
+   "חדר זוגי 2-2"
+  ],
+  [
+   "5972",
+   "חדר זוגי 2-3"
+  ]
+ ],
+ "1234": [
+  [
+   "2663",
+   "חדר זוגי 2-2"
+  ],
+  [
+   "6051",
+   "חדר טריפל 2-3"
+  ]
+ ],
+ "1966": [
+  [
+   "5542",
+   "Double room 1-3"
+  ]
+ ],
+ "269": [
+  [
+   "95",
+   "Strass Double Room 1-3"
+  ],
+  [
+   "1556",
+   "Strass Junior Suite 1-4"
+  ],
+  [
+   "3381",
+   "Sport Junior Suite 1-4"
+  ],
+  [
+   "3382",
+   "Sport Deluxe Double Room 1-4"
+  ],
+  [
+   "3694",
+   "Strass Single Room 1-1"
+  ],
+  [
+   "5576",
+   "Sport Single Room 1-1"
+  ],
+  [
+   "5979",
+   "Sport Penthouse Suite 1-3"
+  ],
+  [
+   "6329",
+   "Sport Twin room 1-2"
+  ]
+ ],
+ "1917": [
+  [
+   "5368",
+   "Double room 1-3"
+  ]
+ ],
+ "2080": [
+  [
+   "5973",
+   "דירת 2 חדרים + סלון - 95 מ\"ר"
+  ]
+ ],
+ "1897": [
+  [
+   "5281",
+   "Double Ziller 1-3"
+  ],
+  [
+   "5332",
+   "Double Stilluptal 1-2"
+  ]
+ ],
+ "984": [
+  [
+   "1833",
+   "double room 1-3"
+  ]
+ ],
+ "445": [
+  [
+   "4529",
+   "Interior Room 2-3"
+  ],
+  [
+   "4530",
+   "Exterior Room 2-3"
+  ]
+ ],
+ "444": [
+  [
+   "678",
+   "Double Room 1-3"
+  ]
+ ],
+ "1161": [
+  [
+   "2386",
+   "Signature Room Resort View 1-3"
+  ],
+  [
+   "4241",
+   "Deluxe Suites Resort View 1-4"
+  ],
+  [
+   "5052",
+   "Signature Room Slopes View 1-3"
+  ],
+  [
+   "5055",
+   "Deluxe Suites Slopes View 1-4"
+  ],
+  [
+   "5806",
+   "Double Superior Resort View 1-3"
+  ],
+  [
+   "5807",
+   "Double Superior Slopes View 1-3"
+  ]
+ ],
+ "1246": [
+  [
+   "2701",
+   "Double Standard 1-3"
+  ]
+ ],
+ "1257": [
+  [
+   "2736",
+   "Standard Room 2-3"
+  ]
+ ],
+ "243": [
+  [
+   "3808",
+   "Premium Room 1-4"
+  ]
+ ]
+}

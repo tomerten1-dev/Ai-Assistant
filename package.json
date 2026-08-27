@@ -1,14 +1,29 @@
 {
   "name": "pingwin-ski-bot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "בוט התאמת חופשות סקי לאתר פינגווין — דמו",
   "scripts": {
     "build:data": "node tools/build-availability.js && node tools/build-camps.js && node tools/build-restrictions.js && node tools/merge-rooms.js",
-    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js",
+    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js && node tests/test-lead.js && node tests/test-booking-url.js && node tests/test-site-rooms.js && node tests/test-room-match.js && node tests/test-prefill-match.js && node tests/test-inventory.js && node tests/test-inventory-http.js && node tests/test-watch.js",
     "start": "node server/server.js",
+    "dev": "node tools/dev.js",
+    "test:ui": "node tests/test-widget.js",
+    "test:prefill": "node tests/test-prefill.js",
+    "rooms": "node tools/room-list.js",
+    "bank": "node tests/test-bank.js",
+    "bank:live": "node tests/test-bank.js --typical --sample=100 --live --watch",
     "stress": "node tests/stress.js",
     "review": "node tools/review-log.js",
-    "build:site": "node tools/fetch-hotel-images.js && node tools/fetch-inclusions.js"
+    "build:site": "node tools/fetch-hotel-images.js && node tools/fetch-inclusions.js",
+    "match": "node tools/match-score.js",
+    "inventory": "node tools/build-availability.js",
+    "push": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/push-availability.ps1 -VerboseLog",
+    "inventory:local": "node tools/build-availability.js",
+    "test:page": "node tests/test-inventory-page.js",
+    "watch": "node tools/watch-inventory.js"
+  },
+  "dependencies": {
+    "nodemailer": "^9.0.5"
   }
 }

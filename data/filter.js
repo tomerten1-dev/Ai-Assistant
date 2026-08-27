@@ -7,12 +7,18 @@ const { roomFacts } = require('./room-match');
 
 const DATA_DIR = __dirname;
 function loadJSON(p) { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, p), 'utf8')); }
+function stampOf(p) {
+  try { return fs.statSync(path.join(DATA_DIR, p)).mtimeMs; } catch (e) { return 0; }
+}
 
 const MONTHS = { 12: '12', 1: '01', 2: '02', 3: '03' };
 
 class SkiSearch {
   constructor({ availability, resorts, camps, pricing, departures } = {}) {
     this.av = availability || loadJSON('availability.json');
+    // remember which file we read, so a push can replace it under us
+    this._avFixed = !!availability;
+    this._avStamp = this._avFixed ? 0 : stampOf('availability.json');
     this.resorts = resorts || loadJSON('resorts.json');
     this.camps = camps || loadJSON('camps.json');
     this.pricing = pricing || loadJSON('pricing.json');
@@ -72,12 +78,23 @@ class SkiSearch {
      policy (Tomer 23/08): regular camp = ages 6-13 (split by ski level,
      runs most weeks); ages 4-6 camp opens only on specific dates.
      age 6 fits either group. ---- */
+  /* ---- how many seats does this party take? ----
+     Children whose ages are not known yet still travel: "זוג עם 2 ילדים"
+     must be four people everywhere — in the search, the trade-off counts and
+     the card captions — not four in one place and two in another. */
+  static partyOf(slots) {
+    return (slots.adults || 0) +
+      Math.max((slots.children_ages || []).length, slots.children_count || 0);
+  }
+
+  // policy (Tomer 26/08, questionnaire q4): a six-year-old goes to the 6-13
+  // group, and the 6-13 group takes children up to and including 14. Under
+  // four there is no group — "3 ו-10 חודשים" is a no, not a maybe.
   static neededAgeGroups(childrenAges) {
     const groups = new Set();
     for (const a of childrenAges || []) {
       if (a >= 4 && a < 6) groups.add('4-6');
-      else if (a > 6 && a <= 13) groups.add('6-13');
-      else if (a === 6) groups.add('6*'); // fits either group
+      else if (a >= 6 && a <= 14) groups.add('6-13');
     }
     return groups;
   }
@@ -97,11 +114,7 @@ class SkiSearch {
       if (waitSeats(g)) waitlistOnly.push(g);
       else missing.push(g);
     };
-    for (const g of needed) {
-      if (g === '6*') {
-        if (!openSeats('4-6') && !openSeats('6-13')) check('6-13');
-      } else check(g);
-    }
+    for (const g of needed) check(g);
     return { full: missing.length === 0 && waitlistOnly.length === 0, running, missing, waitlist_only: waitlistOnly };
   }
 
@@ -134,12 +147,36 @@ class SkiSearch {
   /* =============== main search =============== */
   // slots: {adults, children_ages, month, flexible_dates, country, destination,
   //         needs_hebrew_kids_club, preferences}
+  // The office pushes a new inventory file every few hours (server/inventory.js).
+  // Re-read it when it changes instead of holding the copy this process started
+  // with — a restart to pick up new stock is a restart nobody will remember to
+  // do, and the stock going stale is exactly the failure this is all about.
+  refreshIfChanged() {
+    if (this._avFixed) return false;
+    const now = stampOf('availability.json');
+    if (!now || now === this._avStamp) return false;
+    try {
+      const next = loadJSON('availability.json');
+      if (next && Array.isArray(next.units) && next.units.length) {
+        this.av = next;
+        this._avStamp = now;
+        console.log('inventory reloaded — %d unit groups', next.units.length);
+        return true;
+      }
+    } catch (e) {
+      // a file mid-write, or briefly unreadable: keep what we have and try
+      // again next time rather than serving nothing
+      console.error('inventory reload failed (%s) — keeping the previous file', e.message);
+    }
+    return false;
+  }
+
   search(slots) {
+    this.refreshIfChanged();
     // children whose ages we do not know yet still take seats: "עם 3 נכדים"
     // was a party of two by this arithmetic, and five people were offered
     // rooms for three
-    const party = (slots.adults || 0) +
-      Math.max((slots.children_ages || []).length, slots.children_count || 0);
+    const party = SkiSearch.partyOf(slots);
     const notes = [];   // machine-readable notes Claude may phrase
     let relaxed = []; // which constraints were relaxed, in order
 
@@ -148,14 +185,18 @@ class SkiSearch {
         !(slots.excluded_countries || []).includes('france')) {
       notes.push({ type: 'france_february_gap' });
     }
-    // a kids club was asked for, but no child falls in 4–13
-    if (slots.needs_hebrew_kids_club && !SkiSearch.neededAgeGroups(slots.children_ages).size) {
+    // a kids club was asked for, but no child falls in 4–14
+    // ...but only once the ages are known. With "2 ילדים" and no ages yet,
+    // telling the family the camp is not for them — and then asking the
+    // ages — was both wrong and rude.
+    if (slots.needs_hebrew_kids_club && (slots.children_ages || []).length &&
+        !SkiSearch.neededAgeGroups(slots.children_ages).size) {
       notes.push({ type: 'camp_age_mismatch', ages: slots.children_ages || [] });
     }
     // Some children are in range and some are not. Saying nothing about the
     // 14-year-old lets a parent assume all their children have a group.
     if (slots.needs_hebrew_kids_club) {
-      const outside = (slots.children_ages || []).filter(a => a < 4 || a > 13);
+      const outside = (slots.children_ages || []).filter(a => a < 4 || a > 14);
       if (outside.length && SkiSearch.neededAgeGroups(slots.children_ages).size) {
         notes.push({ type: 'camp_age_partial', ages: outside });
       }
@@ -329,7 +370,13 @@ class SkiSearch {
       if (!found && (slots.country || slots.destination)) {
         for (const m of [+slots.month, ...months].filter(x => x != null)) {
           const alt = this._filter(slots, party, { month: m, country: null, destination: null });
-          if (covers(alt)) { found = { list: alt, note: { type: 'camp_location', to: m } }; break; }
+          if (covers(alt)) {
+            // name where the club actually runs — "יעדים אחרים" told a family
+            // that asked for Austria nothing about where they were being sent
+            const to_countries = [...new Set(alt.filter(c => c.camps && !(c.camps.missing || []).length).map(c => c.country))];
+            found = { list: alt, note: { type: 'camp_location', to: m, from_country: slots.country || null, to_countries, groups: [...SkiSearch.neededAgeGroups(slots.children_ages)] } };
+            break;
+          }
         }
       }
       if (found) {
@@ -626,6 +673,11 @@ class SkiSearch {
       // customer's flight cannot reach
       if (sheets && !sheets.includes(u.sheet)) continue;
       if (this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
+      // Sabbath observance binds a split exactly as it binds a single room:
+      // a family of six who said "בלי טיסות בשבת" was offered two rooms on a
+      // Saturday departure, because this loop never looked at the weekday
+      if (slots.no_saturday_flights && new Date(u.date + 'T00:00:00Z').getUTCDay() === 6) continue;
+      if (slots.nights_wanted && u.nights !== slots.nights_wanted) continue;
       if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
       if (slots.country && u.country !== slots.country) continue;
       if ((slots.excluded_countries || []).includes(u.country)) continue;
@@ -633,9 +685,11 @@ class SkiSearch {
       if (slots.hotel && u.hotel !== slots.hotel) continue;
       // asked for a specific third of the month
       if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
+      if (slots.exact_day && Math.abs(+u.date.slice(8, 10) - slots.exact_day) > 3) continue;
       // a resort the customer ruled out ("לא בנסקו") — the country stays open
       if ((slots.excluded_destinations || []).some(
         d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
+      if (slots.destination && !matchDestination(slots.destination, u, this.resortOf(u.hotel))) continue;
       const k = u.hotel + '||' + u.date;
       if (!byHotelDate.has(k)) byHotelDate.set(k, []);
       byHotelDate.get(k).push(u);
@@ -725,7 +779,7 @@ class SkiSearch {
     const out = [];
     const count = (over) => {
       const alt = { ...slots, ...over };
-      const p = (alt.adults || 0) + (alt.children_ages || []).length;
+      const p = SkiSearch.partyOf(alt);
       let list = this._filter(alt, p || party, {
         month: alt.month, country: alt.country, destination: alt.destination,
         ignoreNights: over.nights_wanted === null,
@@ -838,6 +892,7 @@ class SkiSearch {
       board_he: info.board_he || null,         // בסיס האירוח מדף המלון
       wifi_he: info.wifi_he || null,           // ציטוט מדף המלון
       spa_he: info.spa_he || null,             // ציטוט מדף המלון
+      page_facts: info.page_facts || null,     // נוף, בריכה, מיקום, מסעדה… — ציטוטים מדף המלון (data/hotel-facts.json)
       spa_access: info.spa_access || 'none',   // free|entries|paid|guests|not_stated|none
       spa_access_he: info.spa_access_he || null,
       spa_note_he: info.spa_note_he || null,

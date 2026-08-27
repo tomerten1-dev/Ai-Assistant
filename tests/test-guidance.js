@@ -3,6 +3,10 @@
 // safe — it reaches the model, and it cannot loosen a red rule no matter what
 // he writes in it.
 // Run: node tests/test-guidance.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -120,14 +124,64 @@ t('the office hours are known, for answering when asked', () => {
   assert.strictEqual(guidance.officeOpen(saturday), false);
 });
 
-// Tomer, 24/08: do not phrase the handoff by the clock. "המשרד סגור כרגע"
-// talks someone out of leaving their details at the moment they wanted to.
-t('the handoff sentence is the same at any hour', () => {
-  const midnight = guidance.handoffLine(new Date(2026, 7, 29, 23, 0));
-  const midday = guidance.handoffLine(new Date(2026, 7, 23, 10, 0));
-  assert.strictEqual(midnight, midday, 'the wording still changes with the clock');
-  assert.ok(/04-8557722/.test(midday), 'no way to reach anyone: ' + midday);
-  assert.ok(!/סגור/.test(midnight), 'still announces that the office is closed');
+// Tomer, 24/08: do not talk someone out of leaving their details.
+// Tomer, 26/08: but do not tell a customer writing at 23:00 to call now.
+// Both hold: the closed line keeps the invitation and drops only the "call now".
+const IL = {
+  sunday_0930: new Date('2026-08-23T06:30:00Z'),   // Sunday 09:30 in Israel (06:30 UTC)
+  sunday_0730: new Date('2026-08-23T04:30:00Z'),   // Sunday 07:30 — opens later today
+  sunday_1900: new Date('2026-08-23T16:00:00Z'),   // Sunday 19:00 — opens tomorrow
+  friday_1500: new Date('2026-08-28T12:00:00Z'),   // Friday 15:00 — closed until Sunday
+  saturday_1200: new Date('2026-08-29T09:00:00Z'), // Saturday noon
+};
+t('the office clock is Israel\'s, not the server\'s', () => {
+  // a cloud host runs in UTC: at 09:30 in Haifa its own clock says 06:30, and
+  // the office would read as closed. This is the test that pins the timezone.
+  assert.strictEqual(guidance.officeOpen(IL.sunday_0930), true, 'Sunday 09:30 in Israel is open');
+  assert.strictEqual(guidance.officeState(IL.sunday_0930).open, true);
+});
+t('outside office hours the handoff says when we open, and still invites details', () => {
+  const cases = [
+    [IL.sunday_0730, /היום ב-9:00/],
+    [IL.sunday_1900, /מחר ב-9:00/],
+    [IL.friday_1500, /ביום ראשון ב-9:00/],
+    [IL.saturday_1200, /מחר ב-9:00/],
+  ];
+  for (const [when, opens] of cases) {
+    const line = guidance.handoffLine(when);
+    assert.ok(/סגור/.test(line), 'does not say it is closed: ' + line);
+    assert.ok(opens.test(line), 'does not say when it opens: ' + line);
+    assert.ok(/שם וטלפון/.test(line), 'stopped inviting details: ' + line);
+    assert.ok(!/להתקשר|התקשרו/.test(line), 'tells them to call when nobody will answer: ' + line);
+  }
+});
+t('during office hours the handoff is the one that says "call now"', () => {
+  const line = guidance.handoffLine(IL.sunday_0930);
+  assert.ok(/04-8557722/.test(line), 'no way to reach anyone: ' + line);
+  assert.ok(!/סגור/.test(line), 'announces closed while open: ' + line);
+});
+t('both handoff lines come from guidance.json, and the closed one has its placeholder', () => {
+  const H = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'config', 'guidance.json'), 'utf8')).handoff_he;
+  assert.ok(H.line_he && H.line_closed_he, 'both sentences are in the file');
+  assert.ok(H.line_closed_he.includes('{opens}'), 'the opening time is filled in, not hard-coded');
+  assert.ok(H.opens_he && H.opens_he.today_he && H.opens_he.tomorrow_he && H.opens_he.weekday_he);
+});
+t('with no hours configured nothing is invented', () => {
+  const g = require('../server/guidance.js');
+  const real = g.load().handoff_he.hours;
+  try {
+    delete g.load().handoff_he.hours;
+    assert.strictEqual(g.officeOpen(IL.saturday_1200), null);
+    assert.strictEqual(g.officeState(IL.saturday_1200), null);
+    assert.ok(!/סגור/.test(g.handoffLine(IL.saturday_1200)), 'invented a closing without hours');
+  } finally { g.load().handoff_he.hours = real; }
+});
+t('"מתי אתם פתוחים?" answers with the hours and with the status right now', () => {
+  const a = require('../server/offline-nlu.js').faq('מתי אתם פתוחים?');
+  assert.ok(a && a.id === 'hours');
+  assert.ok(/9:00-18:00/.test(a.he), 'the hours themselves are still there');
+  assert.ok(/כרגע המשרד (פתוח|סגור)/.test(a.he), 'the status is filled in: ' + a.he);
+  assert.ok(!/\{office_status\}/.test(a.he), 'placeholder left in the customer text');
 });
 
 t('who each destination suits reaches the prompt', () => {
@@ -147,6 +201,77 @@ t('there is a closing line for both outcomes', () => {
   assert.ok(guidance.closing('no_offers'));
   assert.strictEqual(guidance.closing('nonsense'), '');
 });
+
+
+/* ---------- one place for the office number, one place for the copy ---------- */
+t('every fixed sentence comes from guidance.json, with the code wording as the floor', () => {
+  const g = require('../server/guidance.js');
+  assert.strictEqual(g.msg('fallback', 'לא בשימוש').includes('04-8557722'), true, '{phone} is filled');
+  assert.strictEqual(g.msg('no_such_key', 'ברירת מחדל {phone}'), 'ברירת מחדל 04-8557722', 'a missing key falls back');
+  assert.strictEqual(g.msg('no_such_key', 'בלי מספר'), 'בלי מספר');
+  assert.ok(g.phone(), 'the office number is configured');
+});
+t('the office phone is written down exactly once', () => {
+  const fs = require('fs'), path = require('path');
+  const root = path.join(__dirname, '..');
+  const hits = [];
+  for (const rel of ['server', 'public']) {
+    const dir = path.join(root, rel);
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.js') || f === 'prompts.js') continue;   // prompts.js is dead code, tracked separately
+      const src = fs.readFileSync(path.join(dir, f), 'utf8');
+      const n = (src.match(/04-8557722/g) || []).length;
+      if (n) hits.push(`${rel}/${f} ×${n}`);
+    }
+  }
+  // the widget keeps one literal as the floor for the moment before /api/config lands
+  assert.deepStrictEqual(hits, ['public/pingwin-bot.js ×1'], 'phone numbers in code: ' + hits.join(', '));
+});
+t('deflections are config, not code, and every placeholder resolves', () => {
+  const fs = require('fs'), path = require('path');
+  const d = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', 'deflect.json'), 'utf8'));
+  assert.ok(d.entries.length >= 15, 'the standing answers live in the file');
+  const offline = require('../server/offline-nlu.js');
+  for (const q of ['כמה זה עולה?', 'תחזרו אליי', 'יש לכם כלב?', 'מי הזמין?']) {
+    const a = offline.deflect(q);
+    assert.ok(a, 'answered: ' + q);
+    assert.ok(!/\{phone\}|\{handoff\}|\{whatsapp\}/.test(a), 'placeholder left in: ' + a);
+  }
+});
+t('a broken entry in deflect.json costs that answer, not the bot', () => {
+  const fs = require('fs'), path = require('path');
+  const P = path.join(__dirname, '..', 'config', 'deflect.json');
+  const good = fs.readFileSync(P, 'utf8');
+  try {
+    const d = JSON.parse(good);
+    d.entries.unshift({ id: 'broken', match: 'ביטול(', answer_he: 'x' });
+    fs.writeFileSync(P, JSON.stringify(d, null, 1));
+    fs.utimesSync(P, new Date(), new Date(Date.now() + 2000));
+    const offline = require('../server/offline-nlu.js');
+    assert.ok(offline.deflect('כמה זה עולה?'), 'the other answers still work');
+  } finally {
+    fs.writeFileSync(P, good);
+    fs.utimesSync(P, new Date(), new Date(Date.now() + 4000));
+  }
+});
+
+t('a two-word question is asked back, not answered with a headcount request', () => {
+  // the live typical run: "עד מתי?" and "כמה זמן?" got "לא בטוח שהבנתי. כתבו לי
+  // כמה אתם נוסעים" — which reads as ignoring a question
+  const offline = require('../server/offline-nlu.js');
+  for (const q of ['עד מתי?', 'כמה זמן?']) {
+    const a = offline.notUnderstood(q);
+    assert.ok(a && /\?/.test(a), 'answered with a question: ' + q);
+    assert.ok(/במשפט אחד/.test(a), 'asks them to say it in a sentence: ' + a);
+  }
+  const noise = offline.notUnderstood('מיע');
+  assert.ok(noise && !/במשפט אחד/.test(noise), 'gibberish still gets the plain line: ' + noise);
+});
+t('both not-understood lines come from guidance.json', () => {
+  const g = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'config', 'guidance.json'), 'utf8'));
+  assert.ok(g.messages_he.not_understood && g.messages_he.not_understood_question, 'both keys are in the file');
+});
+
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

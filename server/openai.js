@@ -44,10 +44,15 @@ async function callOpenAI({ system, messages, maxTokens = 400, json = true, mode
   // JSON mode: the reply is always parseable, so no fence-stripping and no
   // tokens wasted on the model explaining itself
   if (json) body.response_format = { type: 'json_object' };
+  // A hung upstream request used to hang the turn with it: there was no
+  // timeout here at all, and the only backstop was the 25s cap in server.js.
+  // 20s keeps this call strictly inside that cap, so a slow provider degrades
+  // to the free Hebrew layer instead of holding a customer on a blank screen.
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(+(process.env.MODEL_TIMEOUT_MS || 20000)),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
