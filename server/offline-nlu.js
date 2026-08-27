@@ -4,7 +4,8 @@
 // Not as flexible as Claude, but honors the exact same slot schema and the
 // same conversation policy (max 2 questions, one per message).
 
-const guidance = require('./guidance.js');   // the fixed sentences and the office phone live there
+const guidance = require('./guidance.js');
+const { resortHe } = require('../data/resort-names.js');   // the fixed sentences and the office phone live there
 const { SkiSearch } = require('../data/filter.js');
 
 const HE_NUM = {
@@ -619,6 +620,19 @@ function parseText(text, slots) {
     if (named) s.hotel = named;
   }
 
+  // --- a CHAIN named by name. "מה עם קלאב דו סוליי?" is not a question about
+  // one hotel, it is a question about four — and hotelNamed() gives up on
+  // purpose when more than one matches, so before this the bot had nothing to
+  // say and handed the customer to a rep (Tomer, 27/08).
+  s.hotel_group = null;
+  if (!s.hotel) {
+    for (const g of hotelGroups()) {
+      if (!g.re || !g.re.test(t)) continue;
+      s.hotel_group = { id: g.id, he: g.he, hotels: g.hotels };
+      break;
+    }
+  }
+
   // --- a resort pingwin sells but holds no commitments for. Saying nothing
   // and quietly showing something else reads as a bot that ignored the
   // question; claiming it is unavailable would be wrong. Name it and route it.
@@ -923,12 +937,10 @@ function relaxationLines(result, slots) {
     if (r.type === 'month') {
       // "יש סקי בבולגריה בדצמבר?" deserves a yes/no with the place named, not
       // a generic "לא מצאתי בדיוק"
-      const DEST_HE2 = { 'Bansko': 'בנסקו', 'Borovets': 'בורובץ', 'Tignes': 'טיניי',
-        'Les 2 Alpes': 'לה דוז אלפ', 'Val Thorens': 'ואל טורנס', 'Avoriaz': 'אבוריאז',
-        'Les Arcs': 'לה ארק', 'Flaine Grand Massif': 'פליין גרנד מסיף', "Alpe d'Huez": "אלפ ד'הואז",
-        'Montgenevre': "מונז'נבר", 'Les Menuires': 'לה מנואר', 'Soldeu': 'סולדו',
-        'Pas de la Casa': 'פאס דה לה קאסה', 'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל' };
-      const place = slots && ((slots.destination && (DEST_HE2[slots.destination] || null)) ||
+      // the shared table (config/resort-names.json) — this line and the card
+      // beneath it must not spell the same resort two ways
+      const dest = slots && slots.destination;
+      const place = slots && ((dest && resortHe(dest) !== dest ? resortHe(dest) : null) ||
         ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[slots.country]) || null;
       // asked for a holiday by name — answer about the holiday, not the month
       const fromHe = (slots && slots.holiday && slots.holiday !== 'any') ? slots.holiday : (MONTH_HE[r.from] || r.from);
@@ -1342,6 +1354,31 @@ const HOTEL_HE = [
   [/קשמיר/, 'Hotel Kashmir'],
   [/לודג' ?פארק|לודז ?פארק/, 'LODGE PARK (Allotment)'],
 ];
+
+/* Chains, from config/hotel-groups.json — Tomer's file, so a new chain is a
+   line of JSON and not a deploy. Read on demand and re-read when it changes,
+   the same contract faq.json and guidance.json have, and a broken pattern
+   costs that one chain rather than the server. */
+const GROUPS_FILE = require('path').join(__dirname, '..', 'config', 'hotel-groups.json');
+let groupCache = null, groupStamp = -1;
+function hotelGroups() {
+  let stamp = 0;
+  try { stamp = require('fs').statSync(GROUPS_FILE).mtimeMs; } catch (e) { stamp = 0; }
+  if (groupCache && stamp === groupStamp) return groupCache;
+  const out = [];
+  try {
+    const raw = JSON.parse(require('fs').readFileSync(GROUPS_FILE, 'utf8'));
+    for (const g of (raw.groups || [])) {
+      if (!g || !g.match || !Array.isArray(g.hotels) || !g.hotels.length) continue;
+      try { out.push({ id: g.id, he: g.he, hotels: g.hotels, re: new RegExp(g.match, 'i') }); }
+      catch (e) { console.error('hotel-groups.json: bad pattern for %s — %s', g.id, e.message); }
+    }
+  } catch (e) {
+    if (groupStamp !== stamp) console.error('hotel-groups.json unreadable (%s)', e.message);
+  }
+  groupCache = out; groupStamp = stamp;
+  return out;
+}
 
 // Returns a hotel only when EXACTLY one is named. "מה עדיף קאזה קארינה או
 // רגנום?" names two, and locking the search to whichever matched first answers
@@ -1855,6 +1892,7 @@ module.exports = {
   wantsMore,
   hotelNamed,
   hotelsNamed,
+  hotelGroups,
   wantsCallback,
   unknownAnswer,
   noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent, foreignLanguage };

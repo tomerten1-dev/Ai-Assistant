@@ -198,18 +198,8 @@ const BULGARIA = {
   ],
 };
 
-// Hebrew resort names, including the seven the bot did not know before.
-const RESORT_HE = {
-  'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל', 'Saalbach': 'זאלבאך',
-  'Hinterglemm': 'הינטרגלם', 'St. Anton': 'סנט אנטון', 'Zell am See': 'צל אם זה',
-  'Katschberg': 'קצברג',
-  'Val Thorens': 'ואל טורנס', 'Tignes': 'טיניי', 'Les Menuires': 'לה מנואר',
-  'Les Arcs': 'לה ארק', "Alpe d'Huez": "אלפ ד'הואז", 'Les 2 Alpes': 'לה דוז אלפ',
-  "Val d'Isere": "ואל ד'יזר", 'La Plagne': 'לה פלאן', 'Oz en Oisans': 'עוז אן אואזאן',
-  'Flaine Grand Massif': 'פליין', 'Avoriaz': 'אבוריאז', 'Montgenevre': 'מונז\'נבר',
-  'Pas de la Casa': 'פאס דה לה קאסה', 'Soldeu': 'סולדו',
-  'Bansko': 'בנסקו', 'Borovets': 'בורובץ',
-};
+// one table for everyone — config/resort-names.json via data/resort-names.js
+const { resortHe } = require('../data/resort-names.js');
 
 const BY_COUNTRY = { austria: AUSTRIA, france: FRANCE, andorra: ANDORRA, bulgaria: BULGARIA };
 
@@ -276,7 +266,7 @@ function build() {
       for (const [name, siteID, board_he, sameAs] of rows) {
         const hit = committed.get(name);
         hotels.push({
-          name, siteID, resort, resort_he: RESORT_HE[resort] || resort, country,
+          name, siteID, resort, resort_he: resortHe(resort), country,
           board_he,
           // another booking page for a hotel already in this list — kept so the
           // link can reach it, hidden from everything a customer reads

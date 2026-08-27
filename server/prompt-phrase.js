@@ -47,20 +47,13 @@ const PHRASE_PROMPT = `אתה נציג של פינגווין, סוכנות חו�
 // internal ids, no counts, no sheet names, no room codes from the workbook.
 // Every resort we sell, in the Hebrew people actually say. Used for the model's
 // prose — the cards themselves keep the name the site uses.
-const RESORT_HE = {
-  'Bansko': 'בנסקו', 'Borovets': 'בורובץ',
-  'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל',
-  'Val Thorens': 'ואל טורנס', 'Tignes': 'טיניי', 'Les 2 Alpes': 'לה דו אלפ',
-  'Avoriaz': 'אבוריאז', 'Les Arcs': 'לז ארק', 'Les Menuires': 'לה מנואר',
-  'Flaine Grand Massif': 'פליין גראנד מסיף', "Alpe d'Huez": "אלפ ד'ואז",
-  'Montgenevre': 'מונז׳נבר', 'Oz en Oisans': 'עוז אן אואזן',
-  'Soldeu': 'סולדאו', 'Pas de la Casa': 'פאס דה לה קאסה',
-};
+// one table for everyone — see data/resort-names.js
+const { resortHe } = require('../data/resort-names.js');
 
 function cardDigest(c) {
   return {
     hotel: c.hotel,
-    resort: RESORT_HE[c.resort] || c.resort,
+    resort: resortHe(c.resort),
     country_he: c.country_he,
     date_he: c.date_label ? `${c.date_label} ${c.date}` : c.date,
     nights: c.nights,

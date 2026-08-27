@@ -21,6 +21,7 @@ const { SkiSearch } = require('../data/filter.js');
 const { buildBookingUrl, deepLink, pageFor, addNights } = require('../config/booking-url.js');
 const siteRooms = require('./site-rooms.js');
 const inventory = require('./inventory.js');
+const { resortHe } = require('../data/resort-names.js');
 const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
 const recommend = require('./recommend.js');
@@ -148,8 +149,17 @@ function toSearchSlots(slots) {
 function slotsChanged(before, after) {
   const keys = ['adults', 'children_ages', 'children_count', 'no_children', 'month',
     'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club',
-    'excluded_countries', 'no_saturday_flights', 'nights_wanted'];
-  for (const k of keys) if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) return true;
+    'excluded_countries', 'no_saturday_flights', 'nights_wanted',
+    // naming a hotel or a chain IS the customer telling us something. Without
+    // these, "מה עם קלאב דו סוליי?" changed nothing by this measure and the
+    // reply came back "אני כאן בעיקר להתאמת חופשות סקי" over three Club Soleil
+    // cards (Tomer, 27/08)
+    'hotel', 'hotel_group'];
+  // undefined and null mean the same thing here: "we do not know". Comparing
+  // them raw made every turn look like a change the moment a slot was
+  // initialised to null each turn, and the whole off-topic guard stopped firing.
+  const same = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+  for (const k of keys) if (!same(before[k], after[k])) return true;
   return (after.preferences || []).length !== (before.preferences || []).length;
 }
 function shouldAskModel(before, after, text) {
@@ -297,7 +307,8 @@ function presentCards(result, slots, skip, opts = {}) {
     // "(allotment)" is a word from the commitments workbook meaning we hold
     // rooms there. It is not part of the hotel's name and it went out to
     // customers on the cards and in the model's sentences.
-    hotel: displayHotel(c.hotel), resort: c.resort, country: c.country,
+    // the resort in Hebrew: the card said TIGNES beside a Hebrew sentence
+    hotel: displayHotel(c.hotel), resort: resortHe(c.resort), country: c.country,
     country_he: { austria: 'אוסטריה', france: 'צרפת', andorra: 'אנדורה', bulgaria: 'בולגריה' }[c.country] || c.country,
     date: c.date, date_label: c.date_label, nights: c.nights,
     room: c.room, occ: c.occ_effective, occ_composition_he: c.occ_composition_he,

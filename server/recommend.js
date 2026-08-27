@@ -24,6 +24,14 @@ try { camps = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'cam
 const COUNTRY_HE = { austria: 'אוסטריה', bulgaria: 'בולגריה', andorra: 'אנדורה', france: 'צרפת' };
 const PRICE_HE = { budget: 'מהמשתלמים אצלנו', mid: 'ברמת מחיר בינונית', premium: 'ברמת הפרימיום' };
 
+/* What a customer TYPES and what we WRITE BACK are two different things.
+   config/resort-profiles.json carries a `he` per resort, and that is how
+   "טיניי" gets recognised — so it stays, as an alias. But the name that goes on
+   the screen comes from the shared table, or the same resort is spelled one way
+   in this sentence and another on the card right below it (Tomer, 27/08). */
+const { resortHe } = require('../data/resort-names.js');
+const nameOf = p => (p && p.name && resortHe(p.name)) || (p && nameOf(p)) || '';
+
 function approved() {
   return Object.entries(profiles.resorts)
     .filter(([, p]) => p.approved && p.ratings)
@@ -94,7 +102,7 @@ function detect(text, slots) {
     const named = names.length ? names
       : single ? [single]
         : countries.length ? countries.map(c => COUNTRY_HE[c]) : [];
-    const he = named.map(n => (profiles.resorts[n] || {}).he || n);
+    const he = named.map(n => resortHe(n) !== n ? resortHe(n) : ((profiles.resorts[n] || {}).he || n));
     return { kind: 'compare_ask', named: he, audience, attrs };
   }
   if (names.length < 2 && single && (audience.length || attrs.length) && /מתאים|טוב ל|כדאי|שווה|בסדר ל/.test(t)) {
@@ -207,11 +215,11 @@ function which(intent, slots) {
     let why = reasons(p, intent.audience, intent.attrs).slice(0, 4);
     // facts alone can be thin ("נציג באתר") — the approved one-line profile fills in
     if (why.filter(w => !/נציג/.test(w)).length < 2 && p.reason_he) why = [...why.filter(w => !/נציג/.test(w)), p.reason_he];
-    return `• ${p.he} (${COUNTRY_HE[p.country]}) — ${why.join(', ')}`;
+    return `• ${nameOf(p)} (${COUNTRY_HE[p.country]}) — ${why.join(', ')}`;
   });
-  const more = fit.length > 3 ? `\nיש גם ${fit.slice(3, 6).map(p => p.he).join(', ')}.` : '';
+  const more = fit.length > 3 ? `\nיש גם ${fit.slice(3, 6).map(p => nameOf(p)).join(', ')}.` : '';
   const he = `${topic ? 'האתרים שלנו שמתאימים במיוחד ' + topic : 'האתרים שמתאימים'} — לפי הנתונים של כל אתר:\n${lines.join('\n')}${more}`;
-  return { he, chips: top.map(p => p.he) };
+  return { he, chips: top.map(p => nameOf(p)) };
 }
 
 function factLine(p) {
@@ -242,15 +250,15 @@ function compare(intent, slots) {
   const byName = Object.fromEntries(approved().map(p => [p.name, p]));
   const ps = intent.names.map(n => byName[n]).filter(Boolean);
   if (ps.length < 2) return null;
-  const lines = ps.map(p => `• ${p.he}: ${factLine(p)}. ${PRICE_HE[p.price_level] || ''}. מתאים במיוחד ל${suits(p)}.`);
+  const lines = ps.map(p => `• ${nameOf(p)}: ${factLine(p)}. ${PRICE_HE[p.price_level] || ''}. מתאים במיוחד ל${suits(p)}.`);
   let pick = '';
   if (intent.audience.length) {
     const best = [...ps].sort((a, b) => score(b, intent.audience, []) - score(a, intent.audience, []))[0];
     const why = reasons(best, intent.audience, []).slice(0, 3);
-    pick = `\n${LABEL[intent.audience[0]]} הייתי מכוון ל${best.he}${why.length ? ' — ' + why.join(', ') : ''}.`;
+    pick = `\n${LABEL[intent.audience[0]]} הייתי מכוון ל${nameOf(best)}${why.length ? ' — ' + why.join(', ') : ''}.`;
   }
-  const he = `${ps.map(p => p.he).join(' מול ')}, לפי הנתונים של כל אתר:\n${lines.join('\n')}${pick}`;
-  return { he, chips: ps.map(p => p.he) };
+  const he = `${ps.map(p => nameOf(p)).join(' מול ')}, לפי הנתונים של כל אתר:\n${lines.join('\n')}${pick}`;
+  return { he, chips: ps.map(p => nameOf(p)) };
 }
 
 function countriesCompare(intent) {
@@ -267,13 +275,13 @@ function countriesCompare(intent) {
     if (ps.some(p => p.ratings.families >= 5)) tags.push('כפרים שבנויים למשפחות');
     if (ps.every(p => p.price_level === 'budget')) tags.push('מהמשתלמים אצלנו');
     const who = [...new Set(ps.flatMap(p => suits(p).split(', ')))].filter(w => w !== 'רוב הגולשים').slice(0, 3).join(', ');
-    const names = ps.length > 4 ? ps.slice(0, 4).map(p => p.he).join(', ') + ' ועוד' : ps.map(p => p.he).join(', ');
+    const names = ps.length > 4 ? ps.slice(0, 4).map(p => nameOf(p)).join(', ') + ' ועוד' : ps.map(p => nameOf(p)).join(', ');
     return `• ${COUNTRY_HE[c]} (${names}): גלישה עד ${top} מ׳${km ? `, עד ${km} ק"מ מסלולים` : ''}${tags.length ? ' · ' + tags.join(' · ') : ''}. מתאים במיוחד ל${who || 'רוב הגולשים'}.`;
   });
   let pick = '';
   if (intent.audience.length) {
     const best = [...all].filter(p => intent.countries.includes(p.country)).sort((a, b) => score(b, intent.audience, intent.attrs) - score(a, intent.audience, intent.attrs))[0];
-    if (best) pick = `\n${LABEL[intent.audience[0]]} הייתי מכוון ל${COUNTRY_HE[best.country]} — ${best.he}: ${reasons(best, intent.audience, intent.attrs).slice(0, 3).join(', ') || best.reason_he}.`;
+    if (best) pick = `\n${LABEL[intent.audience[0]]} הייתי מכוון ל${COUNTRY_HE[best.country]} — ${nameOf(best)}: ${reasons(best, intent.audience, intent.attrs).slice(0, 3).join(', ') || best.reason_he}.`;
   }
   return { he: `${intent.countries.map(c => COUNTRY_HE[c]).join(' מול ')}, לפי היעדים שאנחנו מוכרים:\n${lines.join('\n')}${pick}`, chips: intent.countries.map(c => COUNTRY_HE[c]) };
 }
@@ -283,7 +291,7 @@ function countriesCompare(intent) {
 function compareAsk(intent, slots) {
   const all = limitCountry(approved().filter(p => p.recommend), slots);
   const byCountry = {};
-  for (const p of all) (byCountry[p.country] = byCountry[p.country] || []).push(p.he);
+  for (const p of all) (byCountry[p.country] = byCountry[p.country] || []).push(nameOf(p));
   const lines = Object.entries(byCountry)
     .map(([c, names]) => `• ${COUNTRY_HE[c]}: ${names.join(', ')}`);
   const one = intent.named.length === 1 ? intent.named[0] : null;
@@ -292,7 +300,7 @@ function compareAsk(intent, slots) {
     : 'בשמחה. על אילו שני אתרים להשוות? אלה האתרים שאנחנו מוכרים:';
   return {
     he: `${head}\n${lines.join('\n')}\nכתבו לי שניים ואפרט את ההבדלים — גובה, גודל אזור הגלישה, מתאים למי, ומרחק משדה התעופה.`,
-    chips: all.slice(0, 4).map(p => p.he),
+    chips: all.slice(0, 4).map(p => nameOf(p)),
     ask_only: true,   // a question, not an answer: no hotel cards under it
   };
 }
@@ -304,11 +312,11 @@ function assess(intent, slots) {
   const why = reasons(p, intent.audience, intent.attrs).slice(0, 4);
   const topic = topicLabel(intent.audience, intent.attrs);
   if (ok) {
-    return { he: `כן — ${p.he} מתאים ${topic}: ${why.length ? why.join(', ') : p.reason_he}. רוצים שאבדוק מה פנוי שם?`, chips: [p.he] };
+    return { he: `כן — ${nameOf(p)} מתאים ${topic}: ${why.length ? why.join(', ') : p.reason_he}. רוצים שאבדוק מה פנוי שם?`, chips: [nameOf(p)] };
   }
   const alt = which({ audience: intent.audience, attrs: intent.attrs }, {});
-  const altNames = alt.chips.filter(n => n !== p.he).slice(0, 2);
-  return { he: `${p.he} הוא לא הבחירה הראשונה שלנו ${topic} — ${p.reason_he}${altNames.length ? ` ${topic} הייתי מסתכל קודם על ${altNames.join(' או ')}.` : ''} רוצים שאראה מה פנוי?`, chips: altNames.length ? altNames : [p.he] };
+  const altNames = alt.chips.filter(n => n !== nameOf(p)).slice(0, 2);
+  return { he: `${nameOf(p)} הוא לא הבחירה הראשונה שלנו ${topic} — ${p.reason_he}${altNames.length ? ` ${topic} הייתי מסתכל קודם על ${altNames.join(' או ')}.` : ''} רוצים שאראה מה פנוי?`, chips: altNames.length ? altNames : [nameOf(p)] };
 }
 
 function answer(text, slots) {

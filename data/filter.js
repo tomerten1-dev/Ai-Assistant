@@ -639,6 +639,8 @@ class SkiSearch {
       if ((slots.excluded_countries || []).includes(u.country)) continue;
       // named a hotel by name — that is the search, not a ranking hint
       if (slots.hotel && u.hotel !== slots.hotel) continue;
+      // a chain the customer named: narrow to it, do not lock to one hotel
+      if (slots.hotel_group && !slots.hotel_group.hotels.includes(u.hotel)) continue;
       // asked for a specific third of the month
       if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
       // asked for an exact departure day — within a few days of it counts,
@@ -683,6 +685,8 @@ class SkiSearch {
       if ((slots.excluded_countries || []).includes(u.country)) continue;
       // named a hotel by name — that is the search, not a ranking hint
       if (slots.hotel && u.hotel !== slots.hotel) continue;
+      // a chain the customer named: narrow to it, do not lock to one hotel
+      if (slots.hotel_group && !slots.hotel_group.hotels.includes(u.hotel)) continue;
       // asked for a specific third of the month
       if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
       if (slots.exact_day && Math.abs(+u.date.slice(8, 10) - slots.exact_day) > 3) continue;
