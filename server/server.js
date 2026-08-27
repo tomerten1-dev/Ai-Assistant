@@ -1373,6 +1373,9 @@ const server = http.createServer(async (req, res) => {
         generated_at: (av && av.generated_at) || null,
         age_hours: h == null ? null : Math.round(h * 10) / 10,
         stale: inventory.stale(av), stale_after_hours: inventory.STALE_HOURS,
+        // no token configured: this server takes an update from its own
+        // machine only, and the page can stop asking for a key
+        local_only: inventory.localOnly(),
         units: (av && av.units || []).length, last_push: inventory.lastPush(),
       });
     }

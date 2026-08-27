@@ -140,8 +140,19 @@
     }
     $('raw').textContent = JSON.stringify(out, null, 1).slice(0, 4000) + '\n…';
     $('result').hidden = false;
-    $('send').disabled = !$('token').value.trim();
+    $('send').disabled = needsToken && !$('token').value.trim();
   }
+
+  // A server with no token set only accepts from its own machine — running it
+  // on a laptop should not mean inventing a secret first.
+  var needsToken = true;
+  fetch('/api/inventory').then(function (r) { return r.json(); }).then(function (s) {
+    if (s && s.local_only) {
+      needsToken = false;
+      $('token').closest('div').hidden = true;
+      $('send').disabled = !payload;
+    }
+  }).catch(function () {});
 
   /* ---------- drop target ---------- */
   var drop = $('drop'), input = $('file');
@@ -160,7 +171,7 @@
   });
 
   $('token').addEventListener('input', function () {
-    $('send').disabled = !payload || !$('token').value.trim();
+    $('send').disabled = !payload || (needsToken && !$('token').value.trim());
   });
 
   $('send').addEventListener('click', async function () {

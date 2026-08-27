@@ -31,11 +31,30 @@ const STAMP = path.join(__dirname, '..', 'server-data', 'inventory-stamp.json');
 const MIN_KEEP = Number(process.env.INVENTORY_MIN_RATIO || 0.5);
 
 const token = () => process.env.INVENTORY_TOKEN || '';
-const enabled = () => !!token();
+const enabled = () => !!token() || localOnly();
+
+/* Running on a laptop with no token set, reached from that same laptop.
+ *
+ * Not a back door: whoever can open a socket on 127.0.0.1 of this machine can
+ * already read the files this endpoint writes. It exists so that trying the
+ * page locally does not require inventing a secret first.
+ *
+ * Two guards, and both must hold. TRUST_PROXY means a proxy is in front, and
+ * then EVERY request looks like it came from 127.0.0.1 — that is the one way
+ * this could become a real hole, so it is off entirely in that case. And a
+ * server with a token configured is a real one; it never takes this path.
+ */
+function localOnly() {
+  return !token() && process.env.TRUST_PROXY !== '1';
+}
+function isLoopback(req) {
+  const a = String((req.socket && req.socket.remoteAddress) || '');
+  return a === '127.0.0.1' || a === '::1' || a === '::ffff:127.0.0.1';
+}
 
 function authorised(req) {
   const want = token();
-  if (!want) return false;
+  if (!want) return localOnly() && isLoopback(req);
   const got = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!got) return false;
   const a = Buffer.from(got), b = Buffer.from(want);
@@ -87,8 +106,11 @@ function lastPush() {
 
 // Accept or refuse. Returns {ok, status, body} — never throws at the caller.
 function accept(req, next) {
-  if (!enabled()) return { ok: false, status: 503, body: { error: 'INVENTORY_TOKEN is not set on this server' } };
-  if (!authorised(req)) return { ok: false, status: 401, body: { error: 'bad token' } };
+  if (!authorised(req)) {
+    return token()
+      ? { ok: false, status: 401, body: { error: 'bad token' } }
+      : { ok: false, status: 503, body: { error: 'INVENTORY_TOKEN is not set on this server' } };
+  }
   const now = current();
   const why = validate(next, now);
   if (why) {
@@ -130,5 +152,5 @@ function stale(av) {
   return h != null && h > STALE_HOURS;
 }
 
-module.exports = { accept, validate, authorised, enabled, current, lastPush,
+module.exports = { accept, validate, authorised, enabled, localOnly, current, lastPush,
   ageHours, stale, STALE_HOURS, FILE, STAMP };

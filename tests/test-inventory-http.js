@@ -91,6 +91,59 @@ const post = (body, token, method = 'POST') => new Promise(res => {
     srv.kill();
     fs.writeFileSync(AV, original);
   }
+
+  // ── the same server with NO token: it takes an update from its own machine
+  // and from nowhere else ──
+  const srv2 = spawn(process.execPath, [path.join(__dirname, '..', 'server', 'server.js')], {
+    env: { ...process.env, PORT: String(PORT + 1), CHAT_LOG: 'off', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '',
+      SITE_ROOMS: 'off', INVENTORY_TOKEN: '', TRUST_PROXY: '' },
+    stdio: ['ignore', 'pipe', 'pipe'] });
+  await new Promise((ok, no) => {
+    let out = ''; srv2.stdout.on('data', d => { out += d; if (out.includes('http://localhost')) ok(); });
+    setTimeout(() => no(new Error('second server did not start')), 8000);
+  });
+  const post2 = (body, token) => new Promise(res => {
+    const d = JSON.stringify(body);
+    const r = http.request({ port: PORT + 1, path: '/api/inventory', method: 'POST',
+      headers: Object.assign({ 'content-type': 'application/json', 'content-length': Buffer.byteLength(d) },
+        token ? { authorization: 'Bearer ' + token } : {}) },
+      x => { let t = ''; x.on('data', c => t += c); x.on('end', () => res({ status: x.statusCode, body: t })); });
+    r.on('error', e => res({ status: 0, body: e.message })); r.write(d); r.end();
+  });
+  try {
+    const fresh = JSON.parse(original); fresh.generated_at = new Date().toISOString();
+    let r = await post2(fresh, null);
+    t('with no token set, an update from this machine is taken', () => {
+      assert.strictEqual(r.status, 200, r.body);
+    });
+    r = await new Promise(res => {
+      http.get({ port: PORT + 1, path: '/api/inventory' }, x => {
+        let t = ''; x.on('data', c => t += c); x.on('end', () => res(JSON.parse(t)));
+      });
+    });
+    t('and the page is told it need not ask for a key', () => assert.strictEqual(r.local_only, true));
+
+    // the guard that matters: behind a proxy every request looks local, so the
+    // no-token path must switch itself off entirely
+    const inv = require('../server/inventory.js');
+    const was = process.env.TRUST_PROXY;
+    process.env.TRUST_PROXY = '1'; delete process.env.INVENTORY_TOKEN;
+    t('behind a proxy the no-token path is off, because everything looks local', () => {
+      assert.strictEqual(inv.localOnly(), false);
+      assert.strictEqual(inv.authorised({ headers: {}, socket: { remoteAddress: '127.0.0.1' } }), false);
+    });
+    process.env.TRUST_PROXY = '';
+    t('and even without a proxy it refuses a request from anywhere else', () => {
+      assert.strictEqual(inv.authorised({ headers: {}, socket: { remoteAddress: '10.0.0.9' } }), false);
+      assert.strictEqual(inv.authorised({ headers: {}, socket: { remoteAddress: '127.0.0.1' } }), true);
+    });
+    if (was === undefined) delete process.env.TRUST_PROXY; else process.env.TRUST_PROXY = was;
+  } finally {
+    srv2.kill();
+    fs.writeFileSync(AV, original);
+  }
+  {
+  }
   console.log(`inventory-http: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
