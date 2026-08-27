@@ -18,8 +18,28 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
-if (-not $Workbook) { throw "צריך נתיב לקובץ: -Workbook 'F:\...\commitments-winter-2027.xlsm'" }
-if (-not (Test-Path $Workbook)) { throw "הקובץ לא נמצא: $Workbook" }
+# בלי נתיב — פותחים חלון בחירה. שם הקובץ בעברית, ונתיב עברי שמוקלד ידנית
+# ב-cmd נשבר בגלל דף הקוד; ככה לא מקלידים אותו בכלל.
+if (-not $Workbook) {
+  Add-Type -AssemblyName System.Windows.Forms
+  $dlg = New-Object System.Windows.Forms.OpenFileDialog
+  $dlg.Title = 'לבחור את קובץ ההתחייבויות (או קובץ כלשהו בתיקייה הנכונה)'
+  $dlg.Filter = 'קבצי אקסל|*.xlsm;*.xlsx|הכול|*.*'
+  if (Test-Path 'F:\') { $dlg.InitialDirectory = 'F:\' }
+  if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
+    throw 'לא נבחר קובץ.'
+  }
+  $Workbook = $dlg.FileName
+}
+if (-not (Test-Path $Workbook)) { throw "לא נמצא: $Workbook" }
+
+# עוקבים אחרי התיקייה ולא אחרי הקובץ: השם משתנה בין עונות, ומעקב אחרי שם
+# קבוע נשבר בשקט ביום שמישהו משנה אותו
+if (-not (Get-Item $Workbook).PSIsContainer) {
+  $Workbook = Split-Path -Parent $Workbook
+}
+Write-Host "עוקב אחרי התיקייה: $Workbook"
+Write-Host "(הקובץ החדש ביותר בה נבחר אוטומטית — כולל אחרי שינוי שם)" 
 if (-not $ServerUrl) { $ServerUrl = 'http://localhost:8787' }
 
 # משתני הסביבה נשמרים ברמת המשתמש, כדי שהמשימה תראה אותם

@@ -140,16 +140,26 @@ Node כבר מותקן, והקובץ ב-F: כבר פתוח לך. זה קורא �
 של הבנייה רץ לפני כל שליחה.
 
 ```
-set PINGWIN_WORKBOOK=F:\<תיקייה>\commitments-winter-2027.xlsm
-set PINGWIN_BOT_URL=http://localhost:8787
-npm run watch
+npm run watch -- "F:\<התיקייה שבה יושב הקובץ>"
 ```
+
+**מצביעים על התיקייה, לא על הקובץ.** שם הקובץ בעברית ומשתנה בין עונות; מעקב
+אחרי שם קבוע נשבר בשקט ביום שמישהו משנה אותו. המעקב בוחר את קובץ האקסל
+החדש ביותר בתיקייה, מדלג על קובצי הנעילה של אקסל (`~$...`, שנוצרים ברגע
+שמישהו פותח את הקובץ ותמיד נראים החדשים ביותר), ואומר בשורה מפורשת אם
+הקובץ התחלף.
+
+נתיב עברי שמוקלד ב-`cmd` עלול להישבר בגלל דף הקוד — עדיף PowerShell, או
+פשוט להשתמש בבורר הקבצים למטה ולא להקליד אותו בכלל.
 
 ### שיישרד גם אתחול
 
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-watch.ps1 -Workbook "F:\...\commitments-winter-2027.xlsm"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-watch.ps1
 ```
+
+נפתח חלון בחירת קובץ — בוחרים את קובץ ההתחייבויות ב-F:, וזהו. לא מקלידים
+נתיב בעברית בכלל.
 
 יוצר משימה שרצה מרגע ההתחברות למחשב, **תחת המשתמש שלך** — בלי הרשאות מנהל
 ובלי לגעת בשום דבר משותף. להסרה: `Unregister-ScheduledTask -TaskName "Pingwin inventory watch"`.

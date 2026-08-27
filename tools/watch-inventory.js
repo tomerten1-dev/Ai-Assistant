@@ -24,8 +24,11 @@ const os = require('os');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const WB = process.argv[2] || process.env.PINGWIN_WORKBOOK
-  || path.join(ROOT, 'source-data', 'commitments-winter-2027.xlsm');
+// A file, or the folder it lives in. A folder is the safer answer: the workbook
+// is named in Hebrew and gets renamed between seasons, and a path typed once
+// into an environment variable is a path that goes stale in silence.
+const TARGET = process.argv[2] || process.env.PINGWIN_WORKBOOK
+  || path.join(ROOT, 'source-data');
 const URL_ = (process.env.PINGWIN_BOT_URL || '').replace(/\/+$/, '');
 const TOKEN = process.env.PINGWIN_BOT_TOKEN || '';
 const EVERY = Number(process.env.PINGWIN_WATCH_SECONDS || 60) * 1000;
@@ -42,10 +45,48 @@ const say = (...a) => console.log(clock(), ...a);
    on once the file has stopped moving. Someone saving a 300 KB workbook over
    the network is not atomic, and parsing it halfway through is how you push a
    truncated season. */
+/* Which file to read.
+   Given a folder, the newest workbook in it — so a rename, or next season's
+   file, is picked up without anyone editing a setting.
+   ~$ files are Excel's lock files: the moment somebody opens the workbook one
+   appears beside it, and it is ALWAYS the newest thing in the folder. It is
+   also a few hundred bytes of nothing. Picking it would mean that the instant
+   a person opens the file, the bot stops being updated. */
+const LOCK = /^~\$/;
+const BOOK = /\.xls[xm]$/i;
+function pick() {
+  let st;
+  try { st = fs.statSync(TARGET); } catch (e) { return null; }
+  if (st.isFile()) return TARGET;
+  let best = null, bestAt = -1;
+  let names;
+  try { names = fs.readdirSync(TARGET); } catch (e) { return null; }
+  for (const name of names) {
+    if (LOCK.test(name) || !BOOK.test(name)) continue;
+    const full = path.join(TARGET, name);
+    let s2;
+    try { s2 = fs.statSync(full); } catch (e) { continue; }
+    if (!s2.isFile()) continue;
+    // an Excel lock file is tiny; so is a stub someone left behind
+    if (s2.size < 20000) continue;
+    if (s2.mtimeMs > bestAt) { bestAt = s2.mtimeMs; best = full; }
+  }
+  return best;
+}
+
+let WB = null;
 function snapshot() {
+  const f = pick();
+  if (!f) return null;
+  if (f !== WB) {
+    if (WB) say('הקובץ התחלף:', path.basename(f));
+    WB = f;
+  }
   try {
-    const st = fs.statSync(WB);
-    return st.mtimeMs + ':' + st.size;
+    const st = fs.statSync(f);
+    // the name is part of the identity: a new file with the same size and
+    // timestamp is still a new file
+    return f + ':' + st.mtimeMs + ':' + st.size;
   } catch (e) { return null; }
 }
 async function settled() {
@@ -103,12 +144,15 @@ async function once(why) {
 }
 
 (async () => {
-  say('מסתכל על', WB);
+  say('מסתכל על', TARGET);
   say(URL_ ? 'מעדכן את ' + URL_ : 'כותב מקומית (בלי PINGWIN_BOT_URL)');
   if (!snapshot()) {
-    console.error(clock(), 'הקובץ לא נמצא. להגדיר PINGWIN_WORKBOOK, או להעביר נתיב כארגומנט.');
+    console.error(clock(), 'לא נמצא קובץ אקסל בנתיב הזה.');
+    console.error('   אפשר להעביר נתיב לקובץ או לתיקייה:  npm run watch -- "F:\\...\\<שם>.xlsm"');
+    console.error('   או להגדיר PINGWIN_WORKBOOK.');
     process.exit(1);
   }
+  say('הקובץ:', path.basename(WB));
   let seen = await settled();
   await once('עדכון ראשון');
   say(`בודק כל ${EVERY / 1000} שניות. אפשר להשאיר את החלון פתוח ולשכוח.`);

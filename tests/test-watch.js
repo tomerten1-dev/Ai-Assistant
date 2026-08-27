@@ -100,6 +100,56 @@ const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); }
       const gate = require('../data/pii-gate.js');
       for (const p of pushes) assert.deepStrictEqual(gate.check(p), []);
     });
+    w.kill();
+
+    /* ── pointed at a FOLDER ──────────────────────────────────────────────
+       Which is how it should be pointed: the workbook is named in Hebrew and
+       gets renamed between seasons, and a path typed once into a setting is a
+       path that goes stale without anyone noticing. */
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wb-folder-'));
+    const hebrew = path.join(dir, 'התחייבויות חורף 2027.xlsm');
+    fs.copyFileSync(WB, hebrew);
+    // Excel's lock file, which appears the moment somebody opens the workbook
+    // and is always the newest thing in the folder
+    fs.writeFileSync(path.join(dir, '~$התחייבויות חורף 2027.xlsm'), 'lock');
+    fs.writeFileSync(path.join(dir, 'notes.txt'), 'not a workbook');
+
+    const n0 = pushes.length;
+    const w2 = spawn(process.execPath, [path.join(__dirname, '..', 'tools', 'watch-inventory.js'), dir], {
+      env: { ...process.env, PINGWIN_BOT_URL: `http://127.0.0.1:${PORT}`, PINGWIN_WATCH_SECONDS: '2' },
+      stdio: ['ignore', 'pipe', 'pipe'] });
+    let log2 = '';
+    w2.stdout.on('data', d => { log2 += d; });
+    w2.stderr.on('data', d => { log2 += d; });
+
+    try {
+      await waitFor(n0 + 1, 25000);
+      t('given a folder it finds the workbook, whatever it is called', () => {
+        assert.ok(pushes.length > n0, log2);
+        assert.ok(/התחייבויות חורף 2027\.xlsm/.test(log2), 'did not name the file it chose: ' + log2);
+        assert.ok(pushes[pushes.length - 1].units.length > 500);
+      });
+      t('and ignores the lock file Excel leaves beside it', () => {
+        // it is newer than the workbook and four bytes long — picking it would
+        // mean the bot stops updating the moment a person opens the file
+        assert.ok(!/~\$/.test(log2), log2);
+      });
+
+      // next season's file arrives under a different name
+      const n1 = pushes.length;
+      const renamed = path.join(dir, 'התחייבויות חורף 2028.xlsm');
+      fs.copyFileSync(WB, renamed);
+      fs.utimesSync(renamed, new Date(), new Date());
+      await waitFor(n1 + 1, 25000);
+      t('a renamed or replaced workbook is picked up without touching a setting', () => {
+        assert.ok(pushes.length > n1, log2);
+        assert.ok(/הקובץ התחלף/.test(log2), 'switched in silence: ' + log2);
+        assert.ok(/2028/.test(log2), log2);
+      });
+    } finally {
+      w2.kill();
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   } finally {
     w.kill(); srv.close();
     try { fs.unlinkSync(copy); } catch (e) { /* gone already */ }
