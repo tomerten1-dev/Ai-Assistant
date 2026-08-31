@@ -357,5 +357,136 @@ t('אין מספרי כסף בתשובה החדשה', () => {
 });
 
 
+/* ---- routing defects found by the 30/08 test run ---- */
+
+t('"ביטול" reaches the cancellation answer, not the payment one', () => {
+  // "ביט" (the payment app) is a substring of ביטול, and Hebrew letters are not
+  // \w so \b cannot separate them. A customer asking about cancelling was told
+  // about credit cards — the worst kind of wrong answer, a confident one.
+  for (const q of ['ביטול', 'ומה עם ביטול?', 'מה עם ביטול', 'אפשר לבטל?',
+                   'מדיניות הביטול', 'דמי ביטול', 'ביטול הזמנה']) {
+    const hit = nlu.faq(q);
+    assert.ok(hit, 'no answer at all for: ' + q);
+    assert.strictEqual(hit.id, 'cancellation', q + ' → ' + hit.id);
+  }
+});
+
+t('...and the payment app still reaches the payment answer', () => {
+  for (const q of ['אפשר לשלם בביט?', 'ביט או פייפאל?', 'העברה בנקאית אפשרית?']) {
+    assert.strictEqual((nlu.faq(q) || {}).id, 'payment_methods', q);
+  }
+  assert.strictEqual((nlu.faq('צריך ביטוח נסיעות?') || {}).id, 'insurance');
+});
+
+t('childcare while the parents ski is answered, not called off-topic', () => {
+  // nine of these in the question bank, and every one got "אני כאן בעיקר
+  // להתאמת חופשות סקי" — to the question that decides whether a young family
+  // books at all
+  for (const q of ['מה עושים עם התינוק בזמן שאנחנו גולשים?', 'יש שמרטפות?',
+                   'מי שומר על הילד בזמן שאנחנו על המסלול?', 'מה עושים עם ילד בן 2?',
+                   'איפה משאירים את התינוק?', 'יש מסגרת לתינוק בן שנה?']) {
+    assert.strictEqual((nlu.faq(q) || {}).id, 'non_skiing_child', q);
+  }
+});
+
+t('a buying signal is recognised as one', () => {
+  for (const q of ['המשך להזמנה', 'אני רוצה להזמין', 'בואו נסגור', 'ניקח את הראשון',
+                   'אני רוצה את זה', 'איך מזמינים?', 'תזמין לי את זה']) {
+    assert.strictEqual((nlu.faq(q) || {}).id, 'next_step', q);
+  }
+});
+
+t('"הציוד כלול?" is answered like "מה כלול"', () => {
+  for (const q of ['הציוד כלול?', 'השכרת ציוד בתשלום?', 'סקי פס כלול?', 'מה נכנס במחיר?']) {
+    assert.strictEqual((nlu.faq(q) || {}).id, 'whats_included', q);
+  }
+});
+
+/* ---- what the 100-question LIVE run got wrong (30/08) ---- */
+
+t('a question about dates is answered with dates', () => {
+  const { SkiSearch } = require('../data/filter.js');
+  const e = new SkiSearch();
+  // the answer sat in the workbook while the bot asked "כמה תהיו בסך הכל?"
+  assert.ok(e.departureDates({ holiday: 'חנוכה' }).length, 'no Hanukkah departures found');
+  assert.ok(e.departureDates({ holiday: 'פורים' }).length >= 3, 'Purim flies on three days');
+  assert.deepStrictEqual(e.departureDates({ from: '2026-12-22', to: '2026-12-29' }), [],
+    'setup: December 22-29 should be empty, which is what makes the honest answer honest');
+  assert.ok(e.departureDates({ month: 2 }).length > 5, 'February departures vanished');
+});
+
+t('shopping and duty-free go to a person, not to a guess', () => {
+  // no data anywhere in the project says what Andorra costs, so the only
+  // honest answers are "a rep will know" — never an invented one
+  for (const q of ['אנדורה זה דיוטי פרי, שווה?', 'יש דיוטי פרי באנדורה?', 'כדאי לקנות באנדורה?']) {
+    const hit = nlu.faq(q);
+    assert.ok(hit && hit.id === 'shopping_duty_free', q + ' → ' + (hit || {}).id);
+    assert.ok(/נציג/.test(hit.he), 'does not hand it to a person: ' + hit.he);
+    assert.ok(!/זול|יקר|כדאי לקנות שם/.test(hit.he), 'made a claim about prices: ' + hit.he);
+  }
+});
+
+t('a fridge or safe in the room is a per-hotel question', () => {
+  for (const q of ['מקררון?', 'יש מקרר בחדר?', 'כספת בחדר?', 'מיני בר בחדר?']) {
+    assert.ok((nlu.parseText(q, {}).unverifiable || []).includes('מקרר בחדר'), q);
+  }
+});
+
+t('asking to see photos is answered — every card carries a gallery', () => {
+  for (const q of ['אפשר לראות תמונות/סרטון של המלון?', 'יש תמונות?', 'איך המלון נראה?']) {
+    assert.strictEqual((nlu.faq(q) || {}).id, 'hotel_photos', q);
+  }
+});
+
+t('a per-hotel question is never treated as gibberish or off topic', () => {
+  // "מקררון?" on an empty chat: understood (it sets a topic), but there is no
+  // card to answer it yet — that is a pointer, not "לא בטוח שהבנתי"
+  for (const q of ['מקררון?', 'כספת בחדר?', 'יש חדר כושר?']) {
+    assert.ok((nlu.parseText(q, {}).unverifiable || []).length, q + ' set no topic');
+  }
+});
+
+t('HEBREW SUBSTRING TRAP: a topic never fires on a word that merely contains it', () => {
+  // \b does not work after Hebrew letters in JS, so any bare word in a pattern
+  // matches inside longer words. It cost us three separate bugs in one day:
+  // "ביט" inside ביטול, "ישן" inside פלייסטיישן, "חדש" inside "עולים חדשים".
+  // Each one made the bot answer a question nobody asked.
+  const traps = [
+    ['פלייסטיישן?', 'שיפוץ'],
+    ['יש הנחה לעולים חדשים?', 'שיפוץ'],
+    ['ילד ישן בחדר?', 'שיפוץ'],
+    ['כושר גופני נדרש?', 'חדר כושר'],
+  ];
+  for (const [q, topic] of traps) {
+    const got = nlu.parseText(q, {}).unverifiable || [];
+    assert.ok(!got.includes(topic), q + ' still matched "' + topic + '": ' + JSON.stringify(got));
+  }
+  // ...while the real questions still land
+  for (const [q, topic] of [['המלון ישן?', 'שיפוץ'], ['מתי שופץ המלון?', 'שיפוץ'],
+                            ['יש חדר כושר?', 'חדר כושר']]) {
+    assert.ok((nlu.parseText(q, {}).unverifiable || []).includes(topic), q);
+  }
+});
+
+t('PRIVACY: who else is on our departure is refused, not answered', () => {
+  // Found by the full offline sweep, 30/08. These were neither guarded nor
+  // answered — the bot simply asked how many people were travelling. They
+  // cannot be answered without saying something about customers who never
+  // agreed to it.
+  for (const q of ['יש עוד משפחות ישראליות באותו תאריך?', 'יש עוד משפחות דתיות באותה יציאה?',
+                   'מי עוד נרשם לתאריך הזה?', 'כמה אנשים כבר הזמינו?', 'מי איתנו בטיסה?']) {
+    const g = nlu.guard(q);
+    assert.ok(g, q + ' was not refused');
+    assert.ok(/לא אוכל לשתף|אין לי גישה לפרטי לקוחות/.test(g), q + ' → ' + g);
+  }
+});
+
+t('...and ordinary "יש עוד" questions still get through', () => {
+  for (const q of ['יש עוד אפשרויות?', 'יש עוד מלונות בבנסקו?', 'כמה אנשים נכנסים לחדר?',
+                   'יש עוד תאריכים בפברואר?', 'מי המדריך בקייטנה?']) {
+    assert.ok(!nlu.guard(q), q + ' was refused by mistake: ' + nlu.guard(q));
+  }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

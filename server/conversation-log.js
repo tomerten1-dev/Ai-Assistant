@@ -130,6 +130,12 @@ function tidySlots(slots) {
   return out;
 }
 
+// required lazily: conversation-log is loaded by tools that never touch the
+// model layer, and a hard dependency would drag it in for no reason
+function modelHealth() {
+  try { return require('./model-health.js').turnFlags(); } catch (e) { return null; }
+}
+
 function logTurn({ conversationId, userText, reply, cards, result, slots, modelUsed, ms,
   notUnderstood, answeredBy }) {
   append({
@@ -141,6 +147,11 @@ function logTurn({ conversationId, userText, reply, cards, result, slots, modelU
     slots: tidySlots(slots),
     signals: signals({ cards, result, slots, reply, notUnderstood, answeredBy }),
     model: !!modelUsed,
+    // `model` above is only true when SLOT FILLING succeeded, so a rejected
+    // phrasing, a dead router and a timeout were all invisible here — which is
+    // how the model layer could be quietly off for a week. These say what the
+    // provider actually did on this turn.
+    ...(modelHealth() || {}),
     ms,
   });
 }

@@ -124,9 +124,18 @@
     if (tsLoaded) return tsLoaded;
     tsLoaded = new Promise(function (resolve) {
       if (window.turnstile) return resolve();
+      // A timeout on the LOAD, not only on the challenge. This promise used to
+      // settle from onload/onerror alone, and the 12-second guard below starts
+      // only after it resolves — so a host that stalls rather than fails (a
+      // corporate proxy, some ad blockers) left it pending forever. The turn
+      // never settled: the typing dots span on, the send button stayed
+      // disabled, and only a page reload recovered.
+      var done = false;
+      var finish = function () { if (!done) { done = true; resolve(); } };
+      setTimeout(finish, 8000);
       var t = document.createElement('script');
       t.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-      t.async = true; t.onload = function () { resolve(); }; t.onerror = function () { resolve(); };
+      t.async = true; t.onload = finish; t.onerror = finish;
       document.head.appendChild(t);
     });
     return tsLoaded;
@@ -460,6 +469,16 @@
     + '.fine{align-self:stretch;max-width:min(100%,640px);font-size:12px;line-height:1.55;'
     + 'color:' + THEME.textLight + ';margin-top:-6px;padding-inline-start:46px}'
     + '.fine a{color:' + THEME.primary + ';text-decoration:underline}'
+    // שורת שקיפות בסגנון סאני (30/08): "חיפשתי במלאי לפי: ..." — סטטוס שקט מעל ההצעות
+    + '.status{align-self:stretch;padding-inline-start:46px;font-size:12.5px;color:' + THEME.textLight + ';font-style:italic;line-height:1.55}'
+    // חיווי המתנה מדבר — הטקסט שמצטרף לנקודות אחרי שנייה וחצי
+    + '.typing .tlab{font-size:12.5px;color:' + THEME.textLight + ';margin-inline-start:4px}'
+    // פידבק על תשובה — אגודל למעלה/למטה, מתחת לתשובה האחרונה בלבד
+    + '.fb{align-self:stretch;display:flex;gap:4px;padding-inline-start:46px;align-items:center;margin-top:-12px}'
+    + '.fb button{background:none;border:none;cursor:pointer;font-size:14px;padding:3px 6px;border-radius:6px;opacity:.55;transition:opacity .15s,background .15s;font-family:inherit}'
+    + '.fb button:hover{opacity:1;background:' + THEME.bgAlt + '}'
+    + '.fb button.on{opacity:1;background:' + THEME.bgAlt + '}'
+    + '.fb .fbnote{font-size:11.5px;color:' + THEME.textLight + '}'
     + '.card .why{font-size:13px;color:' + THEME.text + ';background:' + THEME.bgAlt + ';border-radius:8px;padding:8px 10px;line-height:1.5}'
     + '.card .tags{display:flex;gap:6px;flex-wrap:wrap}'
     + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
@@ -508,7 +527,13 @@
     + '.form label{font-size:12.5px;color:' + THEME.textLight + '}'
     + '.form input{border:1.5px solid #cfdae4;border-radius:9px;padding:8px 12px;font-size:14px;font-family:inherit;direction:rtl}'
     + '.form .note{font-size:11.5px;color:' + THEME.textLight + '}'
-    + '.srhint{font-size:11px;color:' + THEME.textLight + ';text-align:center;padding:2px 0 6px;background:' + THEME.bg + '}';
+    // visually hidden, still read aloud — the live region above
+    + '.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;'
+    + 'clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}'
+    // מס' השיחה, כמו אצל סאני: הלקוח יכול לצטט אותו לנציג, והנציג מוצא בעזרתו
+    // את השיחה ביומן ואת הליד ב-CRM. יושב בשורת הכותרת ולא בשורה משלו — שורה
+    // נוספת בתחתית גזלה גובה, והפילה את מבחן הגלילה במובייל (1.65 מסכים).
+    + '.hdr .cidsub{opacity:.75;letter-spacing:.3px}';
 
   var style = document.createElement('style');
   style.textContent = css;
@@ -555,7 +580,16 @@
   var ttl = el('div', 'ttl', 'פינגווין');
   ttl.appendChild(el('span', 'long', ' | ייעוץ חופשות סקי'));
   hTxt.appendChild(ttl);
-  hTxt.appendChild(el('div', 'sub', 'זמינות בזמן אמת מתוך המלאי שלנו'));
+  var hSub = el('div', 'sub', 'זמינות בזמן אמת מתוך המלאי שלנו');
+  // מס' שיחה גלוי (הלקח מסאני): הלקוח יכול לצטט אותו לנציג, והנציג מוצא בעזרתו
+  // את השיחה ביומן ואת הליד ב-CRM — שלושתם נושאים את אותו מזהה.
+  var hCid = el('span', 'cidsub', '');
+  hSub.appendChild(hCid);
+  hTxt.appendChild(hSub);
+  function updateCid() {
+    var id = cid();
+    hCid.textContent = id ? ' · מס׳ שיחה ' + String(id).replace(/^c/, '').slice(0, 8) : '';
+  }
   // Let the customer decide how much room the chat gets. A fixed box the
   // page cannot escape is the most common complaint about widgets like this,
   // and three offers side by side need real width to be readable.
@@ -612,7 +646,22 @@
   hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hNew); hdr.appendChild(hExp); hdr.appendChild(hX);
 
   var msgs = el('div', 'msgs');
-  msgs.setAttribute('aria-live', 'polite');
+  /* The live region is a small dedicated node, not the whole scroll container.
+     With aria-live on `.msgs`, every card, chip row, status line and form was
+     a change inside a live region — and a restored session injected the entire
+     transcript into it at page load, so a screen-reader user heard the whole
+     conversation again on every reply. Now only the bot's new sentence is
+     announced, and the transcript stays in the reading order where it belongs. */
+  var live = el('div', 'sr');
+  live.setAttribute('role', 'status');
+  live.setAttribute('aria-live', 'polite');
+  live.setAttribute('aria-atomic', 'true');
+  function announce(text) {
+    if (!text) return;
+    // replacing the text is what makes it an announcement
+    live.textContent = '';
+    setTimeout(function () { live.textContent = String(text).slice(0, 400); }, 30);
+  }
 
   var inp = el('div', 'inp');
   var input = document.createElement('textarea');
@@ -633,7 +682,7 @@
   inpBox.appendChild(input); inpBox.appendChild(send);
   inp.appendChild(inpBox);
 
-  win.appendChild(hdr); win.appendChild(msgs); win.appendChild(inp);
+  win.appendChild(hdr); win.appendChild(msgs); win.appendChild(live); win.appendChild(inp);
   wrap.appendChild(win); wrap.appendChild(fab);
   root.appendChild(wrap);
 
@@ -649,7 +698,16 @@
   }
   /* ============== session persistence ==============
      "המשך להזמנה" navigates to a hotel page; without this the customer came
-     back to an empty chat. sessionStorage: same tab, cleared when it closes. */
+     back to an empty chat.
+     30/08: sessionStorage cleared the whole conversation the moment the tab
+     closed. Sunny (Isrotel/Abra) restores the previous conversation days
+     later, under the same conversation id — reopened it the next morning and
+     the last exchange was still there. For a holiday people decide on over a
+     week that is the difference between a warm lead and starting from zero, so
+     we keep the chat in localStorage with an explicit expiry.
+     A transcript that outlives the browser session is also a transcript on a
+     shared computer, so: a hard TTL, the "שיחה חדשה" button in the header, and
+     ?pwreset=1 all clear it, and only the last 20 turns are kept. */
   // The offer is the hotel's photograph, with the text on it (Tomer, 26/08).
   // ?pwcard=plain — or ...pingwin-bot.js?card=plain on the tag — draws the
   // older white card instead; kept because it is the fallback whenever a hotel
@@ -663,6 +721,22 @@
   })();
 
   var STORE_KEY = 'pingwin_bot_session_v1';
+  // Days a conversation is worth resuming. Long enough to cover "אחשוב על זה
+  // ואחזור", short enough that a chat is not sitting on a family computer for
+  // a season. Tomer can change it in one place.
+  var STORE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+  // localStorage where it exists (survives the tab closing), sessionStorage
+  // where it does not, and a no-op in private modes that throw on both — the
+  // widget must never fail to load because storage is unavailable.
+  var store = (function () {
+    function usable(s) {
+      try { var k = '__pw'; s.setItem(k, '1'); s.removeItem(k); return true; }
+      catch (e) { return false; }
+    }
+    try { if (usable(window.localStorage)) return window.localStorage; } catch (e) {}
+    try { if (usable(window.sessionStorage)) return window.sessionStorage; } catch (e) {}
+    return { getItem: function () { return null; }, setItem: function () {}, removeItem: function () {} };
+  })();
   // The widget's own build, taken from its script URL (?v=0.2.0 in the GTM tag).
   // A conversation started on an older build is not resumed on a newer one: the
   // replay would mix old wording and old cards into a new bot.
@@ -671,13 +745,22 @@
   })();
   function persist() {
     try {
-      sessionStorage.setItem(STORE_KEY, JSON.stringify({
-        build: BUILD,
+      store.setItem(STORE_KEY, JSON.stringify({
+        build: BUILD, savedAt: Date.now(),
         messages: state.messages.slice(-20), slots: state.slots, lastCards: state.lastCards || null,
         booted: state.booted, open: state.open, log: state.log.slice(-40)
       }));
     } catch (e) {}
   }
+  // Flags that mean "already said once in this conversation". They are right
+  // within a sitting and wrong across a fortnight: a customer returning a week
+  // later had the closing line permanently suppressed, the offer to hand over
+  // to a person permanently suppressed, and offers they no longer remember
+  // hidden as already-seen. Dropped on restore so a returning customer gets a
+  // conversation that still talks to them.
+  var STALE_ON_RESTORE = ['_closed', '_nudged', '_lastLines', '_shown', '_fixed_said',
+    '_notes_said', '_dates_said', '_know_said', '_lastEcho', '_held', '_showMe', '_lost'];
+
   function restore() {
     try {
       // ?pwreset=1 in the URL (or #pwreset) forces a clean chat — the switch
@@ -685,24 +768,37 @@
       // a clean chat means clean all the way: the red dot comes back too,
       // otherwise a tester can never see the launcher as a first-time visitor
       if (/[?&#]pwreset\b/.test(location.href)) {
-        sessionStorage.removeItem(STORE_KEY);
+        store.removeItem(STORE_KEY);
         try { sessionStorage.removeItem(SEEN_KEY); fab.classList.remove('seen'); } catch (e) { }
         return null;
       }
-      var raw = sessionStorage.getItem(STORE_KEY);
+      var raw = store.getItem(STORE_KEY);
       if (!raw) return null;
       var d = JSON.parse(raw);
       if (!d || !Array.isArray(d.messages)) return null;
-      if (d.build !== BUILD) { sessionStorage.removeItem(STORE_KEY); return null; }
+      if (d.build !== BUILD) { store.removeItem(STORE_KEY); return null; }
+      // Expired is the same as absent — and it is cleared rather than left to
+      // sit there, so a stale transcript does not outlive its own welcome.
+      if (d.savedAt && (Date.now() - d.savedAt) > STORE_TTL_MS) {
+        store.removeItem(STORE_KEY); return null;
+      }
+      // a conversation resumed on another day starts its once-per-conversation
+      // behaviours again — see STALE_ON_RESTORE above
+      var sameDay = d.savedAt && (Date.now() - d.savedAt) < 12 * 60 * 60 * 1000;
+      if (!sameDay && d.slots) {
+        for (var i = 0; i < STALE_ON_RESTORE.length; i++) delete d.slots[STALE_ON_RESTORE[i]];
+      }
       return d;
     } catch (e) { return null; }
   }
   // Start over — for a customer whose plans changed, and for us while testing.
   function resetChat() {
-    try { sessionStorage.removeItem(STORE_KEY); } catch (e) {}
+    try { store.removeItem(STORE_KEY); } catch (e) {}
     state.messages = []; state.slots = {}; state.lastCards = null; state.log = [];
     state.booted = false; state.turn = 0; state.busy = false;
+    state.gen = (state.gen || 0) + 1;      // orphan anything still in flight
     while (msgs.firstChild) msgs.removeChild(msgs.firstChild);
+    updateCid();                          // a new conversation gets a new id
     win.classList.remove('big');
     send.disabled = false;
     state.open = false; openWin();        // re-runs the greeting and the starters
@@ -758,13 +854,80 @@
     return m;
   }
 
-  var typingEl = null;
+  var typingEl = null, typingTimer = null;
   function showTyping(on) {
     if (on && !typingEl) {
       typingEl = el('div', 'typing');
       typingEl.appendChild(el('i')); typingEl.appendChild(el('i')); typingEl.appendChild(el('i'));
       msgs.appendChild(typingEl); scrollDown();
-    } else if (!on && typingEl) { typingEl.remove(); typingEl = null; }
+      // כמו אצל סאני: כשהתשובה לוקחת רגע, אומרים מה קורה במקום להשאיר נקודות.
+      // רק אחרי שנייה וחצי — תשובה מהירה לא צריכה את זה.
+      typingTimer = setTimeout(function () {
+        if (typingEl) { typingEl.appendChild(el('span', 'tlab', 'בודק במלאי החורף שלנו…')); scrollDown(); }
+      }, 1500);
+    } else if (!on && typingEl) {
+      clearTimeout(typingTimer); typingTimer = null;
+      typingEl.remove(); typingEl = null;
+    }
+  }
+
+  // שורת השקיפות מעל הצעות — מגיעה מהשרת מוכנה (search_echo_he), ונשמרת
+  // ביומן כדי שתשוחזר יחד עם שאר השיחה
+  function addStatus(text, silent) {
+    if (!text) return null;
+    var s = el('div', 'status', '🔎 ' + text);
+    msgs.appendChild(s); scrollDown();
+    if (!silent) state.log.push({ t: 'status', v: text });
+    return s;
+  }
+
+  /* מה שהלקוח חיפש, כשדות — נוסע עם הליד ל-CRM (server/crm-lead.js).
+     רשימה סגורה במכוון: מוסיפים כאן שדה רק אם רוצים שהוא יגיע ל-CRM. */
+  var LEAD_FIELDS = ['adults', 'children_ages', 'month', 'month_alt', 'exact_day',
+    'flexible_dates', 'nights_wanted', 'country', 'destination', 'departure_airport',
+    'needs_hebrew_kids_club', 'no_saturday_flights', 'preferences', 'notes_from_customer'];
+  function leadRequest() {
+    var s = state.slots || {}, out = {};
+    LEAD_FIELDS.forEach(function (k) {
+      var v = s[k];
+      if (v == null || v === '' || (Array.isArray(v) && !v.length)) return;
+      out[k] = v;
+    });
+    return out;
+  }
+
+  /* פידבק בסגנון סאני (30/08): אגודל למעלה/למטה מתחת לתשובה האחרונה בלבד.
+     ההצבעה נשלחת ל-/api/feedback ונשמרת בצד השרת — בלי פרטים אישיים. */
+  function addFeedback(replyText) {
+    var old = msgs.querySelectorAll('.fb');
+    for (var i = 0; i < old.length; i++) old[i].remove();
+    var row = el('div', 'fb');
+    var note = el('span', 'fbnote', '');
+    function voteBtn(sym, vote, label) {
+      var b = el('button', null, sym);
+      b.setAttribute('aria-label', label);
+      b.addEventListener('click', function () {
+        if (b.classList.contains('on')) return;
+        var sib = row.querySelectorAll('button');
+        for (var j = 0; j < sib.length; j++) sib[j].classList.remove('on');
+        b.classList.add('on');
+        note.textContent = vote === 'up' ? 'תודה!' : 'תודה — נלמד מזה.';
+        track('feedback', { vote: vote });
+        fetchWithTimeout(API_BASE + '/api/feedback', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            vote: vote, conversationId: cid(),
+            reply: String(replyText || '').slice(0, 600)
+          })
+        }, 10000).catch(function () { });
+      });
+      return b;
+    }
+    row.appendChild(voteBtn('👍', 'up', 'תשובה טובה'));
+    row.appendChild(voteBtn('👎', 'down', 'תשובה פחות טובה'));
+    row.appendChild(note);
+    msgs.appendChild(row);
+    return row;
   }
 
   // `bare` drops the "יציאה ביום" prefix — the card now labels the row itself,
@@ -1014,7 +1177,10 @@
     if (tags.childNodes.length) card.appendChild(tags);
 
     var foot = el('div', 'cfoot');
-    foot.appendChild(el('div', 'price', 'טווח מחיר: ' + c.price_range));
+    // A hotel with no classified price band shows no band. It used to show the
+    // TODO default from pricing.json as though it were data, and a missing
+    // field would have printed the word "undefined" to a customer.
+    if (c.price_range) foot.appendChild(el('div', 'price', 'טווח מחיר: ' + c.price_range));
     // "מתאים ל-4 נוסעים" already opens the why-line on most cards — once is enough
     if (c.occ && c.occ.max != null && !(c.why_he && c.why_he.indexOf('מתאים ל-') === 0)) {
       foot.appendChild(el('div', 'fits', 'מתאים ל-' + c.occ.max + ' נוסעים'));
@@ -1060,6 +1226,18 @@
       box.appendChild(ch);
     });
     msgs.appendChild(box);
+    // Mark the row when it really does overflow, so the fade only appears when
+    // there is something past the edge. Mouse-only users had no sign at all
+    // that chips 5-10 existed: the scrollbar is hidden on both engines.
+    var markOverflow = function () {
+      if (!box.isConnected) return;
+      box.classList.toggle('more', box.scrollWidth - box.clientWidth > 4);
+    };
+    markOverflow();
+    setTimeout(markOverflow, 60);            // after fonts settle
+    box.addEventListener('scroll', function () {
+      box.classList.toggle('more', box.scrollWidth - box.clientWidth - box.scrollLeft > 4);
+    });
     state.log.push({ t: 'chips', v: labels });
   }
   function addCardsRow(cards) {
@@ -1079,8 +1257,10 @@
       else if (e.t === 'bot') addMsg('bot', e.v, false, e.at);
       else if (e.t === 'cards') { addCardsRow(e.v); state.log.push(e); }
       else if (e.t === 'chips') addChips(e.v);
+      else if (e.t === 'status') addStatus(e.v);
     });
     if (d.lastCards) state.lastCards = d.lastCards;
+    updateCid();                          // a resumed conversation keeps its id
     // chips of a finished turn are still live — the customer may pick up where they left
     scrollDown();
   }
@@ -1121,21 +1301,31 @@
       f.appendChild(el('div', 'note', 'השאירו שם וטלפון ונציג פינגווין יחזור אליכם.'));
     }
     var leadKind = opts.kind || (state.slots && state.slots._lead_kind) || 'customer';
-    var lName = el('label', null, 'שם'); var iName = document.createElement('input');
-    iName.setAttribute('aria-label', 'שם'); iName.name = 'name'; iName.autocomplete = 'name'; lName.htmlFor = iName.id = 'pw-lead-name';
+    /* A customer who wrote in English got a correct English reply and then a
+       form that was entirely in Hebrew — labels, consent line, and the
+       validation errors telling them why it was rejected. lead_kind carries
+       the language ("language_en"), so the form follows it. Hebrew stays the
+       default and the fallback for every string a translation is missing. */
+    var langCode = /^language_([a-z]{2})$/.exec(leadKind);
+    var L = (langCode && CONFIG.lead_form && CONFIG.lead_form[langCode[1]]) || {};
+    var lang = function (k, he) { return L[k] || he; };
+    if (langCode) f.setAttribute('dir', langCode[1] === 'ar' ? 'rtl' : 'ltr');
+
+    var lName = el('label', null, lang('name', 'שם')); var iName = document.createElement('input');
+    iName.setAttribute('aria-label', lang('name', 'שם')); iName.name = 'name'; iName.autocomplete = 'name'; lName.htmlFor = iName.id = 'pw-lead-name';
     if (opts.prefill && opts.prefill.name) iName.value = opts.prefill.name;
-    var lPhone = el('label', null, 'טלפון'); var iPhone = document.createElement('input');
+    var lPhone = el('label', null, lang('phone', 'טלפון')); var iPhone = document.createElement('input');
     if (opts.prefill && opts.prefill.phone) iPhone.value = opts.prefill.phone;
-    iPhone.type = 'tel'; iPhone.dir = 'ltr'; iPhone.setAttribute('aria-label', 'טלפון'); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
+    iPhone.type = 'tel'; iPhone.dir = 'ltr'; iPhone.setAttribute('aria-label', lang('phone', 'טלפון')); iPhone.name = 'phone'; iPhone.autocomplete = 'tel'; iPhone.inputMode = 'tel'; lPhone.htmlFor = iPhone.id = 'pw-lead-phone';
     // Optional, and said plainly why: the customer who wants the offer in
     // writing is the customer who is showing it to somebody else tonight.
-    var lMail = el('label', null, 'מייל (לא חובה — לקבלת ההצעה בכתב)');
+    var lMail = el('label', null, lang('email', 'מייל (לא חובה — לקבלת ההצעה בכתב)'));
     var iMail = document.createElement('input');
     iMail.type = 'email'; iMail.setAttribute('aria-label', 'מייל לקבלת ההצעה'); iMail.name = 'email';
     iMail.autocomplete = 'email'; iMail.inputMode = 'email'; iMail.dir = 'ltr';
     lMail.htmlFor = iMail.id = 'pw-lead-email';
     if (opts.prefill && opts.prefill.email) iMail.value = opts.prefill.email;
-    var go = el('button', 'btn pri', 'שלחו לנציג'); go.type = 'submit';
+    var go = el('button', 'btn pri', lang('send', 'שלחו לנציג')); go.type = 'submit';
     var note = el('div', 'note', 'רק שם וטלפון — בלי התחייבות. ההזמנה סופית רק אחרי אישור נציג ומייל עם קבלה.');
     // consent (Tomer, q30; Privacy Protection Law amendment 13): an unticked
     // box the customer must tick, next to a link to Pingwin's privacy policy
@@ -1143,8 +1333,11 @@
     var iConsent = document.createElement('input'); iConsent.type = 'checkbox'; iConsent.id = 'pw-lead-consent'; iConsent.name = 'consent';
     consent.htmlFor = iConsent.id;
     consent.appendChild(iConsent);
-    var cTxt = el('span', null, 'אני מאשר/ת שפינגווין תשמור את הפרטים ותיצור איתי קשר בנוגע לפנייה זו, בהתאם ל');
-    var cLink = document.createElement('a'); cLink.href = THEME.privacyUrl; cLink.target = '_blank'; cLink.rel = 'noopener'; cLink.textContent = 'מדיניות הפרטיות';
+    var cTxt = el('span', null, L.consent
+      ? L.consent + ' '
+      : 'אני מאשר/ת שפינגווין תשמור את הפרטים ותיצור איתי קשר בנוגע לפנייה זו, בהתאם ל');
+    var cLink = document.createElement('a'); cLink.href = THEME.privacyUrl; cLink.target = '_blank'; cLink.rel = 'noopener';
+    cLink.textContent = L.consent ? 'privacy policy' : 'מדיניות הפרטיות';
     cTxt.appendChild(cLink); cTxt.appendChild(document.createTextNode('.'));
     consent.appendChild(cTxt);
     f.appendChild(lName); f.appendChild(iName);
@@ -1157,20 +1350,26 @@
       ev.preventDefault();
       var nameVal = iName.value.trim();
       var phoneVal = iPhone.value.trim();
-      if (!nameVal || !phoneVal) { note.textContent = 'נדרשים שם וטלפון ליצירת קשר.'; return; }
+      if (!nameVal || !phoneVal) { note.textContent = lang('err_required', 'נדרשים שם וטלפון ליצירת קשר.'); return; }
       // a rep can do nothing with "אבג" — require a real Israeli-length number
       var digits = phoneVal.replace(/\D/g, '');
       if (digits.length < 9 || digits.length > 15) {
-        note.textContent = 'מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567';
+        note.textContent = lang('err_phone', 'מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567');
         return;
       }
       if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
       var mailVal = iMail.value.trim();
       if (mailVal && !/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(mailVal)) {
-        note.textContent = 'כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.'; iMail.focus(); return;
+        note.textContent = lang('err_email', 'כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.'); iMail.focus(); return;
       }
-      if (!iConsent.checked) { note.textContent = 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'; iConsent.focus(); return; }
+      if (!iConsent.checked) { note.textContent = lang('err_consent', 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'); iConsent.focus(); return; }
+      // Up to 27 seconds could pass here — Turnstile, then the request — and
+      // the only sign was the button going pale. Customers tapped it again and
+      // then closed the widget, at the highest-intent moment in the flow.
       go.disabled = true;
+      var goLabel = go.textContent;
+      go.textContent = lang('sending', 'שולח…');
+      var restoreBtn = function () { go.disabled = false; go.textContent = goLabel; };
       turnstileToken().then(function (tok) { return fetchWithTimeout(API_BASE + '/api/lead', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -1181,6 +1380,10 @@
             date: card ? card.date : null, nights: card ? card.nights : null,
             room: card ? card.room : null,
             party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null,
+            // מה שהלקוח חיפש, בשדות מסודרים — כדי שה-CRM יוכל לסנן ולנתב לפי
+            // חודש, יעד וקהל, ולא רק לקרוא תמליל. רשימה סגורה: שום שדה פנימי
+            // (כל מה שמתחיל ב-_) לא יוצא מכאן. השרת מסנן שוב מצדו.
+            request: leadRequest(),
             kind: leadKind,
             consent: { privacy: true, at: new Date().toISOString(), text: consent.textContent },
             conversation_id: state.slots ? state.slots._cid : null,
@@ -1193,12 +1396,14 @@
         if (!res.ok) throw new Error('lead rejected');
         track('lead', { kind: leadKind || 'customer', has_offer: !!card });
         f.remove();
+        // כמו אצל סאני: אומרים ללקוח שסיכום השיחה עובר לנציג — שלא יצטרך
+        // לספר הכל מהתחלה בטלפון (ה-transcript כבר נשלח עם הליד)
         addMsg('bot', card
-          ? 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + iso(card.hotel) + '.'
-          : 'הפרטים התקבלו. נציג פינגווין יחזור אליכם בהקדם.');
+          ? 'הפרטים התקבלו, יחד עם סיכום מה שחיפשתם כאן — כך שלא תצטרכו לחזור על הכל. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + iso(card.hotel) + '.'
+          : 'הפרטים התקבלו, יחד עם סיכום מה שחיפשתם כאן — כך שלא תצטרכו לחזור על הכל. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         track('error', { where: 'lead' });
-        go.disabled = false; note.textContent = say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}');
+        restoreBtn(); note.textContent = say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}');
       });
     });
   }
@@ -1207,11 +1412,27 @@
   function sendText(text) {
     text = (text || '').trim();
     if (!text || state.busy) return;
-    addMsg('user', text);
+    // A turn is stamped, and a response whose stamp is stale is discarded.
+    // "שיחה חדשה" mid-turn used to let the OLD conversation's reply, cards and
+    // slots land in the fresh one — including its conversation id, which then
+    // reappeared in the header.
+    var gen = (state.gen = (state.gen || 0) + 1);
+    var sentLogAt = state.log.length;
+    var sentBubble = addMsg('user', text);
     state.messages.push({ role: 'user', content: text });
     input.value = '';
     input.style.height = 'auto'; // shrink back after send
     state.busy = true; send.disabled = true; showTyping(true);
+    // Last resort. Every path below settles, but "every path settles" was true
+    // of the Turnstile loader too until it wasn't, and the cost of being wrong
+    // is a widget locked with the dots spinning until the customer reloads.
+    // This can only ever unlock it; a normal turn clears the timer first.
+    var stuck = setTimeout(function () {
+      if (!state.busy) return;
+      state.busy = false; send.disabled = false; showTyping(false);
+      addMsg('bot', say('chat_error', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו {phone}.'));
+      scrollDown();
+    }, 35000);
 
     // keep the typing indicator on screen long enough to be seen — offline
     // mode answers almost instantly, which otherwise feels like a jump cut
@@ -1226,16 +1447,34 @@
         body: JSON.stringify({ messages: state.messages.slice(-20), slots: state.slots, turnstile: tok })
       }, 28000);
     }).then(function (r) {
-      // 429 = "slow down": the server sends a polite line, show it as a reply
-      if (r.status === 429) return r.json().then(function (j) { j.slots = state.slots; return j; });
-      if (!r.ok) throw new Error('http ' + r.status);
-      return r.json();
+      if (r.ok) return r.json();
+      // A non-200 that still carries a Hebrew reply IS the reply: 429 says
+      // "slow down", 403 says "refresh the page and try again". Throwing on
+      // everything but 429 meant the 403 line — the most actionable sentence
+      // the server has — was never shown; the customer got the generic error
+      // and a "נסו שוב" chip that could only fail the same way, while the
+      // sentence that would have fixed it sat unread in the response.
+      return r.json().then(function (j) {
+        if (j && j.reply_he) {
+          // keep our own conversation state on an error: the 403 body returns
+          // slots without the conversation id, which would wipe the chat
+          j.slots = (j.slots && j.slots._cid) ? j.slots : state.slots;
+          j.no_retry = !!j.verify;      // retrying a failed verification cannot help
+          return j;
+        }
+        throw new Error('http ' + r.status);
+      }, function () { throw new Error('http ' + r.status); });
     });
 
     Promise.all([call, minWait]).then(function (both) {
+      if (gen !== state.gen) return;          // a newer turn, or a reset, won
       var data = both[0];
       showTyping(false);
       state.slots = data.slots || state.slots;
+      updateCid();
+      // "חיפשתי במלאי לפי: ..." — הלקוח רואה שהבקשה שלו הובנה, לפני ההצעות
+      if (data.search_echo_he && ((data.cards && data.cards.length) ||
+          (data.two_room_splits && data.two_room_splits.length))) addStatus(data.search_echo_he);
       var introEl = null;
       // the closing sentence ("אם אחת מהן נראית לכם…") talks about the buttons —
       // so it goes under the cards, not above them
@@ -1246,9 +1485,19 @@
         introEl = addMsg('bot', shown);
         // the server says when the moment deserves more than the small avatar
         if (data.mood === 'wave') introEl.classList.add('wave');
+        // the one thing a screen reader should hear on this turn
+        announce(shown + (data.cards && data.cards.length && !data.cards_unchanged
+          ? ' — ' + data.cards.length + ' הצעות' : ''));
         state.messages.push({ role: 'assistant', content: data.reply_he });
       }
-      if (data.cards && data.cards.length) {
+      // The same three offers were re-drawn on every turn: a six-turn chat on a
+      // phone was eighteen cards, fifteen of them duplicates, and the view
+      // jumped to the newest copy each time — so every turn looked as though
+      // the bot had answered by presenting the same hotels again. The server
+      // says when the set has not changed; the cards stay where they are.
+      if (data.cards && data.cards.length && data.cards_unchanged) {
+        state.lastCards = data.cards;
+      } else if (data.cards && data.cards.length) {
         track('offers', { count: data.cards.length });
         // three offers side by side, so the customer barely scrolls
         var row = addCardsRow(data.cards);
@@ -1258,13 +1507,17 @@
         scrollToTopOf(introEl || row);
         state.messages.push({ role: 'assistant', content: '[הוצגו ' + data.cards.length + ' הצעות: ' + data.cards.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
       }
-      if (data.two_room_splits && data.two_room_splits.length && (!data.cards || !data.cards.length)) {
+      if (data.two_room_splits && data.two_room_splits.length && !data.cards_unchanged &&
+          (!data.cards || !data.cards.length)) {
         data.two_room_splits.slice(0, 3).forEach(function (s) {
-          addMsg('bot', s.hotel + ' — ' + fmtDate(s.date) + ' · ' + s.nights + ' לילות\nשני חדרים: ' + s.rooms.join(' + ') + ' · ' + s.price_range);
+          addMsg('bot', s.hotel + ' — ' + fmtDate(s.date) + ' · ' + s.nights + ' לילות\nשני חדרים: ' + s.rooms.join(' + ') +
+            (s.price_range ? ' · ' + s.price_range : ''));
         });
       }
       // asked to be called back — open the form on the offer they were looking
       // at, or a blank one if they have not chosen yet
+      // אגודלים מתחת לתשובה האחרונה — לא כשנפתח טופס ליד, שלא להסיח
+      if (data.reply_he && !data.open_lead_form && !data.no_retry) addFeedback(data.reply_he);
       if (data.open_lead_form) {
         var lc = state.lastCards || [];
         if (data.lead_kind) openLeadForm(null, { kind: data.lead_kind, prefill: data.lead_prefill || null });
@@ -1276,16 +1529,24 @@
       if (data.cards && data.cards.length) scrollToTopOf(introEl || row);
       else scrollDown();
     }).catch(function () {
+      if (gen !== state.gen) return;          // a newer turn, or a reset, won
       showTyping(false);
       track('error', { where: 'chat' });
-      // the message stays in history; "נסו שוב" re-sends it without retyping
+      // The message stays in history; "נסו שוב" re-sends it without retyping.
+      // The bubble and the log entry are removed with it — leaving them meant
+      // the retry drew the customer's own message a second time, with the
+      // error between the two copies, and both survived a reload.
       state.messages.pop();
+      if (sentBubble && sentBubble.parentNode) sentBubble.parentNode.removeChild(sentBubble);
+      if (sentLogAt != null && state.log.length > sentLogAt) state.log.splice(sentLogAt, 1);
       addMsg('bot', say('chat_error', 'אירעה תקלה זמנית בתקשורת. נסו שוב בעוד רגע, או חייגו {phone}.'));
       var retry = el('div', 'chips');
       var rb = el('button', 'chip', 'נסו שוב');
       rb.addEventListener('click', function () { retry.remove(); sendText(text); });
       retry.appendChild(rb); msgs.appendChild(retry); scrollDown();
     }).then(function () {
+      clearTimeout(stuck);
+      if (gen !== state.gen) return;          // the newer turn owns the UI now
       state.busy = false; send.disabled = false; focusInput();
       persist();
     });
@@ -1342,11 +1603,13 @@
     var saved = restore();
     if (!saved || !saved.booted) return;
     replay(saved);
-    if (saved.open) {
-      state.open = true; win.classList.add('open'); wrap.classList.add('chatting');
-      fitWidth();
-      fab.setAttribute('aria-expanded', 'true');
-    }
+    // The transcript is restored; the WINDOW is not re-opened. It used to be,
+    // and once the conversation moved to localStorage (30/08) that meant a
+    // customer who left the chat open and simply navigated away landed on the
+    // home page days later with the whole screen taken by the bot — at ≤480px
+    // the panel is 100vw/100dvh — without having touched anything, and without
+    // focus moving into it either. The launcher is right there; reopening is
+    // one tap, and then it is their choice.
   })();
   hX.addEventListener('click', closeWin);
   win.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWin(); });

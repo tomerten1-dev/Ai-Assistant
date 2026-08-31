@@ -28,7 +28,21 @@ function model() { return process.env.OPENAI_MODEL || DEFAULT_MODEL; }
 // for them. The phrasing call writes the sentence the customer actually reads,
 // and OPENAI_PHRASE_MODEL lets that one job ride a better model without
 // paying for it everywhere else.
-async function callOpenAI({ system, messages, maxTokens = 400, json = true, model: modelOverride }) {
+/* One turn has ONE time budget, not one per call. Three model calls run in
+   sequence (slots, router, phrasing) and each used a fixed 20s ceiling, so two
+   slow ones blew the 25s cap in server.js between them and the customer got an
+   apology instead of the offers that were already found. `deadline` is a
+   timestamp for the whole turn; each call gets whatever is left of it, with a
+   floor so a nearly-spent budget fails fast rather than firing a request that
+   cannot possibly return in time. */
+function callBudgetMs(deadline) {
+  const ceiling = +(process.env.MODEL_TIMEOUT_MS || 20000);
+  if (!deadline) return ceiling;
+  const left = deadline - Date.now();
+  return Math.max(1200, Math.min(ceiling, left));
+}
+
+async function callOpenAI({ system, messages, maxTokens = 400, json = true, model: modelOverride, deadline }) {
   const key = process.env.OPENAI_API_KEY;
   if (!key || key.includes('xxxx')) {
     const err = new Error('missing_api_key');
@@ -52,7 +66,7 @@ async function callOpenAI({ system, messages, maxTokens = 400, json = true, mode
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(+(process.env.MODEL_TIMEOUT_MS || 20000)),
+    signal: AbortSignal.timeout(callBudgetMs(deadline)),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
@@ -81,4 +95,4 @@ function track(usage, usedModel) {
   );
 }
 
-module.exports = { callOpenAI, spend, model, DEFAULT_MODEL };
+module.exports = { callOpenAI, spend, model, DEFAULT_MODEL, callBudgetMs };

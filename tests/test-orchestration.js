@@ -53,7 +53,9 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
   console.log('[tokens] a real sentence is worth exactly one model call');
   reset(JSON.stringify({ slots: {}, ready_to_search: true }));
   const r1 = await handleChat({
-    messages: [{ role: 'user', content: 'זוג עם ילדים בני 5 ו-9, פברואר, בלי קייטנה' }],
+    // the destination is stated so the 30/08 gate is satisfied — this test is
+    // about how many model calls a real sentence costs, not about the gate
+    messages: [{ role: 'user', content: 'זוג עם ילדים בני 5 ו-9, פברואר באוסטריה, בלי קייטנה' }],
     slots: {},
   });
   t('one call to understand, one to phrase', slotCalls === 1 && phraseCalls === 1, 'slot=' + slotCalls + ' phrase=' + phraseCalls);
@@ -72,7 +74,7 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
 
   console.log('\n[tokens] only an unrecognised phrasing escalates to the model');
   reset(JSON.stringify({
-    slots: { adults: 2, no_children: true, month: 1 },
+    slots: { adults: 2, no_children: true, month: 1, country: 'austria' },
     reply_he: '', ready_to_search: true,
   }));
   const r2 = await handleChat({
@@ -88,7 +90,12 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
 
   console.log('\n[safety] the model never sees inventory, so cards come from data only');
   t('cards present', r2.cards.length > 0);
-  t('every card is a real workbook hotel', r2.cards.every(c => c.hotel && c.date && /^₪+$/.test(c.price_range)));
+  // 30/08: a price band is now present only for a hotel Tomer has actually
+  // classified. It used to fall back to pricing.json's TODO default for the 32
+  // of 40 hotels that have none, and that placeholder was then reasoned from.
+  // What this test is really pinning is that a band, when shown, is real.
+  t('every card is a real workbook hotel',
+    r2.cards.every(c => c.hotel && c.date && (c.price_range == null || /^₪+$/.test(c.price_range))));
 
   console.log('\n[resilience] a broken model degrades to the free layer, not to an error');
   reset('this is not json at all');
@@ -110,14 +117,23 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
   // size the offers cannot be right yet.
   t('a party size alone holds the offers back', r4.cards.length === 0, 'cards=' + r4.cards.length);
   t('and asks for what is missing', /[?]/.test(r4.reply_he), r4.reply_he);
+  // Policy changed 30/08 (Tomer, after using "סאני"): the destination joined
+  // the essentials. Who, when and where decide which packages qualify; the
+  // airport only filters them, so it is still gathered as chips afterwards.
+  reset();
+  const r4b = await handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר' }], slots: {},
+  });
+  t('who and when without where holds the offers', r4b.cards.length === 0, 'cards=' + r4b.cards.length);
+  t('and asks where', /יעד|אוסטריה/.test(r4b.reply_he), r4b.reply_he);
+
   reset();
   const r5 = await handleChat({
-    messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר' }], slots: {},
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר באוסטריה' }], slots: {},
   });
   t('essentials complete -> offers, no question at all',
     r5.cards.length === 3 && !/[?]/.test(r5.reply_he), r5.reply_he);
   t('airport still gathered — as chips', (r5.chips || []).some(c => c.includes('חיפה')));
-  t('destination gathered as chips too', (r5.chips || []).some(c => c === 'אוסטריה'));
   t('pending parameter reported', r5.pending_parameter === 'airport');
 
   console.log('\n[cap] the bot never interrogates past MAX_QUESTIONS');

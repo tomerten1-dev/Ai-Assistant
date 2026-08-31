@@ -53,8 +53,25 @@ node server/server.js
 שימו את הקבצים ב-`source-data/` ואז:
 
 ```bash
-npm run build:data
+npm run build:data:verify   # קודם: משווה בלי לכתוב, ומראה מה השתנה
+npm run build:data          # ואז: כותב את data/availability.json
 ```
+
+`build-availability.js` כותב **רק** שורות במצב `free`, ומסרב לכתוב אם בדיקה
+פנימית נכשלת (ספירה לא מסתדרת, עברית בשדה ציבורי, רצף 6 ספרות).
+
+`data/camps.json` ו-`data/restrictions.json` **אינם** נבנים אוטומטית — הם
+נתונים עסקיים שנשמרים ידנית. `tools/build-camps.js` ו-`tools/build-restrictions.js`
+קיימים ומסבירים את זה במקום לייצר קובץ שגוי.
+
+### גלגול עונה
+
+כל מה שקשור לשנה ולחודשים יושב בקובץ אחד: **`data/config/date-labels.json`**.
+`season.start` / `season.end` קובעים את השנים ואת חודשי העונה, ו-`labels`
+מחזיק את תאריכי החגים (חנוכה, פורים) — שזזים בין שנים עבריות ולכן חייבים
+להתעדכן בכל גלגול. `server/season.js` קורא משם, וכל השאר קורא ממנו.
+
+מספרי הפרסר של העונה (כמה שורות, כמה פנויות) יושבים ב-`tests/workbook-baseline.json`.
 
 ## הטמעה באתר האמיתי
 

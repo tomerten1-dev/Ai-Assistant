@@ -218,7 +218,7 @@ t('the office phone is written down exactly once', () => {
   for (const rel of ['server', 'public']) {
     const dir = path.join(root, rel);
     for (const f of fs.readdirSync(dir)) {
-      if (!f.endsWith('.js') || f === 'prompts.js') continue;   // prompts.js is dead code, tracked separately
+      if (!f.endsWith('.js')) continue;
       const src = fs.readFileSync(path.join(dir, f), 'utf8');
       const n = (src.match(/04-8557722/g) || []).length;
       if (n) hits.push(`${rel}/${f} ×${n}`);

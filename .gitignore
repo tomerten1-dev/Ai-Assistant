@@ -1,16 +1,22 @@
-node_modules/
+# Secrets. .env.example is the template and IS committed; .env never is.
 .env
-.DS_Store
-# ---- PII: raw commitments workbook never enters git ----
-source-data/
-*.xlsm
-*.xlsx
-/tmp/
+.env.*
+!.env.example
+
+# Customer data. leads.jsonl holds names and phone numbers, feedback.jsonl
+# holds whatever a customer typed into the thumbs-down box, and logs/ holds
+# conversation transcripts. server.js and README both said this directory was
+# ignored; until 30/08 there was no .gitignore at all, so it was not.
 server-data/
 logs/
-# תוצאות ריצה של הבנק — פלט, לא מקור. כל מכונה מייצרת אותן בעצמה,
-# ושמירתן ב-git גרמה להתנגשות אצל תומר ב-git pull (26/08).
+
+# The commitments workbook and anything derived straight from it. It is the
+# company's inventory, not code.
+source-data/
+
+# Generated and machine-local
+node_modules/
 tests/bank-results.json
-tests/bank-results-live.json
-tests/bank-results-live-typical.json
-shots/
+*.log
+.DS_Store
+Thumbs.db

@@ -38,6 +38,12 @@ function classify(res) {
   if (d.guard) out.add('refuse');
   if (d.answered_by === 'deflect') out.add('deflect');
   if (d.answered_by === 'faq' || d.answered_by === 'router') out.add('faq');
+  // a deterministic answer built from the workbook — departure dates (30/08).
+  // It is an answer like any other; without this the bot said "היציאות שלנו
+  // בחנוכה: 5.12" and the run recorded the question as ignored.
+  if (d.answered_by === 'dates') out.add('faq');
+  // ...and a per-hotel question answered on the offer cards, or pointed at them
+  if (d.answered_by === 'cards') out.add('faq');
   if ((res.cards || []).length || (res.two_room_splits || []).length) out.add('match');
   if (res.open_lead_form || PHONE.test(reply)) out.add('escalate');
   if (d.off_topic) out.add('offtopic');

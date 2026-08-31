@@ -20,9 +20,15 @@ function startServer() {
       env: { ...process.env, PORT: String(PORT), CHAT_LOG: 'off', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    let out = '';
+    let out = '', err = '';
     s.stdout.on('data', d => { out += d; if (out.includes('http://localhost')) resolve(s); });
-    s.on('exit', c => reject(new Error('server exited ' + c)));
+    s.stderr.on('data', d => { err += d; });
+    // A leaked server from a previous failed run holds the port and every
+    // later run dies here with a bare "server exited 1". Say which it is.
+    s.on('exit', c => reject(new Error(/EADDRINUSE/.test(err)
+      ? `port ${PORT} is already in use — a server from an earlier run is still up. ` +
+        `Kill it and try again (pkill -f "server/server.js").`
+      : 'server exited ' + c + (err ? '\n' + err.split('\n').slice(-6).join('\n') : ''))));
     setTimeout(() => reject(new Error('server did not start')), 8000);
   });
 }
@@ -31,10 +37,20 @@ function startServer() {
   let pass = 0, fail = 0;
   const t = (name, fn) => { try { fn(); pass++; } catch (e) { fail++; console.error('✗', name, '\n  ', e.message); } };
   const srv = await startServer();
-  const browser = await chromium.launch({ executablePath: process.env.CHROME || '/opt/pw-browsers/chromium' });
-  const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
+  // The server outlived the test whenever anything before the `finally` threw
+  // — browser launch, a navigation race — and then every later run failed on
+  // the busy port instead of on its own merits.
+  const stop = () => { try { srv.kill('SIGKILL'); } catch (e) { /* already gone */ } };
+  process.on('exit', stop);
+  process.on('uncaughtException', e => { stop(); console.error(e); process.exit(1); });
+  process.on('unhandledRejection', e => { stop(); console.error(e); process.exit(1); });
+  let browser, page;
   const errors = [];
-  page.on('pageerror', e => errors.push(e.message));
+  try {
+    browser = await chromium.launch({ executablePath: process.env.CHROME || '/opt/pw-browsers/chromium' });
+    page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
+    page.on('pageerror', e => errors.push(e.message));
+  } catch (e) { stop(); throw e; }
   const URL = `http://127.0.0.1:${PORT}/`;
   try {
     await page.goto(URL);
@@ -58,13 +74,28 @@ function startServer() {
     const afterResetReload = await count(page);
     t('the cleared chat stays cleared across a reload', () => assert.strictEqual(afterResetReload, 1));
 
-    await page.evaluate(`sessionStorage.setItem('pingwin_bot_session_v1', JSON.stringify({build:'stale',messages:[{role:'user',content:'x'}],booted:true,open:true,log:[{t:'user',v:'x'}]}))`);
+    // 30/08: the conversation moved from sessionStorage to localStorage so it
+    // survives the tab closing (Sunny restores a conversation days later, and
+    // for a holiday people decide on over a week that is the difference
+    // between a warm lead and starting from zero). These two probes were still
+    // writing to, and reading from, the storage the widget no longer uses.
+    await page.evaluate(`localStorage.setItem('pingwin_bot_session_v1', JSON.stringify({build:'stale',savedAt:Date.now(),messages:[{role:'user',content:'x'}],booted:true,open:true,log:[{t:'user',v:'x'}]}))`);
     await page.reload(); await page.waitForTimeout(1000);
     const afterStale = await count(page);
     t('a session from an older build is not replayed', () => assert.strictEqual(afterStale, 0));
 
+    // an expired conversation is gone, not merely ignored
+    await page.evaluate(`localStorage.setItem('pingwin_bot_session_v1', JSON.stringify({build:new URL(document.querySelector('script[src*="pingwin-bot"]').src).searchParams.get('v')||'0',savedAt:Date.now()-40*24*60*60*1000,messages:[{role:'user',content:'x'}],booted:true,open:true,log:[{t:'user',v:'x'}]}))`);
+    await page.reload(); await page.waitForTimeout(1000);
+    const afterExpiry = await count(page);
+    const expiredStore = await page.evaluate(`localStorage.getItem('pingwin_bot_session_v1')`);
+    t('a conversation past its expiry is dropped', () => {
+      assert.strictEqual(afterExpiry, 0);
+      assert.strictEqual(expiredStore, null, 'the expired record was left in storage');
+    });
+
     await page.goto(URL + '?pwreset=1'); await page.waitForTimeout(800);
-    const stored = await page.evaluate(`sessionStorage.getItem('pingwin_bot_session_v1')`);
+    const stored = await page.evaluate(`localStorage.getItem('pingwin_bot_session_v1')`);
     t('?pwreset clears the stored session', () => assert.strictEqual(stored, null));
 
     // Pingi — the character Tomer approved on 26/08. The launcher is a reception
@@ -246,7 +277,7 @@ function startServer() {
           await p4.waitForTimeout(400);
           // this query is the one that produces a tier badge and a "last room"
           await p4.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
-            ta.value = '2 מבוגרים בפברואר'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+            ta.value = '2 מבוגרים בפברואר בבולגריה'; ta.dispatchEvent(new Event('input', { bubbles: true }));
             r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
           await p4.waitForTimeout(3500);
           const badges = await p4.evaluate(`(() => { const r = ${SHADOW};
@@ -344,7 +375,8 @@ function startServer() {
 
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
-    await browser.close(); srv.kill();
+    if (browser) await browser.close().catch(() => {});
+    stop();
   }
   console.log(`widget: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

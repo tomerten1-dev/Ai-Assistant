@@ -201,6 +201,12 @@ function readWorkbook(path) {
         row: rc.row, col: rc.col, ref,
         text: value == null ? '' : String(value).trim(),
         num, fillRgb: fill ? fill.rgb : null, fillId: xf.fillId || 0,
+        // Was the fill actually understood? `fill === null` means no fill at
+        // all (a white cell, decoded correctly). `fill` present with rgb null
+        // means there IS a fill and we could not resolve its colour — indexed
+        // 64/65, an uncovered theme index, a patternFill with no fgColor.
+        // Collapsing both to "no colour" let coloured (sold) cells read as free.
+        fillDecoded: !fill || fill.rgb != null,
         fillIndexed: fill ? fill.indexed : null,
         formula: fm ? unesc(fm[1]) : null,
         dateISO: (num != null && isDateFmt) ? serialToISO(num) : null,

@@ -133,8 +133,84 @@ async function integration() {
   } finally { srv.kill(); }
 }
 
+/* The shape the CRM receives (server/crm-lead.js). Whoever maps this into
+   Priority / Monday / Make writes that mapping once — so these tests exist to
+   make a silent rename impossible. */
+async function crm() {
+  const crmLead = require('../server/crm-lead.js');
+  const FULL = {
+    ...REC,
+    context: {
+      ...REC.context,
+      request: {
+        adults: 2, children_ages: [5, 9], month: 2, country: 'austria',
+        needs_hebrew_kids_club: true, no_saturday_flights: true,
+        preferences: ['ספא'], notes_from_customer: ['חוגגים יום נישואין'],
+        nights_wanted: 7, departure_airport: 'tlv',
+      },
+      consent: { privacy: true, at: '2026-08-26T18:00:00.000Z', text: 'מאשר' },
+    },
+  };
+
+  await t('the payload is versioned, so a CRM mapping can pin what it expects', () => {
+    const out = crmLead.toCrm(FULL);
+    assert.strictEqual(out.schema, 'pingwin.lead/1');
+    assert.strictEqual(out.lead_id, 'labc');
+    assert.strictEqual(out.source, 'web-chat');
+  });
+
+  await t('the customer, the request and the offer each arrive as flat fields', () => {
+    const out = crmLead.toCrm(FULL);
+    assert.strictEqual(out.customer.name, 'תומר כהן');
+    assert.strictEqual(out.customer.phone, '0501234567');
+    assert.strictEqual(out.request.adults, 2);
+    assert.deepStrictEqual(out.request.children_ages, [5, 9]);
+    assert.strictEqual(out.request.children_count, 2);
+    assert.strictEqual(out.request.party_size, 4);
+    assert.strictEqual(out.request.month_he, 'פברואר');
+    assert.strictEqual(out.request.country_he, 'אוסטריה');
+    assert.strictEqual(out.request.hebrew_kids_club, true);
+    assert.strictEqual(out.request.no_saturday_flights, true);
+    assert.deepStrictEqual(out.request.preferences, ['ספא']);
+    assert.deepStrictEqual(out.request.notes, ['חוגגים יום נישואין']);
+    assert.strictEqual(out.offer.hotel, 'Hotel Ferienhof');
+    assert.strictEqual(out.offer.date, '2027-01-09');
+  });
+
+  await t('the conversation id travels with the lead — it is how a rep finds the chat', () => {
+    assert.strictEqual(crmLead.toCrm(FULL).conversation.id, 'cxyz');
+  });
+
+  await t('RED RULE 3: no price ever leaves on the wire', () => {
+    const priced = { ...FULL, context: { ...FULL.context, price_range: '₪₪₪', price: 4500 } };
+    const json = JSON.stringify(crmLead.toCrm(priced));
+    assert.ok(!/price|₪|4500/.test(json), 'a price reached the CRM payload: ' + json.slice(0, 200));
+  });
+
+  await t('only whitelisted fields cross — internal slots never reach the CRM', () => {
+    const dirty = { ...FULL, context: { ...FULL.context,
+      request: { ...FULL.context.request, _cid: 'secret', _vt: 'stamp', _asked: ['adults'] } } };
+    const json = JSON.stringify(crmLead.toCrm(dirty));
+    assert.ok(!/_cid|_vt|_asked|secret|stamp/.test(json), 'an internal field leaked: ' + json.slice(0, 200));
+  });
+
+  await t('an older widget that sends only `party` still produces a usable lead', () => {
+    const old = { ...REC };                       // no context.request at all
+    const out = crmLead.toCrm(old);
+    assert.strictEqual(out.request.adults, 2);
+    assert.deepStrictEqual(out.request.children_ages, [5, 9]);
+  });
+
+  await t('a lead with no offer is legitimate and does not crash the mapping', () => {
+    const out = crmLead.toCrm({ id: 'l1', at: 'now', name: 'א', phone: '0500000000', context: {} });
+    assert.strictEqual(out.offer, null);
+    assert.strictEqual(out.kind, 'customer');
+  });
+}
+
 (async () => {
   await unit();
+  await crm();
   await integration();
   console.log(`lead: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

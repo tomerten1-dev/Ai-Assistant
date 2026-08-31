@@ -116,7 +116,7 @@ t('the companion script is shipped, and is inert without our parameters', () => 
 });
 
 (async () => {
-  const r = await handleChat({ messages: [{ role: 'user', content: '3 מבוגרים בפברואר' }], slots: {} });
+  const r = await handleChat({ messages: [{ role: 'user', content: '3 מבוגרים בפברואר באוסטריה' }], slots: {} });
   t('every offer the customer sees carries a prefilled link', () => {
     assert.ok(r.cards.length, 'no offers to check');
     for (const c of r.cards) {

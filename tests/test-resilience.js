@@ -61,7 +61,7 @@ t('a failure while wording the reply still ships the offers', async () => {
   const real = offline.phrase;
   offline.phrase = () => { throw new Error('deliberate failure in the template builder'); };
   try {
-    const out = await quiet(() => handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} }));
+    const out = await quiet(() => handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה' }], slots: {} }));
     assert.ok(out.cards.length >= 1, 'the search result survived: ' + out.cards.length + ' cards');
     assert.ok(out.reply_he && out.reply_he.length > 10, 'and a sentence was still said');
     assert.ok(!/משהו השתבש/.test(out.reply_he), 'not the generic error line');
@@ -73,7 +73,7 @@ t('a failure in one preamble line costs that line only', async () => {
   const real = offline.comparingLine;
   offline.comparingLine = () => { throw new Error('deliberate failure in a preamble line'); };
   try {
-    const out = await quiet(() => handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} }));
+    const out = await quiet(() => handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה' }], slots: {} }));
     assert.ok(out.cards.length >= 1, 'offers survived');
     assert.ok(!/משהו השתבש/.test(out.reply_he));
   } finally { offline.comparingLine = real; }
@@ -81,7 +81,7 @@ t('a failure in one preamble line costs that line only', async () => {
 
 t('the customer-facing error line is still there when there is nothing to ship', async () => {
   const { handleChat } = require('../server/server.js');
-  const out = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} });
+  const out = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה' }], slots: {} });
   assert.ok(out.reply_he, 'a normal turn is unaffected');
   assert.ok(out.cards.length >= 1);
 });

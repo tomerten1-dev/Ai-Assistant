@@ -21,7 +21,7 @@ const departures = JSON.parse(fs.readFileSync(path.join(CFG, 'departures.json'),
 let camps = { resorts: [] };
 try { camps = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'camps.json'), 'utf8')); } catch { }
 
-const COUNTRY_HE = { austria: 'אוסטריה', bulgaria: 'בולגריה', andorra: 'אנדורה', france: 'צרפת' };
+const { COUNTRY_HE } = require('./labels.js');
 const PRICE_HE = { budget: 'מהמשתלמים אצלנו', mid: 'ברמת מחיר בינונית', premium: 'ברמת הפרימיום' };
 
 function approved() {

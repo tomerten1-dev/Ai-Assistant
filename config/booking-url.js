@@ -16,7 +16,7 @@
 //
 // So the deep link carries our values in its own namespaced parameters, and a
 // small companion script on the hotel page (public/pingwin-prefill.js, loaded
-// by one GTM tag — see docs/DEPLOY.md) reads them and drives those two calls.
+// by one GTM tag — see public/gtm-tag.html) reads them and drives those two calls.
 // Nothing on Pingwin's side has to change, and if the tag is ever removed the
 // link still lands on the right hotel page: the parameters are simply ignored.
 //
@@ -95,16 +95,28 @@ function deepLink(hotelInfo, card, party) {
   // engine); the name stays as the fallback the browser can still match on
   if (card.room_id) p.set(NS + 'roomid', String(card.room_id));
   if (card.room) p.set(NS + 'room', card.room);
+  // The party is filled in ALL of it or none of it. Children whose ages we do
+  // not know yet were simply dropped, while the adult count and the auto-quote
+  // went through — so a family of five landed on the form filled for two and
+  // watched it produce a two-person price for a five-person apartment, which
+  // is the number they then anchored on. The search itself was right: partyOf
+  // counts a child with no age. Only the link disagreed.
   const adults = party && party.adults;
-  if (adults) p.set(NS + 'ad', String(adults));
   const kids = (party && party.children_ages) || [];
-  if (kids.length) p.set(NS + 'kids', kids.join(','));
+  const kidCount = Math.max(kids.length, (party && party.children_count) || 0);
+  const partyComplete = !!adults && kidCount === kids.length;
+  if (partyComplete) {
+    p.set(NS + 'ad', String(adults));
+    if (kids.length) p.set(NS + 'kids', kids.join(','));
+  }
   const pans = pansionCode(card.board_he);
   if (pans) p.set(NS + 'pans', String(pans));
   // and produce the quote for them (Tomer, 26/08). The companion script only
   // presses it once the room has a price — that is, only when the prefill
   // actually succeeded; on a half-filled form the customer is left to choose.
-  p.set(NS + 'quote', '1');
+  // A quote for the wrong number of people is worse than no quote, so it is
+  // asked for only when we know who is travelling.
+  if (partyComplete) p.set(NS + 'quote', '1');
   return base + '&' + p.toString();
 }
 

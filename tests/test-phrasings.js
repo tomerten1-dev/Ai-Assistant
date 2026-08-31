@@ -241,12 +241,14 @@ console.log('\n— never repeat the same question —');
   console.log(q === null ? '  ✓ no question when every parameter is known' : `  ✗ asked anyway: ${q.he}`);
 }
 {
-  // essentials known but airport/destination still open → keep gathering
+  // Policy 30/08 (Tomer, after "סאני"): the destination is an essential and is
+  // asked BEFORE the airport — it decides which packages qualify, the airport
+  // only filters them.
   const q = nextQuestion({ adults: 2, children_ages: [5, 9], month: 2, needs_hebrew_kids_club: true }, null);
-  const ok = q && q.key === 'airport';
+  const ok = q && q.key === 'country';
   ok ? pass++ : fail++;
-  console.log(ok ? '  ✓ asks about the departure airport once essentials are in'
-                 : `  ✗ expected the airport question, got ${q && q.key}`);
+  console.log(ok ? '  ✓ asks about the destination once who/when/camp are in'
+                 : `  ✗ expected the country question, got ${q && q.key}`);
 }
 {
   // "לא משנה" is an answer, not a gap — it must not be re-asked

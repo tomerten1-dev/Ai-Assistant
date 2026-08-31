@@ -81,12 +81,12 @@ function buildPayload({ slots, cards, result, fallback, lastReply, answered }) {
     בקשת_הלקוח: {
       מבוגרים: slots.adults,
       גילאי_ילדים: slots.children_ages,
-      חודש: ({ 12: 'דצמבר', 1: 'ינואר', 2: 'פברואר', 3: 'מרץ', any: 'גמיש' })[slots.month] || slots.month,
+      חודש: (slots.month === 'any' ? 'גמיש' : require('./labels.js').month(slots.month)) || slots.month,
       // A comparison holds MORE than the one country the slot keeps — telling
       // the model only about Bulgaria made it call Mayrhofen "outside the
       // destination you asked for" to a customer who asked Austria-or-Bulgaria.
       משווים_בין: (slots.compare || []).map(p =>
-        ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[p.country] || p.destination) || undefined,
+        require('./labels.js').country(p.country) || p.destination) || undefined,
       // A destination we sell but hold nothing for is still a destination the
       // customer named. Leaving it out made the model write "מאחר שלא ציינתם
       // יעד" to someone who had just said Italy.
@@ -112,10 +112,30 @@ function buildPayload({ slots, cards, result, fallback, lastReply, answered }) {
 
 // The output guard. Anything the model could get wrong in a way that costs
 // money or trust is checked here, and a failure means we ship the template.
-function validate(text, { cards, fallback }) {
+function validate(text, { cards, fallback, payload, userText }) {
   const t = String(text || '').trim();
   if (!t) return { ok: false, why: 'empty' };
   if (t.length > 700) return { ok: false, why: 'too long' };
+
+  /* Every number in the reply has to come from the payload, the template, or
+     what the customer just wrote. This check existed in prompt-answer.js and
+     was never wired to anything, so the offer phrasing had no numeric rule at
+     all: the date check below only matched d.m / d/m, and I measured
+     "יש לנו יציאה ב-22 בפברואר", "נשארו שני חדרים אחרונים", "המלון מתאים ל-8
+     נוסעים" and "אנחנו 40 דקות מהשדה" all passing — the last of which is also
+     a red-rule-5 violation (travel times).
+     Skipped when the caller gives no payload, so an old call site degrades to
+     the previous behaviour rather than rejecting everything. */
+  if (payload) {
+    const digits = x => String(x || '').match(/\d+/g) || [];
+    const allowed = new Set([
+      ...digits(payload), ...digits(fallback), ...digits(userText),
+      ...cards.flatMap(c => digits(JSON.stringify(c))),
+    ]);
+    for (const n of digits(t)) {
+      if (!allowed.has(n)) return { ok: false, why: 'number not in the payload: ' + n };
+    }
+  }
 
   // red rule 3 — no sums of money
   if (/\d[\d,.]*\s*(₪|\$|€|שקל|ש"ח|שח|יורו|אירו)/.test(t)) return { ok: false, why: 'price' };
@@ -127,6 +147,20 @@ function validate(text, { cards, fallback }) {
   if (/(מובטח|בטוח פנוי|אני מבטיח|מבטיחים לכם)/.test(t)) return { ok: false, why: 'promise' };
   // red rule 8 — no flight times
   if (/\b\d{1,2}:\d{2}\b/.test(t)) return { ok: false, why: 'flight time' };
+  // red rule 5 — no journey times, in words as well as in digits.
+  // (No trailing \b: Hebrew letters are not \w in JS, so a word boundary never
+  // matches after them. Fourth time this trap has bitten in this codebase.)
+  if (/\d+\s*(דקות|דק'|שעות|שעה|שעתיים)(?![א-ת])/.test(t) ||
+      /(שעתיים|חצי שעה)\s*(נסיעה|מהשדה|מהמלון)/.test(t)) {
+    return { ok: false, why: 'journey time' };
+  }
+  // Scarcity is ours to state, not the model's: the only remaining-rooms
+  // sentence the customer may read is the one the server generates from
+  // count_available, and it only ever says "נשאר חדר אחד".
+  if (/נשאר(ו|ים)?\s*\d+\s*חדר|עוד\s*\d+\s*חדרים/.test(t) &&
+      !/נשאר/.test(String(fallback || ''))) {
+    return { ok: false, why: 'invented a remaining-rooms count' };
+  }
   // red rule 6
   if (/הכי טוב|הטוב ביותר/.test(t)) return { ok: false, why: 'superlative' };
 
@@ -202,4 +236,42 @@ const KNOWN_HOTELS = (() => {
   } catch (e) { return []; }
 })();
 
-module.exports = { PHRASE_PROMPT, buildPayload, validate, cardDigest };
+/* The slot model has a SECOND channel to the customer that nothing checked.
+   When it decides it is not ready to search it returns `reply_he`, a free
+   string, and server.js used it as the turn's question — past validate(),
+   which only ever sees the phrasing model's output, and only when there are
+   cards. And this model is not blind to the domain: its prompt hands it the
+   resort list per country, the season dates and the four camp resorts, so
+   "יש לנו יציאה למאיירהופן ב-15 בינואר" is a sentence it can write.
+
+   The channel is allowed to be exactly one thing: a short question asking for
+   a missing detail. So this validates the SHAPE rather than trying to police
+   the meaning — a question, briefly, with no facts in it at all. Anything else
+   falls back to the deterministic question ladder, which is never wrong. */
+function validateQuestion(text) {
+  const t = String(text || '').trim();
+  if (!t) return { ok: false, why: 'empty' };
+  if (t.length > 160) return { ok: false, why: 'too long for a question' };
+  if (!/[?？]\s*$/.test(t)) return { ok: false, why: 'not a question' };
+  // one question, not a paragraph with a question mark at the end
+  if ((t.match(/[?？]/g) || []).length > 1) return { ok: false, why: 'more than one question' };
+  if (/\n/.test(t)) return { ok: false, why: 'more than one line' };
+  // A question asks for a fact; it never states one. That rules out prices,
+  // dates, counts and times in a single stroke — the digits a legitimate
+  // question needs are the ones IT offers as examples, and the deterministic
+  // ladder already owns those.
+  if (/[0-9٠-٩]/.test(t)) return { ok: false, why: 'a question with a number in it' };
+  // …and it never names a place, which is the other half of an availability
+  // claim. Hotel names are Latin in our data; resort names are checked in both.
+  for (const name of KNOWN_HOTELS) if (t.includes(name)) return { ok: false, why: 'names a hotel' };
+  // RESORT_HE maps English → Hebrew, so the Hebrew names are the VALUES. The
+  // keys are Latin and already caught by the Latin-word rule below; checking
+  // the wrong half is what let "אנחנו יוצאים לבנסקו" through the first draft.
+  for (const he of Object.values(RESORT_HE)) if (he && t.includes(he)) return { ok: false, why: 'names a resort' };
+  if (/[A-Za-z]{3,}/.test(t)) return { ok: false, why: 'latin word' };
+  // the same red rules as everywhere else, in case the shape checks are passed
+  if (/[₪$€]|מחיר|עולה|הנחה|מבטיח|מובטח/.test(t)) return { ok: false, why: 'red rule' };
+  return { ok: true };
+}
+
+module.exports = { PHRASE_PROMPT, buildPayload, validate, validateQuestion, cardDigest, RESORT_HE };

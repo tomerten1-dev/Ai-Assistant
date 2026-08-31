@@ -9,33 +9,73 @@ const path = require('path');
 const { parseInventory, stats } = require('../data/inventory.js');
 const { SkiSearch } = require('../data/filter.js');
 
+const SEASON = require('../server/season.js');
 const ROOT = path.join(__dirname, '..');
-const XLSM = path.join(ROOT, 'source-data', 'commitments-winter-2027.xlsm');
+const XLSM = process.env.WORKBOOK ||
+  path.join(ROOT, 'source-data', `commitments-winter-${SEASON.endYear()}.xlsm`);
 
-let pass = 0, fail = 0;
+let pass = 0, fail = 0, skipped = 0;
 function t(name, cond, detail) {
   if (cond) { pass++; console.log('  ✓', name); }
   else { fail++; console.log('  ✗', name, detail ? '—' + detail : ''); }
 }
 
-console.log('— parsing workbook —');
-const rows = parseInventory(XLSM);
-const st = stats(rows);
+/* The commitments workbook is the company's inventory and is gitignored, so on
+   any checkout without it this file used to throw at line one — and because it
+   is FIRST in an && chain of twenty test files, `npm test` then ran no tests at
+   all. Everything after the workbook section works from the committed
+   data/*.json and is worth running on its own.
+   The parse counts are also a fact about ONE season's workbook: they are
+   pinned in tests/workbook-baseline.json so a rollover updates a data file
+   rather than tempting someone to re-baseline numbers inside a test. */
+const haveWorkbook = fs.existsSync(XLSM);
+let rows = null, st = null;
+if (!haveWorkbook) {
+  console.log('— parsing workbook — SKIPPED (no', path.relative(ROOT, XLSM) + ')');
+  console.log('  set WORKBOOK=/path/to/file.xlsm to run the parser checks too');
+} else {
+  console.log('— parsing workbook —');
+  rows = parseInventory(XLSM);
+  st = stats(rows);
+}
+const w = (name, fn) => {
+  if (!haveWorkbook) { skipped++; return; }
+  try { fn(); } catch (e) { fail++; console.log('  ✗', name, '—', e.message); }
+};
 
 console.log('\n[6] parse counts vs approved reference (spec 3.5 + Tomer 23/08)');
-t('total rows 3804', st.total === 3804, 'got ' + st.total);
-t('free 2282', st.status.free === 2282, 'got ' + st.status.free);
-t('sold 1432', st.status.sold === 1432, 'got ' + st.status.sold);
-t('reserved 68 (exact per spec)', st.status.reserved === 68, 'got ' + st.status.reserved);
-t('not_for_sale 20', st.status.not_for_sale === 20, 'got ' + st.status.not_for_sale);
-t('unknown (contradictions) 2', st.status.unknown === 2, 'got ' + st.status.unknown);
-t('season range', st.firstDate === '2026-12-05' && st.lastDate === '2027-03-28');
-t('hanukkah sheet: exactly 3 free (Tomer)', rows.filter(r => r.sheet.includes('חנוכה') && r.status === 'free').length === 3);
-t('Belambra Grand Massif kept in BOTH sheets (not merged)',
-  new Set(rows.filter(r => r.hotel === 'Belambra Grand Massif').map(r => r.sheet)).size === 2);
+const BASE = JSON.parse(fs.readFileSync(path.join(__dirname, 'workbook-baseline.json'), 'utf8'));
+w('parse counts match the approved baseline', () => {
+  const got = { total: st.total, free: st.status.free, sold: st.status.sold,
+    reserved: st.status.reserved, not_for_sale: st.status.not_for_sale,
+    unknown: st.status.unknown };
+  for (const k of Object.keys(got)) {
+    if (got[k] !== BASE[k]) throw new Error(`${k}: got ${got[k]}, baseline ${BASE[k]}`);
+  }
+  pass++; console.log('  ✓ parse counts match the approved baseline');
+});
+w('season range matches the baseline', () => {
+  if (st.firstDate !== BASE.first_date || st.lastDate !== BASE.last_date) {
+    throw new Error(`${st.firstDate}..${st.lastDate} vs ${BASE.first_date}..${BASE.last_date}`);
+  }
+  pass++; console.log('  ✓ season range matches the baseline');
+});
+w('hanukkah sheet free count matches the baseline', () => {
+  const n = rows.filter(r => r.sheet.includes('חנוכה') && r.status === 'free').length;
+  if (n !== BASE.hanukkah_free) throw new Error('got ' + n);
+  pass++; console.log('  ✓ hanukkah sheet free count matches the baseline');
+});
+w('Belambra Grand Massif kept in BOTH sheets (not merged)', () => {
+  const n = new Set(rows.filter(r => r.hotel === 'Belambra Grand Massif').map(r => r.sheet)).size;
+  if (n !== 2) throw new Error('sheets: ' + n);
+  pass++; console.log('  ✓ Belambra Grand Massif kept in BOTH sheets (not merged)');
+});
 
 console.log('\n[4c] ואקאנס + שמור never reach results');
-t('no vacances rows parsed', !rows.some(r => /ואקאנס/.test(JSON.stringify(r))));
+w('no vacances rows parsed', () => {
+  if (rows.some(r => /ואקאנס/.test(JSON.stringify(r)))) throw new Error('a ואקאנס row was parsed');
+  pass++; console.log('  ✓ no vacances rows parsed');
+});
 const av = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'availability.json'), 'utf8'));
 t('availability.json holds only free units (no reserved/sold leak possible)',
   av.units.length > 0 && av.source_stats.free_rows === av.units.reduce((n, u) => n + u.count, 0));
@@ -218,9 +258,21 @@ t('camp_age_mismatch still fires for a 16-year-old',
 console.log('\n— guardrails —');
 const r5 = engine.search({ adults: 2, children_ages: [], month: 1 });
 t('never more than 8 candidates', r5.candidates.length <= 8);
-t('price is symbolic only (₪ glyphs)', r5.candidates.every(c => /^₪+$/.test(c.price_range)));
-t('closed universe: every candidate hotel exists in the workbook',
-  r5.candidates.every(c => rows.some(r => r.hotel === c.hotel)));
+// 30/08: a band exists only for a hotel that has actually been classified —
+// the other 32 of 40 used to fall through to pricing.json's TODO default and
+// that placeholder was then reasoned from. What must hold is that a band,
+// WHEN shown, is symbolic and never a number.
+t('price is symbolic only (₪ glyphs), and absent when unclassified',
+  r5.candidates.every(c => c.price_range == null || /^₪+$/.test(c.price_range)));
+w('closed universe: every candidate hotel exists in the workbook', () => {
+  if (!r5.candidates.every(c => rows.some(r => r.hotel === c.hotel))) {
+    throw new Error('a candidate hotel is not in the workbook');
+  }
+  pass++; console.log('  ✓ closed universe: every candidate hotel exists in the workbook');
+});
+// …and without the workbook, the same guarantee against the committed data
+t('closed universe: every candidate hotel exists in availability.json',
+  r5.candidates.every(c => av.units.some(u => u.hotel === c.hotel)));
 
-console.log(`\n${pass} passed, ${fail} failed`);
+console.log(`\n${pass} passed, ${fail} failed` + (skipped ? `, ${skipped} skipped (no workbook)` : ''));
 process.exit(fail ? 1 : 0);

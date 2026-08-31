@@ -146,7 +146,7 @@ t('not a recommendation question → null (the rest of the pipeline answers)', (
     assert.ok(/על אילו שני אתרים/.test(r4.reply_he));
     assert.ok(r4.chips.length >= 2, 'the resorts are offered as chips');
   });
-  const r5 = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} });
+  const r5 = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה' }], slots: {} });
   t('the price badge still works on an ordinary search', () => {
     assert.ok(r5.cards.length >= 2);
     assert.ok('tier_he' in r5.cards[0], 'the field is still produced');

@@ -4,8 +4,8 @@
   "private": true,
   "description": "בוט התאמת חופשות סקי לאתר פינגווין — דמו",
   "scripts": {
-    "build:data": "node tools/build-availability.js && node tools/build-camps.js && node tools/build-restrictions.js && node tools/merge-rooms.js",
-    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js && node tests/test-lead.js && node tests/test-booking-url.js && node tests/test-site-rooms.js && node tests/test-room-match.js && node tests/test-prefill-match.js",
+    "build:data": "node tools/build-availability.js && node tools/merge-rooms.js",
+    "test": "node tests/run-tests.js && node tests/test-phrasings.js && node tests/test-offline.js && node tests/test-orchestration.js && node tests/test-rooms.js && node tests/test-faq.js && node tests/test-phrase-guard.js && node tests/test-end-to-end.js && node tests/test-guidance.js && node tests/test-log.js && node tests/test-limits.js && node tests/test-recommend.js && node tests/test-resilience.js && node tests/test-catalogue.js && node tests/test-lead.js && node tests/test-booking-url.js && node tests/test-site-rooms.js && node tests/test-room-match.js && node tests/test-prefill-match.js && node tests/test-sunny.js && node tests/test-camps.js && node tests/test-incoming.js && node tests/test-slow-model.js && node tests/test-health.js",
     "start": "node server/server.js",
     "dev": "node tools/dev.js",
     "test:ui": "node tests/test-widget.js",
@@ -13,10 +13,13 @@
     "rooms": "node tools/room-list.js",
     "bank": "node tests/test-bank.js",
     "bank:live": "node tests/test-bank.js --typical --sample=100 --live --watch",
+    "bank:followups": "node tools/followup-bank.js",
     "stress": "node tests/stress.js",
     "review": "node tools/review-log.js",
-    "build:site": "node tools/fetch-hotel-images.js && node tools/fetch-inclusions.js",
-    "match": "node tools/match-score.js"
+    "leads:retry": "node tools/leads-retry.js",
+    "match": "node tools/match-score.js",
+    "test:all": "npm test && npm run test:ui && npm run test:prefill",
+    "build:data:verify": "node tools/build-availability.js --verify"
   },
   "dependencies": {
     "nodemailer": "^9.0.5"

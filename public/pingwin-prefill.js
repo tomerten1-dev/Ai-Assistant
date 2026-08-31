@@ -1,7 +1,7 @@
 /* pingwin-prefill.js — fills the booking form on a hotel page with what the
    customer already told Pingi.
    -----------------------------------------------------------------------
-   Loaded by ONE GTM tag on pingwin.co.il (see docs/DEPLOY.md). It does nothing
+   Loaded by ONE GTM tag on pingwin.co.il (see public/gtm-tag.html). It does nothing
    at all unless the URL carries our parameters, which only Pingi's
    "המשך להזמנה" button puts there:
 
@@ -61,7 +61,16 @@
     waited += 150;
     var om = window.orderMan;
     if (!om || typeof om.setDates !== 'function') {
-      if (waited > 15000) clearInterval(timer);     // the page is not a booking page
+      if (waited > 15000) {
+        clearInterval(timer);
+        // The customer was told in the chat that their details carry across.
+        // Giving up silently left them on a hotel page with empty dates and no
+        // explanation. Only worth saying when we were actually asked to fill
+        // something in — on an ordinary visit there is nothing to explain.
+        if (q.from || q.roomid) {
+          notice('לא הצלחתי למלא את התאריכים מהצ׳אט בדף הזה — אפשר לבחור אותם כאן.');
+        }
+      }
       return;
     }
     clearInterval(timer);

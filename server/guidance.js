@@ -247,4 +247,19 @@ function languageText(key) {
   return (typeof g[key] === 'string' && g[key].trim()) ? g[key] : null;
 }
 
-module.exports = { forAsking, forAnswering, objection, officeOpen, officeState, handoffLine, closing, guardText, leadIntentText, languageText, msg, fill, phone, load, FILE };
+// The lesson from Isrotel's "סאני" (30/08): an answer that shows offers ends by
+// moving the conversation forward. These are the wordings the bot rotates
+// through; an empty list in the file switches the behaviour off entirely.
+const NEXT_STEP_DEFAULT = [
+  'איזו מההצעות מדברת אליכם? אפשר גם לבדוק כיוון אחר.',
+  'רוצים שאדייק לפי משהו שחשוב לכם — קרבה למסלולים, ספא, קייטנה?',
+  'מתלבטים בין שתיים? כתבו לי אילו ואסביר במה הן שונות.',
+  'רוצים שאבדוק גם חודש או יעד אחר להשוואה?',
+];
+function nextSteps() {
+  const n = load().next_step_he;
+  if (n && Array.isArray(n.variants_he)) return n.variants_he.filter(Boolean);
+  return NEXT_STEP_DEFAULT;
+}
+
+module.exports = { forAsking, forAnswering, objection, officeOpen, officeState, handoffLine, closing, guardText, leadIntentText, languageText, msg, fill, phone, nextSteps, load, FILE };

@@ -34,7 +34,9 @@ const FILES = {
     res.end(fs.readFileSync(file));
   }).listen(PORT);
 
-  const browser = await chromium.launch();
+  // same pinned binary as tests/test-widget.js — a bare launch() asks for the
+  // headless shell, which is a separate download and is not always present
+  const browser = await chromium.launch({ executablePath: process.env.CHROME || '/opt/pw-browsers/chromium' });
   const errors = [];
   const open = async query => {
     const page = await browser.newPage();

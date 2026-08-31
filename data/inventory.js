@@ -7,6 +7,7 @@
 // the room cell. We use that cached code as primary status signal and
 // cross-check with the cell's actual fill RGB + text rules.
 const path = require('path');
+const SEASON = require('../server/season.js');
 const { readWorkbook } = require('../tools/xlsx-read.js');
 
 /* ================= sheet configuration ================= */
@@ -54,7 +55,11 @@ function parseDateLabel(text) {
   const m = text.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
   if (!m) return null;
   let [, d, mo, y] = m;
-  if (!y) y = +mo >= 11 ? '2026' : '2027'; // winter 26/27 season
+  // The season's own years, from data/config/date-labels.json. This line used
+  // to hard-code 2026/2027: next season it would have stamped the WRONG year
+  // onto every row with a bare dd/mm label and produced a complete,
+  // self-consistent, wrong inventory that no test catches.
+  if (!y) y = String(SEASON.yearOf(+mo));
   const iso = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   const label = text.replace(m[0], '').replace(/[\s-]+/g, ' ').trim(); // e.g. "חנוכה", "פורים"
   return { iso, label: label || null };
@@ -113,7 +118,7 @@ function isNonRoom(text) {
    sold  = colored (6 yellow / 4,43 green / others) or order+name present
    reserved = text contains שמור (shevet association — never sellable)
    unknown  = color/text contradiction → excluded from results               */
-function decideStatus(rawText, code, fill) {
+function decideStatus(rawText, code, fill, fillDecoded) {
   const reserved = rawText.includes('שמור');
   const soldByText = ORDER_RE.test(rawText) || hasCustomerName(rawText);
   if (reserved) return 'reserved';
@@ -124,7 +129,15 @@ function decideStatus(rawText, code, fill) {
   if (code === 2 || code === 15) return 'not_for_sale';
   // stale macro cache: helper still holds an old color but the cell itself is
   // white with no order/name (e.g. חנוכה D58, confirmed free by Tomer 23/08)
-  if (fill === null && !soldByText) return 'free';
+  // `fill === null` is NOT "the cell is white". xlsx-read returns null for a
+  // patternFill with no fgColor, for indexed 64/65 (Excel's "automatic"), and
+  // for a theme index the parsed colour scheme does not cover — all of which
+  // are cells that may well be COLOURED, i.e. sold. Reading them as free is
+  // how a whole column of sold rooms could enter the inventory, get cards,
+  // get "נשאר חדר אחד מהסוג הזה" and get a booking link.
+  // Only positive evidence of white counts; anything undecodable becomes
+  // `unknown`, which is already excluded downstream.
+  if (fill === null && !soldByText) return fillDecoded === false ? 'unknown' : 'free';
   return 'sold'; // any other non-zero color on a room row
 }
 
@@ -200,7 +213,7 @@ function parseSheet(sheet, cfg) {
         // when the text carries no room vocabulary and no שמור
         if (code === 44 && occ.notation == null && !raw.includes('שמור') &&
             !/(dbl|twin|sgl|suite|apt|appt|bedroom|bdrm|studio|premium|classic|deluxe|standard|family)/i.test(clean)) continue;
-        const status = decideStatus(raw, Number.isFinite(code) ? code : null, cell.fillRgb);
+        const status = decideStatus(raw, Number.isFinite(code) ? code : null, cell.fillRgb, cell.fillDecoded);
         rows.push({
           sheet: sheet.name, hotel: hc.hotel,
           date: dateISO, date_label: dateLabel,
@@ -222,7 +235,10 @@ function parseSheet(sheet, cfg) {
    room-type banner + inventory-code row, then one row per unit.               */
 function parseHanukkahSheet(sheet, cfg) {
   const rows = [];
-  const DATE = '2026-12-05';
+  // The date comes from the season file (labels → חנוכה → from), because the
+  // Hebrew calendar moves it every year. The sheet itself carries no date.
+  const H = SEASON.holiday('חנוכה') || {};
+  const DATE = H.from || (SEASON.bounds().start);
   const HOTEL = 'Belambra Tignes Val Claret';
   // column groups = every column whose right neighbor holds the code formula
   const groups = new Set();
@@ -241,7 +257,7 @@ function parseHanukkahSheet(sheet, cfg) {
       if (occ.min == null && !/\bCONN\b/i.test(clean)) continue; // type banners have no pax
       // code 44 here is either a stale-cache room (D58) or a yellow-filled
       // room with a stale code (J49) — both are real rooms, decided by fill+text
-      const status = decideStatus(raw, Number.isFinite(code) ? code : null, cell.fillRgb);
+      const status = decideStatus(raw, Number.isFinite(code) ? code : null, cell.fillRgb, cell.fillDecoded);
       rows.push({
         sheet: sheet.name, hotel: HOTEL,
         date: DATE, date_label: 'חנוכה',
@@ -288,7 +304,8 @@ function stats(rows) {
 module.exports = { parseInventory, stats, sanitizeRoomText, parseOccupancy, parseDateLabel };
 
 if (require.main === module) {
-  const p = process.argv[2] || path.join(__dirname, '..', 'source-data', 'commitments-winter-2027.xlsm');
+  const p = process.argv[2] ||
+    path.join(__dirname, '..', 'source-data', `commitments-winter-${SEASON.endYear()}.xlsm`);
   const rows = parseInventory(p);
   console.log(JSON.stringify(stats(rows), null, 2));
 }

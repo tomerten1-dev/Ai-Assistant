@@ -230,5 +230,38 @@ lang('ok', null);
 lang('יש לכם ski-in ski-out בVal Thorens?', null);
 lang('054-1234567', null);
 
+/* ---- every number must come from the payload (ported from prompt-answer.js,
+   which held this check and was wired to nothing — 30/08) ---- */
+{
+  const numCards = [{ hotel: 'Casa Karina', date: '2027-02-05', nights: 7,
+    room: 'DBL 2-3', country: 'bulgaria', price_range: '₪₪', facts_he: [] }];
+  const numPayload = JSON.stringify({ dates: ['2027-02-05'], nights: 7 });
+  const numFallback = 'הנה מה שנראה פנוי אצלנו.';
+  const v = (text, userText) => phrasing.validate(text,
+    { cards: numCards, fallback: numFallback, payload: numPayload, userText });
+  const rejects = (name, text, userText) => t(name, () =>
+    assert.ok(!v(text, userText).ok, 'accepted: ' + text));
+  const accepts = (name, text, userText) => t(name, () => {
+    const r = v(text, userText);
+    assert.ok(r.ok, 'rejected (' + r.why + '): ' + text);
+  });
+
+  rejects('a date the payload never mentioned is rejected, in Hebrew words too',
+    'יש לנו יציאה ב-22 בפברואר לקאזה קארינה.');
+  rejects('an invented remaining-rooms count is rejected', 'נשארו 2 חדרים אחרונים.');
+  rejects('an invented capacity is rejected', 'המלון מתאים ל-8 נוסעים.');
+  rejects('a journey time is rejected (red rule 5)', 'אנחנו 40 דקות מהשדה.');
+  rejects('a journey time in words is rejected too', 'הנסיעה לוקחת 2 שעות בערך.');
+  accepts('numbers that ARE in the payload pass', 'היציאה ל-7 לילות בקאזה קארינה.');
+  accepts('a number the customer themselves wrote passes',
+    'רשמתי 4 נוסעים.', 'אנחנו 4 נוסעים בפברואר');
+  accepts('an ordinary sentence with no numbers still passes',
+    'הנה מה שפנוי בתנאים שביקשתם, ונציג יאשר סופית.');
+  t('without a payload the numeric rule does not fire (older call sites)', () => {
+    assert.ok(phrasing.validate('יש לנו יציאה ב-22 בפברואר.',
+      { cards: numCards, fallback: numFallback }).ok);
+  });
+}
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

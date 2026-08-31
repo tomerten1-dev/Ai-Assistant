@@ -74,9 +74,16 @@
 -->
 <script>
   (function () {
+    // Same two values as the tag above — keep them in step. This line used to
+    // ship with the literal string 'BOT_HOST/pingwin-prefill.js?v=BOT_VERSION',
+    // so pasted as-is it 404s and the prefill never runs anywhere.
+    var BOT_HOST = 'https://bot.pingwin.co.il';
+    var BOT_VERSION = '0.2.0';
+    if (window.__pingwinPrefillTag) return;      // GTM preview / SPA navigation
+    window.__pingwinPrefillTag = true;
     var s = document.createElement('script');
     s.async = true;
-    s.src = 'BOT_HOST/pingwin-prefill.js?v=BOT_VERSION';
+    s.src = BOT_HOST + '/pingwin-prefill.js?v=' + BOT_VERSION;
     document.head.appendChild(s);
   })();
 </script>

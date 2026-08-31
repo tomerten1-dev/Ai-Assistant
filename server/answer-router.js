@@ -52,10 +52,18 @@ ${entries.map(topicLine).join('\n')}
 
 // The model's answer is a key into our own data or it is nothing. Anything we
 // do not recognise becomes null rather than a guess.
+const { parseModelJSON } = require('./claude.js');
+
 function pick(raw, entries) {
   let ids = [];
   try {
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    // parseModelJSON, not JSON.parse: only OpenAI gets a JSON-mode flag, so on
+    // the Claude provider the reply can arrive wrapped in ```json fences. A
+    // bare JSON.parse threw on those, returned null, and the null was cached —
+    // which made the semantic router, the whole point of which is to stop the
+    // regex whack-a-mole, systematically dead with no signal anywhere.
+    const parsed = typeof raw === 'string' ? parseModelJSON(raw) : raw;
+    if (!parsed) return null;
     // the old single-id shape still parses — a cached reply must not break
     ids = Array.isArray(parsed && parsed.ids) ? parsed.ids
       : (parsed && parsed.id ? [parsed.id] : []);

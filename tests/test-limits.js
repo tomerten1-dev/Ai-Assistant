@@ -34,8 +34,13 @@ async function unit() {
     delete process.env.RATE_LEAD_PER_10MIN;
   });
   await t('turn cap', () => {
+    // 30/08: the count now lives server-side, keyed by conversation id. It used
+    // to ride in slots._turns, which the browser sends — so a client that
+    // always sent 0 never reached the cap. A conversation with no id at all
+    // still falls back to the old counter, so omitting the id is not a way out.
     process.env.MAX_TURNS_PER_CHAT = '2';
-    const s = {};
+    limits._resetTurns();
+    const s = { _cid: 'ctestcap1' };
     assert.strictEqual(limits.turnsExceeded(s), false);
     assert.strictEqual(limits.turnsExceeded(s), false);
     assert.strictEqual(limits.turnsExceeded(s), true);
@@ -74,13 +79,28 @@ async function unit() {
     assert.strictEqual(await limits.verifyTurnstile('tok', '1.1.1.1', async () => ({ json: async () => ({ success: true }) })), true);
     delete process.env.TURNSTILE_SECRET;
   });
-  await t('client ip honours TRUST_PROXY only when set', () => {
-    const req = { headers: { 'x-forwarded-for': '9.9.9.9, 10.0.0.1' }, socket: { remoteAddress: '127.0.0.1' } };
+  await t('client ip counts X-Forwarded-For from the right, not the left', () => {
+    // 30/08: this test used to assert '9.9.9.9' — the FIRST element — which is
+    // the one the client writes. A proxy appends, so the rightmost entries are
+    // ours and the leftmost is forgeable. Reading [0] made every rate limit
+    // optional: a random header per request bought a fresh bucket each time.
+    const req = { headers: { 'x-forwarded-for': '9.9.9.9, 203.0.113.5' }, socket: { remoteAddress: '127.0.0.1' } };
     delete process.env.TRUST_PROXY;
-    assert.strictEqual(limits.clientIp(req), '127.0.0.1');
+    delete process.env.CF_CONNECTING_IP;
+    assert.strictEqual(limits.clientIp(req), '127.0.0.1', 'no TRUST_PROXY → socket address');
     process.env.TRUST_PROXY = '1';
-    assert.strictEqual(limits.clientIp(req), '9.9.9.9');
+    assert.strictEqual(limits.clientIp(req), '203.0.113.5', 'one proxy → the address IT recorded');
+    // a forged header cannot buy a new bucket, however many entries it invents
+    const forged = { headers: { 'x-forwarded-for': 'a, b, c, d, 203.0.113.5' }, socket: { remoteAddress: '127.0.0.1' } };
+    assert.strictEqual(limits.clientIp(forged), '203.0.113.5', 'padding the header changed the key');
+    process.env.TRUST_PROXY = '2';
+    assert.strictEqual(limits.clientIp(req), '9.9.9.9', 'two proxies → one hop further left');
     delete process.env.TRUST_PROXY;
+    // Cloudflare overwrites its own header rather than appending, so it wins
+    process.env.CF_CONNECTING_IP = '1';
+    const cf = { headers: { 'cf-connecting-ip': '198.51.100.7', 'x-forwarded-for': 'a, b' }, socket: { remoteAddress: '127.0.0.1' } };
+    assert.strictEqual(limits.clientIp(cf), '198.51.100.7');
+    delete process.env.CF_CONNECTING_IP;
   });
 }
 

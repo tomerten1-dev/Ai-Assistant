@@ -34,23 +34,69 @@ function checkRate(kind, ip, now) {
       || hit(`c60:${ip}`, num('RATE_CHAT_PER_HOUR', 300), 3_600_000, now);
   }
   if (kind === 'lead') return hit(`l:${ip}`, num('RATE_LEAD_PER_10MIN', 5), 600_000, now);
+  // thumbs up/down on answers — cheap to store, but still not worth a flood
+  if (kind === 'feedback') return hit(`f:${ip}`, num('RATE_FEEDBACK_PER_MIN', 20), 60_000, now);
   return null;
 }
 
+/* A proxy APPENDS to X-Forwarded-For; it does not replace it. So element [0]
+   is the one the CLIENT wrote, and reading it made every limit here optional:
+   a random value per request gave an attacker a fresh bucket every time —
+   unlimited model spend, unlimited lead mail, unlimited disk, from one machine.
+   Counting from the RIGHT skips exactly the hops we put in front of ourselves,
+   and those are the only entries we can trust.
+   TRUST_PROXY=1 means one proxy (the common case); TRUST_PROXY=2 means two.
+   CF_CONNECTING_IP=1 prefers Cloudflare's own header, which it overwrites
+   rather than appends and is therefore not client-controlled at all. */
 function clientIp(req) {
-  if (process.env.TRUST_PROXY && req.headers['x-forwarded-for']) {
-    return String(req.headers['x-forwarded-for']).split(',')[0].trim();
+  const socketIp = (req.socket && req.socket.remoteAddress) || 'unknown';
+  if (process.env.CF_CONNECTING_IP && req.headers['cf-connecting-ip']) {
+    return String(req.headers['cf-connecting-ip']).trim() || socketIp;
   }
-  return (req.socket && req.socket.remoteAddress) || 'unknown';
+  const hops = Math.max(0, Math.trunc(Number(process.env.TRUST_PROXY) || 0));
+  if (!hops) return socketIp;
+  const xff = req.headers['x-forwarded-for'];
+  if (!xff) return socketIp;
+  const parts = String(xff).split(',').map(x => x.trim()).filter(Boolean);
+  if (!parts.length) return socketIp;
+  // the last `hops` entries were written by our own proxies; the one just
+  // before them is the furthest address we are entitled to believe
+  const idx = parts.length - hops;
+  return parts[idx >= 0 ? idx : 0] || socketIp;
 }
 
-/* ---------- per-conversation turn cap ---------- */
+/* ---------- per-conversation turn cap ----------
+   Counted HERE, not in the slots the browser sends back. The count used to
+   ride along in `slots._turns`, so a client that always sent 0 never reached
+   the cap — the limit was whatever the browser said it was.
+   Keyed by conversation id, swept lazily like the rate buckets. A conversation
+   nobody has touched for a day is gone; the widget's own 14-day restore keeps
+   a conversation alive far longer than that, and a returning customer starting
+   fresh against the cap is the right outcome anyway. */
 const MAX_TURNS = () => num('MAX_TURNS_PER_CHAT', 80);
-function turnsExceeded(slots) {
-  const t = (+slots._turns || 0) + 1;
-  slots._turns = t;
-  return t > MAX_TURNS();
+const TURN_TTL_MS = 24 * 60 * 60 * 1000;
+const turns = new Map(); // cid → { n, seenAt }
+function turnsExceeded(slots, now = Date.now()) {
+  // No conversation id should be impossible — server.js mints one before this
+  // runs — but "no id" must never be the cheap way OUT of the cap, so it falls
+  // back to the old in-slots counter rather than to `allowed`.
+  const cid = slots && typeof slots._cid === 'string' && slots._cid ? slots._cid : null;
+  if (!cid) {
+    if (!slots) return false;
+    slots._turns = (+slots._turns || 0) + 1;
+    return slots._turns > MAX_TURNS();
+  }
+  if (turns.size > 20_000) for (const [k, v] of turns) if (now - v.seenAt > TURN_TTL_MS) turns.delete(k);
+  let rec = turns.get(cid);
+  if (!rec || now - rec.seenAt > TURN_TTL_MS) { rec = { n: 0, seenAt: now }; turns.set(cid, rec); }
+  rec.n++; rec.seenAt = now;
+  // still reported back so the widget and the logs can see it; it is just no
+  // longer the source of truth
+  slots._turns = rec.n;
+  return rec.n > MAX_TURNS();
 }
+// tests and long-running processes need a way to start clean
+function _resetTurns() { turns.clear(); }
 
 /* ---------- daily LLM budget ---------- */
 let dayKey = null, dayStartUsd = 0;
@@ -95,5 +141,6 @@ async function verifyTurnstile(token, ip, fetchImpl = fetch) {
   } catch { return false; }
 }
 
-module.exports = { checkRate, clientIp, turnsExceeded, budgetExceeded, withTimeout,
+module.exports = {
+  _resetTurns, checkRate, clientIp, turnsExceeded, budgetExceeded, withTimeout,
   turnstileOn, stamp, stampValid, verifyTurnstile, _buckets: buckets };

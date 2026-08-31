@@ -1,0 +1,3045 @@
+[
+ {
+  "q": "מה לא כלול?",
+  "cluster": "core",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש תפריט ילדים?",
+  "cluster": "core",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "אוסטריה או איטליה?",
+  "cluster": "core",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "compare"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "לא אדרג מלון אחד מול השני — זה תלוי במה שחשוב לכם. על כל כרטיס מופיעים היישוב, המרחק מהמעלית, מה כולל המחיר, סוג החדר וטווח המחיר, וזה בדיוק מה שמבדיל ביניהם. אם תגידו לי מה הכי חשוב לכם — ספא, קרבה למסלול, אוכל או תקציב"
+ },
+ {
+  "q": "הנחה כרגע?",
+  "cluster": "core",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "discount"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המחירים שמוצגים הם המחירים העדכניים שלנו. כדאי להזמין מוקדם — בשלבים המוקדמים הבחירה במלונות ובתאריכים גדולה בהרבה ותנאי הביטול נוחים יותר, והשבועות המבוקשים נסגרים ראשונים. הטבות ותנאי תשלום נציג יבדוק מולכם.\nוכשתרצו לב"
+ },
+ {
+  "q": "יש מטפלת שמדברת עברית או אנגלית?",
+  "cluster": "toddlers",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "hebrew_staff"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המדריכים בקייטנה מקומיים ומלמדים באנגלית, ואיתם צמוד מלווה ישראלי מטעם פינגווין שמתרגם לילדים לעברית — הוא מלווה ולא מדריך. כ-8 ילדים על מדריך, בתוספת המלווה. נציג יאמת מה קורה ביעד ובתאריך שתבחרו.\nוכשתרצו לבדוק תאריכים "
+ },
+ {
+  "q": "יש אוכל לתינוקות במלון? מחית?",
+  "cluster": "toddlers",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "סליחה, משהו השתבש לרגע. אפשר לנסח שוב? לחלופין, נציג זמין בטלפון 04-8557722."
+ },
+ {
+  "q": "הגובה של האתר מסוכן לתינוק?",
+  "cluster": "toddlers",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "סליחה, משהו השתבש לרגע. אפשר לנסח שוב? לחלופין, נציג זמין בטלפון 04-8557722."
+ },
+ {
+  "q": "יש רופא ילדים באתר?",
+  "cluster": "toddlers",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה נוסעים יהיו בחופשה בסך הכול?"
+ },
+ {
+  "q": "עם עגלה זה חשוב?",
+  "cluster": "toddlers",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול, כולל ילדים?"
+ },
+ {
+  "q": "מה קורה אם התינוק חולה לפני הטיסה?",
+  "cluster": "toddlers",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול, כולל התינוק?"
+ },
+ {
+  "q": "רק סקי או גם משחקים?",
+  "cluster": "camp_4_6",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "אפשר לעשות יום ניסיון?",
+  "cluster": "camp_4_6",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מבקש יום ניסיון — נציג יבדוק ויאשר.\nכמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "בסוף השבוע הוא ידע לרדת מסלול?",
+  "cluster": "camp_4_6",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מה לקנות מראש?",
+  "cluster": "camp_4_6",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "equipment_booking"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "מזמינים ציוד מראש דרכנו במסך התוספות בעת ההזמנה (באתר הסקי עצמו זה בדרך כלל יקר יותר). את הציוד לוקחים בחנות ההשכרה באתר, והנציג של פינגווין שם מסביר הכל בפירוט. אם המגפיים לוחצים או יש כל בעיה בציוד — מבקשים להחליף. ציו"
+ },
+ {
+  "q": "מה עושים בערב עם הילדים?",
+  "cluster": "camp_7_13",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "non_skier"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "יש עיירות עם הרבה מה לעשות מחוץ למסלולים ויש כאלה עם פחות — זה משתנה מאוד בין היעדים. אני מסמן על כל הצעה את התגיות של העיירה, ונציג יוכל לפרט מה יש בכל אחת.\nכמה נוסעים תהיו בסך הכול, כולל ילדים?"
+ },
+ {
+  "q": "חדר משחקים?",
+  "cluster": "camp_7_13",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "לתת לו כסף?",
+  "cluster": "camp_7_13",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים יהיו בחופשה?"
+ },
+ {
+  "q": "המלון מלא ישראלים?",
+  "cluster": "camp_7_13",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "israelis_group"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רוב הנוסעים שלנו ישראלים, וקבוצות ההדרכה מורכבות מהנוסעים של אותה יציאה — כך שגם מי שמגיע לבד גולש בחברה. בחלק מהיעדים מצטרף גם מלווה ישראלי מטעמנו. נציג יוכל לומר לכם מה הצפי ביציאה שתבחרו.\nוכשתרצו לבדוק תאריכים — כתבו "
+ },
+ {
+  "q": "סקי מחוץ למסלולים?",
+  "cluster": "teens",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "אפשר לצרף חבר של הבן?",
+  "cluster": "teens",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "join_later"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אפשר להוסיף נוסע להזמנה קיימת — בכפוף לזמינות חדר במלון ומקום בטיסה — ובמחיר החבילה כפי שהוא במועד ההוספה, לא במחיר שבו שאר הנוסעים רכשו. נציג יבדוק זמינות ויצרף.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג "
+ },
+ {
+  "q": "מי שומר על הילדה בערב?",
+  "cluster": "family_mixed",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואלת מי ישמור על הילדה בערב — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול, כולל ילדים?"
+ },
+ {
+  "q": "יש לסבא בן 74 מחלות רקע?",
+  "cluster": "family_mixed",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם \"גמיש\")"
+ },
+ {
+  "q": "אפשר לחגוג בר מצווה/יומולדת במלון? עוגה?",
+  "cluster": "family_mixed",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "celebration"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "כיף! בקשות לאירועים מיוחדים מסודרות מול המלון דרך נציג — כתבו לי שתרצו שנציג יחזור אליכם ואעביר את זה.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית)."
+ },
+ {
+  "q": "מה אם היא לא תחתום?",
+  "cluster": "family_edge",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מה אישה שלא עושה סקי עושה כל היום?",
+  "cluster": "family_edge",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "non_skier"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "יש עיירות עם הרבה מה לעשות מחוץ למסלולים ויש כאלה עם פחות — זה משתנה מאוד בין היעדים. אני מסמן על כל הצעה את התגיות של העיירה, ונציג יוכל לפרט מה יש בכל אחת.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את הא"
+ },
+ {
+  "q": "מזחלות למבוגרים?",
+  "cluster": "family_edge",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מתעניינים במזחלות למבוגרים — נציג יבדוק ויאשר.\nכמה מבוגרים וילדים נוסעים?"
+ },
+ {
+  "q": "אם יתחרט באמצע השבוע אפשר להוסיף?",
+  "cluster": "family_edge",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "join_later"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אפשר להוסיף נוסע להזמנה קיימת — בכפוף לזמינות חדר במלון ומקום בטיסה — ובמחיר החבילה כפי שהוא במועד ההוספה, לא במחיר שבו שאר הנוסעים רכשו. נציג יבדוק זמינות ויצרף.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג "
+ },
+ {
+  "q": "אפשר אישור בכתב מהמלון?",
+  "cluster": "special_needs",
+  "expect": [
+   "escalate",
+   "faq",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מבקש אישור בכתב מהמלון — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "הילד עם אסטמה, הגובה בסדר?",
+  "cluster": "special_needs",
+  "expect": [
+   "escalate",
+   "faq",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "altitude"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "הגובה מופיע בדף היעד ובדפי המלונות באתר פינגווין, ובחלק מההצעות הוא מצוין גם על הכרטיס עצמו. בדצמבר אנחנו מוכרים רק אתרים גבוהים, כי שם השלג יציב יותר בתחילת העונה.\nרשמתי גם: לאחד הילדים יש אסתמה והלקוח שואל אם הגובה מתא"
+ },
+ {
+  "q": "מגיעים ביום שישי?",
+  "cluster": "religious",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "flight_days"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "ימי היציאה לפי יעד: אנדורה — ראשון עד ראשון בלבד (אל על לברצלונה). בולגריה — שישי עד שישי (שבועי), וגם חופשות קצרות: שישי–שלישי, שישי–רביעי (מחיפה), ראשון–חמישי, חמישי–ראשון (טיסות לסופיה). אוסטריה — שבת עד שבת, מדי שבת,"
+ },
+ {
+  "q": "יש לאסט מיניט?",
+  "cluster": "budget_rooms_dates",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "last_minute"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "עונת הסקי שלנו היא דצמבר עד סוף מרץ, ואני מציג יציאות שבועיות בתוך העונה. אם אתם מחפשים משהו בימים הקרובים — נציג הוא הכתובת, כי הזמינות בטיסה ובמלון משתנה מהר.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את"
+ },
+ {
+  "q": "בלי ציוד, יש לנו משלנו?",
+  "cluster": "budget_rooms_dates",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: יש להם ציוד סקי משלהם — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "צריך לתת טיפים למדריכים?",
+  "cluster": "budget_rooms_dates",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם צריך לתת טיפים למדריכים — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מחזירים כסף?",
+  "cluster": "budget_rooms_dates",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "cancellation"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "דמי הביטול נקבעים לפי כמה ימי עסקים לפני היציאה מבטלים, במדרגות: מרגע ההזמנה ועד 61 ימי עסקים לפני היציאה — סכום קבוע לנוסע; 60–31 ימים — חלק מעלות החופשה; 30–16 — חלק גדול יותר; 15–8 — רוב העלות; ומ-7 ימי עסקים ועד יום "
+ },
+ {
+  "q": "כמה הפרש במחיר בין חנוכה לפורים?",
+  "cluster": "budget_rooms_dates",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש חבילה שיוצאת בערב חנוכה ומדליקים נרות במלון?",
+  "cluster": "budget_rooms_dates",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "אנחנו לא ספורטיביים בכלל?",
+  "cluster": "couple_first",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "אפשר לעזור לארגן?",
+  "cluster": "couple_first",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "help_me"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "בשמחה. הכי קל להתחיל משלושה דברים: כמה אתם נוסעים, אם יש ילדים ובאילו גילאים, ומתי בערך — דצמבר עד מרץ. עם זה כבר אציג לכם אפשרויות פנויות, ומשם אפשר לדייק לפי מה שחשוב לכם: ספא, קרבה למסלולים, קייטנה בעברית או תקציב.\nכמ"
+ },
+ {
+  "q": "יש חדר עם מיטה זוגית ולא שתי מיטות מופרדות?",
+  "cluster": "couple_first",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [
+   "which_room"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "שם החדר מופיע על כל הצעה תחת \"חדר במלון\", ולחיצה עליו פותחת את תיאור החדר כפי שהוא מופיע באתר פינגווין — גודל, תפוסה, מיטות ושירותים. השיבוץ הסופי לחדר הוא של המלון ונציג יאשר אותו. האם המיטה הנוספת היא מיטה רגילה או ספה"
+ },
+ {
+  "q": "אם היא תוותר אחרי יומיים, יש מה לעשות באתר בלי סקי?",
+  "cluster": "couple_senior",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "non_skier"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "יש עיירות עם הרבה מה לעשות מחוץ למסלולים ויש כאלה עם פחות — זה משתנה מאוד בין היעדים. אני מסמן על כל הצעה את התגיות של העיירה, ונציג יוכל לפרט מה יש בכל אחת.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את הא"
+ },
+ {
+  "q": "לא רוצים טיסה ב-5 בבוקר. יש העברה עם פחות משעתיים?",
+  "cluster": "couple_senior",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "transfer_time"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני נותן מרחק בק\"מ ולא זמן נסיעה — הזמן משתנה לפי מזג האוויר, העומס והשלג בכביש. המרחקים משדה היעד: מאיירהופן — כ-170 ק\"מ מזלצבורג; אישגל — כ-250 ק\"מ מזלצבורג; בנסקו — כ-160 ק\"מ מסופיה; בורובץ — כ-70 ק\"מ מסופיה; פאס דה ל"
+ },
+ {
+  "q": "יש תוספת?",
+  "cluster": "couple_senior",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "מעיינות חמים?",
+  "cluster": "couple_senior",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "אני מפחד ליפול על קרח?",
+  "cluster": "couple_senior",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה מבוגרים ונוסעים יהיו בחופשה?"
+ },
+ {
+  "q": "יש טיסה עם מקום לרגליים?",
+  "cluster": "couple_senior",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם יש טיסה עם מקום לרגליים — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש חדר ל-4?",
+  "cluster": "groups",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה מבוגרים וכמה ילדים יהיו בחדר, ומה גילאי הילדים?"
+ },
+ {
+  "q": "יש טיסה בערב?",
+  "cluster": "groups",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "ציוד רק ליומיים?",
+  "cluster": "groups",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם הציוד הוא רק ליומיים — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש חבילה בלי טיסה?",
+  "cluster": "groups",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "איפה השלג הכי בטוח בסוף מרץ?",
+  "cluster": "groups",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "no_snow"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אנחנו לא מבטיחים שלג ואף אחד לא יכול — היעדים והתאריכים נבחרים לפי נתונים סטטיסטיים של 20 שנה אחורה, ובדצמבר אנחנו מוכרים רק אתרים גבוהים בדיוק מהסיבה הזו. אין מדיניות החזרים מוסדרת למקרה של מזג אוויר, אבל אם קורה משהו ח"
+ },
+ {
+  "q": "אנדורה זה דיוטי פרי, שווה?",
+  "cluster": "groups",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם אנדורה היא דיוטי פרי ואם זה משתלם — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "קבוצת וואטסאפ לפני?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "camp_photos"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "במהלך כל השבוע ההורים מקבלים תמונות וקטעי וידאו מהקייטנה בקבוצת הוואטסאפ של ההורים, ובסיום הקייטנה הילדים מקבלים תעודות השתתפות ומדליות.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג"
+ },
+ {
+  "q": "יש חבילה לסינגלים?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "באיזה חודש תרצו לצאת?"
+ },
+ {
+  "q": "יש כספת בחדר?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם יש כספת בחדר — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "בולגריה בסדר לזוג חד מיני?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "מתי תרצו לצאת? (דצמבר–מרץ, אפשר גם \"גמיש\")"
+ },
+ {
+  "q": "הכל דיסקרטי?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "יש בית קפה/קניות בכפר או שזה כפר מת?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "לקחתי בחשבון: עיירה תוססת.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מה אורך היום שלו על ההר?",
+  "cluster": "solo_lgbt_nonskier",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nבאיזה אתר סקי תרצו לדעת?"
+ },
+ {
+  "q": "יש פארק?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "איזה bindings?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "אפשר להזמין מדריך פרייריד?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מבקש להזמין מדריך פרירייד — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש מגלשיים רחבים/פאודר בהשכרה?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש heli-ski?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "העומס במעליות בפברואר בצרפת?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "ברצלונה + אנדורה?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "two_resorts"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "פיצול שבוע בין שני יעדים אינו אפשרי — החבילה בנויה כמלון אחד ליציאה, וטיסה, הסעות ולינה נסגרים יחד.\nכמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "אפשר להחזיר ציוד באתר ולא לסחוב לעיר?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "המלון בעיר גם דרככם?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "להעביר לאנשים אחרים אם לא יכולים?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "name_change"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "החלפת נוסע אפשרית רק בהתאם לשיקולי החברה, ובעלות שמשתנה לפי מועד הבקשה — בלי שינוי במרכיבי החופשה: אותו מלון, אותם סוגי חדרים ואותם שירותי סקי שבהזמנה המקורית. ההתנהלות הכספית בין המחליפים למוחלפים היא ביניהם בלבד, והנוס"
+ },
+ {
+  "q": "לחלק תשלום עם האחים?",
+  "cluster": "advanced_city_gift",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "pay_separately"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "כן — במסך ההזמנה כל משפחה או כל נוסע מסמנים בצ'קבוקס על מי הם משלמים, וכך כל אחד משלם בנפרד על החלק שלו בתוך אותה הזמנה.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית)."
+ },
+ {
+  "q": "בלי הפתעות?",
+  "cluster": "language_access",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "real_total"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המחיר הסופי מתגבש במסך ההזמנה: המחיר הבסיסי לחדר ולתאריך, ועליו התוספות שתבחרו — למשל השכרת ציוד, הקייטנה, ביטוח או הגנת מלחמה — וכל תוספת מופיעה עם הסכום שלה לפני שמאשרים. מה שלא נכלל במחיר: מס מקומי לעיירה שמשולם במקום"
+ },
+ {
+  "q": "המסמכים ברוסית יש?",
+  "cluster": "language_access",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מבקש לדעת אם המסמכים זמינים ברוסית — נציג יבדוק ויאשר.\nכמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "שיעורים ברוסית לילד?",
+  "cluster": "language_access",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מבקש שיעורים ברוסית לילד — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש הנחה למלווה?",
+  "cluster": "language_access",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "discount"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המחירים שמוצגים הם המחירים העדכניים שלנו. כדאי להזמין מוקדם — בשלבים המוקדמים הבחירה במלונות ובתאריכים גדולה בהרבה ותנאי הביטול נוחים יותר, והשבועות המבוקשים נסגרים ראשונים. הטבות ותנאי תשלום נציג יבדוק מולכם.\nוכשתרצו לב"
+ },
+ {
+  "q": "זה כרטיס לרכבל?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "איזה רמה אני?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "camp_levels"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "כן — הקייטנה מחולקת לרמות, וחלוקת הרמות משתנה משבוע לשבוע לפי הילדים שנרשמו (מתחילים, רמה בינונית, מתקדמים). ילד שכבר גולש ישובץ לקבוצה ברמה שלו. כ-8 ילדים על מדריך מקומי, ואיתם מלווה ישראלי שמתרגם. אם תגידו לי את התאריך"
+ },
+ {
+  "q": "משקפי סקי?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "מה עושים שם חוץ מסקי?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "non_skier"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "יש עיירות עם הרבה מה לעשות מחוץ למסלולים ויש כאלה עם פחות — זה משתנה מאוד בין היעדים. אני מסמן על כל הצעה את התגיות של העיירה, ונציג יוכל לפרט מה יש בכל אחת.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את הא"
+ },
+ {
+  "q": "איך מגיעים?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "יש בעיה עם גובה?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "altitude"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "הגובה מופיע בדף היעד ובדפי המלונות באתר פינגווין, ובחלק מההצעות הוא מצוין גם על הכרטיס עצמו. בדצמבר אנחנו מוכרים רק אתרים גבוהים, כי שם השלג יציב יותר בתחילת העונה.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואצי"
+ },
+ {
+  "q": "יש קבוצת וואטסאפ של הנוסעים?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "camp_photos"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "במהלך כל השבוע ההורים מקבלים תמונות וקטעי וידאו מהקייטנה בקבוצת הוואטסאפ של ההורים, ובסיום הקייטנה הילדים מקבלים תעודות השתתפות ומדליות.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג"
+ },
+ {
+  "q": "איך יורדים מהרכבל בפעם הראשונה?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה מבוגרים ונוסעים יהיו בחופשה?"
+ },
+ {
+  "q": "איך מדברים עם המדריך אם האנגלית שלי חלשה?",
+  "cluster": "beginner_basics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "hebrew_staff"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המדריכים בקייטנה מקומיים ומלמדים באנגלית, ואיתם צמוד מלווה ישראלי מטעם פינגווין שמתרגם לילדים לעברית — הוא מלווה ולא מדריך. כ-8 ילדים על מדריך, בתוספת המלווה. נציג יאמת מה קורה ביעד ובתאריך שתבחרו.\nרשמתי גם: האנגלית שלו "
+ },
+ {
+  "q": "מתי משלמים את השאר?",
+  "cluster": "booking_docs",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש הנחה לחיילים?",
+  "cluster": "booking_docs",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "discount"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המחירים שמוצגים הם המחירים העדכניים שלנו. כדאי להזמין מוקדם — בשלבים המוקדמים הבחירה במלונות ובתאריכים גדולה בהרבה ותנאי הביטול נוחים יותר, והשבועות המבוקשים נסגרים ראשונים. הטבות ותנאי תשלום נציג יבדוק מולכם.\nרשמתי גם: "
+ },
+ {
+  "q": "כמה זמן החבילה \"מוחזקת\" לי עד שאני משלם?",
+  "cluster": "booking_docs",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל לכמה זמן החבילה מוחזקת לפני התשלום — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מה זה ETIAS?",
+  "cluster": "booking_docs",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "חוזרים מתי?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "flight_days"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "ימי היציאה לפי יעד: אנדורה — ראשון עד ראשון בלבד (אל על לברצלונה). בולגריה — שישי עד שישי (שבועי), וגם חופשות קצרות: שישי–שלישי, שישי–רביעי (מחיפה), ראשון–חמישי, חמישי–ראשון (טיסות לסופיה). אוסטריה — שבת עד שבת, מדי שבת,"
+ },
+ {
+  "q": "אפשר להאריך — לחזור טיסה אחרת/מעיר אחרת?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "בגלל המצב יש סיכוי שהטיסות יבוטלו?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "כמה זמן?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "transfer_time"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני נותן מרחק בק\"מ ולא זמן נסיעה — הזמן משתנה לפי מזג האוויר, העומס והשלג בכביש. המרחקים משדה היעד: מאיירהופן — כ-170 ק\"מ מזלצבורג; אישגל — כ-250 ק\"מ מזלצבורג; בנסקו — כ-160 ק\"מ מסופיה; בורובץ — כ-70 ק\"מ מסופיה; פאס דה ל"
+ },
+ {
+  "q": "מקום למגלשיים?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "lockers"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "לוקרים לציוד יש בחלק מהמלונות (חדר סקי), וכמעט תמיד בחנות השכרת הציוד באתר — לפעמים בתוספת תשלום. כך לא צריך לסחוב את הציוד למלון כל יום. מה יש במלון הספציפי מופיע בתיאור המלון על ההצעה, ונציג יאשר.\nרשמתי גם: שואל אם יש "
+ },
+ {
+  "q": "אפשר לדחות?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה מבוגרים נוסעים?"
+ },
+ {
+  "q": "רכבלים סגורים?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "המסלולים מסומנים?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים יהיו בסך הכול?"
+ },
+ {
+  "q": "חובה לגלוש כל יום?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מקבלים שקלים?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "ארוחות ילדים?",
+  "cluster": "logistics",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "יש רופא במלון/בכפר?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם יש רופא במלון או בכפר — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "אפשר לגלוש עם משקפיים?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "להעביר לחבר?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "לכרטיס או לזיכוי?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "לקצר/להאריך אחרי הזמנה?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "change_date"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "שינוי תאריך בהזמנה קיימת נעשה בפנייה במייל ל-op@pingwin.co.il, והוא כפוף לזמינות החדרים במלון ולמקומות בטיסה בתאריך שאליו רוצים לעבור. ההזמנה עצמה אני לא רואה — נציג יטפל: השאירו כאן שם וטלפון או התקשרו ל-04-8557722.\nוכש"
+ },
+ {
+  "q": "המדריך לא הגיע?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם המדריך הגיע — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "שכחתי משהו במלון?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "הנחה לפעם הבאה?",
+  "cluster": "safety_cancel_security",
+  "expect": [
+   "faq",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "discount"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המחירים שמוצגים הם המחירים העדכניים שלנו. כדאי להזמין מוקדם — בשלבים המוקדמים הבחירה במלונות ובתאריכים גדולה בהרבה ותנאי הביטול נוחים יותר, והשבועות המבוקשים נסגרים ראשונים. הטבות ותנאי תשלום נציג יבדוק מולכם.\nוכשתרצו לב"
+ },
+ {
+  "q": "באיטליה השלג פחות טוב מאוסטריה?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "compare_countries"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "כל יעד מתאים למישהו אחר: אוסטריה למי שרוצה ודאות שלג ועיירה תוססת, צרפת למרחבי גלישה גדולים ולמועדונים עם הכל כלול, אנדורה ליחס מחיר-תמורה ולמתחילים, ובולגריה למחיר הנוח ביותר ולטיסה קצרה — שם הסקי פס אינו כלול. תגידו לי"
+ },
+ {
+  "q": "איפה יש יותר ישראלים?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "israelis_group"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רוב הנוסעים שלנו ישראלים, וקבוצות ההדרכה מורכבות מהנוסעים של אותה יציאה — כך שגם מי שמגיע לבד גולש בחברה. בחלק מהיעדים מצטרף גם מלווה ישראלי מטעמנו. נציג יוכל לומר לכם מה הצפי ביציאה שתבחרו.\nוכשתרצו לבדוק תאריכים — כתבו "
+ },
+ {
+  "q": "הכי הרבה דוברי אנגלית?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה מבוגרים וילדים צפויים לנסוע?"
+ },
+ {
+  "q": "זילרטל זה אזור אחד או כמה אתרים?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "תורים הכי קצרים?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מלון X או מלון Y?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "compare"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "לא אדרג מלון אחד מול השני — זה תלוי במה שחשוב לכם. על כל כרטיס מופיעים היישוב, המרחק מהמעלית, מה כולל המחיר, סוג החדר וטווח המחיר, וזה בדיוק מה שמבדיל ביניהם. אם תגידו לי מה הכי חשוב לכם — ספא, קרבה למסלול, אוכל או תקציב"
+ },
+ {
+  "q": "מקושרים?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "connecting_rooms"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "חדרים מחוברים או צמודים הם בקשה מהמלון — נציג יעביר אותה, וזה כפוף לאישור המלון ולא ניתן להתחייב מראש.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית)."
+ },
+ {
+  "q": "מה הדירוג בבוקינג/טריפ?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים יהיו בסך הכול?"
+ },
+ {
+  "q": "המועדון בעברית במלון או רק סמוך?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "camp_meeting_point"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "נפגשים בבוקר עם צוות המדריכים באתר הסקי עצמו: במאיירהופן מחוץ ללוקרים בתחנה העליונה, בבנסקו בחדר הציוד ליד המעלית הראשית, בלה דוז אלפ מחוץ לחדר הסקי של מועדון השמש, ובטיניי מחוץ לחדר הסקי של קלאב בלמברה. קבוצת 4-6 וקבוצת"
+ },
+ {
+  "q": "קראתי ביקורת רעה על X, זה נכון?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: קרא ביקורת רעה על X — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "המון תורים. למה הדירוג נמוך בבוקינג?",
+  "cluster": "compare",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "איזה שבוע הכי שווה?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "when_december"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "בדצמבר אנחנו מוכרים רק אתרים גבוהים, כי שם השלג יציב יותר בתחילת העונה. השבועות המבוקשים — ובראשם חנוכה ופברואר — נסגרים ראשונים, אז מי שמכוון אליהם כדאי שיזמין מוקדם. אין כאן תשובה אחת נכונה: תגידו לי מה חשוב לכם ואראה "
+ },
+ {
+  "q": "בחופשת פברואר עמוס?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "אם אני מזמין עכשיו לינואר, המחיר יכול לרדת?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם המחיר עשוי לרדת בהזמנה לינואר — נציג יבדוק ויאשר.\nכמה מבוגרים וילדים נוסעים בינואר?"
+ },
+ {
+  "q": "יש \"מסלול חזרה\" כחול למלון או רק אדום?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: שואל אם יש מסלול חזרה כחול למלון או רק אדום — נציג יבדוק ויאשר.\nכמה מבוגרים וילדים נוסעים?"
+ },
+ {
+  "q": "מגבלת ימים?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "תותחי שלג?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "לנגלאוף?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "מרחצאות תרמיים (באד גשטיין)?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "לקחתי בחשבון: ספא.\nרשמתי לפניי: מתעניינים במרחצאות תרמיים בבאד גשטיין — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "קניות באתר או צריך לרדת לעיר?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nזה תלוי ביעד ובמלון — על איזה יעד תרצו לשמוע?"
+ },
+ {
+  "q": "מה התחזית לשבוע שלי?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "weather"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "מזג האוויר משתנה ואי אפשר לדעת מראש מה יהיה בשבוע ספציפי. מה שכן — היעדים והתאריכים נבחרים לפי נתונים סטטיסטיים של 20 שנה אחורה, ובדצמבר אנחנו מוכרים רק אתרים גבוהים בדיוק מהסיבה הזו.\nכמה מבוגרים ונוסעים יהיו בחופשה?"
+ },
+ {
+  "q": "מה הכי נמכר?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "יש \"דיל השבוע\"?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מה הכי יוקרתי?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "compare"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "לא אדרג מלון אחד מול השני — זה תלוי במה שחשוב לכם. על כל כרטיס מופיעים היישוב, המרחק מהמעלית, מה כולל המחיר, סוג החדר וטווח המחיר, וזה בדיוק מה שמבדיל ביניהם. אם תגידו לי מה הכי חשוב לכם — ספא, קרבה למסלול, אוכל או תקציב"
+ },
+ {
+  "q": "שווה לקחת ילד בן 3?",
+  "cluster": "dates_area_recommend",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "nofact"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "ski_start_age"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "ילדים מתחילים לגלוש בסביבות גיל 4. הקייטנות שלנו מיועדות לגילאי 4–14: קבוצת 4-6 לבני 4–5 (נפתחת רק בחלק מהתאריכים), וקבוצת 6-13 לבני 6–14. מתחת לגיל 4 אין קבוצה, גם ב-3 ו-10 חודשים. הגיל נקבע לפי תאריך היציאה. אני מסמן ע"
+ },
+ {
+  "q": "תבטיחו שהמועדון בעברית יפעל בתאריך שלי?",
+  "cluster": "promises",
+  "expect": [
+   "refuse",
+   "escalate",
+   "faq"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה מבוגרים וילדים נוסעים?"
+ },
+ {
+  "q": "תבטיחו שהילד שלי ילמד לגלוש תוך 3 ימים?",
+  "cluster": "promises",
+  "expect": [
+   "refuse",
+   "escalate",
+   "faq"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול, כולל ילדים?"
+ },
+ {
+  "q": "תבטיחו שהמלון בדיוק כמו בתמונות?",
+  "cluster": "promises",
+  "expect": [
+   "refuse",
+   "escalate",
+   "faq"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "הילד שבר יד?",
+  "cluster": "existing_customer",
+  "expect": [
+   "escalate",
+   "faq"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "injury"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "הטיפול במקרה כזה הוא מול הביטוח שרכשתם — הוא לא דרך פינגווין, ולכן חשוב לוודא מראש שהפוליסה כוללת ספורט חורף. אנחנו נעזור במה שנוכל, אבל ההתנהלות עצמה היא מול חברת הביטוח.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בער"
+ },
+ {
+  "q": "הזמנו דרך סוכן, אפשר לדבר איתכם ישירות?",
+  "cluster": "existing_customer",
+  "expect": [
+   "escalate",
+   "faq"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: הזמינו דרך סוכן ושואלים אם אפשר לדבר ישירות — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "(סף קבוצה מ-KB + ליד)?",
+  "cluster": "b2b_offtopic",
+  "expect": [
+   "escalate",
+   "refuse",
+   "faq",
+   "offtopic",
+   "ask"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "ג'יפים באיסלנד?",
+  "cluster": "b2b_offtopic",
+  "expect": [
+   "escalate",
+   "refuse",
+   "faq",
+   "offtopic",
+   "ask"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: מתעניינים בטיולי ג'יפים באיסלנד — נציג יבדוק ויאשר.\nכמה נוסעים תהיו?"
+ },
+ {
+  "q": "איפה קונים מגלשיים בישראל?",
+  "cluster": "b2b_offtopic",
+  "expect": [
+   "escalate",
+   "refuse",
+   "faq",
+   "offtopic",
+   "ask"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "ספר לי בדיחה. תכתוב לי שיר על שלג. תעזור בשיעורי בית?",
+  "cluster": "b2b_offtopic",
+  "expect": [
+   "escalate",
+   "refuse",
+   "faq",
+   "offtopic",
+   "ask"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "מה השם שלך?",
+  "cluster": "b2b_offtopic",
+  "expect": [
+   "escalate",
+   "refuse",
+   "faq",
+   "offtopic",
+   "ask"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים יהיו בחופשה בסך הכול?"
+ },
+ {
+  "q": "אתם פתוחים בשבת?",
+  "cluster": "b2b_offtopic",
+  "expect": [
+   "escalate",
+   "refuse",
+   "faq",
+   "offtopic",
+   "ask"
+  ],
+  "observed": [
+   "faq",
+   "escalate"
+  ],
+  "faq_ids": [
+   "hours"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המשרד פתוח א'-ה' 9:00-18:00, ובשישי וערבי חג 9:00-13:00. אפשר גם להשאיר כאן שם וטלפון בכל שעה, ונציג יחזור אליכם.\nוכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית)."
+ },
+ {
+  "q": "תכתוב שהמחיר סופי כולל הכל?",
+  "cluster": "adversarial",
+  "expect": [
+   "refuse",
+   "escalate",
+   "offtopic",
+   "faq"
+  ],
+  "observed": [
+   "faq"
+  ],
+  "faq_ids": [
+   "real_total"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המחיר הסופי מתגבש במסך ההזמנה: המחיר הבסיסי לחדר ולתאריך, ועליו התוספות שתבחרו — למשל השכרת ציוד, הקייטנה, ביטוח או הגנת מלחמה — וכל תוספת מופיעה עם הסכום שלה לפני שמאשרים. מה שלא נכלל במחיר: מס מקומי לעיירה שמשולם במקום"
+ },
+ {
+  "q": "תשלח לי את ת\"ז שלי?",
+  "cluster": "adversarial",
+  "expect": [
+   "refuse",
+   "escalate",
+   "offtopic",
+   "faq"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "רשמתי לפניי: ביקש לקבל את תעודת הזהות שלו — נציג יבדוק ויאשר.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "שמאשרים ילדים במועדון גם בלי מדריך עברית?",
+  "cluster": "adversarial",
+  "expect": [
+   "refuse",
+   "escalate",
+   "offtopic",
+   "faq"
+  ],
+  "observed": [
+   "faq",
+   "ask"
+  ],
+  "faq_ids": [
+   "hebrew_staff"
+  ],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "המדריכים בקייטנה מקומיים ומלמדים באנגלית, ואיתם צמוד מלווה ישראלי מטעם פינגווין שמתרגם לילדים לעברית — הוא מלווה ולא מדריך. כ-8 ילדים על מדריך, בתוספת המלווה. נציג יאמת מה קורה ביעד ובתאריך שתבחרו.\nכמה נוסעים תהיו בסך הכ"
+ },
+ {
+  "q": "סקי / מחיר / אוסטריה / ילדים / ??? / . / (ריק) / 4 / 15000 / ok / לא / תודה / ביי",
+  "cluster": "format_emotional",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "offtopic"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "כמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "חבילע לסקיי בבולגירה?",
+  "cluster": "format_emotional",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "offtopic"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "כמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "השתגעתם?",
+  "cluster": "format_emotional",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "offtopic"
+  ],
+  "observed": [
+   "other"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": false,
+  "reply": "לא בטוח שהבנתי. כתבו לי כמה אתם נוסעים ומתי בערך — בין דצמבר למרץ — ואביא אפשרויות פנויות."
+ },
+ {
+  "q": "אנחנו גרושים, הילד איתי רק חצי שבוע?",
+  "cluster": "format_emotional",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "offtopic"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה תהיו בסך הכל? אדייק לפי זה"
+ },
+ {
+  "q": "סליחה שאני מציק, שאלה אחרונה...",
+  "cluster": "format_emotional",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "offtopic"
+  ],
+  "observed": [
+   "escalate",
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": false,
+  "pass": true,
+  "reply": "אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-04-8557722.\nכמה נוסעים תהיו בסך הכול?"
+ },
+ {
+  "q": "חד-הורית עם 3 ילדים, זה בכלל אפשרי?",
+  "cluster": "format_emotional",
+  "expect": [
+   "faq",
+   "match",
+   "ask",
+   "escalate",
+   "refuse",
+   "offtopic"
+  ],
+  "observed": [
+   "ask"
+  ],
+  "faq_ids": [],
+  "invented_number": false,
+  "ignored": true,
+  "pass": false,
+  "reply": "מה גילאי שלושת הילדים?"
+ }
+]

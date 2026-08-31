@@ -6,6 +6,8 @@
 
 const guidance = require('./guidance.js');   // the fixed sentences and the office phone live there
 const { SkiSearch } = require('../data/filter.js');
+const season = require('./season.js');
+const labels = require('./labels.js');
 
 const HE_NUM = {
   'אחד': 1, 'אחת': 1, 'שניים': 2, 'שתיים': 2, 'שני': 2, 'שתי': 2,
@@ -67,6 +69,9 @@ const OFF_COMMITMENT = [
 
 // Customers describe what they want, not our tag names: "סאונה וג'קוזי" is
 // a spa request and "מרחק הליכה קצר מהמעליות" is a slopes-proximity request.
+// The closed vocabulary of preferences. Exported so the incoming-slot filter
+// can hold the browser to the same list — a preference is a tag this parser
+// produced, never free text the client made up.
 const PREFS = [
   [/אפרה|חיי לילה|(?:^|[^א-ת])ברים(?![א-ת])|פאבים/, 'אפרה-סקי'],
   [/ספא|סאונה|ג'?קוזי|בריכה|עיסוי|מרחץ/, 'ספא'],
@@ -385,7 +390,7 @@ function parseText(text, slots) {
   s.wrong_year = null;
   {
     const y = t.match(/(?:^|[^\d])(20\d{2})(?![\d])/);
-    if (y && +y[1] !== 2026 && +y[1] !== 2027) s.wrong_year = +y[1];
+    if (y && season.isWrongYear(+y[1])) s.wrong_year = +y[1];
   }
 
   // --- month
@@ -406,7 +411,7 @@ function parseText(text, slots) {
   // an exact day, not just its month: "12.2.27", "5/1"
   {
     const dm2 = t.match(/(?:^|[^\d])(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?![\d])/);
-    if (dm2 && +dm2[1] >= 1 && +dm2[1] <= 31 && [12, 1, 2, 3].includes(+dm2[2])) {
+    if (dm2 && +dm2[1] >= 1 && +dm2[1] <= 31 && season.inSeason(+dm2[2])) {
       s.exact_day = +dm2[1];
       s.month = +dm2[2];
     }
@@ -441,9 +446,22 @@ function parseText(text, slots) {
   // The Israeli calendar, not only the month: חנוכה תשפ"ז is 5–12.12.2026 and
   // פורים is 23–24.3.2027. A family that says "בחנוכה" means that week, and
   // was being shown the whole of December.
-  if (/חנוכה/.test(t) && !partMatch) { s.month = 12; s.month_part = 'early'; s.holiday = 'חנוכה'; }
-  else if (/פורים/.test(t) && !partMatch) { s.month = 3; s.month_part = 'late'; s.holiday = 'פורים'; }
-  else if (s.month !== (slots || {}).month) s.holiday = null;   // moved on to a plain month
+  // Hebrew holidays move by weeks between years, so their dates are DATA, not
+  // constants: data/config/date-labels.json, read through season.js. They were
+  // hard-coded to תשפ"ז — next season "בפורים" would have been filtered,
+  // silently, to the wrong third of the month, with no error anywhere.
+  let namedHoliday = null;
+  if (!partMatch) {
+    for (const [name, def] of Object.entries(season.holidays())) {
+      if (!t.includes(name)) continue;
+      if (def.month != null) s.month = def.month;
+      if (def.month_part) s.month_part = def.month_part;
+      s.holiday = name;
+      namedHoliday = name;
+      break;
+    }
+  }
+  if (!namedHoliday && s.month !== (slots || {}).month) s.holiday = null;   // moved on to a plain month
 
   // "גמיש בתאריך" said on its own RELEASES the month rather than merely filling
   // it in when empty — that is what a customer means by flexible, and until now
@@ -455,8 +473,13 @@ function parseText(text, slots) {
     s.flexible_dates = true;
     s.month_part = null;
   }
-  // and the same for the destination, which had no release at all
-  if (/לא משנה איז[הו] (?:מדינה|יעד)|לא משנה היעד|לא משנה לאן|כל יעד|כל מדינה/.test(t)) {
+  // and the same for the destination, which had no release at all.
+  // "לא משנה איפה" / "לא משנה לי היעד" said proactively, not as an answer to
+  // the destination question, used to fall through — and since 30/08 the
+  // destination gates the offers, that left a customer who had just said they
+  // don't mind being asked where they want to go. (The `answering === 'country'`
+  // branch further down still covers the plain "לא משנה" reply to the question.)
+  if (/לא משנה איז[הו] (?:מדינה|יעד)|לא משנה (?:לי )?(?:ה)?(?:יעד|מדינה|איפה|היכן)|לא משנה (?:לי |לנו )?לאן|לא חשוב (?:לי |לנו )?(?:ה)?(?:יעד|לאן|איפה)|אין (?:לי |לנו )?העדפ[הת] (?:ל)?(?:יעד|מדינה)|כל יעד|כל מדינה/.test(t)) {
     s.country = 'any'; s.destination = null; s.hotel = null;
     s.excluded_countries = []; s.excluded_destinations = [];
   }
@@ -476,7 +499,17 @@ function parseText(text, slots) {
     [/wifi|וויפי|ויי ?פיי|אינטרנט/i, 'WIFI'],
     [/ספא|סאונה|ג'קוזי|חמאם|וולנס|wellness/i, 'ספא ובריכה'],
     // hotel-page facts (data/hotel-facts.json): quoted, never inferred
+    // A HEATED pool is its own question in winter, and it is the one Isrotel's
+    // "סאני" could not answer (30/08). It is checked before the general pool
+    // pattern so the specific answer wins.
+    [/בריכה מחוממת|בריכה מחומם|בריכה חמה|מחוממת|בריכה בחורף/, 'בריכה מחוממת'],
     [/בריכ/, 'בריכה'],
+    [/חדר ?כושר|חדר אימון|חדר ספורט|\bgym\b|fitness ?(?:room|center|centre)/i, 'חדר כושר'],
+    // "מקררון?" answered nothing, and "יש מקרר בחדר?" reached the kosher entry
+    // (deliberate there — a kosher guest asks about a fridge for their own
+    // food). Either way the hotel's own page is the better answer.
+    [/מקרר|מקררון|מיני ?בר|minibar|כספת/i, 'מקרר בחדר'],
+    [/מכבס|כביסה|מכונת כביסה|לכבס/, 'מכבסה'],
     [/נוף|עם נוף|נוף להר|נוף למסלול/, 'נוף'],
     [/מרפסת|בלקון/, 'מרפסת'],
     [/מיקום|במרכז העיירה|במרכז הכפר|מרכז העיירה|שקט בלילה|רועש|רחוב ראשי|קרוב לחנויות|ליד המסעדות|מרחק מהמרכז|מהמרכז/, 'מיקום'],
@@ -487,11 +520,20 @@ function parseText(text, slots) {
     [/חדר סקי|מייבש נעליים|מייבש מגפיים|לוקר|אחסון ציוד|איפה שמים את הסקי/, 'חדר סקי'],
     [/חניה|חנייה/, 'חניה'],
     [/מעלית במלון|יש מעלית|בלי מדרגות|מדרגות/, 'מעלית במלון'],
-    [/שופץ|שיפוץ|משופץ|מתי נבנה|ישן|חדש/, 'שיפוץ'],
+    // NEVER put a bare Hebrew word here without an anchor: \b does not work
+    // after Hebrew letters, so /ישן/ matched "פלייסט-יישן" and /חדש/ matched
+    // "עולים חדשים", and both were answered as questions about renovation.
+    [/שופץ|שיפוץ|משופץ|מתי נבנה|מלון ישן|בניין ישן|המלון ישן|מלון חדש|המלון חדש|נראה ישן|נראה חדש/, 'שיפוץ'],
     [/כוכבים|דירוג המלון|איזה רמה המלון|רמת המלון/, 'דירוג המלון'],
   ];
   s.unverifiable = [];
   for (const [re, label] of UNVERIFIABLE) if (re.test(t) && !s.unverifiable.includes(label)) s.unverifiable.push(label);
+  // "יש בריכה מחוממת?" matches the heated pattern AND the plain בריכ one, and
+  // the card then answered the same question twice in a row. The specific
+  // question wins; the general one is dropped.
+  if (s.unverifiable.includes('בריכה מחוממת')) {
+    s.unverifiable = s.unverifiable.filter(x => x !== 'בריכה');
+  }
   // Which board basis, specifically. Someone asking for פנסיון מלא and shown
   // חצי פנסיון first was answered but not served.
   if (/הכל כלול|all inclusive/i.test(t)) s.board_wanted = 'all_inclusive';
@@ -788,9 +830,63 @@ function parseText(text, slots) {
 // arrive only if the customer raises them, or via the chips after results.
 // prevKey = the question the user just answered; never repeat it verbatim —
 // if the answer wasn't understood, ask again in a clearer way.
+// How many BLOCKING gaps are still open, in the same order nextQuestion asks
+// them. Sunny (30/08) frames the last one differently — "חסר לי פרט אחד: כמה
+// מבוגרים יהיו בחדר?" — and says what happens once it has it. A customer who
+// knows they are one answer away from seeing something answers it; a customer
+// who thinks the questions are endless leaves. This is the only thing the
+// count is used for, so it mirrors the ladder rather than owning it.
+// Does this message carry a subject of its own, or does it borrow one from the
+// turn before it? "וגם לילדים?" borrows; "יש חדר משפחתי?" does not.
+//
+// Sunny (Isrotel/Abra, 30/08) rewrites the borrowing kind into a standalone
+// query before it retrieves — "וגם לילדים?" became "בריכה מחוממת ילדים ים סוף
+// אילת רויאל ביץ' אילת" — and shows the customer the rewritten query. We
+// copied the rewrite; this function is the decision of when to apply it.
+//
+// The old test was a whitelist of opening words, which missed "ומתי זה?" and
+// "רק לכולם?". The real test is about every word in the message: if not one of
+// them refers to a subject, the subject is not in the message. That keeps the
+// guard that matters — a short question containing a content word ("חדר") is a
+// NEW subject, and answering it from the previous one is confidently wrong,
+// which is worse than routing it properly.
+// (\b is useless here: Hebrew letters are not \w in JS, so a word boundary
+// never matches after them — the same trap as the "ביט" pattern elsewhere.)
+const FILLER_WORD = /^(ו|גם|רק|זה|זו|זאת|הם|הן|אז|אבל|או|כן|לא|מה|יש|אין|האם|אפשר|צריך|כמה|מתי|איפה|איך|למה|מי|של|עם|את|על|כל|כולם|לכולם|לכל|לילדים|לילד|לילדה|למבוגרים|למבוגר|לתינוק|לתינוקות|שם|שמה|בעצם|כלומר|נכון|בטוח|באמת|הזה|הזאת|האלה|אחד|אחת|עד|לפני|אחרי|בשביל|לגבי|בקשר|בזה|מזה|כאן)$/;
+// Multi-word connectives that mark a continuation whatever follows them.
+const CONTINUATION_OPENER = /^\s*(ו?מה עם|ו?מה לגבי|ו?מה בקשר|וגם|ואם|ובעצם|עד מתי|עד איזה|עד גיל|מגיל)(?=\s|$|[?.,!])/;
+// Predicates: words that say something ABOUT a subject without naming one.
+// "זה כלול?" is as elliptical as "גם לילדים?" — the thing that might be
+// included is in the previous turn, not in this message.
+// Pro-forms: they point back at something rather than naming it. "רק משם?"
+// after "מאיפה הטיסות?" is exactly as elliptical as "גם לילדים?".
+const PROFORM_WORD = /^(משם|לשם|מפה|מכאן|פה|שם|אליו|אליה|אליהם|ממנו|ממנה|מהם|מהן|בו|בה|בהם|בהן|עליו|עליה|עליהם|שלו|שלה|שלהם|שלהן|אותו|אותה|אותם|אותן|כזה|כזאת|כאלה|הוא|היא|כך|ככה)$/;
+const PREDICATE_WORD = /^(כלול|כלולה|כלולים|כלולות|נכלל|נכללת|קיים|קיימת|זמין|זמינה|פנוי|פנויה|אפשרי|אפשרית|חובה|חינם|בתשלום|בסדר|מתאים|מתאימה|נשאר|נשארו|בטוח|סגור|פתוח)$/;
+function isElliptical(text) {
+  const raw = String(text || '').trim();
+  const bare = raw.replace(/[?!.,״"'׳’“”]/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = bare.split(' ').filter(Boolean);
+  if (!words.length || words.length > 5 || bare.length > 45) return false;
+  const one = w => FILLER_WORD.test(w) || PREDICATE_WORD.test(w) || PROFORM_WORD.test(w);
+  const filler = w => one(w) || one(w.replace(/^ו/, ''));
+  return words.every(filler) || CONTINUATION_OPENER.test(raw);
+}
+
+function blockingGaps(slots) {
+  const s = slots || {};
+  const kidsInCampRange = (s.children_ages || []).some(a => SkiSearch.inCampAge(a));
+  const gaps = [];
+  if (s.adults == null && !(s.notes_from_customer || []).some(n => /נוסע יחיד/.test(n))) gaps.push('adults');
+  if (!(s.children_ages || []).length && s.no_children !== true) gaps.push('children');
+  if (s.month == null) gaps.push('month');
+  if (kidsInCampRange && s.needs_hebrew_kids_club == null) gaps.push('kids_club');
+  if (s.country == null && s.destination == null) gaps.push('country');
+  return gaps;
+}
+
 function nextQuestion(slots, prevKey) {
   let q = null;
-  const kidsInCampRange = (slots.children_ages || []).some(a => a >= 4 && a <= 13);
+  const kidsInCampRange = (slots.children_ages || []).some(a => SkiSearch.inCampAge(a));
   // Nothing blocks any more. The bot searches with whatever it has and asks
   // alongside the offers, because a customer who has to answer three questions
   // before seeing anything is being interviewed, not helped (Tomer, 24/08).
@@ -810,12 +906,17 @@ function nextQuestion(slots, prevKey) {
   // a kids club can invalidate an entire week, so it is worth asking up front
   else if (kidsInCampRange && slots.needs_hebrew_kids_club == null)
     q = { key: 'kids_club', blocking: true, he: 'תרצו קייטנת סקי בעברית לילדים?' };
-  // non-blocking: these sharpen the match, but the customer sees offers first
+  // Where they want to go decides WHICH packages qualify, so it is asked before
+  // the offers, not after them (Tomer, 30/08 — the "like Sunny" rule). Three
+  // hotels in three different countries is what the bot showed when it did not
+  // know this, and it is the thing that made the offers feel like a catalogue.
+  // "לא משנה" is a fine answer and opens the gate just as well.
+  else if (slots.country == null && slots.destination == null)
+    q = { key: 'country', blocking: true, he: 'יש יעד שמושך אתכם — אוסטריה, צרפת, אנדורה או בולגריה? (אפשר גם "לא משנה")' };
+  // non-blocking: this sharpens the match, but the customer sees offers first
   // and refines from there rather than being interviewed
   else if (slots.departure_airport == null)
     q = { key: 'airport', blocking: false, he: 'מאיפה נוח לכם לטוס — נתב"ג או חיפה? (מחיפה יש רק בנסקו)' };
-  else if (slots.country == null && slots.destination == null)
-    q = { key: 'country', blocking: false, he: 'יש יעד שמושך אתכם — אוסטריה, צרפת, אנדורה או בולגריה? (אפשר גם "לא משנה")' };
   if (q && prevKey && (q.key === prevKey ||
       (q.key === 'children' && prevKey === 'children_ages') ||
       (q.key === 'children_ages' && prevKey === 'children'))) {
@@ -864,7 +965,7 @@ function bothMonthsLine(result, slots, hasCards) {
 function comparingLine(result, slots) {
   const cmp = (result.notes || []).find(n => n.type === 'comparing');
   if (!cmp) return null;
-  const he = p => ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[p.country] || p.destination;
+  const he = p => labels.country(p.country) || p.destination;
   const empty = (cmp.places || []).filter(p => !p.found).map(he).filter(Boolean);
   const full = (cmp.places || []).filter(p => p.found).map(he).filter(Boolean);
   const nPlaces = (cmp.places || []).length;
@@ -929,7 +1030,7 @@ function relaxationLines(result, slots) {
         'Montgenevre': "מונז'נבר", 'Les Menuires': 'לה מנואר', 'Soldeu': 'סולדו',
         'Pas de la Casa': 'פאס דה לה קאסה', 'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל' };
       const place = slots && ((slots.destination && (DEST_HE2[slots.destination] || null)) ||
-        ({ france: 'צרפת', austria: 'אוסטריה', andorra: 'אנדורה', bulgaria: 'בולגריה' })[slots.country]) || null;
+        labels.country(slots.country)) || null;
       // asked for a holiday by name — answer about the holiday, not the month
       const fromHe = (slots && slots.holiday && slots.holiday !== 'any') ? slots.holiday : (MONTH_HE[r.from] || r.from);
       out.push(place
@@ -984,14 +1085,22 @@ function phrase(result, slots, cards) {
     lines.push(`קבוצת ${narrowed.groups.join(', ')} פועלת רק בחלק מהשבועות, אז הצגתי רק תאריכים שבהם היא כן פועלת:`);
   }
 
+  // A club was asked for and no age is known, so the camp filter could not
+  // run. Say so plainly — the alternative was showing weeks with no club at
+  // all under a sentence claiming they were filtered for one (30/08).
+  if (note('camp_unverified')) {
+    lines.push(guidance.msg('camp_unverified',
+      'עוד לא בדקתי קייטנה — בשביל זה אני צריך את הגילאים. מה שלמטה עדיין לא מסונן לפי הקייטנה:'));
+  }
+
   const partial = note('camp_age_partial');
   if (partial && partial.ages.length) {
     const ages = partial.ages.join(', ');
-    lines.push(`שימו לב: הקייטנות מיועדות לגילאי 4-14, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
+    lines.push(`שימו לב: הקייטנות מיועדות לגילאי ${SkiSearch.campAgeLabel()}, כך שלגיל ${ages} אין קבוצה. לשאר הילדים כן.`);
   }
 
   if (slots.wrong_year) {
-    lines.push(`אנחנו מוכרים כרגע את עונת חורף 2026/27 — דצמבר 2026 עד סוף מרץ 2027. הנה מה שפנוי בעונה הזו:`);
+    lines.push(season.seasonSentence() + ' הנה מה שפנוי בעונה הזו:');
   }
 
   const campAge = note('camp_age_mismatch');
@@ -999,8 +1108,8 @@ function phrase(result, slots, cards) {
     const a = (campAge.ages || []);
     const ages = a.length > 1 ? a.slice(0, -1).join(', ') + ' ו-' + a[a.length - 1] : a.join('');
     lines.push(ages
-      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי 4-14, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
-      : 'הקייטנות שלנו מיועדות לגילאי 4-14. הנה מה שפנוי:');
+      ? `שימו לב: הקייטנות שלנו מיועדות לגילאי ${SkiSearch.campAgeLabel()}, ולכן אין קבוצה מתאימה לגיל ${ages}. הנה מה שפנוי:`
+      : `הקייטנות שלנו מיועדות לגילאי ${SkiSearch.campAgeLabel()}. הנה מה שפנוי:`);
   }
 
   const airportNote = (result.notes || []).find(n => n.type === 'airport_cannot_reach');
@@ -1044,7 +1153,7 @@ function phrase(result, slots, cards) {
       lines.push(`ב${MONTH_HE[r.from] || 'חודש שביקשתם'} אין שבוע שבו ${groupsHe.v} ${groupsHe.s}, אז הצגתי את ${MONTH_HE[r.to] || 'חודש אחר'} — שם ${groupsHe.p} כן ${groupsHe.v}:`);
     }
     if (r.type === 'camp_location') {
-      const CH = { austria: 'אוסטריה', france: 'צרפת', andorra: 'אנדורה', bulgaria: 'בולגריה' };
+      const CH = labels.COUNTRY_HE;
       const from = CH[r.from_country] || 'היעד שביקשתם';
       const to = (r.to_countries || []).map(c => CH[c] || c).filter(Boolean);
       const where = to.length ? to.join(' ו-') : 'יעדים אחרים';
@@ -1070,7 +1179,13 @@ function phrase(result, slots, cards) {
     // not a restatement of the request in the third person, and not the
     // destination the line above has just answered about
     .filter(n => !/^ ?(הלקוח|הלקוחה|המשפחה|הזוג|הם |הוא |היא |הנוסע)/.test(n))
-    .filter(n => !(offComm && n.includes(offComm.name)));
+    .filter(n => !(offComm && n.includes(offComm.name)))
+    // ...and not something the CARDS are already answering. "יש בריכה
+    // מחוממת?" put "בריכה" in the notes and "בריכה מחוממת" in the topics, so
+    // the reply promised to pass the question to a rep directly above a card
+    // that answered it. When a topic is handled per hotel, the card is the
+    // answer and the preamble stays out of it.
+    .filter(n => !(slots.unverifiable || []).some(u => u.includes(n) || n.includes(u)));
   if (cards.length && heard.length) {
     lines.push('רשמתי לפניי: ' + heard.join(', ') + '. אעביר את זה לנציג שילווה אתכם.');
   }
@@ -1090,7 +1205,37 @@ function phrase(result, slots, cards) {
   // The answer to "יקר לי", in Tomer's own words from config/guidance.json.
   const obj = guidance.objection('too_expensive');
   if (obj && note('cheaper_found')) lines.push(obj.cheaper);
-  if (obj && note('no_cheaper')) lines.push(obj.none);
+  // Nothing cheaper where they were looking, but there IS somewhere else
+  // (30/08, the Sunny lesson). We name the direction and offer to look — we do
+  // not move them there on our own, and we never quote a number.
+  const elsewhere = note('cheaper_elsewhere');
+  if (elsewhere) {
+    const COUNTRY_HE = labels.COUNTRY_HE;
+    const where = elsewhere.by === 'country'
+      ? COUNTRY_HE[elsewhere.country] || null
+      : labels.month(elsewhere.month) || null;
+    if (where) {
+      lines.push(elsewhere.by === 'country'
+        ? `בתנאים שביקשתם אלה המחירים הנמוכים שיש לי, אבל ב${where} יש אפשרויות בטווח מחיר נמוך יותר. רוצים שאראה?`
+        : `בתנאים שביקשתם אלה המחירים הנמוכים שיש לי, אבל ב${where} יש אפשרויות בטווח מחיר נמוך יותר. רוצים שאבדוק?`);
+    }
+  }
+  // No classified price band for anything on screen — so there is nothing
+  // honest to compare. Silence was the old behaviour and the worst one: the
+  // customer said the price was too high and the bot answered as if they had
+  // said nothing at all.
+  // …but only when none of the offers on screen carries one. A turn that ends
+  // up showing two classified hotels can rank those, and saying "I have no
+  // price ranking" over them would contradict the bands beside it.
+  if (note('price_unranked') && !cards.some(c => c.price_range)) {
+    lines.push(guidance.msg('price_unranked',
+      'אין לי דירוג מחיר על המלונות האלה, אז לא אשווה ביניהם מעצמי. נציג יגיד לכם בדיוק מה יוצא זול יותר — ' +
+      'אפשר להתקשר ל-' + guidance.phone() + ' או להשאיר שם וטלפון. אפשר גם לנסות חודש או יעד אחר ואראה מה נפתח.'));
+  }
+  // ...and only when there is genuinely nothing cheaper anywhere do we say so.
+  // This sentence used to be printed from inside the customer's own filter,
+  // which made it a claim about the whole company based on one country.
+  if (obj && !elsewhere && note('no_cheaper')) lines.push(obj.none);
 
   // acknowledge an active preference, so a refine chip visibly does something
   const prefs = slots.preferences || [];
@@ -1144,7 +1289,7 @@ function phrase(result, slots, cards) {
       open.delete('הסעות משדה התעופה');
     }
     if (open.size) {
-      lines.push('את ' + [...open].join(', ') + ' נציג יאמת מול המלון לפני הסגירה.');
+      lines.push('את ' + [...open].join(', ') + ' לא מצאתי בדפי המלונות אצלי — נציג יאמת מול המלון לפני הסגירה.');
     }
   }
 
@@ -1158,7 +1303,10 @@ function phrase(result, slots, cards) {
     const matched = (slots.preferences || []).filter(p => (c.tags || []).includes(p));
     if (matched.length) why.push('תואם למה שביקשתם: ' + matched.join(', '));
     if (c.recommended) why.push('מהמבוקשים ביותר אצלנו');
-    if ((slots.preferences || []).includes('תקציב') && c.price_range.length <= 2) why.push('ידידותי לתקציב');
+    // only a hotel with a classified band may be called budget-friendly; the
+    // unclassified ones used to qualify via pricing.json's TODO default
+    if ((slots.preferences || []).includes('תקציב') &&
+        c.price_range && c.price_range.length <= 2) why.push('ידידותי לתקציב');
     c.why_he = why.join(', ');
   }
   // Five true sentences stacked on top of each other is not an explanation, it
@@ -1188,7 +1336,11 @@ function cardFacts(c, asked, open) {
   const say = (topic, text) => { if (text) { out.push(text); open.delete(topic); } };
   // this card cannot answer it, but another card might — so it is named here
   // rather than swept into one blanket sentence at the end
-  const defer = (label) => out.push(label + ' — נציג יאמת מול המלון');
+  // Sunny (30/08) never says "we don't have it" for something merely absent
+  // from its data — it says "לא מופיע ברשימת האבזור, ולכן אני לא יכולה לאשר".
+  // The difference matters: a customer told "אין" walks away from a hotel that
+  // may well have the thing. Say where we looked, then who will confirm.
+  const defer = (label) => out.push(label + ' — לא כתוב בדף של המלון אצלי; נציג יאמת מול המלון');
 
   for (const topic of asked) {
     switch (topic) {
@@ -1247,6 +1399,38 @@ function cardFacts(c, asked, open) {
         if (pf.pool_he) say(topic, 'בריכה: ' + pf.pool_he);
         else if (c.spa_access === 'none') say(topic, 'אין בריכה או ספא במלון הזה');
         else defer('בריכה');
+        break;
+      // "יש בריכה מחוממת?" — the question Sunny could not answer (30/08).
+      // Three honest states, and the third is the important one: the page
+      // mentions a pool but never says whether it is heated, and guessing from
+      // "it's a ski hotel, of course it's heated" is exactly the invention this
+      // bot exists not to make.
+      case 'בריכה מחוממת':
+        if (pf.pool_heated && pf.pool_where === 'village') {
+          // Belambra Avoriaz: the heated pool is the village sports centre, not
+          // the hotel's. Answering "כן" here would be true of the resort and
+          // false of the room they are booking.
+          say(topic, 'בריכה מחוממת: לא במלון עצמו — ' + pf.pool_he);
+        } else if (pf.pool_heated) {
+          say(topic, 'בריכה מחוממת: ' + pf.pool_he);
+        } else if (pf.pool_he) {
+          say(topic, 'בריכה: ' + pf.pool_he + ' (הדף לא מציין אם היא מחוממת, אז לא אאשר את זה מעצמי — נציג יאמת)');
+        } else if (c.spa_access === 'none') {
+          say(topic, 'אין בריכה או ספא במלון הזה');
+        } else defer('בריכה מחוממת');
+        break;
+      case 'חדר כושר':
+        if (pf.gym_he) say(topic, 'חדר כושר: ' + pf.gym_he);
+        else defer('חדר כושר');
+        break;
+      case 'מקרר בחדר':
+        if (pf.rooms_features_he) say(topic, 'בחדר: ' + pf.rooms_features_he);
+        else if (rf.name || rf.size_he) defer('מקרר או כספת בחדר');
+        else defer('מקרר או כספת בחדר');
+        break;
+      case 'מכבסה':
+        if (pf.laundry_he) say(topic, 'כביסה: ' + pf.laundry_he);
+        else defer('שירותי כביסה');
         break;
       case 'נוף':
         if (pf.view_he) say(topic, 'נוף: ' + pf.view_he);
@@ -1577,15 +1761,16 @@ function faqMulti(text) {
   // a booking question that merely mentions a passport is not a passport
   // question; the six-months paragraph beside it reads as a non-sequitur
   if (hits.some(h => h.id === 'my_booking')) {
-    return { id: 'my_booking', he: hits.find(h => h.id === 'my_booking').he,
-      all: [hits.find(h => h.id === 'my_booking')] };
+    const b = hits.find(h => h.id === 'my_booking');
+    return { id: 'my_booking', he: b.he, matched: b.matched, all: [b] };
   }
   if (hits.length < 3) {
     const whole = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
     for (const e of loadFaq()) {
       if (hits.length >= 3) break;
       if (hits.some(h => h.id === e.id)) continue;
-      if (e.re.test(whole)) hits.push({ id: e.id, he: fillPlaceholders(e.he) });
+      const m = whole.match(e.re);
+      if (m) hits.push({ id: e.id, he: fillPlaceholders(e.he), matched: String(m[0]).trim() });
     }
   }
   if (!hits.length) return null;
@@ -1596,7 +1781,8 @@ function faqMulti(text) {
   const kept = hits.filter(h => !silenced.has(h.id));
   const final = kept.length ? kept : hits;
   return { id: final[0].id, he: final.map(h => h.he).join(String.fromCharCode(10)),
-    all: final.map(h => ({ id: h.id, he: h.he })) };
+    matched: final[0].matched,
+    all: final.map(h => ({ id: h.id, he: h.he, matched: h.matched })) };
 }
 
 function faq(text) {
@@ -1606,7 +1792,14 @@ function faq(text) {
     .replace(/[׳‘’]/g, "'")
     .replace(/[״“”]/g, '"')
     .replace(/\s+/g, ' ') + ' ';
-  for (const e of loadFaq()) if (e.re.test(t)) return { id: e.id, he: fillPlaceholders(e.he) };
+  // `matched` is the customer's own words that fired the pattern. It is what
+  // the retrieval echo shows them ("בודק לגבי: ביטול") — Sunny does the same,
+  // and it is the only honest way to say what we understood without inventing
+  // a topic name the answer file does not have.
+  for (const e of loadFaq()) {
+    const m = t.match(e.re);
+    if (m) return { id: e.id, he: fillPlaceholders(e.he), matched: String(m[0]).trim() };
+  }
   return null;
 }
 
@@ -1716,7 +1909,7 @@ function guard(text) {
   // their OWN booking is not a red rule — "לא מצליח להיכנס לאזור האישי עם
   // מספר ההזמנה" belongs to the my-booking answer, not to this refusal
   if (/שלי|שלנו|אזור האישי|לא מצליח להיכנס|הזמנתי|ביצעתי הזמנה|איפה אני רואה|הסטטוס של/.test(t)) { /* fall through */ }
-  else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות|שמות או טלפונים|טלפונים של (נוסעים|לקוחות|אנשים)|פרטי קשר של (נוסעים|לקוחות)|להתחבר לנוסעים|נוסעים שכבר הזמינו|מי עוד הזמין|מי נוסע איתנו/.test(t)) {
+  else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות|שמות או טלפונים|טלפונים של (נוסעים|לקוחות|אנשים)|פרטי קשר של (נוסעים|לקוחות)|להתחבר לנוסעים|נוסעים שכבר הזמינו|מי עוד הזמין|מי נוסע איתנו|יש עוד (?:משפחות|ישראלים|זוגות|קבוצות|אנשים|חרדים|דתיים)|עוד משפחות (?:ישראליות|דתיות|עם ילדים)|כמה (?:אנשים|נוסעים|משפחות) (?:כבר )?(?:הזמינו|נרשמו|רשומים|יש)|מי עוד (?:נרשם|רשום|טס|נוסע|יהיה)|מי איתנו בטיסה|מי בקבוצה/.test(t)) {
     // Their OWN booking is a different question with a different answer: we
     // still show nothing, but "אין לי גישה לפרטי לקוחות אחרים" reads as an
     // accusation when someone is asking about the holiday they just bought.
@@ -1857,4 +2050,9 @@ module.exports = {
   hotelsNamed,
   wantsCallback,
   unknownAnswer,
-  noMatchAnswer, parseText, nextQuestion, phrase, deflect, leadIntent, foreignLanguage };
+  noMatchAnswer, parseText, nextQuestion, blockingGaps, isElliptical,
+  PREFERENCE_TAGS: [...new Set(PREFS.map(p => p[1]))],
+  // re-exported so every layer asks the same question of the same source
+  // rather than writing the boundary out again (see SkiSearch.campAgeRange)
+  inCampAge: (age) => SkiSearch.inCampAge(age),
+  campAgeLabel: () => SkiSearch.campAgeLabel(), phrase, deflect, leadIntent, foreignLanguage };
