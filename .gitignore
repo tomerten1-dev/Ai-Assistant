@@ -16,7 +16,19 @@ source-data/
 
 # Generated and machine-local
 node_modules/
+# Test-run output. bank-results.json is 744KB and the live variants are
+# regenerated on every run; none of them is source.
 tests/bank-results.json
+tests/bank-results-live.json
+tests/bank-results-live-typical.json
+
+# Saved copies of pingwin.co.il used to reverse-engineer the booking deep link.
+# Reference material, not source — checked for secrets before they were first
+# committed (30/08) and clean, but they do not belong in code review diffs.
+# Remove these three lines if you'd rather keep them tracked.
+page.html
+page2.html
+order.js
 *.log
 .DS_Store
 Thumbs.db
