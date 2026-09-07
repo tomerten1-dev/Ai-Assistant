@@ -804,6 +804,8 @@ class SkiSearch {
     if ((slots.excluded_countries || []).includes(u.country)) return null;
     // named a hotel by name — that is the search, not a ranking hint
     if (slots.hotel && u.hotel !== slots.hotel) return null;
+    // a chain the customer named: narrow to it, do not lock to one hotel
+    if (slots.hotel_group && !slots.hotel_group.hotels.includes(u.hotel)) return null;
     // asked for a specific third of the month
     if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) return null;
     // asked for an exact departure day — within a few days of it counts,

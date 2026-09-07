@@ -465,6 +465,44 @@ function startServer() {
       });
     }
 
+    // the lead form refuses an empty submit OUT LOUD (design audit 27/08):
+    // the note turns red, the field is aria-invalid, a screen reader hears it
+    {
+      const p7 = await browser.newPage({ viewport: { width: 430, height: 920 } });
+      p7.on('pageerror', e => errors.push(String(e)));
+      let m = null;
+      try {
+        await p7.goto(URL + '?pwreset=1');
+        await p7.waitForTimeout(500);
+        await p7.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p7.waitForTimeout(400);
+        await p7.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+          ta.value = 'אני מעדיף לדבר עם בנאדם'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+          r.querySelector('.send').click(); })()`);
+        await p7.waitForTimeout(3000);
+        await p7.evaluate(`(() => { const f = ${SHADOW}.querySelector('.form'); if (f) f.requestSubmit(); })()`);
+        await p7.waitForTimeout(300);
+        m = await p7.evaluate(`(() => { const r = ${SHADOW};
+          const f = r.querySelector('.form'); if (!f) return { noForm: true };
+          const notes = [...f.querySelectorAll('.note')]; const note = notes[notes.length - 1];
+          const name = f.querySelector('input');
+          return {
+            err: note && note.className.includes('err'),
+            alert: note && note.getAttribute('role') === 'alert',
+            invalid: name && name.getAttribute('aria-invalid') === 'true',
+            noteText: note && note.textContent,
+            titleWeight: getComputedStyle(f.querySelector('.ftitle')).fontWeight,
+          }; })()`);
+      } finally { await p7.close(); }
+      t('an empty lead-form submit is refused out loud', () => {
+        assert.ok(m && !m.noForm, 'the lead form did not open');
+        assert.ok(m.err, 'the note did not turn into an error: ' + m.noteText);
+        assert.strictEqual(m.alert, true, 'no role=alert — a screen reader hears nothing');
+        assert.ok(m.invalid, 'the offending field is not marked aria-invalid');
+        assert.strictEqual(m.titleWeight, '700', 'form title weight: ' + m.titleWeight);
+      });
+    }
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     if (browser) await browser.close().catch(() => {});

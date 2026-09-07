@@ -1,0 +1,19 @@
+{
+  "_comment": "רשתות מלונות. לקוח ששואל 'מה עם קלאב דו סוליי?' לא שואל על מלון אחד — הוא שואל על ארבעה. עד 27/08 הבוט לא זיהה את השם בכלל והעביר לנציג, כי המנגנון היחיד שהיה הוא נעילה על מלון בודד, והוא מוותר כשיותר ממלון אחד מתאים.",
+  "_source": "תומר, 27/08: \"למה לא מופיע קלאב דו סוליי\"",
+  "_how": "match הוא ביטוי רגולרי על מה שהלקוח כתב; hotels הם השמות בקובץ ההתחייבויות. חיפוש מצטמצם למלונות האלה במקום להינעל על אחד.",
+  "groups": [
+    {
+      "id": "club_soleil",
+      "he": "קלאב דו סוליי",
+      "match": "קלאב ?(דו|דה|די)? ?סולי+|קלאב ?סוליי|club ?soleil",
+      "hotels": ["Club Soleil Oz", "Club Soleil Les 2 Alpes", "Club Soleil Montgenevre", "Club Soleil Les Menuires"]
+    },
+    {
+      "id": "belambra",
+      "he": "בלמברה",
+      "match": "בלמברה|בלאמברה|belambra",
+      "hotels": ["Belambra Val Claret", "Belambra Les Cretes L2A 1800", "Belambra L'Oree des Pistes", "Belambra Grand Massif", "Belambra Avoriaz", "Belambra Tignes Val Claret"]
+    }
+  ]
+}

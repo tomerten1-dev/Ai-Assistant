@@ -90,6 +90,8 @@ for (const u of built.units) {
   }
 }
 if (/\d{6,}/.test(JSON.stringify(built.units))) problems.push('a 6-digit sequence (order number?) reached the output');
+// and the gate the server runs on a pushed file — the same code, so the two never drift
+for (const p of require('../data/pii-gate.js').check(built)) if (!problems.includes(p)) problems.push(p);
 
 if (problems.length) {
   console.error('REFUSING to write — the output failed its own checks:');

@@ -24,6 +24,8 @@ const season = require('./season.js');
 const labels = require('./labels.js');
 const { buildBookingUrl, deepLink, pageFor, addNights } = require('../config/booking-url.js');
 const siteRooms = require('./site-rooms.js');
+const inventory = require('./inventory.js');
+const { resortHe } = require('../data/resort-names.js');
 const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
 const crmLead = require('./crm-lead.js');
@@ -182,8 +184,17 @@ function toSearchSlots(slots) {
 function slotsChanged(before, after) {
   const keys = ['adults', 'children_ages', 'children_count', 'no_children', 'month',
     'flexible_dates', 'country', 'destination', 'departure_airport', 'needs_hebrew_kids_club',
-    'excluded_countries', 'no_saturday_flights', 'nights_wanted'];
-  for (const k of keys) if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) return true;
+    'excluded_countries', 'no_saturday_flights', 'nights_wanted',
+    // naming a hotel or a chain IS the customer telling us something. Without
+    // these, "מה עם קלאב דו סוליי?" changed nothing by this measure and the
+    // reply came back "אני כאן בעיקר להתאמת חופשות סקי" over three Club Soleil
+    // cards (Tomer, 27/08)
+    'hotel', 'hotel_group'];
+  // undefined and null mean the same thing here: "we do not know". Comparing
+  // them raw made every turn look like a change the moment a slot was
+  // initialised to null each turn, and the whole off-topic guard stopped firing.
+  const same = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+  for (const k of keys) if (!same(before[k], after[k])) return true;
   return (after.preferences || []).length !== (before.preferences || []).length;
 }
 function shouldAskModel(before, after, text) {
@@ -546,7 +557,8 @@ function presentCards(result, slots, skip, opts = {}) {
     // "(allotment)" is a word from the commitments workbook meaning we hold
     // rooms there. It is not part of the hotel's name and it went out to
     // customers on the cards and in the model's sentences.
-    hotel: displayHotel(c.hotel), resort: c.resort, country: c.country,
+    // the resort in Hebrew: the card said TIGNES beside a Hebrew sentence
+    hotel: displayHotel(c.hotel), resort: resortHe(c.resort), country: c.country,
     country_he: labels.country(c.country) || c.country,
     // כוכבים וציון אורחים — מדפי pingwin.co.il, והחסר הושלם מ-Booking.com
     // (data/resorts.json, נאסף 31/08). null = לא אומת, ואז לא מציגים כלום.
@@ -572,7 +584,13 @@ function presentCards(result, slots, skip, opts = {}) {
     // still hold. "נשארו 2 חדרים" is true; a countdown timer would not be.
     // only the last room of its type earns the line — a third of the workbook
     // is 2–3 rooms, and a badge on every card is noise, not information
-    rooms_left_he: c.count_available === 1 ? 'נשאר חדר אחד מהסוג הזה' : null,
+    // ...and only while we can still believe it. This is the line that goes
+    // stale fastest — the last room of a type is the first thing to sell — and
+    // it is also the line that pushes a customer to decide. Past
+    // INVENTORY_STALE_HOURS since the workbook was read, it is withheld
+    // (Tomer, 26/08). Everything else on the card survives.
+    rooms_left_he: (c.count_available === 1 && !inventory.stale(engine.av))
+      ? 'נשאר חדר אחד מהסוג הזה' : null,
     price_range: c.price_range, recommended: c.recommended,
     camps: c.camps, occ_unverified: c.occ_unverified,
     // Everything the hotel pages taught us about THIS unit. This list used to
@@ -2435,6 +2453,15 @@ async function handleChatInner(body) {
     // the widget prints the closing UNDER the offers, where the buttons it
     // refers to are; above three cards it pushed them below the fold
     if (close && anyOffer) slots._after_cards = close;
+    // When the workbook has not reached us for a while, say so in the customer's
+    // terms rather than in ours: the rooms were free at the last update and
+    // availability moves (Tomer, 26/08). One line, only with offers on screen,
+    // and only when it is actually true — a line the customer sees every time
+    // is a line they stop reading.
+    if (anyOffer && inventory.stale(engine.av)) {
+      const moving = (guidance.load().messages_he || {}).inventory_moving_he;
+      if (moving && !parts.some(x => String(x).includes(moving.slice(0, 20)))) parts.push(moving);
+    }
     // The second Sunny lesson (30/08): an answer that shows offers ends by
     // moving the conversation forward ("איזה מהמלונות מושך אתכם יותר?"). Only
     // when nothing in the reply already asks — one question per reply is our
@@ -2689,6 +2716,30 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     if (!applyCors(req, res)) { res.writeHead(403); res.end('origin not allowed'); return; }
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+    // The office pushes a new inventory file here. Not a browser request: no
+    // Origin, no CORS, no rate limit by IP — it is authorised by a token and
+    // by what it contains (server/inventory.js). Answered before the
+    // origin-required rule below, which exists for the widget.
+    if (req.method === 'POST' && url.pathname === '/api/inventory') {
+      const body = await readJson(req, 8_000_000);
+      if (!body) return;
+      const r = inventory.accept(req, body);
+      return json(res, r.status, r.body);
+    }
+    if (req.method === 'GET' && url.pathname === '/api/inventory') {
+      // for the push script and for a human: how old is what we are selling
+      const av = inventory.current();
+      const h = inventory.ageHours(av);
+      return json(res, 200, {
+        generated_at: (av && av.generated_at) || null,
+        age_hours: h == null ? null : Math.round(h * 10) / 10,
+        stale: inventory.stale(av), stale_after_hours: inventory.STALE_HOURS,
+        // no token configured: this server takes an update from its own
+        // machine only, and the page can stop asking for a key
+        local_only: inventory.localOnly(),
+        units: (av && av.units || []).length, last_push: inventory.lastPush(),
+      });
+    }
     // in production every browser POST carries an Origin; one without it is not the widget
     if (STRICT_ORIGIN && req.method === 'POST' && !req.headers.origin) { res.writeHead(403); res.end('origin required'); return; }
     if (req.method === 'GET' && url.pathname === '/healthz') {
@@ -2872,8 +2923,42 @@ const server = http.createServer(async (req, res) => {
       console.log('feedback: ' + (vote === 'up' ? '👍' : '👎') + ' (' + String(fb.conversationId || '?').slice(0, 40) + ')');
       return json(res, 200, { ok: true });
     }
+    /* The four modules the inventory page needs, wrapped so a browser can load
+       server code unchanged. An allowlist and nothing else — a route that
+       served any path under the repo would be a way to read .env.
+       Why not a copy of the parser written for the browser: because then a
+       workbook parsed in Chrome and one parsed by the build could disagree,
+       and whichever the office happened to use that morning would decide what
+       the bot sells. */
+    const BROWSER_MODULES = ['tools/xlsx-read.js', 'data/inventory.js',
+      'data/aggregate.js', 'data/pii-gate.js'];
+    if (req.method === 'GET' && url.pathname.startsWith('/mod/')) {
+      const id = url.pathname.slice(5);
+      if (!BROWSER_MODULES.includes(id)) { res.writeHead(404); res.end(); return; }
+      let src;
+      try { src = fs.readFileSync(path.join(ROOT, id), 'utf8'); }
+      catch (e) { res.writeHead(404); res.end(); return; }
+      // a CommonJS shim: node's own ids resolved against this small map, and
+      // fs/zlib/path stubbed because the browser never reaches the code paths
+      // that use them (it brings its own unzip)
+      const wrapped = 'window.__mods[' + JSON.stringify(id) + '] = (function(){\n'
+        + 'var module={exports:{}},exports=module.exports;\n'
+        + 'function require(id){\n'
+        + '  if(id==="path")return{join:function(){return Array.prototype.join.call(arguments,"/")},'
+        + 'basename:function(p){return String(p).split(/[\\\\/]/).pop()}};\n'
+        + '  if(id==="fs"||id==="zlib")return{};\n'
+        + '  var k=String(id).replace(/^\\.\\.\\//,"").replace(/^\\.\\//,"");\n'
+        + '  for(var m in window.__mods){if(m===k||m.endsWith("/"+k))return window.__mods[m];}\n'
+        + '  throw new Error("no module "+id);\n'
+        + '}\n' + src + '\nreturn module.exports;})();\n';
+      res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-store' });
+      res.end(wrapped);
+      return;
+    }
+
     // static
-    let file = url.pathname === '/' ? '/public/demo.html'
+    let file = url.pathname === '/inventory' ? '/public/inventory-upload.html'
+      : url.pathname === '/' ? '/public/demo.html'
       : url.pathname === '/pingwin-bot.js' ? '/public/pingwin-bot.js'
         : '/public' + url.pathname;
     const full = path.join(ROOT, path.normalize(file));

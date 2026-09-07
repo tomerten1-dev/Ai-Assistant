@@ -660,10 +660,30 @@
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
     + '.send:hover{background:' + THEME.primaryDark + '}'
     + '.send:disabled{opacity:.45;cursor:default}'
-    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}'
-    + '.form label{font-size:12.5px;color:' + THEME.textLight + '}'
-    + '.form input{border:1.5px solid #cfdae4;border-radius:9px;padding:8px 12px;font-size:14px;font-family:inherit;direction:rtl}'
-    + '.form .note{font-size:11.5px;color:' + THEME.textLight + '}'
+    /* the conversion moment gets the same visual language as the rest of the
+       widget: card border + elevation instead of a heavy primary frame, inputs
+       styled like the composer, and a real focus ring. It used to look pasted
+       from another product (design audit, 27/08). */
+    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1px solid #dde5ec;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;'
+    + 'box-shadow:0 1px 3px rgba(16,32,48,.05)}'
+    + '.form .ftitle{font-size:15px;font-weight:700;color:' + THEME.text + ';line-height:1.35}'
+    + '.form label{font-size:12px;color:' + THEME.textLight + '}'
+    + '.form input{border:1px solid #dde5ec;border-radius:12px;padding:9px 12px;font-size:16px;font-family:inherit;direction:rtl;color:' + THEME.text + ';'
+    + 'transition:border-color .15s,box-shadow .15s}'
+    + '.form input:focus{outline:none;border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
+    + '.form input[aria-invalid="true"]{border-color:#b3261e}'
+    + '.form .note{font-size:12px;color:' + THEME.textLight + '}'
+    + '.form .note.err{color:#b3261e;font-weight:600}'
+    /* everything that enters the conversation rises 8px and fades in over
+       180ms, decelerating (craft research, 27/08) */
+    + '.m,.cards-row,.form,.typing,.chips{animation:pwIn .18s cubic-bezier(.05,.7,.1,1) both}'
+    + '@keyframes pwIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'
+    /* pressed state: the 100ms feedback rule — the widget had zero :active styles */
+    + '.btn:active,.chip:active,.send:active,.hdr .x:active,.hdr .exp:active,.galb:active,.dtog:active,.wa:active{transform:scale(.96)}'
+    + '.btn:disabled,.chip:disabled{opacity:.55;cursor:default;transform:none}'
+    /* one focus ring for the controls that had none */
+    + '.rlink:focus-visible,.imore:focus-visible,.galb:focus-visible,.fine a:focus-visible,.consent a:focus-visible,.form input:focus-visible,.galn:focus-visible'
+    + '{outline:2px solid ' + THEME.primaryDark + ';outline-offset:2px}'
     // visually hidden, still read aloud — the live region above
     + '.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;'
     + 'clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}'
@@ -681,7 +701,7 @@
     if (!document.querySelector('link[data-pw-font]')) {
       var fl = document.createElement('link');
       fl.rel = 'stylesheet'; fl.setAttribute('data-pw-font', '');
-      fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap';
+      fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&display=swap';
       document.head.appendChild(fl);
     }
   } catch (e) { }
@@ -1560,10 +1580,10 @@
     var f = document.createElement('form'); f.className = 'form';
     f.setAttribute('novalidate', '');
     if (card) {
-      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם על: ' + iso(card.hotel)));
+      f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם על: ' + iso(card.hotel)));
       f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
     } else {
-      f.appendChild(el('div', 'hname', 'נציג יחזור אליכם'));
+      f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם'));
       f.appendChild(el('div', 'note', 'השאירו שם וטלפון ונציג פינגווין יחזור אליכם.'));
     }
     var leadKind = opts.kind || (state.slots && state.slots._lead_kind) || 'customer';
@@ -1612,23 +1632,45 @@
     f.appendChild(consent);
     f.appendChild(note); f.appendChild(go);
     msgs.appendChild(f); scrollDown();
+    /* Errors are SAID, not whispered: the note goes red and bold, the field is
+       marked aria-invalid, and a screen reader hears it (role=alert). The
+       reassuring default text comes back the moment the problem is fixed —
+       the old code destroyed it permanently on the first slip. */
+    var noteDefault = note.textContent;
+    var complain = function (msg, field) {
+      note.textContent = msg;
+      note.classList.add('err');
+      note.setAttribute('role', 'alert');
+      if (field && field.setAttribute) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
+    };
+    var calm = function () {
+      note.classList.remove('err');
+      note.removeAttribute('role');
+      [iName, iPhone, iMail].forEach(function (i) { i.removeAttribute('aria-invalid'); });
+    };
+    [iName, iPhone, iMail].forEach(function (i) {
+      i.addEventListener('input', function () {
+        if (note.classList.contains('err')) { calm(); note.textContent = noteDefault; }
+      });
+    });
     f.addEventListener('submit', function (ev) {
       ev.preventDefault();
+      calm();
       var nameVal = iName.value.trim();
       var phoneVal = iPhone.value.trim();
-      if (!nameVal || !phoneVal) { note.textContent = lang('err_required', 'נדרשים שם וטלפון ליצירת קשר.'); return; }
+      if (!nameVal || !phoneVal) { complain(lang('err_required', 'נדרשים שם וטלפון ליצירת קשר.'), !nameVal ? iName : iPhone); return; }
       // a rep can do nothing with "אבג" — require a real Israeli-length number
       var digits = phoneVal.replace(/\D/g, '');
       if (digits.length < 9 || digits.length > 15) {
-        note.textContent = lang('err_phone', 'מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567');
+        complain(lang('err_phone', 'מספר הטלפון לא נראה תקין. לדוגמה: 050-1234567'), iPhone);
         return;
       }
-      if (nameVal.length < 2) { note.textContent = 'נשמח לשם מלא ליצירת קשר.'; return; }
+      if (nameVal.length < 2) { complain('נשמח לשם מלא ליצירת קשר.', iName); return; }
       var mailVal = iMail.value.trim();
       if (mailVal && !/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(mailVal)) {
-        note.textContent = lang('err_email', 'כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.'); iMail.focus(); return;
+        complain(lang('err_email', 'כתובת המייל לא נראית תקינה. אפשר גם להשאיר ריק.'), iMail); return;
       }
-      if (!iConsent.checked) { note.textContent = lang('err_consent', 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).'); iConsent.focus(); return; }
+      if (!iConsent.checked) { complain(lang('err_consent', 'כדי שנוכל לחזור אליכם צריך לאשר את מדיניות הפרטיות (הסימון למטה).')); iConsent.focus(); return; }
       // Up to 27 seconds could pass here — Turnstile, then the request — and
       // the only sign was the button going pale. Customers tapped it again and
       // then closed the widget, at the highest-intent moment in the flow.
@@ -1669,7 +1711,7 @@
           : 'הפרטים התקבלו, יחד עם סיכום מה שחיפשתם כאן — כך שלא תצטרכו לחזור על הכל. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         track('error', { where: 'lead' });
-        restoreBtn(); note.textContent = say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}');
+        restoreBtn(); complain(say('send_error', 'תקלה בשליחה — נסו שוב או חייגו {phone}'));
       });
     });
   }
