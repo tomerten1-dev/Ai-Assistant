@@ -23,12 +23,15 @@ let callCount = 0;
 // A third job joined them (24/08): choosing WHICH approved answer a question
 // deserves. It is counted apart, because it is not understanding and not
 // wording — and because it must not fire on a bare "כן".
-let slotCalls = 0, phraseCalls = 0, routeCalls = 0;
+// A fourth (06/09): the reply editor, which turns the assembled lines of a
+// no-offers turn into one written answer. Counted apart; never on a chip.
+let slotCalls = 0, phraseCalls = 0, routeCalls = 0, composeCalls = 0;
 require.cache[claudePath].exports = {
   ...real,
   callClaude: async ({ system }) => {
     callCount++;
     if (/מנתב שאלות/.test(system || '')) routeCalls++;
+    else if (/אתה עורך/.test(system || '')) composeCalls++;
     else if (/מנסח|נציג של פינגווין/.test(system || '')) phraseCalls++;
     else slotCalls++;
     if (!scripted.length) throw new Error('stub exhausted');
@@ -43,7 +46,7 @@ function t(name, cond, detail) {
   if (cond) { pass++; console.log('  ✓', name); }
   else { fail++; console.log('  ✗', name, detail ? '— ' + detail : ''); }
 }
-const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; routeCalls = 0; };
+const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; routeCalls = 0; composeCalls = 0; };
 
 (async () => {
   // Policy changed 24/08 (Tomer): the model reads every real message, because
@@ -59,13 +62,15 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
     slots: {},
   });
   t('one call to understand, one to phrase', slotCalls === 1 && phraseCalls === 1, 'slot=' + slotCalls + ' phrase=' + phraseCalls);
-  t('still produced offers', r1.cards.length === 3, 'cards=' + r1.cards.length);
+  t('still produced offers', r1.cards.length === 2, 'cards=' + r1.cards.length);
 
   console.log('[tokens] chip clicks and one-word answers are still free');
   reset();
   await handleChat({ messages: [{ role: 'user', content: 'ינואר' }], slots: { adults: 2, no_children: true } });
   await handleChat({ messages: [{ role: 'user', content: 'כן' }], slots: { adults: 2, children_ages: [7], month: 1, _lastQuestion: 'kids_club' } });
   await handleChat({ messages: [{ role: 'user', content: '4' }], slots: { _lastQuestion: 'adults' } });
+  // a bare number, a yes, a month: understood for free AND not worth editing
+  t('chip-like turns are never sent to the reply editor', composeCalls === 0, 'compose calls=' + composeCalls);
   await handleChat({ messages: [{ role: 'user', content: 'חשוב לי ספא' }], slots: { adults: 2, no_children: true, month: 1 } });
   // phrasing of the offers they produce, never a second look at the message.
   // Each of these is understood for free; the calls counted here are the
@@ -132,7 +137,7 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
     messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר באוסטריה' }], slots: {},
   });
   t('essentials complete -> offers, no question at all',
-    r5.cards.length === 3 && !/[?]/.test(r5.reply_he), r5.reply_he);
+    r5.cards.length === 2 && !/[?]/.test(r5.reply_he), r5.reply_he);
   t('airport still gathered — as chips', (r5.chips || []).some(c => c.includes('חיפה')));
   t('pending parameter reported', r5.pending_parameter === 'airport');
 

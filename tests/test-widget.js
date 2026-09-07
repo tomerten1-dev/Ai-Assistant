@@ -65,7 +65,7 @@ function startServer() {
     const afterReload = await count(page);
     t('a reload resumes the same conversation', () => assert.strictEqual(afterReload, talking));
 
-    await page.evaluate(`${SHADOW}.querySelector('.newc').click()`);
+    await page.evaluate(`${SHADOW}.querySelector('.foot .fnew').click()`);
     await page.waitForTimeout(400);
     const afterReset = await count(page);
     t('"שיחה חדשה" leaves only the greeting', () => assert.strictEqual(afterReset, 1));
@@ -163,7 +163,7 @@ function startServer() {
       assert.strictEqual(openState.opacity, '0', 'still visible over the chat');
       assert.strictEqual(openState.pointer, 'none', 'still clickable under the chat');
     });
-    // .x is worn by both the close button and "שיחה חדשה" — take the ✕ itself
+    // .x is worn by the close button and the expand toggle — take the ✕ itself
     await page.evaluate(`[...${SHADOW}.querySelectorAll('.hdr .x')].find(b => b.textContent.trim() === '✕').click()`);
     await page.waitForTimeout(500);
     const backAgain = await page.evaluate(`getComputedStyle(${SHADOW}.querySelector('.fab')).opacity`);
@@ -333,8 +333,13 @@ function startServer() {
     // on a 1366 laptop. The card, the chips and the panel width were all
     // changed to fix it, and this is what stops any of it creeping back — it
     // measures the real thing in a real browser instead of trusting the CSS.
-    for (const vp of [{ w: 1366, h: 768, max: 1.35, name: 'לפטופ 1366×768' },
-                      { w: 390, h: 844, max: 1.65, name: 'מובייל 390×844' }]) {
+    // 31/08: התקציבים כוילו מחדש. המדידות המקוריות (1.31/1.95) נלקחו כשבאג
+    // ה-flex-shrink כיווץ את בועות הבוט מתחת לגובה הטקסט שלהן — כלומר חלק
+    // מה"קומפקטיות" היה טקסט שנצבע על טקסט. אחרי התיקון הגבהים אמיתיים:
+    // 1.51 בלפטופ, 2.02 במובייל. התקציב שומר על זה מלהתדרדר, לא מתיימר לרדת
+    // מתחת לגובה שהתוכן באמת תופס.
+    for (const vp of [{ w: 1366, h: 768, max: 1.6, name: 'לפטופ 1366×768' },
+                      { w: 390, h: 844, max: 2.15, name: 'מובייל 390×844' }]) {
       const p2 = await browser.newPage({ viewport: { width: vp.w, height: vp.h } });
       let m = null;
       try {
@@ -370,6 +375,93 @@ function startServer() {
       });
       t(`${vp.name}: כרטיס סגור הוא כותרת, שורה וכפתור`, () => {
         assert.ok(m.cardH <= 230, 'כרטיס סגור ' + m.cardH + 'px');
+      });
+    }
+
+    // ── הטקסט שנערם (תומר, 31/08) ────────────────────────────────────────
+    // ‎.msgs היא עמודת flex עם גלילה; בלי flex-shrink:0 הדפדפן מכווץ את בועות
+    // הבוט ברגע שהשיחה ארוכה מהחלון (min-height:36px התיר לרדת מתחת לגובה
+    // הטקסט), והטקסט נצבע על ההודעות שאחריו. הקופסאות לא נחפפות — התוכן
+    // גולש מהן — ולכן מדידת מלבנים לא תפסה את זה. המבחן: אחרי שיחה ארוכה,
+    // אף ילד של .msgs לא מכיל יותר תוכן מגובה הקופסה שלו.
+    {
+      const p5 = await browser.newPage({ viewport: { width: 1326, height: 650 } });
+      let spill = null;
+      try {
+        await p5.goto(URL + '?pwreset=1');
+        await p5.waitForTimeout(500);
+        await p5.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p5.waitForTimeout(400);
+        for (const q of ['מה כלול בחבילה?', 'ולילדים?', 'מה לגבי ביטול?']) {
+          await p5.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+            ta.value = ${JSON.stringify(q)};
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+            r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
+          await p5.waitForTimeout(2200);
+        }
+        const check = `(() => [...${SHADOW}.querySelector('.msgs').children]
+          .filter(k => k.scrollHeight > k.clientHeight + 3)
+          .map(k => k.className + ': ' + k.scrollHeight + 'px בתוך ' + k.clientHeight + 'px'))()`;
+        spill = { live: await p5.evaluate(check) };
+        // גם אחרי רענון (שחזור שיחה) — המסלול שבו תומר צילם את זה.
+        // ניווט בלי ?pwreset: רענון עם הפרמטר מוחק את השיחה במקום לשחזר.
+        await p5.goto(URL); await p5.waitForTimeout(600);
+        await p5.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p5.waitForTimeout(600);
+        spill.replay = await p5.evaluate(check);
+        spill.count = await p5.evaluate(`${SHADOW}.querySelectorAll('.m').length`);
+      } finally { await p5.close(); }
+      t('שיחה ארוכה: אף הודעה לא נמעכת והטקסט לא נערם (חי)', () => {
+        assert.ok(spill.count >= 6, 'השיחה לא שוחזרה, המדידה חסרת משמעות: ' + spill.count);
+        assert.deepStrictEqual(spill.live, []);
+      });
+      t('שיחה ארוכה: וגם אחרי רענון ושחזור', () => {
+        assert.deepStrictEqual(spill.replay, []);
+      });
+    }
+
+    // ── מספר הטלפון נצבע משמאל לימין (תומר צילם, 31/08) ─────────────────
+    // בתוך משפט עברי, תו נייטרלי בין שתי קבוצות ספרות מפריד ביניהן והן
+    // נצבעות בסדר עברי: הלקוח ראה 8557722-04. הבדיקה מודדת את מיקום ה-x
+    // של כל תו על המסך — כלומר מה שהעין באמת רואה, לא את המחרוזת.
+    {
+      const p6 = await browser.newPage({ viewport: { width: 900, height: 760 } });
+      let painted = null;
+      try {
+        await p6.goto(URL + '?pwreset=1');
+        await p6.waitForTimeout(500);
+        await p6.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await p6.waitForTimeout(400);
+        await p6.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+          ta.value = 'אני מעדיף לדבר עם בנאדם'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+          r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
+        await p6.waitForTimeout(2500);
+        painted = await p6.evaluate(`(() => {
+          const r = ${SHADOW};
+          const el = [...r.querySelectorAll('.m.bot')].find(e => /8557722/.test(e.textContent));
+          if (!el) return null;
+          const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          let node, chars = [];
+          while ((node = walk.nextNode())) {
+            const rng = document.createRange();
+            for (let i = 0; i < node.length; i++) {
+              rng.setStart(node, i); rng.setEnd(node, i + 1);
+              const rect = rng.getBoundingClientRect();
+              if (/[0-9-]/.test(node.data[i]) && rect.width) {
+                chars.push({ c: node.data[i], x: rect.left, y: Math.round(rect.top) });
+              }
+            }
+          }
+          if (!chars.length) return null;
+          const top = Math.min(...chars.map(c => c.y));
+          return chars.filter(c => Math.abs(c.y - top) < 3)
+            .sort((a, b) => a.x - b.x).map(c => c.c).join('');
+        })()`);
+      } finally { await p6.close(); }
+      t('מספר הטלפון נצבע 04-8557722 ולא הפוך', () => {
+        assert.ok(painted, 'לא נמצאה הודעה עם מספר טלפון — הקבוע השתנה?');
+        assert.ok(painted.startsWith('04-8557722'),
+          'המספר נצבע כ-' + painted + ' — בדקו תווי כיווניות סביב המקף');
       });
     }
 

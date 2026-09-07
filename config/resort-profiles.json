@@ -29,7 +29,14 @@
    "price_level": "mid",
    "recommend": true,
    "reason_he": "אפרה-סקי מהמפורסמים באוסטריה; מתחילים לומדים בראש הגונדולה, לא בכפר; שטח בינוני, קרחון הינטרטוקס בכרטיס האזורי (באוטובוס).",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "לפי אתר האתר הרשמי, גם הקטנטנים (גילאי 2–4) זוכים להשגחה ישירות במאיירהופן דרך בתי הספר לסקי",
+    "childcare_age": "מגיל 2",
+    "snow_garden_he": "קינדרלנד הורברג עם מסוע קסם באורך 69 מ', ואזורי תרגול לילדים בפנקן ובמוסל",
+    "source": "https://www.mayrhofen.at/en/stories/mountopolis-kids-in-the-mayrhofen",
+    "winter_verified": true
+   }
   },
   "Ischgl": {
    "country": "austria",
@@ -57,7 +64,14 @@
    "price_level": "premium",
    "recommend": true,
    "reason_he": "גבוה ומובטח-שלג, פרירייד נרחב ומסיבות מהפרועות באלפים; מתחילים עולים לאידאלפ, הכפר רועש ויקר.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "גן אורחים באידאלפ מטעם ביה\"ס לסקי, 10:00–15:30; לא מתקבלים תינוקות עם חיתולים, גיל מינימום לא צוין",
+    "childcare_age": null,
+    "snow_garden_he": "קינדרלנד באידאלפ — גן סקי לגילאי 3–5 בהפעלת ביה\"ס לסקי אישגל",
+    "source": "https://www.ischgl.com/en/plan-your-trip/ischgl-a-z/guest-kindergarten-idalp_infra_100001496",
+    "winter_verified": true
+   }
   },
   "Bansko": {
    "country": "bulgaria",
@@ -85,7 +99,14 @@
    "price_level": "budget",
    "recommend": true,
    "reason_he": "מסלולים כחולים סלחניים בראש הגונדולה (תורי בוקר); עיירה עם ברים ומועדונים; שטח קטן ומעט שחורים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": null,
+    "childcare_age": null,
+    "snow_garden_he": "מועדון ילדים \"ג'וניור\" בתחנה העליונה של הגונדולה לגילאי 4–7, 9:00–16:30, שיעורים ופעילויות בשלג ובפנים",
+    "source": "https://www.banskoski.com/en/page/prices",
+    "winter_verified": true
+   }
   },
   "Borovets": {
    "country": "bulgaria",
@@ -113,7 +134,14 @@
    "price_level": "budget",
    "recommend": true,
    "reason_he": "מתחילים ואזור ילדים ליד הכפר עם בית ספר מוערך; ברים עם מוזיקה חיה; שטח קטן ונמוך למנוסים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": null,
+    "childcare_age": null,
+    "snow_garden_he": "גן סקי לגילאי 4–6 ליד מלון סמוקוב, 9:00–16:00, עם משחקי שלג, מזחלות ושיעורי סקי",
+    "source": "https://www.ski-school-borovets.com/general-information/ski-kindergarten-2.html",
+    "winter_verified": true
+   }
   },
   "Pas de la Casa": {
    "country": "andorra",
@@ -141,7 +169,14 @@
    "price_level": "budget",
    "recommend": true,
    "reason_he": "עיירת מסיבות גבוהה עם סקי-אין/אאוט ורחבת מתחילים ליד המעליות; רועשת בלילה וחשופה לרוח; שחורים מתונים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "גרנדוואלירה מציינת שאין מעון יום בסקטור פאס דה לה קאסה; המעון הקרוב בגראו רואיג מקבל מגיל 12 חודשים",
+    "childcare_age": null,
+    "snow_garden_he": "גן שלג של גרנדוואלירה בפאס דה לה קאסה לגילאי 3–6 (אחד מ-6 גני שלג באתר)",
+    "source": "https://www.grandvalira.com/en/services/nursery",
+    "winter_verified": true
+   }
   },
   "Soldeu": {
    "country": "andorra",
@@ -169,7 +204,14 @@
    "price_level": "budget",
    "recommend": true,
    "reason_he": "רמת מתחילים מרווחת בראש הגונדולה ובית ספר דובר אנגלית מהמובילים; ברים חיים; לא מאתגר למנוסים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון יום של גרנדוואלירה בסולדאו, 9:30–16:30; בסולדאו מתקבלים ילדים מעל 24 חודשים בלבד",
+    "childcare_age": "מגיל שנתיים",
+    "snow_garden_he": "גן שלג של גרנדוואלירה בסולדאו לגילאי 3–6",
+    "source": "https://www.grandvalira.com/en/services/nursery",
+    "winter_verified": true
+   }
   },
   "Avoriaz": {
    "country": "france",
@@ -197,7 +239,14 @@
    "price_level": "mid",
    "recommend": true,
    "reason_he": "ללא מכוניות, סקי-אין/אאוט מכל דירה, רמות מתחילים ופארקים; פולי דוס ומועדון; תחום ענק אך בלי קרחון.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון \"אבריזו\" לילדים מגיל 6 חודשים עד 5 שנים, עם אגף נפרד לתינוקות (6–15 חודשים)",
+    "childcare_age": "מגיל 6 חודשים",
+    "snow_garden_he": "כפר הילדים של ESF — גלישות ראשונות לגילאי 3–5 בסביבה בטוחה",
+    "source": "https://www.avoriaz.com/en/childcare/",
+    "winter_verified": true
+   }
   },
   "Flaine Grand Massif": {
    "country": "france",
@@ -225,7 +274,14 @@
    "price_level": "mid",
    "recommend": true,
    "reason_he": "ללא מכוניות, בנוי למשפחות, מתחילים בקערה מול המגורים ושלג אמין; ערבים שקטים, מעט מסלולים קשים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון \"לה פטי לו\" (Les P'tits Loups) לפעוטות מגיל 15 חודשים עד גיל 3",
+    "childcare_age": "מגיל 15 חודשים",
+    "snow_garden_he": "מועדון פיו-פיו של ESF פליין — גן שלג לגלישות ראשונות מגיל 3",
+    "source": "https://www.flaine.com/en/fiche/les-ptits-loups-nursery/",
+    "winter_verified": true
+   }
   },
   "Les Menuires": {
    "country": "france",
@@ -253,11 +309,18 @@
    "price_level": "mid",
    "recommend": true,
    "reason_he": "בסיס נוח ומשתלם בשלושת העמקים, מדרונות משפחתיים וסקי-אין/אאוט; אפרה-סקי רגוע; לה מאס ואוף-פיסט למנוסים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון ESF ללא סקי לפעוטות מגיל 3 חודשים עד 3 שנים, עם פעילויות התפתחות ושנת צהריים",
+    "childcare_age": "מגיל 3 חודשים",
+    "snow_garden_he": "קלאב פיו-פיו של ESF – גן שלג לגילאי 3–5 עם משחקים ולימוד סקי ראשון",
+    "source": "https://www.esf-lesmenuires.com/les-menuires/kindergarten/",
+    "winter_verified": true
+   }
   },
   "Tignes": {
    "country": "france",
-   "he": "טיניי",
+   "he": "טין",
    "village_m": 2100,
    "top_m": 3456,
    "piste_km": null,
@@ -281,7 +344,14 @@
    "price_level": "premium",
    "recommend": true,
    "reason_he": "גבוה עם קרחון ושלג מובטח, תחום עצום ואוף-פיסט קיצוני; ברים ומועדונים בוואל קלארה; מעט ירוקים ונוף חשוף למתחילים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון יום עירוני 'Les Petits Montagnards' לפעוטות מגיל 10 שבועות עד גיל בית הספר",
+    "childcare_age": "מגיל 10 שבועות",
+    "snow_garden_he": "קלאב פיו-פיו של ESF טין – גן ילדים ייעודי ללימוד סקי לגילאי 3–5",
+    "source": "https://mairie-tignes.fr/vivre-a-tignes/petite-enfance-enfance-et-jeunesse/petite-enfance/",
+    "winter_verified": true
+   }
   },
   "Val Thorens": {
    "country": "france",
@@ -309,7 +379,14 @@
    "price_level": "premium",
    "recommend": true,
    "reason_he": "הכפר הגבוה באירופה, סקי-אין/אאוט מלא, מתחילים ליד הכפר, שלושת העמקים למנוסים, פולי דוס מהסוערות באלפים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון יום של ESF ללא סקי מגיל 3 חודשים, עם צוות גננות ואחיות",
+    "childcare_age": "מגיל 3 חודשים",
+    "snow_garden_he": "גני שלג פיו-פיו של ESF (מונטנה/רוק דה פקלה) מגיל 3; באבי-סקי בליווי הורה מגיל שנתיים",
+    "source": "https://www.valthorens.com/en/sejour/famille/activites-0-3-ans/",
+    "winter_verified": true
+   }
   },
   "Les Arcs": {
    "country": "france",
@@ -337,7 +414,14 @@
    "price_level": "premium",
    "recommend": true,
    "reason_he": "כפרים ללא מכוניות עם סקי-אין/אאוט, מתחילים ליד הכפרים, מועדוני ילדים; פאראדיסקי ענק ואוף-פיסט; חיי לילה מתונים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "'הלט-גרדרי 2000' בארק 2000 – מעון יום ללא סקי לילדים מגיל 14 חודשים",
+    "childcare_age": "מגיל 14 חודשים",
+    "snow_garden_he": "קלאב פיו-פיו של ESF ארק 1800 – גן השלג הגדול בצרפת, מגיל 3",
+    "source": "https://en.lesarcs.com/childcare/halte-garderie-2000-189633",
+    "winter_verified": true
+   }
   },
   "Les 2 Alpes": {
    "country": "france",
@@ -365,7 +449,14 @@
    "price_level": "mid",
    "recommend": true,
    "reason_he": "מתחילים נוחים למעלה אך החזרה לכפר תלולה; קרחון מבטיח שלג, אוף-פיסט מעולה; אפרה-סקי מהרועשים בצרפת.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון 'Bonhomme de Neige' לרגלי המדרונות – מגיל 6 חודשים עד 5 שנים, בהרשמה מראש",
+    "childcare_age": "מגיל 6 חודשים",
+    "snow_garden_he": "גני שלג פיו-פיו של ESF לגילאי 3–5 – אזור מוגן עם מסוע ומשחקים",
+    "source": "https://www.les2alpes.com/winter/offers/nursery-bonhomme-de-neige-les-deux-alpes-en-winter-2958665/",
+    "winter_verified": true
+   }
   },
   "Alpe d'Huez": {
    "country": "france",
@@ -393,7 +484,14 @@
    "price_level": "mid",
    "recommend": true,
    "reason_he": "מרפסת שטופת שמש עם אזור מתחילים רחב ליד הכפר; תחום גדול ומגוון עם סארן הארוך ופיק בלאן; חיי ערב ערים, לא סוערים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "מעון 'Les Intrépides' – בחופשות מקבל ילדי נופשים מגיל 6 חודשים עד 4 שנים",
+    "childcare_age": "מגיל 6 חודשים",
+    "snow_garden_he": "'שאלה דז-אנפאן' של ESF – גן שלג וגרדרי לגילאי 2.5–4 עם מסועים ומסלולי משחק",
+    "source": "https://www.alpedhuez.com/en/les-intrepides-nursery/",
+    "winter_verified": true
+   }
   },
   "Montgenevre": {
    "country": "france",
@@ -421,7 +519,14 @@
    "price_level": "budget",
    "recommend": true,
    "reason_he": "כפר צרפתי אותנטי, מתחילים רחבים ליד הכפר, מקושר לויה לאטאה האיטלקי; חיי ערב מתונים.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "קרש 'Les Sourires' במרכז הכפר – מגיל 3 חודשים עד 6 שנים, בהזמנה מראש",
+    "childcare_age": "מגיל 3 חודשים",
+    "snow_garden_he": "קלאב פיו-פיו של ESF – גן שלג מאובטח מגיל 3, בשתי נקודות באתר",
+    "source": "https://montgenevre.com/en/summer/family/or-take-care-of-my-child/",
+    "winter_verified": false
+   }
   },
   "Oz en Oisans": {
    "country": "france",
@@ -449,8 +554,16 @@
    "price_level": "budget",
    "recommend": true,
    "reason_he": "כפר קטן ושקט, מתחילים ליד הבסיס, גונדולה לתחום אלפ ד'הואז הגדול; החזרה לכפר מוגבלת; כמעט בלי חיי לילה.",
-   "approved": true
+   "approved": true,
+   "toddler": {
+    "childcare_he": "קרש-גרדרי 'La Petite d'Oz' בלב האתר – מגיל 6 חודשים עד 6 שנים",
+    "childcare_age": "מגיל 6 חודשים",
+    "snow_garden_he": "קלאב פיו-פיו של ESF – גן שלג לגילאי 3–5, לימוד סקי בהדרגה ובבטחה",
+    "source": "https://www.oz-en-oisans.com/summer/offers/le-nid-day-care-center-oz-en-summer-2795323/",
+    "winter_verified": false
+   }
   }
  },
- "approved_at": "2026-08-26"
+ "approved_at": "2026-08-26",
+ "_toddler_note": "toddler נאסף 31/08/2026 לבקשת תומר מאתרי האתרים הרשמיים/בתי הספר לסקי (source לכל אתר). winter_verified=false פירושו שהמקור הוא עמוד קיץ — נציג יאמת לחורף. ההרשמה למסגרות מקומיות איננה דרך פינגווין."
 }

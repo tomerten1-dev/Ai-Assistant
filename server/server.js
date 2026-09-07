@@ -28,6 +28,9 @@ const limits = require('./limits.js');
 const leadMail = require('./lead-mail.js');
 const crmLead = require('./crm-lead.js');
 const recommend = require('./recommend.js');
+const characterize = require('./characterize.js');
+const compose = require('./compose.js');
+const translate = require('./translate.js');
 
 loadEnv();
 const has = k => process.env[k] && !process.env[k].includes('xxxx');
@@ -47,6 +50,14 @@ function aiMode() {
 }
 // how many questions the bot may ask before it must show results
 const MAX_QUESTIONS = +(process.env.MAX_QUESTIONS || 3);
+// How many offers a turn puts on the screen. Two (Tomer, 06/09): "זה או זה",
+// not a comparison of three — and two cards fit a phone screen. The search
+// still picks three; the third travels as `spare_cards`, and the widget
+// reveals it on one tap ("עוד אפשרות") without a round trip. CARDS_DEFAULT=3
+// restores the old layout in one line.
+const CARDS_DEFAULT = Math.max(1, Math.min(3, +(process.env.CARDS_DEFAULT || 2)));
+// see the note beside the phrasing call: this cap covers the model's thinking
+const PHRASE_TOKENS = +(process.env.PHRASE_MAX_TOKENS || 2200);
 // Questions that may be skipped when the answer cannot change the result.
 // adults and children_ages are NOT here: the party size decides which rooms
 // even fit, so it is never merely informative.
@@ -217,6 +228,29 @@ async function fillSlotsWithModel(messages, prevSlots, questionsAsked, deadline)
 // only when the free regex layer missed. Cached, because customers ask the
 // same twenty questions and a repeat should cost nothing.
 const ROUTE_CACHE = new Map();
+// A short, current-facts digest of who we're talking to — handed to the
+// answer router alongside the question. Without it, a question whose only
+// content words are pronouns ("יש להם מסגרת או שהם עם המבוגרים?") gives the
+// router nothing to work with, and it has to guess between "organized tour"
+// and "teen camp" (persona P22, 03/09: it guessed wrong). Built from slots —
+// the facts already distilled from the conversation — rather than resending
+// several raw turns: that would cost more per call and risks dragging in a
+// topic the conversation has since moved past.
+function partyDigest(slots) {
+  const bits = [];
+  if (slots.adults != null) bits.push(slots.adults + ' מבוגרים');
+  const kids = (slots.children_ages || []).slice().sort((a, b) => a - b);
+  if (kids.length) bits.push('ילדים/נערים בני ' + kids.join(', '));
+  else if (slots.children_count) bits.push(slots.children_count + ' ילדים (גיל לא צויין)');
+  if (slots.needs_hebrew_kids_club === true) bits.push('רוצים קייטנה בעברית');
+  if (slots.needs_hebrew_kids_club === false) bits.push('בלי קייטנה');
+  const dest = slots.destination || (slots.country && slots.country !== 'any' ? slots.country : null);
+  if (dest) bits.push('יעד: ' + dest);
+  if ((slots.preferences || []).length) bits.push(slots.preferences.slice(0, 4).join(', '));
+  if ((slots.notes_from_customer || []).length) bits.push(slots.notes_from_customer.slice(-3).join('; '));
+  return bits.length ? ('רקע על הנוסעים: ' + bits.join(' | ')) : '';
+}
+
 async function routeToAnswer(text, deadline) {
   if (aiMode() === 'offline') return null;
   const entries = offline.faqEntries();
@@ -260,15 +294,16 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
   try {
     const payload = phrasing.buildPayload({ slots, cards, result, fallback, lastReply, answered });
     const system = phrasing.PHRASE_PROMPT + guidance.forAnswering(cards[0] && cards[0].country);
-    // 1200, not 320: on a reasoning model max_completion_tokens covers the
-    // thinking too, and a 320 cap produced an empty reply that then failed
-    // validation and silently fell back to the template on every turn. The
-    // auditor still caught the occasional empty at 900, so there is headroom
-    // here — an empty reply costs the same as a full one.
+    // Generous on purpose: on a reasoning model this cap covers the THINKING
+    // as well as the reply, so a tight budget does not shorten the answer, it
+    // truncates it. At 1200 a customer read "…אם זה חשוב לכם, העביר את" and
+    // then the offer cards (seen live 31/08). A truncated reply is now caught
+    // and thrown away, so the only cost of being generous is tokens on the
+    // turns that need them — and the cost of being mean is a half sentence.
     const raw = aiMode() === 'openai'
-      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200, json: false,
+      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: PHRASE_TOKENS, json: false,
           model: process.env.OPENAI_PHRASE_MODEL || undefined, deadline })
-      : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: 1200, deadline });
+      : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: PHRASE_TOKENS, deadline });
     let text = String(raw || '').trim();
     // Whole sentences it already said last turn, dropped. "ההצעות נראות פנויות,
     // ונציג יאשר סופית" is true every time and worth saying once.
@@ -300,6 +335,59 @@ async function phraseWithModel({ slots, cards, result, fallback, lastReply, answ
   }
 }
 
+/* The reply editor (server/compose.js). Runs on turns WITHOUT offer cards —
+   knowledge answers, follow-ups, questions — where the stacked lines show
+   their seams. Card turns keep phraseWithModel, which already writes their
+   intro. Anything the validator rejects ships as the original lines. */
+const COMPOSE_TOKENS = +(process.env.COMPOSE_MAX_TOKENS || 1200);
+function composeEnabled() {
+  const v = String(process.env.REPLY_EDITOR || 'on').toLowerCase();
+  return !(v === 'off' || v === '0' || v === 'false');
+}
+async function composeWithModel({ replyText, lastUser, digest, lastReply, question, deadline, knownNames, knowledge, cardsShown }) {
+  const original = String(replyText || '');
+  if (aiMode() === 'offline' || !composeEnabled()) return original;
+  const lines = original.split(String.fromCharCode(10)).map(x => x.trim()).filter(Boolean);
+  // one line with nothing to merge into it is not worth a model call — and
+  // neither is a chip click or a bare "כן"/"4": those turns stay free. A turn
+  // with no knowledge answer in it (a preference noted, a question asked)
+  // is two short template lines; the seams there are not worth a call either.
+  if (lines.length < 2 || original.length < 60) return original;
+  if (!knowledge && lines.length < 3) return original;
+  const u = String(lastUser || '').trim();
+  if (u.split(/\s+/).length < 2 || /^(\d+|כן|לא|בסדר|אוקיי|אוקי|ok|טוב)\s*[.!]?$/i.test(u)) return original;
+  if (health.open()) return original;
+  health.called('compose');
+  try {
+    const payload = compose.buildPayload({ userText: lastUser, digest, lastReply, lines, question, cardsShown });
+    const system = compose.COMPOSE_PROMPT + guidance.forAnswering(null);
+    const raw = aiMode() === 'openai'
+      ? await callOpenAI({ system, messages: [{ role: 'user', content: payload }], maxTokens: COMPOSE_TOKENS, json: false,
+          model: process.env.OPENAI_PHRASE_MODEL || undefined, deadline })
+      : await callClaude({ system, messages: [{ role: 'user', content: payload }], maxTokens: COMPOSE_TOKENS, deadline });
+    const text = String(raw || '').trim();
+    const verdict = compose.validate(text, { material: original, question, digest, userText: lastUser, knownNames, cardsShown });
+    if (!verdict.ok) {
+      health.rejected('compose', verdict.why);
+      console.error('reply editor rejected (%s): %s', verdict.why, text.slice(0, 160));
+      return original;
+    }
+    health.ok('compose');
+    return text;
+  } catch (e) {
+    health.failed('compose', e);
+    console.error('reply editor failed:', e.message);
+    return original;
+  }
+}
+// hotel and resort names the editor must not introduce on its own
+const KNOWN_NAMES = (() => {
+  try {
+    const hotels = Object.keys(require('../data/resorts.json').hotels || {}).map(displayHotel);
+    return [...new Set([...hotels, ...Object.values(phrasing.RESORT_HE)])].filter(n => n && n.length >= 4);
+  } catch (e) { return []; }
+})();
+
 // The hotel's name as a customer should read it.
 function displayHotel(name) {
   return String(name || '').replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim();
@@ -325,6 +413,115 @@ function partySize(slots) {
 // two hotels by price band, which is right when the customer is choosing among
 // offers and wrong when they asked us to compare two RESORTS — there it reads
 // as a verdict about a hotel nobody asked about (Tomer, 26/08).
+// "4 כוכבים · 8.5 בבוקינג" — או חצי, או כלום. אף פעם לא ניחוש.
+function ratingBadge(info) {
+  const bits = [];
+  if (info && info.stars != null) bits.push(info.stars + ' כוכבים');
+  if (info && info.booking_score != null) bits.push(info.booking_score + ' בבוקינג');
+  return bits.length ? bits.join(' · ') : null;
+}
+
+/* ---- מתקני מלון, מהדף של המלון (31/08) ----
+   "יש בריכה מחוממת?", "יש מקרר בחדר?", "יש חדר כושר בסטראס?" — נענים ממה
+   שכתוב בדף המלון ב-pingwin.co.il (data/resorts.json → page_facts, נאסף
+   31/08 ללא מחירים). זה הלקח מסאני, בכיוון ההפוך: היא נכשלה על "בריכה
+   מחוממת"; אצלנו התשובה היא ציטוט הדף — וכשהדף שותק, אומרים שהדף שותק
+   ("לא כתוב בדף של המלון אצלי") ולא שהמציאות ריקה. */
+const FACILITY_FIELDS = [
+  [/מחוממת/, '_pool_heated', 'בריכה מחוממת'],
+  [/בריכה|לשחות/, 'pool_he', 'בריכה'],
+  [/ספא|סאונה|ג'קוזי|גקוזי|ג׳קוזי/, 'spa_page_he', 'ספא'],
+  [/חדר כושר|מכון כושר/, 'gym_he', 'חדר כושר'],
+  [/חדר סקי|לוקר|אחסון ציוד|ייבוש מגפ|מקום למגלשיים/, 'ski_room_he', 'חדר סקי'],
+  [/חני(?:ה|יה)|חניון/, 'parking_he', 'חניה'],
+  [/וויפיי|ויי?פיי|אינטרנט|wifi/i, 'wifi_page_he', 'אינטרנט'],
+  [/מטבחון|מקרר|מיקרוגל|פינת בישול|לבשל/, 'kitchenette_he', 'מטבחון ומקרר'],
+  [/חדר משחקים|פינת משחקים/, 'kids_he', 'חדר משחקים'],
+  [/מסעדה|חדר אוכל|בר במלון/, 'restaurant_he', 'הסעדה'],
+  [/מרפסת|נוף מהחדר/, 'balcony_he', 'מרפסת ונוף'],
+  [/כביסה/, 'laundry_he', 'כביסה'],
+  [/שאטל|סקי ?בוס|הסעה למעלית|הסעה לאתר/, 'shuttle_he', 'שאטל'],
+  [/מעלית במלון/, 'elevator_he', 'מעלית במלון'],
+];
+// חגורת בטיחות אחרונה לחוק אדום 3: ערך שמכיל כסף לא יוצא ללקוח, גם אם
+// חמק פנימה בעת האיסוף
+const FACT_MONEY = /[€$₪]|\d[\d,.]*\s*(?:אירו|יורו|שקל|דולר)(?![א-ת])/;
+function facilityLine(lastUser, prevSlots, engine) {
+  const text = String(lastUser || '');
+  let wanted = FACILITY_FIELDS.filter(([re]) => re.test(text)).slice(0, 2);
+  // "בריכה מחוממת" תופסת גם את שדה הבריכה הרגיל — שורה אחת, לא שתיים
+  if (wanted.some(([, f]) => f === '_pool_heated')) wanted = wanted.filter(([, f]) => f !== 'pool_he');
+  if (!wanted.length) return null;
+  let names = offline.hotelsNamed(text);
+  if (!names.length) {
+    const shown = [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
+    const keys = Object.keys(engine.resorts.hotels);
+    names = shown.map(d => keys.find(k => displayHotel(k) === d)).filter(Boolean);
+  }
+  names = [...new Set(names)].slice(0, 3);
+  if (!names.length) {
+    // "יש בריכה מחוממת?" בלי מלון — השאלה שסאני נכשלה בה. יש לנו את הנתון:
+    // מונים את המלונות שדף האתר שלהם אומר במפורש בריכה מחוממת.
+    if (wanted.some(([, f]) => f === '_pool_heated')) {
+      const heated = Object.entries(engine.resorts.hotels)
+        .filter(([, h]) => (h.page_facts || {}).pool_heated === true)
+        .map(([k]) => displayHotel(k)).slice(0, 6);
+      if (heated.length) {
+        return 'כן — לפי דפי המלונות באתר פינגווין יש בריכה מחוממת בין השאר ב: ' +
+          heated.join(', ') + '. תגידו לי יעד או מלון ואדייק, ומה שלא כתוב בדף — נציג יאמת.';
+      }
+    }
+    return null;                                        // בלי מלון — התשובה הכללית
+  }
+  const lines = [];
+  let anyData = false;
+  for (const n of names) {
+    const pf = (engine.hotelInfo(n) || {}).page_facts || {};
+    for (const [, field, label] of wanted) {
+      let val;
+      if (field === '_pool_heated') {
+        val = pf.pool_heated === true ? 'כן — ' + (pf.pool_he || 'בריכה מחוממת') :
+          pf.pool_heated === false ? 'הבריכה לא מסומנת כמחוממת בדף המלון' :
+          pf.pool_he ? String(pf.pool_he).replace(/[.\s]+$/, '') + '. האם היא מחוממת לא כתוב בדף — נציג יאמת מול המלון' : null;
+      } else val = pf[field];
+      if (val && FACT_MONEY.test(val)) val = null;      // לעולם לא כסף
+      if (val) { anyData = true; lines.push('• ' + displayHotel(n) + ' — ' + label + ': ' + val); }
+      else lines.push('• ' + displayHotel(n) + ' — ' + label + ': לא כתוב בדף של המלון אצלי; נציג יאמת מול המלון.');
+    }
+  }
+  if (!anyData) return null;                            // אין אף עובדה — עדיף המסלול הקיים
+  return 'מדף המלון באתר פינגווין:\n' + lines.join('\n');
+}
+
+/* ---- דירוג מלונות, מהנתונים (אישור תומר, 31/08) ----
+   "מלון X או מלון Y?", "כמה כוכבים?", "מה הדירוג בבוקינג?" — נענים מהמספרים
+   שנאספו מאתר פינגווין ומבוקינג אל data/resorts.json, לא מטקסט קבוע ולא
+   ממודל. מדווח עובדות זו לצד זו ולא פוסק מי "יותר טוב" — הלקוח יסיק.
+   כשלא נקבו בשם מלון, עונה על ההצעות שכבר על המסך. */
+const RATING_Q = /דירוג|כוכבים|בוקינג|booking|טריפ|יוקרתי|מפואר|לוקשרי|luxury|מפנק|איזה מלון (?:יותר|עדיף|טוב)|רמת המלון/i;
+function ratingsLine(lastUser, prevSlots, engine) {
+  if (!RATING_Q.test(String(lastUser || ''))) return null;
+  let names = offline.hotelsNamed(lastUser);
+  if (!names.length) {
+    // המלונות שעל המסך, בסדר שהוצגו
+    const shown = [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
+    const keys = Object.keys(engine.resorts.hotels);
+    names = shown.map(d => keys.find(k => displayHotel(k) === d)).filter(Boolean);
+  }
+  names = [...new Set(names)].slice(0, 3);
+  if (!names.length) return null;
+  const parts = [];
+  let anyData = false;
+  for (const n of names) {
+    const badge = ratingBadge(engine.hotelInfo(n));
+    if (badge) { anyData = true; parts.push('• ' + displayHotel(n) + ' — ' + badge); }
+    else parts.push('• ' + displayHotel(n) + ' — אין לי דירוג מאומת למלון הזה; נציג יבדוק.');
+  }
+  if (!anyData) return null;             // אין אף מספר אמיתי — עדיף התשובה הכללית
+  return 'לפי הנתונים שבאתר פינגווין:\n' + parts.join('\n') +
+    '\nמה עוד חשוב לכם — ספא, מרחק מהמסלול, סוג החדר — כתוב על ההצעה של כל מלון.';
+}
+
 function presentCards(result, slots, skip, opts = {}) {
   // top 3 for display; ranked by the deterministic sort, but prefer showing
   // three DIFFERENT hotels before a second room of the same hotel
@@ -351,6 +548,11 @@ function presentCards(result, slots, skip, opts = {}) {
     // customers on the cards and in the model's sentences.
     hotel: displayHotel(c.hotel), resort: c.resort, country: c.country,
     country_he: labels.country(c.country) || c.country,
+    // כוכבים וציון אורחים — מדפי pingwin.co.il, והחסר הושלם מ-Booking.com
+    // (data/resorts.json, נאסף 31/08). null = לא אומת, ואז לא מציגים כלום.
+    stars: engine.hotelInfo(c.hotel).stars ?? null,
+    booking_score: engine.hotelInfo(c.hotel).booking_score ?? null,
+    rating_he: ratingBadge(engine.hotelInfo(c.hotel)),
     date: c.date, date_label: c.date_label, nights: c.nights,
     room: c.room, occ: c.occ_effective, occ_composition_he: c.occ_composition_he,
     desc_he: c.desc_he, lift_he: c.lift_he, tags: c.tags, image: c.image,
@@ -570,8 +772,88 @@ function droppedQuestionLine(lastUser, multiPart, answersGiven, guarded) {
     'שאלתם עוד דבר ולא עניתי עליו — כתבו לי אותו שוב במשפט אחד ואענה.');
 }
 
-/* ---------- chat orchestration ---------- */
+// The same FAQ answer, asked about again. The sentence the follow-up is about,
+// if one can be picked; else, for a SHORT answer, the answer again with
+// "כאמור" — "למה שאזמין דווקא אצלכם?" after the two-sentence competitor line
+// got "עניתי על זה למעלה" (S11, 06/09 smoke), which reads as a door closing.
+// Only a long paragraph earns the "that is all I have" line.
+function repeatAnswer(lastUser, he, fallback) {
+  const picked = offline.pickSentence(lastUser, he);
+  if (picked) return picked;
+  const body = String(he || '').trim();
+  if (body.length <= 260 && !/^כאמור/.test(body)) return 'כאמור — ' + body;
+  return fallback;
+}
+
+/* ---------- foreign languages: translate in, run the Hebrew turn, translate out ----------
+   See server/translate.js. The Hebrew pipeline never learns that the customer
+   wrote English; it sees a Hebrew message and produces a Hebrew reply, and the
+   two translations wrap it. `slots._lang` keeps the language sticky, so
+   "2 adults" or "ok" (no letters to detect a language from) still comes back
+   in English; a message with Hebrew in it ends the translation. */
+async function translateWithModel({ system, user, maxTokens, deadline, json }) {
+  const raw = aiMode() === 'openai'
+    ? await callOpenAI({ system, messages: [{ role: 'user', content: user }], maxTokens, json,
+        model: process.env.OPENAI_PHRASE_MODEL || undefined, deadline })
+    : await callClaude({ system, messages: [{ role: 'user', content: user }], maxTokens, deadline });
+  return String(raw || '').trim();
+}
 async function handleChat(body) {
+  const rawMessages = Array.isArray(body && body.messages) ? body.messages : [];
+  const lastIdx = (() => { for (let i = rawMessages.length - 1; i >= 0; i--) if (rawMessages[i] && rawMessages[i].role !== 'assistant') return i; return -1; })();
+  const text = lastIdx >= 0 && typeof rawMessages[lastIdx].content === 'string' ? rawMessages[lastIdx].content : '';
+  const detected = offline.foreignLanguage(text);
+  const prevLang = body && body.slots && typeof body.slots._lang === 'string' && translate.TRANSLATABLE.has(body.slots._lang) ? body.slots._lang : null;
+  const hasHebrew = /[א-ת]/.test(text);
+  const lang = translate.TRANSLATABLE.has(detected) ? detected
+    : (!detected && !hasHebrew && text.trim() && prevLang) ? prevLang : null;
+  const clearLang = out => { if (out && out.slots && out.slots._lang && !lang) delete out.slots._lang; return out; };
+  if (!lang || aiMode() === 'offline' || offline.guard(text) || offline.isGibberish(text) || process.env.TRANSLATE === 'off') return clearLang(await handleChatInner(body));
+  // an integer, or the timer refuses it ("delay is out of range" — 25000/3)
+  const budget = () => Date.now() + Math.round(Math.min(9000, Math.max(3000, CHAT_TIMEOUT_MS / 3)));
+  // in: only when there are letters to translate ("4" and "2+2" go straight through)
+  let he = text;
+  if (/[A-Za-zЀ-ӿ؀-ۿÀ-ÿ]{2}/.test(text)) {
+    health.called('translate');
+    try {
+      const raw = await translateWithModel({ system: translate.IN_PROMPT, user: text, maxTokens: 400, deadline: budget(), json: true });
+      let parsed = null;
+      try { parsed = JSON.parse(raw); } catch (e) { const m = raw.match(/\{[\s\S]*\}/); if (m) { try { parsed = JSON.parse(m[0]); } catch (e2) { parsed = null; } } }
+      he = translate.validateIn(parsed && parsed.he, text, KNOWN_NAMES);
+      if (!he) { health.rejected('translate', 'in'); console.error('translate-in rejected: %s', raw.slice(0, 160)); }
+      else health.ok('translate');
+    } catch (e) { health.failed('translate', e); console.error('translate-in failed:', e.message); he = null; }
+    if (!he) return clearLang(await handleChatInner(body));   // the fixed sentence in their language, as before
+  }
+  const messages = rawMessages.map((m, i) => i === lastIdx ? { ...m, content: he } : m);
+  const out = await handleChatInner({ ...body, messages });
+  if (!out || !out.slots) return out;
+  out.slots._lang = lang;
+  // out
+  health.called('translate');
+  let translated = null;
+  try {
+    const raw = await translateWithModel({ system: translate.outPrompt(lang), user: String(out.reply_he || ''), maxTokens: 900, deadline: budget(), json: false });
+    translated = translate.validateOut(raw, out.reply_he, lang);
+    if (!translated) { health.rejected('translate', 'out'); console.error('translate-out rejected: %s', raw.slice(0, 160)); }
+    else health.ok('translate');
+  } catch (e) { health.failed('translate', e); console.error('translate-out failed:', e.message); }
+  if (translated) {
+    out.reply_he = translated;
+    out.model_used = true;
+    if (out.open_lead_form && !out.lead_kind) out.lead_kind = 'language_' + lang;
+    if (process.env.BANK_DEBUG && out.debug) out.debug.lang = lang;
+  } else {
+    // a reply we could not carry across the language is not sent half-way:
+    // the fixed sentence in their language, and the form
+    out.reply_he = guidance.languageText(lang) || out.reply_he;
+    out.open_lead_form = true; out.lead_kind = 'language_' + lang;
+  }
+  return out;
+}
+
+/* ---------- chat orchestration ---------- */
+async function handleChatInner(body) {
   const startedAt = Date.now();
   // Pick up a re-exported workbook without a restart. Cheap (five stat calls)
   // and it is the one file where reading a stale copy means telling a customer
@@ -610,24 +892,46 @@ async function handleChat(body) {
   const questionsAsked = assistantQuestionCount(messages);
 
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
-  const lastUser = lastUserMsg ? lastUserMsg.content : '';
+  const lastUser = offline.fixTypos(lastUserMsg ? lastUserMsg.content : '');
 
   // ---- step 1: deterministic Hebrew parse — always runs, always free ----
   let slots = offline.parseText(lastUser, prevSlots);
+  /* "זוג לבנסקו במרץ" ואז "בעצם עדיף לנו צרפת": המדינה החדשה נקלטה, אבל
+     היעד מהתור הקודם (בנסקו) נשאר וגבר עליה — הלקוח קיבל "איזו מההצעות
+     מדברת אליכם?" על אותן הצעות בבולגריה. יעד ששייך למדינה אחרת מזו שנאמרה
+     עכשיו כבר לא רלוונטי. (התגלה בבדיקה הרב-תורית, 31/08 — בנק חד-תורי לא
+     יכול למצוא את זה מבנית.) */
+  if (slots.country && slots.destination) {
+    try {
+      const prof = require('../config/resort-profiles.json').resorts[slots.destination];
+      // רק כשהמדינה נאמרה עכשיו והיעד הוא ירושה מתור קודם
+      if (prof && prof.country && prof.country !== slots.country &&
+          slots.destination === prevSlots.destination && slots.country !== prevSlots.country) {
+        slots.destination = null;
+      }
+    } catch (e) { /* אם אי אפשר לקבוע — משאירים כמו שהיה */ }
+  }
   // One conversation id, minted on the first turn and carried by every reply —
   // including the early returns (greeting, farewell, guard, language). It is
   // what ties a lead to the chat that produced it, and it used to be handed
   // back only when Turnstile was on, so most leads had no chat at all.
   if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
   let replyIfNotReady = null;
+  let modelAskedQuestion = false;   // the question in replyIfNotReady is the model's, not the ladder's
   let modelUsed = false;
 
   // ---- step 1a: not Hebrew? one sentence in their language, and the form ----
-  const lang = offline.foreignLanguage(lastUser);
+  // "asdfgh" is not English
+  const lang = offline.isGibberish(lastUser) ? null : offline.foreignLanguage(lastUser);
   // transliterated Hebrew always gets the invitation (what it parsed is kept);
   // a real foreign sentence that the English floor already understood
   // ("family of 4 in february") goes on to the search instead
-  if (lang && (lang === 'translit' || !slotsChanged(prevSlots, slots)) && !offline.guard(lastUser)) {
+  const hebrewInvite = lang === 'translit' || lang === 'mixed';
+  // With a model, a foreign message only reaches this point when the
+  // translation was refused (see handleChat above); without one, this is the
+  // whole answer. Either way a Hebrew paragraph to an English speaker helps
+  // nobody — the fixed sentence in their language, and what was parsed is kept.
+  if (lang && !offline.guard(lastUser)) {
     const line = guidance.languageText(lang);
     if (line) {
       if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
@@ -635,14 +939,86 @@ async function handleChat(body) {
         cards: [], result: { notes: [], relaxed: [] }, slots, modelUsed: false, ms: Date.now() - startedAt,
         notUnderstood: false, answeredBy: 'lang:' + lang });
       return {
-        open_lead_form: lang !== 'translit', lead_kind: lang !== 'translit' ? 'language_' + lang : null, lead_prefill: null,
-        reply_he: line, model_used: false, pending_parameter: lang === 'translit' ? 'adults' : null,
+        open_lead_form: !hebrewInvite, lead_kind: !hebrewInvite ? 'language_' + lang : null, lead_prefill: null,
+        reply_he: line, model_used: false, pending_parameter: hebrewInvite ? 'adults' : null,
         slots, cards: [], two_room_splits: [], notes: [], relaxed: [],
-        chips: lang === 'translit' ? ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'] : [], chip_to_pref: CHIP_TO_PREF,
+        chips: hebrewInvite ? ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'] : [], chip_to_pref: CHIP_TO_PREF,
         ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'lang', lang, faq_ids: [], guard: null, off_topic: false, not_understood: false, pending: null } } : {}),
       };
     }
   }
+
+  // ---- step 1a½: an existing customer (or a complaint) stays with the rep ----
+  // Once someone has said "הזמנתי ולא קיבלתי אישור" or "המלון היה נורא", the
+  // next turns belong to that thread — "מספר ההזמנה 48213", "מתי אקבל את
+  // הכרטיסים?", "אני רוצה פיצוי". Live persona run (03/09): each of those was
+  // answered with three hotel cards and "כמה נוסעים תהיו?". A paying customer
+  // got a catalogue. The mode ends the moment they start a new search
+  // ("בוא נראה מה יש לפברואר לזוג") or ask to see offers.
+  // A company outing, a school, a bar-mitzvah group: the same rule. "אפשר גם
+  // ערב צוות במלון?" from the welfare manager of 24 employees was answered
+  // "נוסעים גם ילדים?" and then three hotel cards (P16, live 06/09).
+  const GROUP_KINDS = new Set(['corporate', 'school', 'celebration_group']);
+  const repKind = prevSlots._rep_mode ||
+    (prevSlots._lead_kind === 'existing' ? 'existing' : (GROUP_KINDS.has(prevSlots._lead_kind) ? 'group' : null));
+  const REP_EXIT = /רוצה לראות|תראה לי|תראו לי|מה יש ל|בוא נראה|בואו נראה|חופשה חדשה|הזמנה חדשה|עוד חופשה|להזמין שוב|הזמנה נוספת|אפשרויות/;
+  if (repKind && !slotsChanged(prevSlots, slots) && !REP_EXIT.test(lastUser) &&
+      !offline.guard(lastUser) && !offline.isGreeting(lastUser) && !offline.wantsMore(lastUser)) {
+    const bookingNo = lastUser.match(/(?:מספר|מס'?)? ?ה?הזמנה\D{0,4}(\d{3,})|הזמנה (?:מספר |מס'? ?)?(\d{3,})/);
+    const num = bookingNo ? (bookingNo[1] || bookingNo[2]) : null;
+    const fh = offline.faqMulti(lastUser);
+    const STICKY = new Set(['complaint', 'my_booking']);
+    const generic = repKind === 'complaint'
+      ? guidance.msg('complaint_followup',
+          'אני לא רוצה לענות על זה בסיסמאות. הפנייה שלכם צריכה להגיע לנציג שיראה מה קרה ויטפל בזה אישית — השאירו כאן שם וטלפון ואסמן שזו פנייה שכבר נפלה פעם, או התקשרו ל-{phone}.')
+      : repKind === 'group'
+      ? guidance.msg('group_followup',
+          'לקבוצה כזו הכול נבנה בהתאמה אישית מול נציג הקבוצות — ערבי צוות, חלוקה לחדרים, תמהיל גולשים ולא-גולשים ותקציב. את הפרטים משאירים כאן — שם וטלפון — ונציג קבוצות יחזור אליכם, או התקשרו ל-{phone}.')
+      : guidance.msg('existing_followup',
+          'זה שייך להזמנה שלכם, ואותה אני לא רואה — נציג כן. השאירו כאן שם וטלפון (ומספר ההזמנה, אם יש) ונחזור אליכם, או התקשרו ל-{phone}.');
+    const tail = repKind === 'group'
+      ? guidance.msg('group_tail', 'ולקבוצה בגודל הזה — הכול נסגר מול נציג הקבוצות: השאירו כאן שם וטלפון ונחזור אליכם.')
+      : guidance.msg('rep_tail', 'ההזמנה הקיימת שלכם — רק מול נציג: השאירו כאן שם וטלפון ונחזור אליכם.');
+    let line;
+    // the two things an upset customer actually asks, answered to the point
+    const wantsComp = /פיצוי|זיכוי|החזר כספי/.test(lastUser);
+    const whyAgain = /למה ש(?:אני )?(?:אזמין|נזמין)|למה לחזור|למה שאחזור|למה שנחזור/.test(lastUser);
+    if (num) {
+      slots.notes_from_customer = [...new Set([...(slots.notes_from_customer || []), 'מספר הזמנה ' + num])].slice(0, 6);
+      line = 'רשמתי: הזמנה ' + num + '. ' + generic;
+    } else if (fh && !STICKY.has(fh.id) && fh.id !== prevSlots._lastFaqId) {
+      line = /שם וטלפון/.test(fh.he) ? fh.he : fh.he + String.fromCharCode(10) + tail;
+      slots._lastFaqId = fh.id;
+    } else if (wantsComp) {
+      line = guidance.msg('complaint_compensation',
+        'פיצוי או זיכוי — זו החלטה של נציג אחרי שיראה את ההזמנה ומה קרה, לא שלי. השאירו כאן שם וטלפון ואעביר את זה כפנייה שכבר נפלה פעם, או התקשרו ל-{phone}.');
+    } else if (whyAgain) {
+      line = guidance.msg('complaint_why_again',
+        'שאלה הוגנת, ולא אענה עליה בסיסמאות. מה שכן יכול לשכנע זה שהפעם מישהו באמת יחזור אליכם — השאירו שם וטלפון ואסמן את הפנייה כדחופה לנציג, או התקשרו ל-{phone}.');
+    } else {
+      line = generic;
+    }
+    // the same sentence twice running reads better as a person repeating
+    // themselves on purpose
+    if (line === prevSlots._lastGuard) line = 'כאמור — ' + line;
+    slots._lastGuard = line.replace(/^כאמור — /, '');
+    slots._rep_mode = repKind;
+    slots._lead_kind = repKind === 'existing' ? 'existing' : (slots._lead_kind || null);
+    // the form stays tagged with WHO they are ("corporate"), not with the mode
+    const leadKindOut = repKind === 'group' ? (slots._lead_kind || prevSlots._lead_kind || 'corporate') : repKind;
+    chatLog.logTurn({
+      conversationId: body.conversationId || slots._cid, userText: lastUser, reply: line,
+      cards: [], result: { notes: [], relaxed: [] }, slots, modelUsed: false, ms: Date.now() - startedAt,
+      notUnderstood: false, answeredBy: 'rep:' + repKind,
+    });
+    return {
+      open_lead_form: true, lead_kind: leadKindOut, lead_prefill: null,
+      reply_he: line, model_used: false, pending_parameter: null,
+      slots, cards: [], two_room_splits: [], notes: [], relaxed: [], chips: [], chip_to_pref: CHIP_TO_PREF,
+      ...(process.env.BANK_DEBUG ? { debug: { answered_by: 'rep', lead_kind: repKind, faq_ids: fh ? [fh.id] : [], guard: null, off_topic: false, not_understood: false, pending: null } } : {}),
+    };
+  }
+  if (repKind) { delete slots._rep_mode; }   // they moved on — a new search or "תראה לי"
 
   // ---- step 1b: is this even a customer looking for a holiday? ----
   // A travel agent, a company, a school, a journalist, someone who already
@@ -652,6 +1028,8 @@ async function handleChat(body) {
   if (leadIntent) {
     // a phone number typed after "אני סוכן" is still the agent's lead
     slots._lead_kind = (leadIntent.kind === 'phone_only' && prevSlots._lead_kind) ? prevSlots._lead_kind : leadIntent.kind;
+    if (slots._lead_kind === 'existing') slots._rep_mode = 'existing';
+    if (GROUP_KINDS.has(slots._lead_kind)) slots._rep_mode = 'group';
     if (!slots._cid) slots._cid = 'c' + Math.random().toString(36).slice(2, 10);
     chatLog.logTurn({
       conversationId: body.conversationId || slots._cid, userText: lastUser, reply: leadIntent.he,
@@ -688,6 +1066,18 @@ async function handleChat(body) {
         // a concrete month the regex layer already parsed ("דצמבר או ינואר"
         // became "any או ינואר" in front of a customer)
         if (found.month === 'any' && typeof slots.month === 'number') delete found.month;
+        // "any" is what the customer says, not what the model assumes. Live
+        // persona run (03/09): "2 מבוגרים ו-2 ילדים" came back with a flexible
+        // month, the gate opened, and three hotels were shown before anyone
+        // had said when — then the next line asked "באיזה חודש?". A flexible
+        // answer needs a flexible word in the message.
+        const FLEX = /גמיש|לא משנה|כל (חודש|תאריך|מקום|יעד)|מתי שיש|איפה שיש|מה שיש|אין לי העדפה|לא חשוב/;
+        if (!FLEX.test(lastUser)) {
+          if (found.month === 'any') delete found.month;
+          if (found.flexible_dates === true) delete found.flexible_dates;
+          if (found.country === 'any') delete found.country;
+          if (found.departure_airport === 'any') delete found.departure_airport;
+        }
         // "טסנו איתכם לפני שנתיים" is two years AGO, not a two-year-old.
         // Children arriving only from the model, in a message with no child
         // word in it, are an invention.
@@ -723,7 +1113,7 @@ async function handleChat(body) {
           .filter(n => !/חשוב להם|מבקשים|מעוניינים|רוצים ש|מחפשים ש/.test(n))
           // a request for other customers' details is refused by the guard —
           // it must never resurface as a note promising a rep will "check"
-          .filter(n => !/פרטי קשר|טלפונים של|שמות של|נוסעים אחרים|לקוחות אחרים/.test(n))
+          .filter(n => !/פרטי קשר|טלפונים של|טלפון של|שמות של|נוסעים אחרים|לקוחות אחרים|לקוח אחר|נוסע אחר/.test(n))
           .filter(n => !(/שבת/.test(n) && merged.no_saturday_flights))
           .slice(0, 6);
         slots = merged;
@@ -736,7 +1126,7 @@ async function handleChat(body) {
         // wrong, only plainer.
         if (!parsed.ready_to_search && parsed.reply_he) {
           const q = phrasing.validateQuestion(parsed.reply_he);
-          if (q.ok) replyIfNotReady = parsed.reply_he;
+          if (q.ok) { replyIfNotReady = parsed.reply_he; modelAskedQuestion = true; }
           else console.error('slot question rejected (' + q.why + '):', String(parsed.reply_he).slice(0, 120));
         }
       }
@@ -827,26 +1217,70 @@ async function handleChat(body) {
   // Only for something that looks like a question. "ינואר", "כן", "4" and
   // "חשוב לי ספא" are answers to us, not questions to route — paying to route
   // them would be the token policy thrown away for nothing.
-  const looksLikeQuestion = /[?]/.test(lastUser) ||
+  // "אפשר גם בעברית" / "אפשר בעברית" after a foreign-language turn is an
+  // affirmation, not a question about who speaks Hebrew — routing it sent the
+  // model to hebrew_staff (persona P29, 03/09), a paragraph about camp
+  // counsellors nobody asked about.
+  const justSwitchingToHebrew = /^\s*(כן,?\s*)?אפשר (גם )?בעברית\.?\s*$/.test(lastUser);
+  const looksLikeQuestion = !justSwitchingToHebrew && (/[?]/.test(lastUser) ||
     /^\s*(מה|מי|מתי|איפה|איך|כמה|האם|יש |אפשר|צריך|למה|אם )/.test(lastUser) ||
     (!slotsChanged(prevSlots, slots) && lastUser.trim().length > 8) ||
     // A requirement stated inside a long request is a question too: "רוצים
     // העברות פרטיות ומלון על המסלול" has an answer waiting for it, and it was
     // going unanswered because the same sentence also filled slots.
-    lastUser.trim().length > 60;
+    lastUser.trim().length > 60);
+  // "ולצרפת?" straight after the flight-days answer, "ובחנוכה?" after the
+  // holidays answer: a word or two that continue the previous topic. The
+  // answer is a sentence of the paragraph we just gave — quote it, no model
+  // needed (20 "אין לי תשובה מוכנה" follow-ups in the live FAQ run, 06/09).
+  const prevFaqEntry = prevSlots._lastFaqId
+    ? offline.faqEntries().find(e => e.id === prevSlots._lastFaqId) : null;
+  const shortFollowup = lastUser.trim().split(/\s+/).length <= 4 && /^\s*[ו]/.test(lastUser.trim());
+  if (!faqHit && prevFaqEntry && shortFollowup && !offline.guard(lastUser)) {
+    const picked = offline.pickSentence(lastUser, prevFaqEntry.answer_he);
+    if (picked) faqHit = { id: prevFaqEntry.id, he: picked, all: [{ id: prevFaqEntry.id, he: picked }], followup: true };
+  }
+  // computed once, used by both router calls below. A short message gets the
+  // previous customer message alongside — "ולצרפת?" on its own routes nowhere.
+  const prevUserMsg = [...messages].slice(0, -1).reverse().find(m => m.role === 'user');
+  const shortMsg = lastUser.trim().split(/\s+/).length <= 8;
+  const prevLine = shortMsg && prevUserMsg
+    ? 'ההודעה הקודמת של הלקוח: ' + String(prevUserMsg.content || '').slice(0, 120) +
+      (prevSlots._lastFaqId ? ' (נענתה מתוך: ' + prevSlots._lastFaqId + ')' : '')
+    : '';
+  const routerDigest = [partyDigest(slots), prevLine].filter(Boolean).join(String.fromCharCode(10));
+  const withDigest = t => routerDigest ? routerDigest + String.fromCharCode(10) + 'שאלה: ' + t : t;
+  // "יש להם מסגרת או שהם עם המבוגרים?" two turns after "מתבגרים בני 14 ו-16":
+  // the ages are on the slots, the word is "מסגרת" — that is the teen-camp
+  // answer, and no router call is needed to know it (S09, 06/09 smoke: the
+  // router picked "טיול מאורגן" even with the digest in front of it).
+  const teenAges = (slots.children_ages || []).filter(a => a >= 13 && a <= 17);
+  if (!faqHit && teenAges.length && !offline.guard(lastUser) &&
+      /מסגרת|קייטנ|הדרכה|מי שומר|מה עושים|לבד|מדריך/.test(lastUser) && !/מבוגרים בלבד|למבוגרים\?/.test(lastUser)) {
+    const teen = offline.faqEntries().find(e => e.id === 'teen_camp');
+    if (teen) faqHit = { id: 'teen_camp', he: teen.answer_he, all: [{ id: 'teen_camp', he: teen.answer_he }] };
+  }
+  // Same for "אפשר בכלל לנסוע איתם?" a turn after "תינוק בן שנה ופעוט בן 3":
+  // a baby is on the slots, "איתם" is the baby (S10, offline)
+  const babyAges = (slots.children_ages || []).filter(a => a <= 3);
+  if (!faqHit && babyAges.length && !offline.guard(lastUser) &&
+      /לנסוע אית|לטוס אית|אפשר בכלל|מתאים ל(?:תינוק|פעוט|קטנים)|עם (?:תינוק|פעוט)/.test(lastUser)) {
+    const baby = offline.faqEntries().find(e => e.id === 'travel_with_baby');
+    if (baby) faqHit = { id: 'travel_with_baby', he: baby.answer_he, all: [{ id: 'travel_with_baby', he: baby.answer_he }] };
+  }
   if (!faqHit && looksLikeQuestion && !offline.guard(lastUser) && !offline.deflect(lastUser)) {
     // the model router gets the same context, for the same reason — asked to
     // route "עד מתי?" on its own it has nothing to route
-    faqHit = await routeToAnswer(withEntities || withContext || lastUser, deadline);
+    faqHit = await routeToAnswer(withDigest(withEntities || withContext || lastUser), deadline);
   }
   // "יש חניה במלון? ומה עם ביטוח?" — the regex caught the insurance and the
   // parking question fell on the floor. When the message plainly asks more
   // than one thing, the router runs anyway and the second answer rides along.
   const multiPart = (lastUser.match(/\?/g) || []).length >= 2 ||
-    /ומה (עם|לגבי|בקשר)|וגם מה|ושאלה נוספת|ועוד שאלה/.test(lastUser);
+    /ומה (עם|לגבי|בקשר)|וגם מה|ושאלה נוספת|ועוד שאלה|ואגב|, אגב/.test(lastUser);
   if (faqHit && !faqHit.routed && multiPart && (faqHit.all || []).length < 2 &&
       !offline.guard(lastUser)) {
-    const routed = await routeToAnswer(lastUser, deadline);
+    const routed = await routeToAnswer(withDigest(lastUser), deadline);
     const extra = routed && (routed.all || []).find(a => a.id !== faqHit.id);
     if (extra) faqHit = { ...faqHit, he: faqHit.he + String.fromCharCode(10) + extra.he };
   }
@@ -864,14 +1298,63 @@ async function handleChat(body) {
   if (faqHit && faqHit.id === 'compare_countries' && (slots.compare || []).length) {
     faqHit = null;
   }
-  // Reasoned recommendation (q25): "איזה אתר מתאים למשפחה?", "טיניי או ואל
+  // Reasoned recommendation (q25): "איזה אתר מתאים למשפחה?", "טין או ואל
   // טורנס?", "איפה יש קרחון?" — answered from the approved resort table with
   // the facts as reasons. It outranks the generic compare/country lecture.
   let recAnswer = null;
   if (!offline.guard(lastUser)) {
     recAnswer = recommend.answer(lastUser, slots);
+    // It outranks the GENERIC lectures only. A specific approved answer that
+    // already matched — "איפה הקייטנה?", "אפשר שכל משפחה תשלם בנפרד?" — must
+    // not be replaced by a resort list: 15 bank questions used to get a
+    // recommendation instead of their answer (אושר על ידי תומר, 31/08).
+    const RECOMMEND_MAY_REPLACE = new Set(['compare', 'compare_countries']);
+    if (recAnswer && faqHit && !RECOMMEND_MAY_REPLACE.has(faqHit.id) &&
+        !(faqHit.all || []).some(a => RECOMMEND_MAY_REPLACE.has(a.id))) {
+      recAnswer = null;                       // the specific answer wins
+    }
     if (recAnswer) faqHit = { id: 'recommend', he: recAnswer.he, chips: recAnswer.chips,
       all: [{ id: 'recommend', he: recAnswer.he }] };
+  }
+
+  // שאלת דירוג עם מלון בשם (או עם הצעות על המסך): המספרים האמיתיים גוברים על
+  // התשובה הכללית של luxury_level — אבל אף פעם לא על תשובה ספציפית אחרת.
+  let ratingFacts = null;
+  try { ratingFacts = ratingsLine(lastUser, prevSlots, engine); } catch (e) { ratingFacts = null; }
+  const RATING_GENERIC = new Set(['luxury_level', 'reviews']);
+  if (ratingFacts && (!faqHit || RATING_GENERIC.has(faqHit.id) ||
+      (faqHit.all || []).some(a => RATING_GENERIC.has(a.id)))) {
+    faqHit = { id: 'hotel_ratings', he: ratingFacts, all: [{ id: 'hotel_ratings', he: ratingFacts }] };
+  }
+
+  // שאלת מתקן עם מלון בשם (או הצעות על המסך): הציטוט מדף המלון גובר על
+  // התשובות הגנריות ("תנאי הספא שונים בין המלונות") — אך לא על תשובה
+  // ספציפית אחרת, ולא על כשרות/שבת שהן מדיניות ולא מתקן.
+  let facilityFacts = null;
+  try { facilityFacts = facilityLine(lastUser, prevSlots, engine); } catch (e) { facilityFacts = null; }
+  const FACILITY_GENERIC = new Set(['spa', 'wifi', 'parking', 'hotel_facility_unknown', 'lockers', 'slope_distance']);
+  // "יש מקרר בחדר ב-X?" נתפס על ידי תשובת הכשרות בגלל המילה מקרר; כשנקבו
+  // במלון וזו שאלת מתקן בלי "כשר", העובדה מהדף עדיפה. "לבשל כשר" נשאר אצל
+  // תשובת הכשרות.
+  const kosherHijack = faqHit && (faqHit.id === 'kosher' || (faqHit.all || []).some(a => a.id === 'kosher')) &&
+    !/כשר|כשרות/.test(lastUser);
+  if (facilityFacts && (!faqHit || kosherHijack || FACILITY_GENERIC.has(faqHit.id) ||
+      (faqHit.all || []).some(a => FACILITY_GENERIC.has(a.id)))) {
+    faqHit = { id: 'hotel_facility_facts', he: facilityFacts, all: [{ id: 'hotel_facility_facts', he: facilityFacts }] };
+  }
+  // "מה ההבדל בין Sport ל-Ferienhof?" / "איזה מהם מתאים לנו?" — characterize
+  // the hotels from their approved data (Tomer, 06/09: "כן תיתן לו לאפיין"),
+  // instead of the old "לא אדרג מלון אחד מול השני". No prices, no "הכי".
+  let charFacts = null;
+  try {
+    charFacts = characterize.line(lastUser, prevSlots, slots, engine, {
+      displayHotel, ratingBadge, hotelsNamed: offline.hotelsNamed,
+      resortHe: r => phrasing.RESORT_HE[r] || null,
+    });
+  } catch (e) { charFacts = null; }
+  const CHAR_GENERIC = new Set(['compare', 'which_room', 'luxury_level', 'reviews', 'recommend', 'hotel_ratings', 'slope_distance', 'spa']);
+  if (charFacts && (!faqHit || CHAR_GENERIC.has(faqHit.id) || (faqHit.all || []).some(a => CHAR_GENERIC.has(a.id)))) {
+    faqHit = { id: 'hotel_characterization', he: charFacts, all: [{ id: 'hotel_characterization', he: charFacts }] };
   }
 
   // What we looked up, above the answer we found. Computed here rather than
@@ -881,7 +1364,17 @@ async function handleChat(body) {
   const echoPlace = slots.hotel ||
     (slots.destination ? String(slots.destination) : null) ||
     (botEntities ? botEntities.split(' ').slice(0, 2).join(' ') : null);
+  // No echo over a hotel profile — the profile names the hotel itself, so
+  // "בודק לגבי: Regnum" above it is the same word twice (S15, 06/09 smoke).
+  // And a message the pattern layer answered on its own was not "rewritten",
+  // whatever context was prepared for the router ("ומה עם טיסות בשבת?" → an
+  // echo of "טיסות בשבת" over the shabbat paragraph, S20).
+  const HOTEL_FACT_IDS = new Set(['hotel_characterization', 'hotel_facility_facts', 'hotel_ratings']);
   const echoFor = (hit) => {
+    if (hit && (HOTEL_FACT_IDS.has(hit.id) || (hit.all || []).some(a => HOTEL_FACT_IDS.has(a.id)))) return null;
+    // the customer's own words matched the answer — nothing was looked up on
+    // their behalf, so there is nothing to be transparent about
+    if (hit && !hit.routed && offline.faq(lastUser)) return null;
     const line = knowledgeEcho(hit, slots, { rewritten: !!withContext, place: echoPlace });
     if (!line || line === prevSlots._know_said) return null;
     slots._know_said = line;
@@ -924,7 +1417,9 @@ async function handleChat(body) {
         .filter(n => !(prevSlots.notes_from_customer || []).includes(n)),
       ...(slots.preferences || [])
         .filter(pf => !(prevSlots.preferences || []).includes(pf)),
-    ];
+    // "רשמתי גם: מתעניין ב-Regnum" under the Regnum profile is the model's
+    // note of the very thing we just answered (S15, 06/09 smoke)
+    ].filter(n => !(faqHit.id === 'hotel_characterization' && offline.hotelsNamed(n).length));
     // an emotional turn — a complaint, a booking worry — gets its human word
     // first and no cheery invite after; and no promise of "באמת פנוי"
     const EMOTIONAL = new Set(['complaint', 'my_booking', 'special_needs']);
@@ -934,21 +1429,63 @@ async function handleChat(body) {
     const echoHe = echoFor(faqHit);
     const droppedHe = droppedQuestionLine(lastUser, multiPart,
       Math.max(1, (faqHit.all || []).length), false);
-    const replyText = socialPrefix + (echoHe ? echoHe + String.fromCharCode(10) : '') + faqHit.he +
+    /* The same answer, word for word, twice running.
+       This early return had no repeat suppression at all — it never recorded
+       what it said, so `_lastFaqId` and `_lastLines` stayed empty and the next
+       turn could not tell it was repeating. Seen live 31/08: "מה כלול בחבילה?"
+       then "גם לילדים?" printed the identical four-line paragraph, under an
+       echo saying we had looked the same thing up again.
+       When the follow-up lands on the answer we just gave, the honest reply is
+       that this IS the answer — not the answer again. */
+    let repeatingFaq = faqHit.id && faqHit.id === prevSlots._lastFaqId;
+    /* ...אבל קודם: אולי יש נושא אחר שההודעה גם נוגעת בו. "תבטיח לי שיהיה
+       שלג" ואז "אז מתי הכי בטוח?" נפלו שניהם על no_snow, והלקוח קיבל שורה
+       גנרית במקום התשובה על התקופות. faqMulti מחזיר את כל ההתאמות — אם יש
+       אחת שעוד לא נאמרה, היא התשובה. (בדיקה רב-תורית, 31/08.) */
+    if (repeatingFaq) {
+      const others = (faqHit.all || []).filter(a => a.id !== prevSlots._lastFaqId);
+      if (others.length) {
+        faqHit = { ...faqHit, id: others[0].id, he: others.map(a => a.he).join(String.fromCharCode(10)), all: others };
+        repeatingFaq = false;
+      }
+    }
+    if (EMOTIONAL.has(faqHit.id) && faqHit.id !== 'special_needs') slots._rep_mode = faqHit.id === 'complaint' ? 'complaint' : 'existing';
+    const answerBody = repeatingFaq && faqHit.id === 'complaint'
+      ? guidance.msg('complaint_followup',
+          'אני לא רוצה לענות על זה בסיסמאות. הפנייה שלכם צריכה להגיע לנציג שיראה מה קרה ויטפל בזה אישית — השאירו כאן שם וטלפון ואסמן שזו פנייה שכבר נפלה פעם, או התקשרו ל-{phone}.')
+      : repeatingFaq
+      // "אפשר בביט?" after the payment paragraph: the sentence it is about,
+      // quoted — not "עניתי על זה למעלה" (79 follow-ups, live FAQ run 06/09)
+      ? repeatAnswer(lastUser, faqHit.he, guidance.msg('same_answer_again',
+          'זה מה שיש לי על הנושא הזה — התשובה חלה על כולם, ילדים ומבוגרים כאחד. ' +
+          'אם התכוונתם למשהו ספציפי יותר, כתבו לי אותו ואבדוק.'))
+      : faqHit.he;
+    const replyText = socialPrefix + (echoHe ? echoHe + String.fromCharCode(10) : '') + answerBody +
       (droppedHe ? String.fromCharCode(10) + droppedHe : '') +
       (newNotes.length ? String.fromCharCode(10) + 'רשמתי גם: ' + newNotes.join(', ') +
         (EMOTIONAL.has(faqHit.id) ? ' — אעביר לנציג שיטפל בזה.' : ' — אתחשב בזה בהצעות, ומה שדורש בדיקה נציג יבדוק.') : '') +
       (EMOTIONAL.has(faqHit.id) ? '' : String.fromCharCode(10) +
         'וכשתרצו לבדוק תאריכים — כתבו לי כמה אתם ומתי בערך, ואציג את האפשרויות הפתוחות (נציג מאשר סופית).');
+    // …and remember it, which is what makes the check above possible at all
+    slots._lastFaqId = faqHit.id || null;
+    slots._lastLines = [...new Set([...(prevSlots._lastLines || []),
+      ...replyText.split(String.fromCharCode(10)).filter(Boolean)])].slice(-24);
+    // the editor: one written answer from these lines (a complaint is never edited)
+    const prevAssistantMsg = [...messages].slice(0, -1).reverse().find(m => m.role === 'assistant');
+    const editedText = EMOTIONAL.has(faqHit.id) ? replyText : await composeWithModel({
+      replyText, lastUser, digest: partyDigest(slots), question: null, deadline, knownNames: KNOWN_NAMES, knowledge: true,
+      lastReply: prevAssistantMsg ? String(prevAssistantMsg.content || '') : '',
+    });
+    if (editedText !== replyText) modelUsed = true;
     chatLog.logTurn({
       conversationId: body.conversationId || slots._cid || (slots._cid = 'c' + Math.random().toString(36).slice(2, 10)),
-      userText: lastUser, reply: replyText, cards: [], result: { notes: [], relaxed: [] },
+      userText: lastUser, reply: editedText, cards: [], result: { notes: [], relaxed: [] },
       slots, modelUsed, ms: Date.now() - startedAt,
       notUnderstood: false, answeredBy: faqHit.routed ? 'router' : 'faq',
     });
     return {
       open_lead_form: offline.wantsCallback(lastUser),
-      reply_he: replyText, model_used: modelUsed,
+      reply_he: editedText, model_used: modelUsed,
       pending_parameter: 'adults', slots, cards: [], two_room_splits: [],
       notes: [], relaxed: [],
       chips: (faqHit.chips && faqHit.chips.length) ? faqHit.chips : ['2 נוסעים', '3 נוסעים', '4 נוסעים', '5+ נוסעים'],
@@ -967,10 +1504,34 @@ async function handleChat(body) {
   // does not disown the question.
   const cardTopicAsked = (slots.unverifiable || []).length >
     (prevSlots.unverifiable || []).length;
+  // One list, used twice: for the off-topic verdict here, and below (step 5)
+  // where offers are held — a question containing any of these words is about
+  // the holiday, and must never be told it is not our field.
+  const DOMAIN_HE = /סקי|חופש|מלון|טיסה|לנסוע|נסיעה|לטוס|מקום|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין|לילות|כלול|הבדל|להזמין|הזמנה|ביקשתי|מסלול|ספא|גלישה|מדריך|העבר|יעדים|אופצי|המלצ|הנחה|מעלי|רכבל|גונדול|עגל|תינוק|פעוט|גובה|כרטיס|ציוד|מגלש|מגפ|קסד|מזווד|כבודה|ביטוח|ארוח|אוכל|כשר|בריכ|סאונ|חני|מקרר|מטבח|וואטסאפ|ווצאפ|טיפ |טיפים|שדרוג|חשבונית|החזר|קבל|שיעור|בית ספר|קבוצ|אתר|עייר|כפר|שוק|טיול|מזג|סופה|שרשרא|סים|תרופ|אפיפן|דרכון|ויזה|שבת|נוטריון|הסעה|שאטל|לוקר|בגד|כפפ|משקפ|קרם/;
+  const wantsToSee = offline.wantsMore(lastUser) ||
+    /תראה|תראו|מה יש לכם|הראה לי|אפשר לראות|שלח לי אפשרויות|מה האפשרויות/.test(lastUser) ||
+    // "מה יותר משתלם?" and "יש משהו עד 3500?" are requests to SEE, answered
+    // with a list; holding them back for a full interview reads as stonewalling
+    /משתלם|הכי זול|עד \d{3,5}|יש משהו|יש לכם|מחירים|תאריכים/.test(lastUser) ||
+    // הפתיחות הבסיסיות ביותר — "רוצה חופשת סקי", "מה יש בבולגריה?" — קיבלו
+    // "לא בטוח שהבנתי". זו בקשה לראות, לא שאלת ידע. (בדיקה רב-תורית, 31/08)
+    /^\s*(אני )?(רוצה|מחפש(ת|ים)?|מעוניינ|צריכ|מתעניינ)\s*(חופש|סקי|חבילה|נופש|טיול)/.test(lastUser) ||
+    /^\s*ו?מה יש (ב|לכם ב)/.test(lastUser) ||
+    // "טוב, אז מה יש לזוג בפברואר?" — a request to see, not a question we
+    // failed to answer (persona P14, 03/09). "מה יש לעשות" is a different thing.
+    /(?:^|[\s,.])(?:אז |נו |טוב )?מה יש ל(?!עשות|ה |הם |כם\b)/.test(lastUser) ||
+    // "יש חבילות לאוסטריה?" (the Russian opener, translated) is a request to
+    // see, not a question we failed to answer
+    /^\s*ו?יש (?:לכם )?(?:חבילות|חבילה|חופשות|חופשה|אפשרויות|הצעות|משהו|מקום)(?![א-ת])/.test(lastUser) ||
+    // "זוג, ינואר, מה יש?" — the bare form at the end of the details (P25, live 06/09)
+    /(?:^|[\s,.])(?:אז |נו |טוב )?מה יש\s*[?!.]*\s*$/.test(lastUser) ||
+    // "טוב, בוא נראה בכל זאת מה יש" after a complaint (S12, 06/09 smoke) — a
+    // request to see, and it was getting "אין לי תשובה מאושרת" above the cards
+    /בוא(?:ו)? נראה|נראה מה יש|תציג|תציגו/.test(lastUser);
   const offTopic = lastUser && !slotsChanged(prevSlots, slots) && !modelUsed &&
-    !faqHit && !cardTopicAsked && !offline.deflect(lastUser) && !offline.wantsMore(lastUser) &&
+    !faqHit && !cardTopicAsked && !offline.deflect(lastUser) && !wantsToSee &&
     /\?|איך|מה |למה|מי /.test(lastUser) &&
-    !/סקי|חופש|מלון|טיסה|קייטנ|יעד|תאריך|חודש|ילד|נוסע|מחיר|חדר|שלג|פינגווין|לילות|כלול|הבדל|להזמין|הזמנה|ביקשתי|מסלול|ספא|גלישה|מדריך|העבר|יעדים|אופצי|המלצ/.test(lastUser);
+    !DOMAIN_HE.test(lastUser);
 
   // ---- step 3: what to ask next (same logic whichever layer filled slots) ----
   // Only BLOCKING gaps hold results back. The rest (departure airport,
@@ -983,7 +1544,16 @@ async function handleChat(body) {
     // Passing the previous key would greet them with "סליחה, לא הצלחתי להבין".
     const reAsking = !(prevSlots.children_ages || []).length &&
       (slots.children_ages || []).length > 0 && slots.adults == null;
-    let q = offline.nextQuestion(slots, reAsking ? null : (prevSlots._lastQuestion || null));
+    // Same idea when the customer answered with something ELSE we understood
+    // ("נוסעים גם ילדים?" → "פברואר"): "סליחה, לא הצלחתי להבין" is untrue,
+    // we understood February fine. The retry wording is for a reply that
+    // filled nothing at all.
+    const understoodOther = slotsChanged(prevSlots, slots);
+    // ...and only for a question the customer actually SAW. The FAQ-only turn
+    // files 'adults' as the pending key (so a bare "2" next is a head count)
+    // without printing the question — retrying it reads as scolding.
+    const wasAsked = (prevSlots._asked || []).includes(prevSlots._lastQuestion);
+    let q = offline.nextQuestion(slots, (reAsking || understoodOther || !wasAsked) ? null : (prevSlots._lastQuestion || null));
     // A question whose every answer leads to the same offers is not a question.
     // Skip it and take the next one, rather than spending the customer's turn.
     const asked = new Set();
@@ -1026,12 +1596,46 @@ async function handleChat(body) {
            guidance.msg('one_detail_then', 'ואז אביא לכם אפשרויות פנויות.')]
             .filter(Boolean).join(' ')
         : q.he;
+      // The OPENING asks the basics in one sentence — "כמה תהיו, גילאי ילדים
+      // אם יש, ומתי בערך?" — like Sunny (Tomer, 06/09). A customer who knows
+      // what they want answers all three in one line instead of three turns;
+      // from the second message on it is one question at a time again.
+      // Only the gaps still open, only the three that matter, only when at
+      // least two of them are open (one gap is the ordinary ladder question).
+      const firstUserTurn = messages.filter(m => m.role === 'user').length === 1;
+      // "אפשר גם בעברית" after a foreign-language opener is the first Hebrew
+      // turn — the conversation starts here (S19, 06/09 smoke)
+      if ((firstUserTurn || justSwitchingToHebrew) && !(prevSlots._asked || []).length) {
+        const gaps = offline.blockingGaps(slots);
+        const parts = [];
+        if (gaps.includes('adults')) parts.push(slots.children_count || (slots.children_ages || []).length ? 'כמה מבוגרים' : 'כמה תהיו');
+        if (gaps.includes('children')) parts.push(slots.no_children === false || slots.children_count ? 'בני כמה הילדים' : 'גילאי ילדים אם יש');
+        if (gaps.includes('month')) parts.push('מתי בערך (דצמבר–מרץ)');
+        if (parts.length >= 2) {
+          const joined = parts.length === 2 ? parts.join(' ו') : parts.slice(0, -1).join(', ') + ', ו' + parts[parts.length - 1];
+          replyIfNotReady = guidance.msg('opening_question', 'כדי שאבדוק מה פנוי — {gaps}?').replace('{gaps}', joined);
+          slots._opening_asked = true;
+        }
+      }
     }
     else { pendingQuestion = q; delete slots._lastQuestion; }
   }
 
   const OFF_TOPIC_HE = guidance.msg('off_topic',
     'אני כאן בעיקר להתאמת חופשות סקי של פינגווין. לשאלות אחרות נציג ישמח לעזור ב-{phone}.');
+  // "וכמה זמן לוקח עד שההזמנה מאושרת?" right after the booking answer is not
+  // off topic and not misunderstood — it is a detail we hold no approved
+  // answer for. Say that (37 follow-ups were told "לא התחום שלי" and 50
+  // "לא הבנתי" in the live FAQ run, 06/09). A short message on the heels of
+  // a knowledge answer is a follow-up on it.
+  const knowledgeFollowup = !!prevSlots._lastFaqId && lastUser.trim().split(/\s+/).length <= 8 &&
+    !slotsChanged(prevSlots, slots) && !wantsToSee;
+  // "אסדגכע ייי" — say so, lightly, and leave the door open (Sunny does)
+  const gibberish = offline.isGibberish(lastUser);
+  const SENT_BY_MISTAKE_HE = guidance.msg('sent_by_mistake',
+    'נראה שההודעה נשלחה בטעות — אם יש שאלה, כתבו אותה ואענה.');
+  const FOLLOWUP_UNKNOWN_HE = guidance.msg('followup_unknown',
+    'על הפרט הזה אין לי תשובה מאושרת, ולא אנחש — נציג ישלים אותו: השאירו כאן שם וטלפון או התקשרו ל-{phone}.');
   const SEASON_HE = guidance.msg('out_of_season',
     'עונת הסקי שלנו היא דצמבר עד סוף מרץ — בחודשים אחרים אין לנו יציאות.');
   // a direct answer to a direct question (exact price, other customers'
@@ -1090,6 +1694,9 @@ async function handleChat(body) {
   // when the complaint answer opens with its own, the social line yields.
   let social = offline.socialLine(lastUser);
   if (social && faqHit && /מצטער/.test(social) && /מצטער/.test(faqHit.he)) social = null;
+  // "היינו אצלכם לפני שנתיים והמלון היה מלוכלך" — "ברוכים השבים!" above a
+  // complaint is a machine that heard "היינו אצלכם" and nothing else
+  if (social && faqHit && /ברוכים השבים/.test(social) && /מצטער/.test(faqHit.he)) social = null;
   // "בת 3 ו-10 חודשים" — say how the age is reckoned, once
   const ageLine = slots.age_boundary != null && prevSlots.age_boundary == null ? guidance.languageText('age_boundary') : null;
   // "מה התאריכים בחנוכה?" — a fact we hold, said before anything else. It goes
@@ -1113,7 +1720,8 @@ async function handleChat(body) {
     knowEcho,
     !deflection && faqHit && !faqSuppressed ? faqHit.he : null,
     !deflection && faqSuppressed ? PER_CARD_POINTER[faqHit.id] : null,
-    offTopic && !deflection ? OFF_TOPIC_HE : null,
+    offTopic && !deflection ? (knowledgeFollowup ? FOLLOWUP_UNKNOWN_HE : OFF_TOPIC_HE) : null,
+    gibberish && !deflection && !faqHit && !slotsChanged(prevSlots, slots) ? SENT_BY_MISTAKE_HE : null,
     slots.out_of_season ? SEASON_HE : null,
   ].filter(Boolean).join('\n');
 
@@ -1136,11 +1744,39 @@ async function handleChat(body) {
   // The question may come from the offline ladder (which names its key) or
   // from the model itself. Either way it rides along; a model question with no
   // key used to be discarded silently, so the turn asked nothing at all.
-  const pendingKey = slots._lastQuestion || (replyIfNotReady ? 'model:' + replyIfNotReady.slice(0, 24) : null);
+  // The key must describe THIS turn's question. When the model asks two turns
+  // running, `slots._lastQuestion` still holds last turn's model key (the
+  // ladder, which clears it, did not run) — so the new question was filed as
+  // "already asked", dropped, and the gate opened: three hotels shown before
+  // anyone said when (every live persona run, 03/09).
+  const pendingKey = modelAskedQuestion
+    ? 'model:' + replyIfNotReady.slice(0, 24)
+    : (slots._lastQuestion || (replyIfNotReady ? 'model:' + replyIfNotReady.slice(0, 24) : null));
   let tailQuestion = null;
   if (pendingKey && replyIfNotReady && !askedBefore.has(pendingKey)) {
     tailQuestion = replyIfNotReady;
     askedBefore.add(pendingKey);
+  } else if (pendingKey && replyIfNotReady && !askedBefore.has(pendingKey + '#again') &&
+             offline.blockingGaps(slots).length > 0 &&
+             +(prevSlots._held || 0) < MAX_QUESTIONS && questionsAsked < MAX_QUESTIONS &&
+             !(prevSlots._shown || []).length) {
+    // The customer answered our question with a question of their own —
+    // "באיזה חודש?" → "יש עוד ישראלים בקבוצה?" — and the same question came up
+    // again. "Never twice" dropped it, and with no question left to ride on,
+    // the gate opened: three hotels before anyone said when (P03, P04, P06,
+    // P17, P21, P30 — live run 06/09, the real cause of the early cards).
+    // Ask once more while the offers are still being held; the held counter
+    // still opens the door after MAX_QUESTIONS, so nobody is stuck. The second
+    // asking is never word-for-word the first: the frame says why it is back.
+    const prevAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+    const verbatim = prevAssistant && String(prevAssistant.content || '').includes(replyIfNotReady);
+    // the ladder's "סליחה, לא הצלחתי להבין" retry wording under the frame
+    // would scold twice — the frame carries the plain question instead
+    const plain = modelAskedQuestion ? replyIfNotReady : ((offline.nextQuestion(slots, null) || {}).he || replyIfNotReady);
+    tailQuestion = (verbatim || !modelAskedQuestion)
+      ? guidance.msg('ask_again', 'עוד פרט שחסר לי כדי לדייק: {q}').replace('{q}', plain)
+      : replyIfNotReady;
+    askedBefore.add(pendingKey + '#again');
   }
   slots._asked = [...askedBefore];
   delete slots._lastQuestion;
@@ -1179,7 +1815,7 @@ async function handleChat(body) {
   const puzzled = nothingKnown && !cardTopicAsked &&
     !offline.faq(lastUser) && !offline.deflect(lastUser) &&
     !offline.guard(lastUser) && !offline.isGreeting(lastUser) && !slotsChanged(prevSlots, slots)
-    ? offline.notUnderstood(lastUser) : null;
+    ? (knowledgeFollowup ? FOLLOWUP_UNKNOWN_HE : gibberish ? SENT_BY_MISTAKE_HE : offline.notUnderstood(lastUser)) : null;
   if (puzzled) {
     slots._lastQuestion = 'adults';
     // This early return sits ABOVE the _lost counter, so three "אאא" in a row
@@ -1191,7 +1827,7 @@ async function handleChat(body) {
     const stuck = slots._lost >= 2 && !prevSlots._nudged;
     if (stuck) slots._nudged = true;
     return {
-      open_lead_form: stuck, reply_he: stuck
+      open_lead_form: stuck, reply_he: stuck && !knowledgeFollowup
         ? puzzled + String.fromCharCode(10) + offline.noMatchAnswer()
         : puzzled,
       model_used: false,
@@ -1267,11 +1903,7 @@ async function handleChat(body) {
   // A GENERIC "show me what you have" no longer skips the gate outright
   // (Tomer, 30/08) — it buys ONE question instead of the full round, and the
   // offers arrive on the next turn whatever the customer answered.
-  const wantsToSee = more || offline.wantsMore(lastUser) ||
-    /תראה|תראו|מה יש לכם|הראה לי|אפשר לראות|שלח לי אפשרויות|מה האפשרויות/.test(lastUser) ||
-    // "מה יותר משתלם?" and "יש משהו עד 3500?" are requests to SEE, answered
-    // with a list; holding them back for a full interview reads as stonewalling
-    /משתלם|הכי זול|עד \d{3,5}|יש משהו|יש לכם|מחירים|תאריכים/.test(lastUser);
+  // (wantsToSee is computed above, before the off-topic verdict)
   // Whatever happens, the door opens by itself: after MAX_QUESTIONS turns of
   // asking, or after this conversation has already held the offers back that
   // many times. Nobody is ever stuck at the door — that rule has not changed,
@@ -1282,7 +1914,11 @@ async function handleChat(body) {
   // and that answer must arrive with the offers rather than another question.
   const askedForOffers = wantsToSee || !!prevSlots._showMe;
   const holdLimit = namedPlace ? 0 : (askedForOffers ? 1 : MAX_QUESTIONS);
-  const askedEnough = questionsAsked >= MAX_QUESTIONS || held >= holdLimit;
+  // "זוג, ינואר, מה יש?" — who and when are known and the customer asked to
+  // see: show, and ask the country underneath (S17, 06/09 smoke — it asked
+  // the country first and showed nothing).
+  const askedEnough = questionsAsked >= MAX_QUESTIONS || held >= holdLimit ||
+    (wantsToSee && partyKnown && whenKnown);
   // The gate holds the FIRST offers back; it never takes offers away. A
   // customer who has already seen three cards and then answers a question is
   // giving us more, and watching the offers vanish reads as going backwards —
@@ -1294,6 +1930,16 @@ async function handleChat(body) {
   slots._held = holdingForDetails ? held + 1 : held;
   slots._showMe = askedForOffers && !knowsEnough;
   if (holdingForDetails) cards = [];
+  // A conduct refusal (write me an approval, give me another customer's phone,
+  // a pasted card number) is the whole answer. Three hotels under it read as
+  // "…but anyway, here is what we have" — the refusal loses its weight.
+  // The price rule is different: that one is answered with the cards on purpose.
+  const conductRefusal = !!guarded && !!offline.guard(lastUser) && !/המחיר המדויק לחדר/.test(guarded);
+  if (conductRefusal) cards = [];
+  // A complaint is answered with a human word and a rep — not with three
+  // hotels underneath it ("המלון היה מלוכלך" → cards, 06/09). Sunny does the
+  // same: apology, the channel, and only then an OFFER to continue, no offers.
+  if (faqHit && faqHit.id === 'complaint' && !offline.wantsMore(lastUser)) cards = [];
   // Holding the offers back must not swallow the off-topic line: "תן לי מתכון
   // לעוגה" used to get three hotels and a redirect, and would now get only
   // "כמה תהיו?" — as if a cake recipe were a step in booking a holiday.
@@ -1301,14 +1947,34 @@ async function handleChat(body) {
     // a question the hotel cards answer is understood, even before any card is
     // on screen — it was still getting "אני כאן בעיקר להתאמת חופשות סקי"
     cardTopicAsked ||
-    wantsToSee || offline.isGreeting(lastUser) ||
+    wantsToSee || offline.isGreeting(lastUser) || justSwitchingToHebrew ||
     (slots.notes_from_customer || []).length > (prevSlots.notes_from_customer || []).length ||
     (slots.preferences || []).length > (prevSlots.preferences || []).length;
   // …but say it once. Step 3 already puts the line in the preamble when the
   // message is off topic, and a customer who asked for a cake recipe got the
   // same sentence twice, one under the other.
-  if (holdingForDetails && !understoodSomething && lastUser.trim() && !preamble.includes(OFF_TOPIC_HE)) {
-    preamble = [preamble, OFF_TOPIC_HE].filter(Boolean).join(String.fromCharCode(10));
+  // הצד השני של אותו באג (סאני נופלת עליו גם): הודעה שגם מילאה פרט וגם שאלה
+  // שאלה — "הקייטנה מגיל 4?" — מילוי הפרט נחשב "הבנו" והשאלה נעלמה בשקט.
+  // 37 שאלות בבנק קיבלו רק "כמה תהיו?" (31/08). אם יש סימן שאלה ואף שכבה לא
+  // ענתה — אומרים זאת, במקום להעלים.
+  const questionAsked = /\?/.test(lastUser) && !offline.isGreeting(lastUser) && !wantsToSee &&
+    !faqHit && !deflection && !dateFacts && !recAnswer && !cardTopicAsked && !guarded;
+  if (holdingForDetails && understoodSomething && questionAsked && slotsChanged(prevSlots, slots) &&
+      !preamble.includes('אין לי תשובה מוכנה')) {
+    preamble = [preamble, guidance.msg('question_swallowed',
+      'רשמתי את הפרטים. על השאלה עצמה אין לי תשובה מוכנה — נסחו אותה במשפט נפרד ואבדוק שוב, ומה שלא אדע נציג ישלים.')].filter(Boolean).join(String.fromCharCode(10));
+  }
+  if (holdingForDetails && !understoodSomething && lastUser.trim() && !preamble.includes(OFF_TOPIC_HE) &&
+      !preamble.includes(FOLLOWUP_UNKNOWN_HE) && !preamble.includes(SENT_BY_MISTAKE_HE)) {
+    // A holiday-domain question we failed to parse is OUR gap, not the
+    // customer's: own it with "לא בטוח שהבנתי", never with "לא התחום שלי".
+    // 21 bank questions about equipment, altitude and flights were being
+    // told they were off topic here (31/08).
+    const line = knowledgeFollowup ? FOLLOWUP_UNKNOWN_HE : DOMAIN_HE.test(lastUser)
+      ? guidance.msg('not_understood_domain',
+          'לא בטוח שהבנתי למה הכוונה — אפשר לכתוב את השאלה במשפט אחד ואענה, ומה שלא אדע נציג ישלים.')
+      : OFF_TOPIC_HE;
+    preamble = [preamble, line].filter(Boolean).join(String.fromCharCode(10));
   }
   let exhausted = false;
   if (more && !cards.length) {
@@ -1319,6 +1985,11 @@ async function handleChat(body) {
   // so the list filled with repeats (3 → 6 → 6 → 9 for three distinct offers)
   // and genuine entries were evicted by the 30-item cap — which is how "יש עוד?"
   // started showing hotels the customer had already been shown.
+  // two on screen, the third held in reserve for "עוד אפשרות" (see CARDS_DEFAULT).
+  // Only what is SHOWN is remembered as shown — the widget adds the spare to
+  // `_shown` itself when it reveals it, so "יש עוד?" never repeats a card.
+  const spareCards = cards.slice(CARDS_DEFAULT);
+  cards = cards.slice(0, CARDS_DEFAULT);
   slots._shown = [...new Set([...seenBefore, ...cards.map(c => c.hotel + '|' + c.date)])].slice(-30);
   // Remember the cheapest band actually put in front of the customer, so that
   // "יקר לי" on the next turn can be answered with something genuinely cheaper
@@ -1437,9 +2108,13 @@ async function handleChat(body) {
   // one answer came back. Rather than guess at the second, say plainly that it
   // was not answered and invite it again — which is also the cheapest possible
   // repair, since the customer restates it in words the patterns may match.
+  // שורת דירוג של יותר ממלון אחד עונה גם על "מה עדיף X או Y" וגם על "מה
+  // הדירוג" — שתי שאלות, תשובה אחת; בלעדיה נוספה שורת "שאלתם עוד דבר".
+  const ratingAnswers = (faqHit && faqHit.id === 'hotel_ratings' &&
+    (faqHit.he.match(/^• /gm) || []).length > 1) ? 1 : 0;
   const answersGiven = (faqHit ? Math.max(1, (faqHit.all || []).length) : 0) +
     (deflection ? 1 : 0) + (dateFacts ? 1 : 0) + (recAnswer ? 1 : 0) +
-    (pointedAtCards ? 1 : 0);
+    (pointedAtCards ? 1 : 0) + ratingAnswers;
   const droppedHe = droppedQuestionLine(lastUser, multiPart, answersGiven, guarded);
   if (droppedHe && !preamble.includes(droppedHe)) {
     preamble = [preamble, droppedHe].filter(Boolean).join(String.fromCharCode(10));
@@ -1476,8 +2151,13 @@ async function handleChat(body) {
   // Some standing answers are about what we will NOT do. Letting the model add
   // its own paragraph under them produced a reply that refused to rank hotels
   // and then ranked them.
+  // A hotel profile from the pages is complete too: the model's paragraph
+  // under it re-told the comparison and got it wrong ("בריכה מופיעה רק
+  // ב־Berghof" under a line saying Sport has one — S14, 06/09 smoke), and the
+  // dedupe then stripped the profile lines it had paraphrased.
   const NO_PARAGRAPH_AFTER = new Set(['compare', 'compare_countries', 'recommend', 'complaint',
-    'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human']);
+    'my_booking', 'special_needs', 'name_change', 'lead_commitment', 'bot_or_human',
+    'hotel_characterization', 'hotel_facility_facts', 'hotel_ratings']);
   const answeredOnly = !!faqHit &&
     (!slotsChanged(prevSlots, slots) || NO_PARAGRAPH_AFTER.has(faqHit.id));
   // The search is already done at this point — three real, available hotels are
@@ -1646,7 +2326,10 @@ async function handleChat(body) {
       // applied to the search and the customer never heard so
       const applied = [];
       if (slots.no_saturday_flights && !/שבת/.test(saidSoFar)) {
-        applied.push('סיננתי יציאות בשבת — כל מה שמוצג יוצא בימים אחרים');
+        // "כל מה שמוצג" while the offers are still held back is a claim about
+        // nothing (S20, 06/09 smoke) — before the cards it is a promise
+        applied.push(holdingForDetails ? 'אסנן יציאות בשבת — אציג רק יציאות בימים אחרים'
+          : 'סיננתי יציאות בשבת — כל מה שמוצג יוצא בימים אחרים');
       }
       // Derived from the RESULT, never from the slot. The camp filter only
       // runs when ages are known (filter.js: it needs the age groups), so the
@@ -1657,7 +2340,16 @@ async function handleChat(body) {
       // camps.json marks no_camp:true, under exactly this sentence.
       // No week in scope runs a group for these children — said once, plainly,
       // instead of the club silently never being mentioned again.
-      if (slots._camp_unavailable && !prevSlots._camp_unavailable && !/קייטנ|קבוצ/.test(saidSoFar)) {
+      /* "does the reply already SAY this" — not "does the word camp appear".
+         The broad substring test suppressed the claim whenever the model's
+         wording happened to mention the club at all, which is most turns where
+         a club was asked for; the customer then saw offers with no word about
+         whether the filter ran (seen live 31/08). This asks whether the reply
+         already makes a filtering claim about the camp. */
+      const claimsCampFilter = /(?:הצגתי|סיננתי|מסונן|רק שבועות|רק תאריכים)[^.]{0,40}(?:קייטנ|קבוצ)|(?:קייטנ|קבוצ)[^.]{0,40}(?:הצגתי|סיננתי|מסונן|פועלת בכל|לא פועלת)/;
+      const saysCampUnchecked = /לא נבדק|עוד לא בדקתי|אינן מסוננות/;
+      if (slots._camp_unavailable && !prevSlots._camp_unavailable &&
+          !claimsCampFilter.test(saidSoFar) && !saysCampUnchecked.test(saidSoFar)) {
         applied.push(guidance.msg('camp_none_in_scope',
           'שימו לב: בתאריכים שמצאתי אין שבוע שבו פועלת קייטנה בעברית לגילאים שלכם'));
       }
@@ -1665,12 +2357,12 @@ async function handleChat(body) {
         cards.every(c => c.camps && (c.camps.running || []).length > 0);
       const campFullyCovered = campRan &&
         cards.every(c => !((c.camps || {}).missing || []).length);
-      if (campFullyCovered && !/קייטנ|קבוצ/.test(saidSoFar)) {
+      if (campFullyCovered && !claimsCampFilter.test(saidSoFar)) {
         applied.push('הצגתי רק שבועות שבהם הקייטנה בעברית פועלת');
       }
       if (slots.departure_airport && slots.departure_airport !== 'any' &&
           !/חיפה|נתב/.test(saidSoFar)) {
-        applied.push('סיננתי לפי שדה היציאה שביקשתם');
+        applied.push(holdingForDetails ? 'אסנן לפי שדה היציאה שביקשתם' : 'סיננתי לפי שדה היציאה שביקשתם');
       }
       if (applied.length) coverage.push(applied.join('; ') + '.');
     }
@@ -1710,7 +2402,21 @@ async function handleChat(body) {
         ? 'טווח המחיר מסומן על כל הצעה, והמחיר המדויק לתאריך ולחדר שלכם מופיע במסך ההזמנה — נציג מאשר אותו סופית.'
         : 'המחיר המדויק לתאריך ולחדר שלכם מופיע במסך ההזמנה — נציג מאשר אותו סופית.')
       : null;
-    const parts = [preamble, intro, contrast, priceLine, ...coverage, tailQuestion].filter(Boolean);
+    // "בעצם אנחנו 3 מבוגרים, לא זוג" after the cards: the search re-ran, and
+    // the customer should hear that it did — a reply that only asks "איזו
+    // מההצעות מדברת אליכם?" reads as not having heard the correction
+    // (Sunny confirms the change in words before searching again; 06/09).
+    let updateLine = null;
+    if (alreadySawOffers && cards.length) {
+      const ch = [];
+      if (slots.adults != null && prevSlots.adults != null && slots.adults !== prevSlots.adults) ch.push(slots.adults + ' מבוגרים');
+      const k0 = (prevSlots.children_ages || []).join(','), k1 = (slots.children_ages || []).join(',');
+      if (k0 && k1 && k0 !== k1) ch.push('ילדים בגילאי ' + (slots.children_ages || []).join(', '));
+      if (typeof slots.month === 'number' && typeof prevSlots.month === 'number' && slots.month !== prevSlots.month && ECHO_MONTH_HE[slots.month]) ch.push(ECHO_MONTH_HE[slots.month]);
+      if (slots.country && prevSlots.country && slots.country !== prevSlots.country && slots.country !== 'any' && ECHO_COUNTRY_HE[slots.country]) ch.push(ECHO_COUNTRY_HE[slots.country]);
+      if (ch.length) updateLine = guidance.msg('search_updated', 'עדכנתי — {changes} — וחיפשתי מחדש:').replace('{changes}', ch.join(', '));
+    }
+    const parts = [preamble, updateLine, intro, contrast, priceLine, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
     // a bot sounds like a bot; a person says it when it is worth saying.
     // two-room splits are offers too — they render as their own cards in
@@ -1754,7 +2460,10 @@ async function handleChat(body) {
     // the single commonest complaint in the golden set. It is dropped only
     // after every coaching line is gone and the reply is still over the cap.
     const SOFT1 = /נפתחות|אני כאן אם תרצו/;
-    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|סיננתי |הצגתי רק שבועות|בטווח המחיר הנמוך מבין|טווח המחיר מסומן|איזו מההצעות|רוצים שאדייק|מתלבטים בין שתיים|רוצים שאבדוק גם/;
+    // "הצגתי רק שבועות שבהם הקייטנה" was in this list and should not have been:
+    // it is not coaching, it is the answer to the thing the family chose the
+    // week FOR. The other entries here are all wording the reply can lose.
+    const SOFT2 = /לקחתי בחשבון|ציינתם .+ או|בטווח המחיר הנמוך מבין|טווח המחיר מסומן|איזו מההצעות|רוצים שאדייק|מתלבטים בין שתיים|רוצים שאבדוק גם/;
     let all = parts.join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     while (all.length > 5) {
       const drop = all.findIndex(l => SOFT1.test(l));
@@ -1785,7 +2494,16 @@ async function handleChat(body) {
       ...(faqSuppressed ? [PER_CARD_POINTER[faqHit.id]].filter(Boolean) : []),
     ]);
     if (alreadySaid.size) {
-      const fresh = all.filter(l => !alreadySaid.has(l) || mustKeep.has(l));
+      let fresh = all.filter(l => !alreadySaid.has(l) || mustKeep.has(l));
+      // The same FAQ two turns running, above the same cards: the paragraph
+      // is dropped as a repeat (right), but the customer's new question then
+      // got only "איזו מההצעות מדברת אליכם?" (P06 "יש מה לעשות לנו באתר?",
+      // 03/09). Say that this IS the answer, as the no-cards path already does.
+      if (faqHit && !faqSuppressed && faqHit.id === prevSlots._lastFaqId &&
+          !fresh.some(l => faqHit.he.includes(l))) {
+        fresh = [repeatAnswer(lastUser, faqHit.he, guidance.msg('same_answer_again',
+          'עניתי על זה למעלה, וזה כל מה שיש לי על הנושא. אם חסר לכם פרט ספציפי — כתבו אותו ואעביר לנציג.')), ...fresh];
+      }
       // Everything we were about to say has already been said, above these same
       // offers. Saying it all again is worse than saying one true short thing.
       // and when everything was already said, the one line we allow ourselves
@@ -1797,6 +2515,14 @@ async function handleChat(body) {
           : [focus.length
             ? `אלה ההצעות שעונות הכי טוב על ${focus.join(' ו')} מתוך מה שפנוי כרגע. רוצים שאבדוק חודש או יעד אחר?`
             : 'אלה ההצעות הפתוחות כרגע בתנאים שלכם. רוצים שאבדוק חודש או יעד אחר?'];
+    }
+    // a conduct refusal stands alone — no "לא מצאתי התאמה" under it, no
+    // coaching about dates: the customer asked for something we do not do
+    if (conductRefusal) all = (deflection || '').split(String.fromCharCode(10)).filter(Boolean);
+    // ...and so does a complaint: the apology and the rep, nothing about
+    // which weeks the camp runs underneath
+    if (faqHit && faqHit.id === 'complaint' && !cards.length) {
+      all = [social, faqHit.he].filter(Boolean).join(String.fromCharCode(10)).split(String.fromCharCode(10)).filter(Boolean);
     }
     slots._lastCards = cardKey;
     // The widget uses this to avoid drawing the same three cards again. They
@@ -1822,6 +2548,25 @@ async function handleChat(body) {
   } catch (e) {
     console.error('reply assembly failed, shipping the plain lines:', e.message, e.stack);
     replyText = [preamble, intro].filter(Boolean).join(String.fromCharCode(10)) || templated || FALLBACK_HE();
+  }
+  // The editor: a conduct refusal stands as written, a complaint keeps its
+  // exact wording, everything else becomes one answer — on turns WITH offers
+  // too (Tomer, 06/09 evening, after seeing Sunny's one-paragraph replies
+  // next to ours: the model's intro + "חסר לי פרט אחד:" + the closing line,
+  // three seams). The price rule is not a conduct refusal: it is answered
+  // with the cards on purpose, and the guard keeps "מסך ההזמנה" in the edit.
+  // A hotel profile is complete as written (see NO_PARAGRAPH_AFTER).
+  const profileTurn = !!faqHit && ['hotel_characterization', 'hotel_facility_facts', 'hotel_ratings'].includes(faqHit.id);
+  if (!conductRefusal && !(faqHit && faqHit.id === 'complaint') && !(guarded && !cards.length) && !profileTurn) {
+    const prevAssistantMsg = [...messages].slice(0, -1).reverse().find(m => m.role === 'assistant');
+    const edited = await composeWithModel({
+      replyText, lastUser, digest: partyDigest(slots), deadline, knownNames: KNOWN_NAMES,
+      knowledge: !!faqHit || !!dateFacts || !!recAnswer || /אין לי תשובה מאושרת/.test(replyText) || cards.length > 0,
+      question: replyIfNotReady || tailQuestion || null,
+      lastReply: prevAssistantMsg ? String(prevAssistantMsg.content || '') : '',
+      cardsShown: cards.map(c => c.hotel),
+    });
+    if (edited !== replyText) { replyText = edited; modelUsed = true; }
   }
 
   // One line per turn. Every defect in this project was found by a person
@@ -1863,6 +2608,7 @@ async function handleChat(body) {
     model_used: modelUsed,
     pending_parameter: pendingQuestion ? pendingQuestion.key : null,
     slots, cards,
+    spare_cards: spareCards,
     two_room_splits: (result.two_room_splits || []).map(sp => ({ ...sp, hotel: displayHotel(sp.hotel) })),
     notes: result.notes, relaxed: result.relaxed,
     // with offers on screen the chips are for exploring; with a question on
@@ -1876,6 +2622,13 @@ async function handleChat(body) {
       faq_ids: faqHit ? (faqHit.all || [faqHit]).map(a => a.id) : [],
       guard: guarded || null, off_topic: !!offTopic, not_understood: !!(offTopic && !deflection && !faqHit),
       pending: pendingQuestion ? pendingQuestion.key : null,
+      // why the offers were (not) held this turn — read by tests/test-personas.js
+      gate: { knowsEnough, askedEnough, held, questionsAsked, holding: holdingForDetails,
+        tail: tailQuestion ? String(tailQuestion).slice(0, 40) : null, pendingKey: pendingKey || null,
+        modelQ: replyIfNotReady ? String(replyIfNotReady).slice(0, 40) : null,
+        month: slots.month ?? null, flex: slots.flexible_dates ?? null, country: slots.country ?? null,
+        destination: slots.destination ?? null, adults: slots.adults ?? null, kids: slots.children_ages || [],
+        prefs: slots.preferences || [], sawOffers: alreadySawOffers, askedBefore: [...askedBefore] },
     } } : {}),
   };
 }
@@ -2148,4 +2901,4 @@ if (require.main === module) {
   leadMail.warnIfUnwatched();
   server.listen(PORT, () => console.log(`pingwin bot server v${BOT_VERSION} [${aiMode()}] → http://localhost:${PORT}`));
 }
-module.exports = { handleChat, server, requiredMissing };
+module.exports = { handleChat, server, requiredMissing, partyDigest };

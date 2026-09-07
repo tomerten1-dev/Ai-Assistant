@@ -26,7 +26,11 @@ const NS = 'pw';   // our parameters, kept out of the site's own namespace
 
 function buildBookingUrl({ page, siteID }) {
   if (!page || !siteID) return null;
-  return `${BASE}/${page}?siteID=${siteID}`;
+  // &tab=20 הוא מה שפותח את לשונית ההזמנה. בלעדיו הדף נוחת על התיאור בלבד:
+  // אין #step1, אין #roomsBlock ואין orderMan — והסקריפט המלווה מחכה 15 שניות
+  // למשהו שלא קיים ומוותר בשקט. ההערה בראש הקובץ ידעה את זה מ-26/08; הקוד לא.
+  // אומת על הדף החי 31/08.
+  return `${BASE}/${page}?siteID=${siteID}&tab=20`;
 }
 
 // Which of a hotel's pages sells THIS stay.

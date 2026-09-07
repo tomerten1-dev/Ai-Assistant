@@ -43,16 +43,16 @@ t('first time ever → beginners', () => {
   assert.ok(a && /מתחילים/.test(a.he));
 });
 t('attribute questions: glacier, night skiing, Hebrew camp, nearest airport', () => {
-  assert.ok(/טיניי/.test(ask('איפה יש קרחון?').he));
+  assert.ok(/טין/.test(ask('איפה יש קרחון?').he));
   assert.ok(!/אישגל/.test(ask('איפה יש סקי לילה?').he), 'Ischgl night skiing was corrected to no');
   assert.ok(/קייטנת סקי בעברית/.test(ask('באיזו יש קייטנה בעברית?').he));
   const near = ask('איזה יעד הכי קרוב לטיסה?');
   assert.ok(/ק"מ/.test(near.he) && !/שע|דק'|דקות/.test(near.he), 'km, never a time');
 });
 t('X או Y → side by side, both named', () => {
-  const a = ask('טיניי או ואל טורנס?');
+  const a = ask('טין או ואל טורנס?');
   assert.strictEqual(a.intent.kind, 'compare');
-  assert.ok(/טיניי/.test(a.he) && /ואל טורנס/.test(a.he));
+  assert.ok(/טין/.test(a.he) && /ואל טורנס/.test(a.he));
   assert.ok(/מ׳/.test(a.he), 'altitudes are facts');
 });
 t('compare with an audience picks one, with reasons', () => {
@@ -67,7 +67,7 @@ t('"is X good for…" — yes with reasons, or no with alternatives', () => {
   assert.ok(/^כן/.test(yes.he));
 });
 t('red rules: no money, no hotel names, no travel times, no hotel ranking', () => {
-  const qs = ['איזה אתר מתאים למשפחה?', 'טיניי או ואל טורנס?', 'איפה הכי מאתגר?', 'איזה יעד הכי קרוב לטיסה?', 'אישגל מתאים למתחילים?'];
+  const qs = ['איזה אתר מתאים למשפחה?', 'טין או ואל טורנס?', 'איפה הכי מאתגר?', 'איזה יעד הכי קרוב לטיסה?', 'אישגל מתאים למתחילים?'];
   for (const q of qs) {
     const a = ask(q); if (!a) continue;
     assert.ok(!MONEY.test(a.he), 'money in: ' + q + ' → ' + a.he);
@@ -78,8 +78,8 @@ t('red rules: no money, no hotel names, no travel times, no hotel ranking', () =
 t('"תשווה לי בין X ל-Y" is a comparison, whatever the verb form', () => {
   // Tomer, 26/08: he asked the bot to compare two resorts and it answered with
   // hotel cards — "תשווה" was simply not in the pattern.
-  for (const q of ['תשווה לי בין טיניי לוואל טורנס', 'תעשה לי השוואה בין אבוריאז לפליין',
-                   'אפשר להשוות בין לה דוז אלפ לטיניי?', 'טיניי מול ואל טורנס',
+  for (const q of ['תשווה לי בין טין לוואל טורנס', 'תעשה לי השוואה בין אבוריאז לפליין',
+                   'אפשר להשוות בין לה דוז אלפ לטין?', 'טין מול ואל טורנס',
                    'מה עדיף, בנסקו או בורובץ?']) {
     const a = ask(q);
     assert.ok(a, 'not recognised: ' + q);
@@ -91,9 +91,9 @@ t('a comparison with no subjects asks which two, and answers nothing else', () =
   assert.strictEqual(a.intent.kind, 'compare_ask');
   assert.ok(a.ask_only, 'a question, so no offers underneath it');
   assert.ok(/על אילו שני אתרים/.test(a.he));
-  assert.ok(/טיניי/.test(a.he) && /בנסקו/.test(a.he), 'it lists what we sell');
-  const one = ask('תשווה לי בין טיניי למשהו אחר');
-  assert.ok(/טיניי מול מה/.test(one.he), 'one named → asks for the second');
+  assert.ok(/טין/.test(a.he) && /בנסקו/.test(a.he), 'it lists what we sell');
+  const one = ask('תשווה לי בין טין למשהו אחר');
+  assert.ok(/טין מול מה/.test(one.he), 'one named → asks for the second');
 });
 t('resorts are recognised in Latin too', () => {
   const a = ask('מה ההבדל בין Les Arcs ל-Val Thorens ל-Ischgl?');
@@ -122,19 +122,19 @@ t('not a recommendation question → null (the rest of the pipeline answers)', (
   // end to end: the recommendation is the reply, resort chips follow
   const r = await handleChat({ messages: [{ role: 'user', content: 'איפה יש קרחון?' }], slots: {} });
   t('e2e: recommendation reaches the customer with resort chips', () => {
-    assert.ok(/טיניי/.test(r.reply_he));
-    assert.ok(r.chips.includes('טיניי'));
+    assert.ok(/טין/.test(r.reply_he));
+    assert.ok(r.chips.includes('טין'));
     assert.ok(!MONEY.test(r.reply_he));
   });
-  const r2 = await handleChat({ messages: [{ role: 'user', content: 'טיניי או ואל טורנס?' }], slots: {} });
+  const r2 = await handleChat({ messages: [{ role: 'user', content: 'טין או ואל טורנס?' }], slots: {} });
   t('e2e: compare gets the facts, then offers from both', () => {
     assert.ok(/מול/.test(r2.reply_he));
     assert.ok(r2.cards.length > 0);
   });
-  const r3 = await handleChat({ messages: [{ role: 'user', content: 'תשווה לי בין טיניי לוואל טורנס' }], slots: {} });
+  const r3 = await handleChat({ messages: [{ role: 'user', content: 'תשווה לי בין טין לוואל טורנס' }], slots: {} });
   t('e2e: a resort comparison is answered in words, and its cards carry no price verdict', () => {
     assert.ok(/מול/.test(r3.reply_he), 'the comparison itself is the reply');
-    assert.ok(/טיניי/.test(r3.reply_he) && /ואל טורנס/.test(r3.reply_he));
+    assert.ok(/טין/.test(r3.reply_he) && /ואל טורנס/.test(r3.reply_he));
     const resorts = new Set(r3.cards.map(c => c.resort));
     assert.ok(resorts.has('Tignes') && resorts.has('Val Thorens'), 'both resorts are represented: ' + [...resorts]);
     assert.deepStrictEqual(r3.cards.map(c => c.tier_he).filter(Boolean), [],

@@ -23,7 +23,9 @@ function topicLine(entry) {
   // for big groups opens "בשמחה, אני יכול להראות לכם אפשרויות", which reads
   // like a match for "תראה לי משהו באוסטריה". The pattern's own first few
   // alternatives say what the entry is ABOUT, so both go in.
-  const keys = String(entry.match || '').split('|')
+  // An entry whose pattern is mostly character classes renders as garbage here
+  // ("בנןת 13-7" for the teen camp) — `topic_he` in faq.json says it in words.
+  const keys = entry.topic_he ? String(entry.topic_he) : String(entry.match || '').split('|')
     .map(k => k.replace(/[\^$?*+\()\[\]{}]/g, '').replace(/\.\{[^}]*\}/g, ' ').trim())
     .filter(k => k && k.length > 2).slice(0, 4).join(' / ');
   const first = String(entry.answer_he || '').split(/[.!?]/)[0].trim();
@@ -43,6 +45,8 @@ function buildPrompt(entries) {
 - אם הלקוח שואל כמה משהו עולה במספרים — החזר null.
 - אם ההודעה מכילה יותר משאלה אחת — החזר עד שני מזהים, לפי סדר השאלות.
 - שאלה יכולה להיות מנוסחת בכל דרך, כולל שגיאות כתיב, סלנג, אנגלית או משפט ארוך.
+- אם יש שורה "ההודעה הקודמת של הלקוח:" — זו ההודעה שלפני השאלה הנוכחית, ובסוגריים המזהה של התשובה שניתנה לה. שאלה קצרה ("ולצרפת?", "וזה כלול?", "ומה עם הילדים?") ממשיכה כמעט תמיד את אותו נושא — נתב אותה לאותה תשובה או לתשובה שמשלימה אותה, לא לנושא אחר שבמקרה מכיל את המילה.
+- אם ההודעה פותחת בשורה "רקע על הנוסעים:" — זה מה שכבר ידוע על הלקוח מהשיחה (הרכב המשפחה, גילאים, יעד, הערות). זו לא השאלה. השתמש בו כדי להבין למי השאלה מתייחסת ("הם", "הילדים", "היא", "מסגרת") ונתב רק את מה שאחרי "שאלה:". למשל: רקע של נערים בני 14 ו-16 ושאלה "יש להם מסגרת?" — זו שאלה על קייטנה/הדרכה לנוער, לא על טיול מאורגן.
 
 התשובות המאושרות:
 ${entries.map(topicLine).join('\n')}

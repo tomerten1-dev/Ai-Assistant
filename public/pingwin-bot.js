@@ -7,22 +7,26 @@
   window.__pingwinBotLoaded = true;
 
   /* ============== THEME — פלייסהולדרים להחלפה לצבעי פינגווין ============== */
+  /* הצבעים והפונט נלקחו מהאתר החי של פינגווין (31/08) — לא עוד placeholder:
+     #37455C הוא כחול-הצפחה של המותג, #F0674C הכתום-אלמוג של הכפתורים,
+     והפונט הוא Open Sans Hebrew כמו בכל האתר. המבנה (כרטיסים ברוחב מלא,
+     פינות 8px, צל עדין, מרווח צפוף) מגיע מסאני — נמדד מה-CSS החי שלה. */
   var THEME = {
-    primary: '#1c3d5a',        // TODO: להחליף לכחול פינגווין הרשמי
-    primaryDark: '#132c42',
-    accent: '#8a9bab',         // אפור-כחול מאופק
-    ice: '#eaf2f8',            // רקע "קרח" עדין להדגשות
-    grad: 'linear-gradient(135deg,#1c3d5a 0%,#2b5f86 100%)',  // כפתורים ראשיים ובועה
+    primary: '#37455C',        // כחול הצפחה של פינגווין (מהאתר)
+    primaryDark: '#2A3547',
+    accent: '#F0674C',         // אלמוג פינגווין — הדגשות בלבד
+    ice: '#E9EEF6',            // תכלת עדין: בועת הלקוח ומסגרת שדה הקלט
+    grad: 'linear-gradient(135deg,#37455C 0%,#4A5B72 100%)',
     bg: '#ffffff',
-    bgAlt: '#f5f7f9',
-    text: '#212b33',
-    textLight: '#5e6b76',
-    bubbleUser: '#1c3d5a',
+    bgAlt: '#F4F6FA',
+    text: '#1E2733',
+    textLight: '#66717F',
+    bubbleUser: '#37455C',
     bubbleUserText: '#ffffff',
-    bubbleBot: '#eef1f4',
-    bubbleBotText: '#212b33',
+    bubbleBot: '#ffffff',
+    bubbleBotText: '#1E2733',
     radius: '10px',
-    font: "'Assistant','Rubik','Segoe UI',system-ui,sans-serif", // TODO: פונט המותג
+    font: "'Open Sans Hebrew','Assistant','Segoe UI',system-ui,sans-serif",
     zIndex: 2147483000,
     position: 'left',          // 'left' | 'right' — פינת הבועה
     whatsapp: '972526543262',  // הכפתור בכותרת: יציאה לאדם מכל מצב (data-whatsapp על התג דורס)
@@ -70,6 +74,7 @@
   // pingi-plain.png נשאר בתיקייה לשימוש עתידי — תומר ביקש (26/08) שגם ליד
   // ההודעות יופיע פינגי עם בגדי החורף, בגודל גדול יותר
   var PINGI_WAVE = API_BASE + '/pingi-wave.png';
+  var PINGI_BOARD = API_BASE + '/pingi-board.png';   // on hover, the launcher shows him riding
   var PRIVACY_URL = (script && script.getAttribute('data-privacy')) || THEME.privacyUrl;
   var BOT_NAME = 'פינגי';
   var LAUNCH_T = 'מתלבטים איפה לגלוש?';
@@ -201,8 +206,26 @@
     + '.fab .av{width:50px;height:50px;border-radius:14px;flex:none;position:relative;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}'
     + '.fab .av img{width:44px;height:44px;display:block;object-fit:contain}'
     // נקודה אדומה בלי מספר: "יש כאן משהו". נעלמת ברגע שפותחים, וחוזרת בביקור הבא
-    + '.fab .dot{position:absolute;top:-4px;inset-inline-end:-4px;width:14px;height:14px;border-radius:50%;background:#e0392b;box-shadow:0 0 0 3px ' + THEME.primary + '}'
-    + '.fab .dot::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:#e0392b;opacity:.5;animation:pwPing 2.4s ease-out infinite}'
+    /* 06/09 (Tomer): green, not red — "מחובר", pulsing the same way */
+    + '.fab .dot{position:absolute;top:-4px;inset-inline-end:-4px;width:14px;height:14px;border-radius:50%;background:#2fb26a;box-shadow:0 0 0 3px ' + THEME.primary + '}'
+    + '.fab .dot::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:#2fb26a;opacity:.5;animation:pwPing 2.4s ease-out infinite}'
+    /* hover: Pingi on his board. Two images stacked, the second fades in — no
+       flicker, and the board one is preloaded because it is already in the DOM */
+    + '.fab .av img.alt{position:absolute;inset:0;margin:auto;opacity:0;transition:opacity .22s ease}'
+    + '.fab:hover .av img.alt,.fab:focus-visible .av img.alt{opacity:1}'
+    + '.fab:hover .av img.base,.fab:focus-visible .av img.base{opacity:0}'
+    + '.fab .av img.base{transition:opacity .22s ease}'
+    /* ---- the ride (Tomer, 06/09): on the first open of a visit Pingi rides
+       his board from the launcher up to the header portrait, and the window
+       unrolls from the bottom behind him. .riding hides the portrait until he
+       lands; the rider itself is a fixed <img> moved with the Web Animations
+       API (see rideIn), so nothing here needs coordinates. */
+    + '.rider{position:fixed;width:54px;height:54px;object-fit:contain;z-index:2147483001;pointer-events:none;'
+    + 'filter:drop-shadow(0 6px 10px rgba(16,32,48,.35))}'
+    + '.win.riding .hdr .mark img{opacity:0}'
+    + '.win.riding .hdr .mark{background:rgba(255,255,255,.55)}'
+    + '.hdr .mark.landed img{animation:pwLand .45s cubic-bezier(.34,1.56,.64,1)}'
+    + '@keyframes pwLand{0%{transform:scale(.6) translateY(4px)}60%{transform:scale(1.12)}100%{transform:scale(1)}}'
     + '.fab.seen .dot{display:none}'
     + '@keyframes pwPing{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(2.3);opacity:0}}'
     + '.fab .txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;gap:1px}'
@@ -223,7 +246,10 @@
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
+    // Tomer, 06/09 (screenshot): the full width already for TWO offers — each
+    // card gets real room and a real photograph; the third simply joins the row
     + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 92px);height:calc(100dvh - 92px)}'
+    + '.win.big.wide{width:min(1100px,calc(100vw - 32px))}'
     + '.win.max{width:calc(100vw - 32px);height:calc(100vh - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
     + '.win.max .msgs{padding:20px 24px}'
     // on a phone the window is the screen, whatever .big/.max say — those two
@@ -231,53 +257,90 @@
     + '@media (max-width:480px){.win,.win.big,.win.max{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0;margin:0}'
     + '.hdr .sub{display:none}.hdr .ttl{font-size:14px;white-space:nowrap}.hdr .ttl .long{display:none}.hdr .wa span{display:none}.hdr .wa{padding:7px}}'
     // כותרת שקטה על רקע בהיר — פחות "באנר", יותר ממשק
-    + '.hdr{background:' + THEME.bg + ';color:' + THEME.text + ';padding:12px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #e8edf1}'
-    + '.hdr .mark{width:38px;height:38px;border-radius:12px;background:' + THEME.ice + ';display:flex;align-items:center;justify-content:center;flex:none;position:relative}'
-    + '.hdr .mark img{width:34px;height:34px;display:block;object-fit:contain}'
-    + '.hdr .mark::after{content:"";position:absolute;inset-inline-end:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;background:#2fb26a;border:2px solid ' + THEME.bg + '}'
-    + '.hdr .ttl{font-weight:700;font-size:14.5px;letter-spacing:.1px}'
-    + '.hdr .sub{font-size:11.5px;color:' + THEME.textLight + '}'
+    /* הכותרת בפרופורציות של סאני: סימן זהות גדול (44px), שם 17/700 בצבע
+       המותג ותפקיד 12px מתחתיו — ולא באנר צבעוני. */
+    /* 06/09 — closer to Sunny: a soft blue band, a round portrait with a
+       white ring, the name large and the role under it. */
+    + '.hdr{background:linear-gradient(180deg,#DCE9F6 0%,#EEF4FA 100%);color:' + THEME.text + ';padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #D9E4F0}'
+    + '.hdr .mark{width:50px;height:50px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px #fff,0 2px 8px rgba(30,60,90,.18);display:flex;align-items:center;justify-content:center;flex:none;position:relative}'
+    + '.hdr .mark img{width:42px;height:42px;display:block;object-fit:contain}'
+    + '.hdr .mark::after{content:"";position:absolute;inset-inline-end:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:#2fb26a;border:2px solid ' + THEME.bg + '}'
+    + '.hdr .ttl{font-weight:800;font-size:19px;letter-spacing:0;color:' + THEME.primaryDark + ';line-height:1.2}'
+    + '.hdr .ttl .long{font-weight:500;font-size:13px;color:' + THEME.textLight + '}'
+    + '.hdr .sub{font-size:12.5px;color:' + THEME.textLight + ';line-height:1.35}'
     + '.form .consent{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:' + THEME.textLight + ';margin:10px 0 4px;line-height:1.4;cursor:pointer}'
     + '.form .consent input{margin-top:3px;flex:none;width:16px;height:16px;accent-color:' + THEME.primaryDark + '}'
     + '.form .consent a{color:' + THEME.primaryDark + ';text-decoration:underline}'
     + '.hdr .wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;background:#e7f6ec;color:#1b6b3a;border:1px solid #cfe9d8;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}'
     + '.hdr .wa:hover{background:#d9f0e1}'
     + '.hdr .wa:focus-visible{outline:2px solid ' + THEME.accent + ';outline-offset:2px}'
-    + '.hdr .wa + .newc,.hdr .wa + .exp{margin-inline-start:0}'
-    + '.hdr .newc{margin-inline-start:auto;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:10px}'
-    + '.hdr .newc + .exp,.hdr .exp + .x{margin-inline-start:0}'
+    + '.hdr .wa + .exp{margin-inline-start:0}'
+    + '.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .exp{margin-inline-start:auto;font-size:16px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px}'
     + '.hdr .exp + .x{margin-inline-start:0}'
     + '.hdr .x{margin-inline-start:auto;background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;'
     + 'min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;line-height:1}'
-    + '.hdr .x:focus-visible,.hdr .newc:focus-visible,.hdr .exp:focus-visible,.send:focus-visible,.chip:focus-visible,.btn:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
+    + '.hdr .x:focus-visible,.hdr .exp:focus-visible,.send:focus-visible,.chip:focus-visible,.btn:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
     // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
-    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:22px 20px 18px;background:linear-gradient(180deg,#fbfcfd 0%,#f4f7fa 100%);display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth}'
+    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 14px 14px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:7px;scroll-behavior:smooth}'
+    /* 06/09 (Tomer: "צריך לגלול הרבה"): the time under every message cost a
+       line each. Now a small centred time appears only when the conversation
+       paused for half an hour or moved to another day — like a phone chat. */
+    + '.tdiv{align-self:center;font-size:11px;color:' + THEME.textLight + ';background:' + THEME.bgAlt + ';border-radius:99px;padding:2px 10px;margin:2px 0;font-variant-numeric:tabular-nums}'
+    /* back to the latest message, when the customer scrolled up to reread */
+    + '.jump{position:sticky;bottom:6px;align-self:center;background:' + THEME.primaryDark + ';color:#fff;border:none;border-radius:99px;'
+    + 'padding:6px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(28,45,70,.3);display:none;z-index:2;order:9999}'
+    + '.jump.on{display:inline-flex;align-items:center;gap:6px}'
+    /* התיקון לטקסט שנערם (תומר, 31/08): ‎.msgs היא עמודת flex עם גלילה, וילדי
+       flex מתכווצים כברירת מחדל לפני שהגלילה נכנסת. ברגע שהשיחה ארוכה מהחלון
+       הדפדפן כיווץ את בועות הבוט — min-height:36px התיר לרדת מתחת לגובה
+       הטקסט — והטקסט נצבע מעבר לקופסה, על ההודעות והצ'יפים שאחריה. לכן זה
+       הופיע רק בשיחות ארוכות/משוחזרות ולא בבדיקות שמדדו קופסאות. אף הודעה
+       לא מתכווצת — הגלילה היא שסופגת את האורך. */
+    + '.msgs>*{flex-shrink:0}'
     // the default Windows scrollbar is a slab down the side of a small window
     + '.msgs::-webkit-scrollbar{width:8px}'
     + '.msgs::-webkit-scrollbar-thumb{background:#d3dae1;border-radius:99px;border:2px solid ' + THEME.bg + '}'
     + '.msgs::-webkit-scrollbar-thumb:hover{background:#b9c4ce}'
     + '.msgs::-webkit-scrollbar-track{background:transparent}'
-    + '.m{font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word}'
-    + '.m.user{align-self:flex-start;max-width:min(82%,460px);background:' + THEME.ice + ';color:' + THEME.text + ';'
-    + 'border:1px solid #d9e6f0;border-radius:16px 16px 16px 4px;padding:10px 15px}'
-    + '.m.bot{align-self:stretch;max-width:min(100%,640px);color:' + THEME.text + ';padding-inline-start:46px;position:relative;min-height:36px}'
-    + '.m.bot::before{content:"";position:absolute;inset-inline-start:0;top:-2px;width:36px;height:36px;border-radius:11px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
-    + '.typing{align-self:stretch;padding:4px 0;padding-inline-start:46px;min-height:34px;display:flex;gap:5px;align-items:center;position:relative}'
-    + '.typing::before{content:"";position:absolute;inset-inline-start:0;top:-1px;width:36px;height:36px;border-radius:11px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/34px 34px no-repeat}'
+    /* ---- שפת ההודעות, בעקבות סאני (נמדד מה-CSS החי שלה, 31/08) ----
+       שני הצדדים הם אותו כרטיס: רוחב מלא, פינות 8px, ריפוד 14px וצל אחד
+       עדין; רק צבע הרקע מבדיל ביניהם. זה מה שנותן לסאני את התחושה הרגועה —
+       אין פינג-פונג של בועות מימין ומשמאל, והטקסט מקבל את כל רוחב החלון.
+       מה שנשאר שלנו: הפינגווין, שמופיע פעם אחת לכל רצף של פינגי במקום על
+       כל הודעה — כך המיתוג נשמר בלי החזרתיות שהעמיסה את המסך. */
+    + '.m{font-size:15px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;align-self:stretch;'
+    + 'border-radius:12px;padding:10px 14px;box-shadow:0 1px 3px rgba(30,39,51,.06)}'
+    + '.m.user{background:#E4EEF8;color:' + THEME.text + ';border:1px solid #D6E3F1}'
+    + '.m.bot{background:#F3F6FA;color:' + THEME.text + ';border:1px solid #EBF0F5;position:relative;'
+    + 'padding-inline-start:15px}'
+    /* הפינגווין רק בראש רצף — .m.bot.lead */
+    + '.m.bot.lead{padding-inline-start:50px;min-height:44px}'
+    + '.m.bot.lead::before{content:"";position:absolute;inset-inline-start:10px;top:8px;width:30px;height:30px;border-radius:9px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/28px 28px no-repeat}'
+    + '.typing{align-self:stretch;background:#F3F6FA;border:1px solid #EBF0F5;border-radius:12px;'
+    + 'box-shadow:0 2px 6px 1px rgba(30,39,51,.05);padding:13px 15px;padding-inline-start:52px;min-height:46px;'
+    + 'display:flex;gap:5px;align-items:center;position:relative}'
+    + '.typing::before{content:"";position:absolute;inset-inline-start:11px;top:11px;width:30px;height:30px;border-radius:9px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI + ') center/28px 28px no-repeat}'
     + '.typing i{width:6px;height:6px;border-radius:50%;background:' + THEME.textLight + ';animation:pb 1s infinite}'
     + '.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}'
     + '@keyframes pb{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}'
     // שורת הצעות: שלושה כרטיסים זה לצד זה, יורדים לטור רק כשאין רוחב
-    + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap}'
-    + '.cards-row .card{flex:1 1 270px;min-width:0}'
-    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #e1e8ef;border-radius:16px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(16,32,48,.05);'
+    + '.cards-row{align-self:stretch;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start}'
+    /* a card is never wider than half the full window: one offer alone
+       used to stretch across the whole screen (Tomer, 06/09, screenshot) */
+    + '.cards-row .card{flex:1 1 250px;min-width:0;max-width:min(100%,540px)}'
+    // one tap for the third offer — no round trip, the card is already here
+    + '.more-opt{align-self:stretch;background:' + THEME.bg + ';border:1.5px dashed #C9D3E2;color:' + THEME.primaryDark + ';'
+    + 'border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-top:-2px;transition:background .15s,border-color .15s}'
+    + '.more-opt:hover{background:' + THEME.bgAlt + ';border-color:' + THEME.primary + '}'
+    + '.more-opt:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
+    + '.card{align-self:stretch;background:' + THEME.bg + ';border:1px solid #E7ECF3;border-radius:8px;padding:10px 12px 10px;display:flex;flex-direction:column;gap:4px;box-shadow:0 2px 6px 1px rgba(30,39,51,.05);'
     + 'box-shadow:0 1px 2px rgba(16,32,48,.05);transition:box-shadow .18s,transform .18s,border-color .18s}'
-    + '.card:hover{box-shadow:0 10px 26px rgba(16,32,48,.12);transform:translateY(-2px);border-color:#c8d5e2}'
+    + '.card:hover{box-shadow:0 8px 22px rgba(30,39,51,.11);transform:translateY(-2px);border-color:#C9D3E2}'
     /* ---- variant: the photo IS the card (?pwcard=photo) ----
        Closed, the hotel's own photograph fills the card and the text sits on a
        scrim over it. Opened, it hands back to the ordinary white card: the
@@ -385,13 +448,18 @@
     + '.card.pbg:hover{box-shadow:0 14px 30px rgba(9,20,35,.28)}'
     + '.card.pbg.open{background-image:none!important;border-color:#e1e8ef}'
     // gallery: the photo fills the top of the card, arrows sit on it
-    + '.card .gal{position:relative;width:calc(100% + 28px);margin:-12px -14px 6px;border-radius:15px 15px 0 0;overflow:hidden;background:#e8edf1}'
+    + '.card .gal{position:relative;width:calc(100% + 24px);margin:-10px -12px 6px;border-radius:8px 8px 0 0;overflow:hidden;background:#e8edf1}'
     + '.card .gal::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(16,32,48,.35) 100%);pointer-events:none}'
     + '.card .gal .galb,.card .gal .galn,.card .gal .tier{z-index:1}'
     // 112px: three cards with their date, room, price and both buttons fit a
     // laptop screen without scrolling — the photo is the first thing to give
-    + '.card .photo{width:100%;height:72px;object-fit:cover;display:block;transition:height .18s ease}'
-    + '.card.open .photo{height:92px}'
+    /* the photograph, not a sliver of it: a 16:9 window that scales with the
+       card (Tomer, 06/09: "שיראו את התמונות כמו שצריך ולא רבע מהן") */
+    + '.card .photo{width:100%;height:auto;aspect-ratio:16/9;max-height:clamp(100px,24vh,210px);object-fit:cover;display:block;transition:height .18s ease}'
+    /* on a short screen the photo gives way, so the name, the date and the
+       buttons stay above the fold (Tomer, 06/09: "looks messy") */
+    + '@media (max-height:640px){.card .photo{max-height:110px}}'
+    + '.card.open .photo{aspect-ratio:16/9}'
     + '.card .gal .tier{position:absolute;top:8px;inset-inline-start:8px;box-shadow:0 1px 4px rgba(0,0,0,.25)}'
     // everything that is nice to know but not needed to choose lives behind one toggle
     + '.card .details{display:none;flex-direction:column;gap:6px}'
@@ -411,9 +479,18 @@
     + '.card .gal .galb,.card:not(.open) .gal .galn{opacity:0}'
     + '.card.open .gal .galb{opacity:.9}'
     + '.card:not(.open) .tags .tag:not(.tier):not(.rec):not(.left){display:none}'
-    + '.card .dtog{align-self:flex-start;background:none;border:none;padding:2px 0;font-family:inherit;font-size:12.5px;color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600;order:8}'
+    /* 06/09 (Tomer): a small link at the card's edge was easy to miss and hard
+       to hit — now a full-width row, 40px tall, with a rule above it */
+    + '.card .dtog{align-self:stretch;text-align:center;background:none;border:none;border-top:1px solid #EEF2F6;'
+    + 'margin:6px -12px -10px;padding:9px 12px;min-height:40px;border-radius:0 0 8px 8px;font-family:inherit;font-size:13.5px;'
+    + 'color:' + THEME.primaryDark + ';cursor:pointer;font-weight:600;order:8;transition:background .15s}'
+    + '.card .dtog:hover{background:#F3F6FA;text-decoration:none}'
+    + '.card .dtog:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:-3px}'
     + '.card .details{order:9}.card .facts{order:7}.card .acts,.card .cta{order:10}'
-    + '.card .dtog:hover{text-decoration:underline}'
+    /* the "עוד/פחות פרטים" row is the card's last row in both states; open,
+       the buttons move under the details (they overlapped, Tomer 06/09) */
+    + '.card .dtog{order:20}.card.open .btns,.card.j.open .btns{order:12}.card.open .cfoot{order:11}'
+
     + '.card .galb{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;'
     + 'border:none;background:rgba(255,255,255,.92);color:' + THEME.text + ';line-height:0;cursor:pointer;padding:0;'
     + 'display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(16,32,48,.25);opacity:0;transition:opacity .15s}'
@@ -455,14 +532,35 @@
     + '.card .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
     + '.card .hname{font-weight:700;font-size:15px;color:' + THEME.text + ';line-height:1.25;letter-spacing:-.2px}'
     + '.card .meta{font-size:13px;color:' + THEME.textLight + ';line-height:1.5}'
+    + '.card .hrating{font-size:12.5px;color:' + THEME.textLight + ';line-height:1.4;margin-top:1px}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
-    + '.m.bot.wave{padding-inline-start:74px;min-height:64px}'
-    + '.m.bot.wave::before{width:64px;height:64px;border-radius:16px;top:-6px;background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/60px 60px no-repeat}'
-    + '.ts{display:block;font-size:10.5px;line-height:1.4;color:' + THEME.textLight + ';opacity:.75;margin-top:3px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}'
-    + '.m.user .ts{color:rgba(255,255,255,.75)}'
+    + '.m.bot.wave{padding-inline-start:76px;min-height:66px}'
+    + '.m.bot.wave::before{width:54px;height:54px;border-radius:13px;top:10px;inset-inline-start:11px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/50px 50px no-repeat}'
+    /* השעה יושבת בפינת הכרטיס, לא על שורה משלה: בכרטיס ברוחב מלא שורה
+       נפרדת השאירה את השעה תלויה באוויר בצד שמאל. (סאני לא מציגה שעות
+       בכלל; אצלנו הן נשארות — שיחה שנמשכת למחרת בלי שעות נקראת כמקשה אחת,
+       תומר 26/08 — רק דיסקרטיות יותר.) */
+    + '.ts{position:absolute;bottom:7px;inset-inline-start:13px;font-size:10px;line-height:1;'
+    + 'color:' + THEME.textLight + ';opacity:.6;font-variant-numeric:tabular-nums;direction:ltr}'
+    + '.m{position:relative;padding-bottom:10px}'
+    + '.ts{display:none}'
+    + '.m.bot.after{padding-bottom:0}'
+    /* 31/08: הבועה של הלקוח בהירה מזמן — שעה לבנה עליה הייתה בלתי נראית */
+    + '.m.user .ts{color:inherit;opacity:.55}'
+    /* פס תחתון: מס\' שיחה ו"שיחה חדשה" — בדיוק איפה שסאני שמה אותם */
+    + '.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;'
+    + 'padding:0 18px 6px;background:' + THEME.bg + ';font-size:11.5px;line-height:1.3;color:' + THEME.textLight + '}'
+    + '.foot .fcid{font-variant-numeric:tabular-nums;letter-spacing:.2px}'
+    + '.foot .fnew{background:none;border:none;padding:1px 0;font:inherit;font-size:12.5px;font-weight:600;'
+    + 'color:' + THEME.primary + ';text-decoration:underline;cursor:pointer}'
+    + '.foot .fnew:hover{color:' + THEME.accent + '}'
+    + '.foot .fnew:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px;border-radius:4px}'
     + '.m.after .ts,.m.wave .ts{display:none}'
-    + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-8px}'
+    /* שורת הסיום ("אם אחת מהן נראית לכם…") היא הערה, לא הודעה: בלי כרטיס */
+    + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-4px;background:transparent;'
+    + 'border:none;box-shadow:none;padding:0 4px}'
     + '.m.bot.after::before{display:none}'
     // גילוי נאות: הערת שוליים, לא הודעה של פינגי — ולכן בלי הפרצוף שלו,
     // ובלי המחלקה .m, שסופרת הודעות בשיחה
@@ -474,7 +572,7 @@
     // חיווי המתנה מדבר — הטקסט שמצטרף לנקודות אחרי שנייה וחצי
     + '.typing .tlab{font-size:12.5px;color:' + THEME.textLight + ';margin-inline-start:4px}'
     // פידבק על תשובה — אגודל למעלה/למטה, מתחת לתשובה האחרונה בלבד
-    + '.fb{align-self:stretch;display:flex;gap:4px;padding-inline-start:46px;align-items:center;margin-top:-12px}'
+    + '.fb{align-self:stretch;display:flex;gap:2px;padding-inline-start:6px;align-items:center;margin-top:-6px;min-height:22px}'
     + '.fb button{background:none;border:none;cursor:pointer;font-size:14px;padding:3px 6px;border-radius:6px;opacity:.55;transition:opacity .15s,background .15s;font-family:inherit}'
     + '.fb button:hover{opacity:1;background:' + THEME.bgAlt + '}'
     + '.fb button.on{opacity:1;background:' + THEME.bgAlt + '}'
@@ -487,8 +585,35 @@
     + '.tag.tier{background:' + THEME.primaryDark + ';color:#fff;border:1px solid ' + THEME.primaryDark + ';font-weight:600}'
     + '.tag.left{background:#fbeeea;color:#8a3b2a;border:1px solid #efcfc6}'
     + '.card .price{font-size:13.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px;background:' + THEME.ice + ';border-radius:8px;padding:4px 10px}'
-    + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:6px;flex-wrap:wrap}'
-    + '.btn{flex:1 1 0;min-width:112px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
+    + '.card .btns{display:flex;gap:7px;margin-top:auto;padding-top:8px;flex-wrap:wrap}'
+    /* ---- option י: band + tiles (white card) ---- */
+    + '.card.j{padding-top:0}'
+    + '.card.j .gal{margin-top:0;border-radius:8px 8px 0 0}'
+    + '.card.j .band{display:flex;justify-content:space-between;align-items:center;gap:10px;'
+    + 'background:' + THEME.grad + ';color:#fff;margin:0 -12px 8px;padding:9px 14px}'
+    + '.card.j .band .bname{font-weight:700;font-size:16px;line-height:1.25;color:#fff}'
+    + '.card.j .band .bwhere{font-size:12.5px;color:rgba(255,255,255,.82);line-height:1.3}'
+    + '.card.j .band .bscore{flex:none;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:99px;'
+    + 'padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}'
+    + '.card.j .facts4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}'
+    + '.card.j .btns{order:6}'
+    + '.card.j .ft{background:' + THEME.bgAlt + ';border-radius:8px;padding:6px 4px;text-align:center;min-width:0}'
+    + '.card.j .ft .fk{font-size:11px;color:' + THEME.textLight + ';letter-spacing:.02em}'
+    + '.card.j .ft .fv{font-weight:700;font-size:13px;margin-top:1px;line-height:1.2;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}'
+    + '.card.j .chead,.card.j .brief,.card.j .hrating{display:none}'
+    + '.card.j.open .facts4{display:none}'
+
+    /* outranks the generic "hide the other tags on a closed card" rule */
+    + '.cards-row .card.j:not(.open) .tags .tag.amen,.cards-row .card.j:not(.open) .tags .tag.rec,.cards-row .card.j:not(.open) .tags .tag.left{display:inline-block}'
+    + '.card.j:not(.open) .tags .tag.tier{display:none}'
+    /* the closed card shows at most four tags */
+    + '.card.j:not(.open) .tags .tag:nth-child(n+5){display:none}'
+    /* Sunny's card ends in one wide navy button; the callback is a link under it */
+    + '.card:not(.pbg) .btns .btn.pri{flex-basis:100%;order:-1;padding:11px 12px;font-size:14px;border-radius:8px}'
+    + '.card:not(.pbg) .btns .btn.sec{flex-basis:100%;background:none;border:none;color:' + THEME.primaryDark + ';'
+    + 'text-decoration:underline;text-underline-offset:3px;padding:4px 0;font-weight:600;box-shadow:none}'
+    + '.card:not(.pbg) .btns .btn.sec:hover{background:none;color:' + THEME.primary + '}'
+    + '.btn{flex:1 1 0;min-width:112px;min-height:40px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s,border-color .15s}'
     + '.btn.pri{background:' + THEME.grad + ';color:#fff;box-shadow:0 2px 6px rgba(28,61,90,.25)}'
     + '.btn.pri:hover{filter:brightness(1.08);box-shadow:0 4px 12px rgba(28,61,90,.3)}'
     + '.btn.sec{background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
@@ -496,7 +621,7 @@
     // One row that scrolls sideways, not four rows that push the offers off the
     // screen. Eight chips wrapping was 173px on a phone — the second largest
     // thing in the conversation after the offers themselves (measured 26/08).
-    + '.chips{display:flex;flex-wrap:nowrap;gap:7px;align-self:stretch;padding-inline-start:32px;'
+    + '.chips{display:flex;flex-wrap:nowrap;gap:7px;align-self:stretch;padding-inline-start:2px;'
     + 'overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
     + 'scroll-snap-type:x proximity;padding-bottom:2px;'
     // flex:none is load-bearing. A scroll container's automatic minimum size is
@@ -504,6 +629,13 @@
     // squashed to nothing the moment the conversation overflowed.
     + 'flex:none;min-width:0;max-width:100%}'
     + '.chips::-webkit-scrollbar{height:0}'
+    /* the row scrolls sideways; when more chips wait past the edge, that edge
+       fades instead of looking cut off (Tomer, 06/09: "למה זה ככה?") */
+    + '.chips.more{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 56px),transparent)}'
+    /* the narrow window keeps the header to one line each: role only, and
+       the WhatsApp pill as an icon */
+    + '.win:not(.big) .hdr .sub .long2,.win:not(.big) .hdr .ttl .long{display:none}'
+    + '.win:not(.big) .hdr .wa span{display:none}.win:not(.big) .hdr .wa{padding:7px}'
     + '.chip{scroll-snap-align:start;flex:none}'
     + '.chip{border:1px solid #d8dfe6;background:' + THEME.bg + ';color:' + THEME.textLight + ';border-radius:99px;'
     // min-height 36px: a 30px chip is below the comfortable tap target on a
@@ -511,19 +643,24 @@
     + 'padding:9px 15px;min-height:38px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}'
     + '.chip:hover{background:' + THEME.primary + ';color:#fff;border-color:' + THEME.primary + '}'
     // שורת הקלט כמסגרת אחת שעוטפת גם את כפתור השליחה — כמו בממשקי AI
-    + '.inp{display:flex;gap:8px;padding:12px 16px 16px;background:' + THEME.bg + ';align-items:flex-end;border-top:1px solid #eef2f5}'
-    + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #d8dfe6;border-radius:14px;'
-    + 'padding:5px;padding-inline:12px 6px;background:' + THEME.bg + ';transition:border-color .15s,box-shadow .15s}'
-    + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(28,61,90,.08)}'
+    + '.inp{display:flex;gap:10px;padding:8px 16px 6px;background:' + THEME.bg + ';align-items:center;border-top:1px solid #E7ECF3}'
+    /* "התשובות בגדר המלצה" — where Sunny keeps it: above the field, always visible */
+    + '.legal{text-align:center;font-size:11.5px;color:' + THEME.textLight + ';padding:6px 16px 0;background:' + THEME.bg + ';border-top:1px solid #E7ECF3}'
+    + '.legal + .inp{border-top:none;padding-top:4px}'
+    /* שדה הקלט של סאני: פינות 8px ומסגרת בגוון בועת הלקוח */
+    + '.inp .box{flex:1;display:flex;align-items:flex-end;gap:6px;border:1px solid #D6DFEA;border-radius:14px;'
+    + 'padding:6px;padding-inline:14px 8px;background:' + THEME.bg + ';box-shadow:0 1px 3px rgba(30,39,51,.06);transition:border-color .15s,box-shadow .15s}'
+    + '.inp .box:focus-within{border-color:' + THEME.primary + ';box-shadow:0 0 0 3px rgba(55,69,92,.10)}'
     + '.inp textarea{flex:1;border:none;background:none;padding:9px 4px;font-size:15px;font-family:inherit;direction:rtl;'
     + 'resize:none;overflow-y:auto;line-height:1.5;max-height:110px;min-height:32px;color:' + THEME.text + '}'
     + '.inp textarea:focus{outline:none}'
-    + '.inp .box:focus-within{outline:3px solid ' + THEME.primaryDark + ';outline-offset:1px}'
     + '.send:hover:not(:disabled){filter:brightness(1.1)}'
-    + '.send{background:' + THEME.grad + ';border:none;color:#fff;border-radius:12px;width:44px;height:44px;flex:none;'
+    + '.send{background:' + THEME.primaryDark + ';border:none;color:#fff;border-radius:50%;width:44px;height:44px;flex:none;'
+    + 'box-shadow:0 2px 8px rgba(28,45,70,.28);'
     + 'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}'
-    + '.send:disabled{opacity:.5;cursor:default}'
-    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}'
+    + '.send:hover{background:' + THEME.primaryDark + '}'
+    + '.send:disabled{opacity:.45;cursor:default}'
+    + '.form{align-self:stretch;background:' + THEME.bg + ';border:1.5px solid ' + THEME.primary + ';border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}'
     + '.form label{font-size:12.5px;color:' + THEME.textLight + '}'
     + '.form input{border:1.5px solid #cfdae4;border-radius:9px;padding:8px 12px;font-size:14px;font-family:inherit;direction:rtl}'
     + '.form .note{font-size:11.5px;color:' + THEME.textLight + '}'
@@ -560,7 +697,9 @@
   var wrap = el('div', 'wrap');
   var fab = el('button', 'fab');
   fab.innerHTML =
-    '<span class="av"><img src="' + PINGI_LAUNCH + '" alt="" aria-hidden="true"><span class="dot" aria-hidden="true"></span></span>' +
+    '<span class="av"><img class="base" src="' + PINGI_LAUNCH + '" alt="" aria-hidden="true">' +
+    (PINGI_LAUNCH !== PINGI_BOARD ? '<img class="alt" src="' + PINGI_BOARD + '" alt="" aria-hidden="true">' : '') +
+    '<span class="dot" aria-hidden="true"></span></span>' +
     '<span class="txt"><b class="l1">' + LAUNCH_T + '</b><span class="l2">' + LAUNCH_S + '</span></span>' +
     '<span class="go" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none">' +
     '<path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
@@ -577,10 +716,11 @@
   mark.innerHTML = '<img src="' + PINGI + '" alt="" aria-hidden="true">';
   hdr.appendChild(mark);
   var hTxt = el('div');
-  var ttl = el('div', 'ttl', 'פינגווין');
-  ttl.appendChild(el('span', 'long', ' | ייעוץ חופשות סקי'));
+  var ttl = el('div', 'ttl', 'פינגי');
+  ttl.appendChild(el('span', 'long', ' · פינגווין'));
   hTxt.appendChild(ttl);
-  var hSub = el('div', 'sub', 'זמינות בזמן אמת מתוך המלאי שלנו');
+  var hSub = el('div', 'sub', 'נציג דיגיטלי');
+  hSub.appendChild(el('span', 'long2', ' · זמינות מהמלאי שלנו'));
   // מס' שיחה גלוי (הלקח מסאני): הלקוח יכול לצטט אותו לנציג, והנציג מוצא בעזרתו
   // את השיחה ביומן ואת הליד ב-CRM — שלושתם נושאים את אותו מזהה.
   var hCid = el('span', 'cidsub', '');
@@ -588,7 +728,11 @@
   hTxt.appendChild(hSub);
   function updateCid() {
     var id = cid();
-    hCid.textContent = id ? ' · מס׳ שיחה ' + String(id).replace(/^c/, '').slice(0, 8) : '';
+    var short = id ? String(id).replace(/^c/, '').slice(0, 8) : '';
+    hCid.textContent = short ? ' · מס׳ שיחה ' + short : '';
+    // foot is built further down; guard so the first call (before it exists)
+    // does not throw and kill the whole widget
+    if (typeof fCid !== 'undefined' && fCid) fCid.textContent = short ? 'מס׳ שיחה ' + short : '';
   }
   // Let the customer decide how much room the chat gets. A fixed box the
   // page cannot escape is the most common complaint about widgets like this,
@@ -601,16 +745,13 @@
     hExp.textContent = max ? '⤢' : '⤡';
     hExp.title = max ? 'הקטנת החלון' : 'הגדלת החלון';
     hExp.setAttribute('aria-label', hExp.title);
-    try { localStorage.setItem('pingwin_bot_max', max ? '1' : '0'); } catch (e) {}
+    // not remembered across page loads: a window that was maximised once
+    // came back maximised on every visit, and read as "opens full screen"
+    try { localStorage.removeItem('pingwin_bot_max'); } catch (e) {}
     scrollDown();
   }
   hExp.addEventListener('click', function () { setExpanded(!win.classList.contains('max')); });
-  try { if (localStorage.getItem('pingwin_bot_max') === '1') setExpanded(true); } catch (e) {}
-  var hNew = el('button', 'x newc');
-  hNew.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/></svg>';
-  hNew.title = 'שיחה חדשה';
-  hNew.setAttribute('aria-label', hNew.title);
-  hNew.addEventListener('click', function () { resetChat(); });
+  try { localStorage.removeItem('pingwin_bot_max'); } catch (e) {}
   var hX = el('button', 'x', '✕');
   hX.setAttribute('aria-label', 'סגירת הצ׳אט');
   // a human is one tap away from every state — the research is unambiguous
@@ -643,7 +784,7 @@
     });
     hWa.href = 'https://wa.me/' + WHATSAPP;
   }
-  hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hNew); hdr.appendChild(hExp); hdr.appendChild(hX);
+  hdr.appendChild(hTxt); if (hWa) hdr.appendChild(hWa); hdr.appendChild(hExp); hdr.appendChild(hX);
 
   var msgs = el('div', 'msgs');
   /* The live region is a small dedicated node, not the whole scroll container.
@@ -666,28 +807,54 @@
   var inp = el('div', 'inp');
   var input = document.createElement('textarea');
   input.rows = 1;
-  input.placeholder = 'לדוגמה: זוג עם שני ילדים, פברואר';
+  input.placeholder = 'אפשר לכתוב כאן…';
   input.setAttribute('aria-label', 'הודעה לבוט');
   // auto-grow up to ~4 lines so long messages stay visible while typing,
   // and expand the whole window once the user starts typing
   input.addEventListener('input', function () {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 96) + 'px';
-    if (input.value.length > 0) win.classList.add('big');
+    // (typing no longer widens the window — only offers do)
   });
   var send = el('button', 'send');
   send.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
   send.setAttribute('aria-label', 'שליחה');
   var inpBox = el('div', 'box');
-  inpBox.appendChild(input); inpBox.appendChild(send);
-  inp.appendChild(inpBox);
+  inpBox.appendChild(input);
+  inp.appendChild(inpBox); inp.appendChild(send);
+  var legal = el('div', 'legal', 'התשובות בגדר המלצה — כל הזמנה מאושרת סופית על ידי נציג');
 
-  win.appendChild(hdr); win.appendChild(msgs); win.appendChild(live); win.appendChild(inp);
+  /* פס תחתון בסגנון סאני: מס' השיחה בקצה אחד, "שיחה חדשה" בשני. במחקר
+     מ-30/08 ציינו שאצלה זה בתחתית ואצלנו בכותרת — עכשיו זה בשני המקומות:
+     בכותרת כהקשר, וכאן כפעולה שהלקוח מוצא בלי לחפש. */
+  var foot = el('div', 'foot');
+  var fCid = el('span', 'fcid', '');
+  var fNew = el('button', 'fnew', 'שיחה חדשה');
+  fNew.addEventListener('click', function () { resetChat(); });
+  foot.appendChild(fCid); foot.appendChild(fNew);
+
+  var jump = el('button', 'jump', '↓ להודעה האחרונה');
+  jump.setAttribute('aria-label', 'גלילה להודעה האחרונה');
+  jump.addEventListener('click', function () { scrollDown(); });
+  msgs.appendChild(jump);
+  var jumpArmed = false;
+  ['wheel', 'touchmove'].forEach(function (evn) { msgs.addEventListener(evn, function () { jumpArmed = true; }, { passive: true }); });
+  msgs.addEventListener('keydown', function (e) { if (/Arrow|Page|Home|End/.test(e.key)) jumpArmed = true; });
+  msgs.addEventListener('scroll', function () {
+    jump.classList.toggle('on', jumpArmed && msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight > 240);
+  });
+  win.appendChild(hdr); win.appendChild(msgs); win.appendChild(live); win.appendChild(legal); win.appendChild(inp); win.appendChild(foot);
   wrap.appendChild(win); wrap.appendChild(fab);
   root.appendChild(wrap);
 
   /* ============== ui helpers ============== */
-  function scrollDown() { msgs.scrollTop = msgs.scrollHeight; }
+  function scrollDown() {
+    // the jump button lives at the end of the column: keep it there as messages are added
+    if (typeof jump !== 'undefined' && jump && jump.parentNode === msgs && msgs.lastElementChild !== jump) msgs.appendChild(jump);
+    if (typeof jumpArmed !== 'undefined') { jumpArmed = false; }
+    if (typeof jump !== 'undefined' && jump) jump.classList.remove('on');
+    msgs.scrollTop = msgs.scrollHeight;
+  }
   // a hung request must not lock the chat forever
   function fetchWithTimeout(url, opts, ms) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -716,8 +883,10 @@
     try {
       var v = new URLSearchParams(window.location.search).get('pwcard');
       if (!v && script && script.src) v = new URL(script.src).searchParams.get('card');
-      return v === 'plain' ? 'plain' : 'photo';
-    } catch (e) { return 'photo'; }
+      // 06/09 (Tomer: "שהבוט ייראה יותר כמו סאני"): the white card with the
+      // photograph on top is the default; ?pwcard=photo brings the photo-card back
+      return v === 'photo' ? 'photo' : 'plain';
+    } catch (e) { return 'plain'; }
   })();
 
   var STORE_KEY = 'pingwin_bot_session_v1';
@@ -769,7 +938,7 @@
       // otherwise a tester can never see the launcher as a first-time visitor
       if (/[?&#]pwreset\b/.test(location.href)) {
         store.removeItem(STORE_KEY);
-        try { sessionStorage.removeItem(SEEN_KEY); fab.classList.remove('seen'); } catch (e) { }
+        try { sessionStorage.removeItem(SEEN_KEY); sessionStorage.removeItem('pw_rode'); fab.classList.remove('seen'); } catch (e) { }
         return null;
       }
       var raw = store.getItem(STORE_KEY);
@@ -798,6 +967,7 @@
     state.booted = false; state.turn = 0; state.busy = false;
     state.gen = (state.gen || 0) + 1;      // orphan anything still in flight
     while (msgs.firstChild) msgs.removeChild(msgs.firstChild);
+    msgs.appendChild(jump); state._lastAt = null;
     updateCid();                          // a new conversation gets a new id
     win.classList.remove('big');
     send.disabled = false;
@@ -808,6 +978,9 @@
   // customer sees them from the first card instead of landing past them
   function scrollToTopOf(node) {
     if (!node) return;
+    // a view we positioned on purpose is not "the customer scrolled up"
+    if (typeof jumpArmed !== 'undefined') { jumpArmed = false; }
+    if (typeof jump !== 'undefined' && jump) jump.classList.remove('on');
     msgs.scrollTop = Math.max(0, node.offsetTop - msgs.offsetTop - 12);
   }
 
@@ -821,13 +994,36 @@
   }
   function addMsg(role, text, silent, at) {
     if (!text) return null;
-    // a phone number that wraps mid-way reads as a typo ("04--8557722"): show
-    // it with a non-breaking hyphen so it always stays on one line
-    var shown = String(text).replace(/(\d{2,3})-(\d{7})/g, '$1\u2011$2');
-    var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot'), shown);
+    /* מספר טלפון בתוך משפט עברי חייב להיצבע משמאל לימין.
+       קודם הוחלף כאן המקף הרגיל במקף לא-שביר (U+2011) כדי שהמספר לא יישבר
+       בין שתי שורות — אבל U+2011 הוא תו נייטרלי באלגוריתם הדו-כיווניות, ולכן
+       הוא הפריד את "04" מ-"8557722" ושתי הקבוצות נצבעו בסדר עברי:
+       הלקוח ראה 8557722-04. (תומר צילם את זה, 31/08; נמדד בדפדפן.)
+       הפתרון: מקף רגיל (שמחבר שתי קבוצות ספרות לרצף אחד), עטוף בבידוד
+       LTR — כך הכיוון מובטח גם אם המספר יושב בקצה שורה או ליד מספר אחר. */
+    var shown = String(text).replace(/(\d{2,3})-(\d{7})/g, '\u2066$1-$2\u2069');
+    // הפינגווין רק בראש רצף: אם ההודעה הקודמת באזור היא גם של הבוט, אין
+    // אווטאר — כך רצף של שלוש שורות מפינגי נראה כמו תשובה אחת, לא כמו שלוש.
+    var prev = msgs.lastElementChild;
+    // the jump button and a time divider are not messages — look past them
+    while (prev && prev.classList && (prev.classList.contains('jump') || prev.classList.contains('tdiv'))) prev = prev.previousElementSibling;
+    var lead = role !== 'user' && !(prev && prev.classList &&
+      prev.classList.contains('m') && prev.classList.contains('bot'));
+    var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot' + (lead ? ' lead' : '')), shown);
     var ts = el('span', 'ts', clockOf(at));
     ts.setAttribute('aria-hidden', 'true');   // the time is decoration for a screen reader
     m.appendChild(ts);
+    // a time marker only when the conversation paused (30 min) or crossed a day
+    var when = at ? new Date(at) : new Date();
+    if (isNaN(when.getTime())) when = new Date();
+    var prevAt = state._lastAt ? new Date(state._lastAt) : null;
+    if (!prevAt || (when - prevAt) > 30 * 60 * 1000 || when.toDateString() !== prevAt.toDateString()) {
+      var sameDay = when.toDateString() === new Date().toDateString();
+      var lab = (sameDay ? '' : ('0' + when.getDate()).slice(-2) + '.' + ('0' + (when.getMonth() + 1)).slice(-2) + ' · ') + clockOf(when.toISOString());
+      var dv = el('div', 'tdiv', lab); dv.setAttribute('aria-hidden', 'true');
+      msgs.appendChild(dv);
+    }
+    state._lastAt = when.toISOString();
     msgs.appendChild(m); scrollDown();
     if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text, at: at || new Date().toISOString() });
     return m;
@@ -875,7 +1071,10 @@
   // ביומן כדי שתשוחזר יחד עם שאר השיחה
   function addStatus(text, silent) {
     if (!text) return null;
-    var s = el('div', 'status', '🔎 ' + text);
+    // a thin line icon, not an emoji (Tomer, 06/09: "זה ילדותי")
+    var s = el('div', 'status');
+    s.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="vertical-align:-1px;margin-inline-end:5px;opacity:.7"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>';
+    s.appendChild(document.createTextNode(text));
     msgs.appendChild(s); scrollDown();
     if (!silent) state.log.push({ t: 'status', v: text });
     return s;
@@ -1018,6 +1217,9 @@
     // ---- name, with the country beside it
     var head = el('div', 'chead');
     head.appendChild(el('div', 'hname', c.hotel));
+    // "★ 4 כוכבים · 8.5 בבוקינג" — רק כשיש נתון מאומת (rating_he מהשרת);
+    // מלון בלי דירוג פשוט לא מציג את השורה
+    if (c.rating_he) head.appendChild(el('div', 'hrating', '★ ' + c.rating_he));
     head.appendChild(el('div', 'cwhere', c.country_he + (c.resort ? ' · ' + c.resort : '')));
     card.appendChild(head);
 
@@ -1052,6 +1254,37 @@
     if (c.price_range) topbar.appendChild(el('span', 'bprice corner', c.price_range));
     if (topbar.childNodes.length) card.appendChild(topbar);
     card.appendChild(brief);
+
+    /* ---- Tomer's pick (06/09, option י): a navy band with the name, the
+       place and the rating right under the photograph, then four tiles —
+       יציאה · לילות · חדר · מחיר. Built for the white card only; the photo
+       card keeps its scrim. head/brief stay in the DOM (the open card and the
+       photo card use them) and CSS hides them under the band. */
+    if (!asPhoto) {
+      card.classList.add('j');
+      var band = el('div', 'band');
+      var bandTxt = el('div', 'btxt');
+      bandTxt.appendChild(el('div', 'bname', c.hotel));
+      bandTxt.appendChild(el('div', 'bwhere', (c.resort ? c.resort + ' · ' : '') + c.country_he));
+      band.appendChild(bandTxt);
+      if (c.rating_he) band.appendChild(el('span', 'bscore', '★ ' + c.rating_he.replace(' כוכבים', '')));
+      var tiles = el('div', 'facts4');
+      var tile = function (k, v) {
+        var t = el('div', 'ft');
+        t.appendChild(el('div', 'fk', k)); t.appendChild(el('div', 'fv', v));
+        tiles.appendChild(t);
+      };
+      var dd = new Date(c.date + 'T00:00:00');
+      var days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      tile('יציאה', days[dd.getDay()] + ' ' + dd.getDate() + '.' + (dd.getMonth() + 1) + (c.date_label ? ' · ' + c.date_label : ''));
+      tile('לילות', String(c.nights));
+      tile('חדר', c.room || '—');
+      tile('מחיר', c.price_range || 'נציג יאשר');
+      // the band goes straight under the gallery; the tiles where the brief was
+      if (card.querySelector('.gal')) card.querySelector('.gal').insertAdjacentElement('afterend', band);
+      else card.insertBefore(band, card.firstChild);
+      brief.insertAdjacentElement('afterend', tiles);
+    }
 
     var rows = el('div', 'rows');
     var row = function (label, value, node) {
@@ -1128,11 +1361,13 @@
     if (c.lift_he) details.appendChild(el('div', 'meta', 'מעלית: ' + c.lift_he));
     // One toggle for the whole card, not one per section. Closed it is the
     // hotel, one line and the button; open it is everything we know.
-    var dtog = el('button', 'dtog', 'פרטים ▾');
+    var dtog = el('button', 'dtog', 'עוד פרטים ▾');
+    dtog.type = 'button';
     dtog.setAttribute('aria-expanded', 'false');
-    dtog.addEventListener('click', function () {
+    dtog.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
       var open = card.classList.toggle('open');
-      dtog.textContent = open ? 'פחות ▴' : 'פרטים ▾';
+      dtog.textContent = open ? 'פחות פרטים ▴' : 'עוד פרטים ▾';
       dtog.setAttribute('aria-expanded', String(open));
       track('card_expand', { hotel: c.hotel, open: open, cid: cid() });
       // Opening a card adds a screenful of text below the fold, and the
@@ -1143,14 +1378,17 @@
       try {
         var pane = card.closest ? card.closest('.msgs') : null;
         if (!pane) return;
-        // after the layout settles, or we scroll to where the card used to end
+        // Tomer, 06/09: opening used to fling the card to the top of the
+        // panel. Now the view moves only as far as it must for the opened
+        // section to be seen — and never past the top of the card.
         requestAnimationFrame(function () {
           requestAnimationFrame(function () {
-            var cb = card.getBoundingClientRect(), pb = pane.getBoundingClientRect();
-            // a card taller than the panel gives up its top margin so that as
-            // much of the detail as possible lands above the fold
-            var pad = (cb.height + 12) > pb.height ? 4 : 12;
-            pane.scrollTo({ top: pane.scrollTop + (cb.top - pb.top) - pad, behavior: 'smooth' });
+            var det = card.querySelector('.details') || card;
+            var db = det.getBoundingClientRect(), cb = card.getBoundingClientRect(), pb = pane.getBoundingClientRect();
+            var overflow = db.bottom - pb.bottom + 12;          // how much of the details is below the fold
+            var roomAbove = Math.max(0, cb.top - pb.top - 8);   // how far we may go before the card's top leaves the view
+            var by = Math.min(Math.max(0, overflow), roomAbove);
+            if (by > 2) pane.scrollBy({ top: by, behavior: 'smooth' });
           });
         });
       } catch (e) { /* a card that will not scroll is still a card that opened */ }
@@ -1174,6 +1412,9 @@
       if (!c.camps.full) tags.appendChild(el('span', 'tag warn', 'קייטנה חלקית — ראו פירוט'));
     }
     if (c.occ_unverified) tags.appendChild(el('span', 'tag warn', 'ההרכב יאומת מול נציג'));
+    // the hotel's own tags from the pages (ספא, קרוב למסלולים, הכל כלול…) —
+    // up to three on the closed card, the rest under "עוד פרטים"
+    (c.tags || []).slice(0, 3).forEach(function (tg) { if (tg && tg.length <= 18) tags.appendChild(el('span', 'tag amen', tg)); });
     if (tags.childNodes.length) card.appendChild(tags);
 
     var foot = el('div', 'cfoot');
@@ -1242,11 +1483,36 @@
   }
   function addCardsRow(cards) {
     win.classList.add('big');
+    if (cards.length > 2) win.classList.add('wide');
     var row = el('div', 'cards-row');
     msgs.appendChild(row);
     cards.forEach(function (c) { addCard(c, row); });
     state.lastCards = cards;
     return row;
+  }
+  /* The third offer, one tap away (Tomer, 06/09: two on screen, three on
+     request). The card is already here — no round trip — and the server is
+     told it was shown, so "יש עוד?" brings something new. Logged into the
+     same cards entry, so a restored chat shows what the customer saw. */
+  function addSpareButton(row, spare, logEntry) {
+    if (!spare || !spare.length) return null;
+    var b = el('button', 'more-opt', '+ עוד אפשרות');
+    b.setAttribute('aria-label', 'הצגת אפשרות נוספת');
+    row.insertAdjacentElement('afterend', b);
+    b.addEventListener('click', function () {
+      b.remove();
+      spare.forEach(function (c) { addCard(c, row); });
+      win.classList.add('wide');
+      state.lastCards = (state.lastCards || []).concat(spare);
+      if (logEntry) logEntry.v = (logEntry.v || []).concat(spare);
+      state.slots = state.slots || {};
+      state.slots._shown = (state.slots._shown || []).concat(spare.map(function (c) { return c.hotel + '|' + c.date; })).slice(-30);
+      state.messages.push({ role: 'assistant', content: '[הוצגו עוד ' + spare.length + ' הצעות: ' + spare.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
+      track('more_option', { count: spare.length });
+      persist();
+      scrollToTopOf(row);
+    });
+    return b;
   }
   // replay a saved conversation after the page changed under us
   function replay(d) {
@@ -1501,8 +1767,10 @@
         track('offers', { count: data.cards.length });
         // three offers side by side, so the customer barely scrolls
         var row = addCardsRow(data.cards);
+        var cardsEntry = { t: 'cards', v: data.cards };
+        addSpareButton(row, data.spare_cards, cardsEntry);
         if (after) addMsg('bot', after).classList.add('after');
-        state.log.push({ t: 'cards', v: data.cards });
+        state.log.push(cardsEntry);
         // park the view on the intro line + first card, not below them
         scrollToTopOf(introEl || row);
         state.messages.push({ role: 'assistant', content: '[הוצגו ' + data.cards.length + ' הצעות: ' + data.cards.map(function (c) { return c.hotel + ' ' + c.date; }).join(', ') + ']' });
@@ -1566,13 +1834,56 @@
   // in the narrow one they stack, and a single answer ran past the bottom of a
   // laptop screen (Tomer, 26/08 — "צריך לגלול הרבה"). Below 1180px there is no
   // room for it beside the page, so it stays narrow and widens when it must.
-  var WIDE = 1180;
-  function fitWidth() {
-    try { if (window.innerWidth >= WIDE) win.classList.add('big'); } catch (e) {}
+  // 06/09 (Tomer: "למה פינגי נפתח על כל המסך?"): it opened wide on every
+  // desktop because of this — now the window opens small and grows only
+  // when offers arrive (addCardsRow), or when the customer presses ⤡.
+  function fitWidth() { /* the small window is the opening size */ }
+  /* Pingi rides from the launcher to the header portrait; the window unrolls
+     behind him. Once per visit (sessionStorage), never for reduced motion,
+     never when the launcher is not on screen. ~0.9s, diagonal like a slope. */
+  var RODE_KEY = 'pw_rode';
+  function rideIn() {
+    try {
+      if (sessionStorage.getItem(RODE_KEY)) return false;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+      if (typeof win.animate !== 'function') return false;
+      var from = fab.querySelector('.av').getBoundingClientRect();
+      var to = mark.getBoundingClientRect();
+      if (!from.width || !to.width) return false;
+      sessionStorage.setItem(RODE_KEY, '1');
+      var DUR = 900;
+      win.classList.add('riding');
+      // the window unrolls from the bottom up, in step with the climb
+      win.animate([{ clipPath: 'inset(100% 0 0 0 round 18px)', opacity: .6 }, { clipPath: 'inset(0 0 0 0 round 18px)', opacity: 1 }],
+        { duration: DUR, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'both' });
+      var rider = document.createElement('img');
+      rider.className = 'rider'; rider.src = PINGI_BOARD; rider.alt = ''; rider.setAttribute('aria-hidden', 'true');
+      rider.style.left = from.left + 'px'; rider.style.top = from.top + 'px';
+      root.appendChild(rider);
+      var dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+      var dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+      // a slight arc: he leans into the slope, straightens as he lands
+      var lean = dx < 0 ? 14 : -14;
+      var anim = rider.animate([
+        { transform: 'translate(0,0) rotate(0deg) scale(1)', offset: 0 },
+        { transform: 'translate(' + (dx * .45) + 'px,' + (dy * .55) + 'px) rotate(' + lean + 'deg) scale(1.08)', offset: .5 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(0deg) scale(' + (to.width / from.width) + ')', offset: 1 }
+      ], { duration: DUR, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards' });
+      var done = function () {
+        rider.remove();
+        win.classList.remove('riding');
+        mark.classList.add('landed');
+        setTimeout(function () { mark.classList.remove('landed'); }, 600);
+      };
+      anim.onfinish = done;
+      setTimeout(function () { if (rider.parentNode) done(); }, DUR + 200);   // belt and braces
+      return true;
+    } catch (e) { win.classList.remove('riding'); return false; }
   }
   function openWin() {
     state.open = true; win.classList.add('open'); wrap.classList.add('chatting');
     fitWidth();
+    rideIn();
     fab.setAttribute('aria-expanded', 'true');
     // the red dot has done its job — it does not come back this visit
     fab.classList.add('seen');

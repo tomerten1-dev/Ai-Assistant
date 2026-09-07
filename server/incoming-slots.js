@@ -152,6 +152,7 @@ function bookkeeping(raw, out) {
   // them. Each cap matches what the server actually writes.
   out._asked = list(raw._asked, { items: 12, max: 80 });
   out._shown = list(raw._shown, { items: 30, max: 120 });
+  out._compared = list(raw._compared, { items: 3, max: 120 });   // hotels just characterized
   out._notes_said = list(raw._notes_said, { items: 20, max: MAX_TEXT });
   out._fixed_said = list(raw._fixed_said, { items: 8, max: LINE_MAX });
   out._lastLines = list(raw._lastLines, { items: 24, max: LINE_MAX });
@@ -163,6 +164,9 @@ function bookkeeping(raw, out) {
   const priceMin = int(raw.shown_price_min, { min: 0, max: 10 });
   if (priceMin != null) out.shown_price_min = priceMin;
 
+  // the customer's language, when the turn was translated in and out
+  const lang = str(raw._lang);
+  if (lang && /^(en|ru|fr|ar)$/.test(lang)) out._lang = lang;
   for (const k of ['_closed', '_nudged', '_showMe', '_after_cards']) {
     const b = bool(raw[k]);
     if (b != null) out[k] = b;
@@ -171,6 +175,8 @@ function bookkeeping(raw, out) {
     const t = str(raw[k]);
     if (t) out[k] = t;
   }
+  // the existing-customer / complaint thread (server.js step 1a½) — a closed set
+  if (raw._rep_mode === 'existing' || raw._rep_mode === 'complaint' || raw._rep_mode === 'group') out._rep_mode = raw._rep_mode;
   // said-once memories: compared by equality against a line we generated, so
   // an arbitrary value can only ever suppress a line, never introduce one
   for (const k of ['_dates_said', '_know_said', '_lastGuard', '_lastEcho', '_lastCards']) {

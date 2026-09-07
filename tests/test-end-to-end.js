@@ -700,8 +700,12 @@ t('naming two hotels is a comparison, not a filter', () => {
     slots: {},
   }).then(out => {
     assert.ok(out.cards.length > 1, 'locked onto one hotel');
-    assert.ok(/לא אדרג/.test(out.reply_he), 'ranked them: ' + out.reply_he);
-    assert.ok(!/הכי טוב/.test(out.reply_he), 'red rule 6: ' + out.reply_he);
+    // Policy changed 06/09 (Tomer, after Sunny): the two hotels are
+    // CHARACTERIZED from their pages — "אם חשוב לכם X — A" — never ranked,
+    // never priced. "לא אדרג" was the old refusal.
+    assert.ok(/במה הם שונים|אם חשוב לכם/.test(out.reply_he), 'not characterized: ' + out.reply_he);
+    assert.ok(!/לא אדרג|הכי טוב|הכי /.test(out.reply_he), 'ranked them: ' + out.reply_he);
+    assert.ok(!/[₪€$]|\d{3,} ?(?:יורו|שקל)/.test(out.reply_he), 'a price: ' + out.reply_he);
   });
 });
 
@@ -1222,9 +1226,12 @@ t('the season we do sell raises nothing', () =>
   handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר 2027' }], slots: {} })
     .then(out => assert.ok(!/מוכרים כרגע את עונת/.test(out.reply_he), out.reply_he)));
 
-t('a brand we do not sell, named in English', () =>
+// Offline (no model) an English message gets the English sentence — a Hebrew
+// refusal to an English speaker helped nobody. With a model the message is
+// translated in and the refusal translated out (tests/test-translate.js).
+t('a brand we do not sell, named in English — offline, the English sentence; the parse is kept', () =>
   handleChat({ messages: [{ role: 'user', content: 'do you have the Kempinski in Bansko?' }], slots: {} })
-    .then(out => assert.ok(/לא מוכרים/.test(out.reply_he), out.reply_he)));
+    .then(out => { assert.ok(/^Hi! I'm Pingwin/.test(out.reply_he), out.reply_he); assert.equal(out.slots.destination, 'Bansko'); }));
 
 t('"תפסיק לשלוח לי הצעות" stops', () =>
   handleChat({ messages: [{ role: 'user', content: 'תפסיק לשלוח לי הצעות' }], slots: {} })

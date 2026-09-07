@@ -79,7 +79,20 @@ async function callOpenAI({ system, messages, maxTokens = 400, json = true, mode
   }
   const data = await res.json();
   track(data.usage, chosen);
-  return (data.choices && data.choices[0] && data.choices[0].message.content) || '';
+  const choice = (data.choices && data.choices[0]) || {};
+  /* The provider tells us when it ran out of room, and we were ignoring it.
+     A reply cut off mid-word passes every check in validate() — none of them
+     is about completeness — so the customer read half a sentence and then the
+     offer cards. Seen live 31/08: "…אם זה חשוב לכם, העביר את" and
+     "…מופיע במסך ההזמנה — נציג מאשר". On a reasoning model the token cap
+     covers the thinking too, so this is not rare, it is a budget problem.
+     Throwing here sends the turn to the template, which is always complete. */
+  if (choice.finish_reason === 'length') {
+    const err = new Error('openai_truncated');
+    err.friendly = 'תקלה זמנית בשירות — נסו שוב בעוד רגע.';
+    throw err;
+  }
+  return (choice.message && choice.message.content) || '';
 }
 
 function track(usage, usedModel) {

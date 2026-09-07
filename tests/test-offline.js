@@ -55,7 +55,7 @@ function t(name, cond, detail) {
     ],
     slots: r2a.slots,
   });
-  t('results after one answer', r2b.cards.length === 3, 'cards=' + r2b.cards.length);
+  t('results after one answer', r2b.cards.length === 2 && (r2b.spare_cards || []).length === 1, 'cards=' + r2b.cards.length + ' spare=' + (r2b.spare_cards || []).length);
 
   console.log('[4] 6 travelers, one unit missing → split or direct');
   const r3 = await handleChat({

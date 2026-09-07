@@ -15,7 +15,7 @@
         provider costs one slow turn rather than every turn until someone
         notices. It closes again on its own after a cooldown. */
 
-const STAGES = ['slots', 'router', 'phrase'];
+const STAGES = ['slots', 'router', 'phrase', 'compose', 'translate'];
 
 function blank() {
   const s = {};

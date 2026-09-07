@@ -43,6 +43,12 @@ async function callClaude({ system, messages, maxTokens = 700, deadline }) {
     throw err;
   }
   const data = await res.json();
+  // same as openai.js: a reply the provider had to cut short is not a reply
+  if (data.stop_reason === 'max_tokens') {
+    const err = new Error('anthropic_truncated');
+    err.friendly = 'תקלה זמנית בשירות — נסו שוב בעוד רגע.';
+    throw err;
+  }
   return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
 }
 

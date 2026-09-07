@@ -50,7 +50,7 @@ const PHRASE_PROMPT = `אתה נציג של פינגווין, סוכנות חו�
 const RESORT_HE = {
   'Bansko': 'בנסקו', 'Borovets': 'בורובץ',
   'Mayrhofen': 'מאיירהופן', 'Ischgl': 'אישגל',
-  'Val Thorens': 'ואל טורנס', 'Tignes': 'טיניי', 'Les 2 Alpes': 'לה דו אלפ',
+  'Val Thorens': 'ואל טורנס', 'Tignes': 'טין', 'Les 2 Alpes': 'לה דו אלפ',
   'Avoriaz': 'אבוריאז', 'Les Arcs': 'לז ארק', 'Les Menuires': 'לה מנואר',
   'Flaine Grand Massif': 'פליין גראנד מסיף', "Alpe d'Huez": "אלפ ד'ואז",
   'Montgenevre': 'מונז׳נבר', 'Oz en Oisans': 'עוז אן אואזן',
@@ -116,6 +116,22 @@ function validate(text, { cards, fallback, payload, userText }) {
   const t = String(text || '').trim();
   if (!t) return { ok: false, why: 'empty' };
   if (t.length > 700) return { ok: false, why: 'too long' };
+
+  /* A reply that stops mid-sentence. The provider's finish_reason is the
+     primary signal (see openai.js / claude.js) — this is the backstop for a
+     model that simply trails off, and for a provider that does not report it.
+     Nothing else in this function is about completeness, so "…אם זה חשוב לכם,
+     העביר את" passed every rule and reached a customer (seen live 31/08). */
+  // Only for something long enough that a missing full stop means "cut off"
+  // rather than "a short line written without one" — a 26-character fragment
+  // is a plausible complete sentence, a 200-character one is not.
+  if (t.length > 80 && !/[.!?:…]["'׳״)\]]?\s*$/.test(t)) {
+    return { ok: false, why: 'ends mid-sentence' };
+  }
+  // …and a dangling connective is a cut sentence even with a full stop on it
+  if (/\s(את|של|עם|על|כדי|אבל|וגם|או|כי|אם|לפי|בין|מול|לכל|לפני|אחרי|יותר|פחות)[.…]?\s*$/.test(t)) {
+    return { ok: false, why: 'ends on a dangling word' };
+  }
 
   /* Every number in the reply has to come from the payload, the template, or
      what the customer just wrote. This check existed in prompt-answer.js and

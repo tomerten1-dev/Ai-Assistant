@@ -57,15 +57,20 @@ t('an ambiguous board is not guessed', () => {
   assert.ok(!('pwpans' in q), 'guessed a board the offer did not commit to');
 });
 t('without dates the link still lands on the right hotel', () => {
+  // &tab=20 היא לשונית ההזמנה. הבדיקה הזאת קיבעה את הקישור בלעדיה, וכך
+  // הצמידה את הבאג: הדף נחת על התיאור, בלי טופס ובלי orderMan (אומת על
+  // הדף החי 31/08).
   assert.strictEqual(b.deepLink(INFO, { date: null, nights: 7 }, {}),
-    'https://www.pingwin.co.il/Plein+Sud.html?siteID=1288');
+    'https://www.pingwin.co.il/Plein+Sud.html?siteID=1288&tab=20');
   assert.strictEqual(b.deepLink({}, { date: '2027-01-09', nights: 7 }, {}), null);
 });
 t('our parameters stay in our own namespace, so the site never collides with them', () => {
   const q = parse(b.deepLink(INFO, { date: '2027-01-09', nights: 7, room: 'x' }, { adults: 2 }));
   for (const k of Object.keys(q)) {
-    assert.ok(k === 'siteID' || k.startsWith('pw'), 'stray parameter: ' + k);
+    // siteID ו-tab הם של האתר עצמו — tab=20 היא לשונית ההזמנה, בלעדיה אין טופס
+    assert.ok(k === 'siteID' || k === 'tab' || k.startsWith('pw'), 'stray parameter: ' + k);
   }
+  assert.strictEqual(q.tab, '20', 'הקישור לא פותח את לשונית ההזמנה');
 });
 t('a stay shorter than a week goes to the page that sells one', () => {
   // Casa Karina is the only hotel with a second booking page. Asking the

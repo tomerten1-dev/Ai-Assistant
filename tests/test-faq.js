@@ -74,7 +74,9 @@ t('each question reaches the intended answer, not a neighbouring one', () => {
 
 // Red rule 3: no numbers in money, anywhere a customer can see.
 t('no answer quotes a sum of money', () => {
-  const MONEY = /\d[\d,.]*\s*(₪|\$|€|שקל|שח|ש"ח|יורו|אירו|אחוז|%)/;
+  // (?![א-ת]) — the Hebrew word-boundary trap, 5th occurrence in this
+  // project: without it "מידה 42 אירופית" reads as "42 אירו".
+  const MONEY = /\d[\d,.]*\s*(₪|\$|€|שקל|שח|ש"ח|יורו|אירו|אחוז|%)(?![א-ת])/;
   for (const e of faqFile.entries) {
     assert.ok(!MONEY.test(e.answer_he), e.id + ' quotes money: ' + e.answer_he);
   }
@@ -83,9 +85,13 @@ t('no answer quotes a sum of money', () => {
 // Tomer, 24/08: give distance in km and let the customer estimate; a duration
 // depends on weather, traffic and snow on the road and cannot be honoured.
 t('no answer promises a journey time', () => {
-  const DURATION = /\d+\s*(דקות|שעות|שעה)|כשעה|כשעתיים/;
+  // The rule (Tomer, 24/08) is about JOURNEY durations — the transfer, the
+  // flight, the road. A policy duration ("המחיר נשמר ל-48 שעות", his own
+  // wording, 31/08) is not a journey; require travel context, exactly like
+  // the phrase guard does.
+  const DURATION = /(\d+\s*(דקות|שעות|שעה)|כשעה|כשעתיים)\s*(נסיעה|העברה|טיסה|בדרך|מהשדה|משדה)|(נסיעה|העברה|הדרך)\s*(של\s*)?(כ-?\s*)?(\d+\s*(דקות|שעות|שעה)|כשעה|כשעתיים)/;
   for (const e of faqFile.entries) {
-    assert.ok(!DURATION.test(e.answer_he), e.id + ' promises a duration: ' + e.answer_he);
+    assert.ok(!DURATION.test(e.answer_he), e.id + ' promises a journey duration: ' + e.answer_he);
   }
 });
 
@@ -482,10 +488,13 @@ t('PRIVACY: who else is on our departure is refused, not answered', () => {
 });
 
 t('...and ordinary "יש עוד" questions still get through', () => {
+  // "יש עוד ישראלים בקבוצה?" is about what our groups are like, not about
+  // who booked a week — it has its own answer (persona P03, 03/09)
   for (const q of ['יש עוד אפשרויות?', 'יש עוד מלונות בבנסקו?', 'כמה אנשים נכנסים לחדר?',
-                   'יש עוד תאריכים בפברואר?', 'מי המדריך בקייטנה?']) {
+                   'יש עוד תאריכים בפברואר?', 'מי המדריך בקייטנה?', 'יש עוד ישראלים בקבוצה?', 'יש עוד משפחות דתיות?']) {
     assert.ok(!nlu.guard(q), q + ' was refused by mistake: ' + nlu.guard(q));
   }
+  assert.strictEqual((nlu.faqMulti('יש עוד ישראלים בקבוצה?') || {}).id, 'israelis_group');
 });
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');

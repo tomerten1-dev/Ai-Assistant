@@ -21,6 +21,10 @@ node_modules/
 tests/bank-results.json
 tests/bank-results-live.json
 tests/bank-results-live-typical.json
+# פלט בדיקת הנכונות. correctness-report.md כן נשמר בגיט — הוא הדוח שמראה
+# התקדמות בין ריצות; ה-JSON המלא וה-stderr של השרת לא.
+tests/correctness-results.json
+tests/correctness-server.log
 
 # Saved copies of pingwin.co.il used to reverse-engineer the booking deep link.
 # Reference material, not source — checked for secrets before they were first

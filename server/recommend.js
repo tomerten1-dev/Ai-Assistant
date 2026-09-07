@@ -36,7 +36,9 @@ function approved() {
 const AUDIENCE = [
   ['families', /משפח|ילד|קטנים|פעוט|הורים/],
   ['beginners', /מתחיל|פעם ה?ראשונה|לא גלש|ללמוד|לומד|קל(?:ים|ה)? יותר|נוח למתחיל|לימוד/],
-  ['apres', /אפרה|חיי לילה|מסיב|לצאת בלילה|ברים|מועדונ|צעירים|רווק|חבר'?ה|חברה של|סטודנט|בני 2\d|לבלות/],
+  // (?<![א-ת]) — מלכודת גבול-המילה העברית, מופע 6: "שוברים" ו"מדברים" מכילים
+  // "ברים", ו"חברה" (עסק) נתפסה כ"חבר'ה" — וכולן קיבלו המלצת אפרה-סקי (31/08)
+  ['apres', /אפרה|חיי לילה|מסיב|לצאת בלילה|(?<![א-ת])ברים(?![א-ת])|מועדונ|צעירים|רווק|חבר'ה|החבר'ה|חברה שלי|סטודנטים לחופש|בני 2\d|לבלות/],
   ['experts', /מנוס|מתקדמ|מאתגר|שחורים|אוף.?פיסט|פאודר|מקצוע|תלול|הרבה קילומטר|שטח גדול|הכי גדול/],
   ['quiet', /שקט|רומנטי|ירח דבש|זוג מבוגר|פנסיונר|לנוח|רגוע/],
 ];
@@ -75,7 +77,7 @@ function detect(text, slots) {
   // hotel / price / policy talk is not "which resort" — the FAQ owns it
   // מלון / מלונות — the final nun means /מלון/ alone misses the plural, which
   // is how "מה ההבדל בין המלונות?" reached the resort engine instead of the FAQ
-  if (/מלו[ןנ]|חדר|ספא|מחיר|כמה עולה|ביטוח|ביטול|כולל|כלול|טיסות/.test(t)) return null;
+  if (/מלו[ןנ]|חדר|ספא|מחיר|כמה עולה|ביטוח|ביטול|כולל|כלול|טיסות|הנח|שובר|כרטיס|מבטל|ביטלת|אחריות|טסים|לומדים/.test(t)) return null;
   // "מה עדיף קאזה קארינה או רגנום?" names two HOTELS. That comparison has its
   // own standing answer (we do not rank hotels); this engine compares resorts.
   // Required lazily: offline-nlu owns the hotel lexicon and does not know us.

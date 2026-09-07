@@ -94,7 +94,14 @@
     "lift_page_he": "במרכז רחובה הראשי של העיירה ובצמוד למעלית הראשית",
     "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "אינטרנט אלחוטי ברחבי המלון"
+    "wifi_page_he": "אינטרנט אלחוטי ברחבי המלון",
+    "pool_where": "indoor"
+   },
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Sport": {
@@ -199,7 +206,14 @@
     "lift_page_he": "במרכז רחובה הראשי של העיירה ובצמוד למעלית הראשית",
     "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "אינטרנט אלחוטי ברחבי המלון"
+    "wifi_page_he": "אינטרנט אלחוטי ברחבי המלון",
+    "pool_where": "indoor"
+   },
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Hotel Ferienhof": {
@@ -303,7 +317,14 @@
     "notes_he": "בימי שבת מרכז הספא סגור לצורך עבודות ניקיון",
     "lift_page_he": "במרחק של כחמש דקות הליכה (כ-500 מטר) בלבד ממעלית הסקי הראשית (פנקן)",
     "shuttle_he": "העברות משדה התעופה למלון וחזרה",
-    "wifi_page_he": "אינטרנט אלחוטי בשטחים הציבוריים ובחדרים"
+    "wifi_page_he": "אינטרנט אלחוטי בשטחים הציבוריים ובחדרים",
+    "ski_room_he": "אפשרות לשכור לוקר באולם הלוקרים הגדול בחלק העליון של המעלית הראשית"
+   },
+   "stars": 4,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Alpenhof Kristal": {
@@ -363,7 +384,14 @@
     "stars_he": "מלון 4 כוכבים מהמבוקשים במאירהופן",
     "lift_page_he": "עשר דקות הליכה מהמעלית הראשית ו- 100 מטר מתחנת האוטובוס המובילה לכל האתרים",
     "shuttle_he": "100 מטר מתחנת האוטובוס המובילה לכל האתרים",
-    "wifi_page_he": "אינטרנט חינם"
+    "wifi_page_he": "אינטרנט חינם",
+    "ski_room_he": "חנויות השכרה במאירהופן: Brundel Sport וGreen Room; אולם לוקרים בחלק העליון של המעלית הראשית"
+   },
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Pension Kumbichlhof": {
@@ -416,6 +444,12 @@
     "notes_he": "בפנסיון לא מסופק שמפו ויש להצטייד בהתאם",
     "lift_page_he": "כחמש דקות הליכה ממעלית הסקי הראשית וממוקדי הבילוי בעיירה. בסמוך לרכבל - Ahornbahn ובמרחק הליכה קצר מהמעלית הראשית Penken",
     "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין"
+   },
+   "stars": null,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
    }
   },
   "Waldheim": {
@@ -475,7 +509,15 @@
     "balcony_he": "מקלחת ושירותים, מרפסת",
     "stars_he": "מלון 4 כוכבים",
     "lift_page_he": "כ-2 דקות הליכה לרכבל הפנקן (200 מטר), 3 דקות מרכבל האהורן ו-2 דקות ממרכז הספורט של העיירה",
-    "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין"
+    "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+    "pool_where": "indoor",
+    "ski_room_he": "אולם הלוקרים הגדול"
+   },
+   "stars": 4,
+   "booking_score": 9.1,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Berghof": {
@@ -538,7 +580,14 @@
     "lift_page_he": "כ- 700 מטר ממעלית הסקי הראשית",
     "shuttle_he": "מול המלון תחנת אוטובוס סקי חינם",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "אינטרנט Wi-Fi חינמי"
+    "wifi_page_he": "אינטרנט Wi-Fi חינמי",
+    "pool_where": "both"
+   },
+   "stars": 4,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Strolz": {
@@ -597,6 +646,12 @@
     "stars_he": "מלון ברמת 3 כוכבים",
     "lift_page_he": "כ- 1000 מטר ממעלית הסקי. ניתן להגיע למעלית בהליכה של כ-12 דקות או 4 דקות עם אוטובוס הסקי",
     "shuttle_he": "4 דקות עם אוטובוס הסקי"
+   },
+   "stars": 3,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Landhaus Roscher": {
@@ -657,7 +712,14 @@
     "balcony_he": "מרפסת",
     "rooms_features_he": "בכל החדרים יש מקלחת, שירותים, טלפון, טלויזיה, מרפסת וWIFI בסיסי",
     "lift_page_he": "הממוקם כ 400 מטר ממעלית הסקי ומרכז העיירה",
-    "wifi_page_he": "בכל החדרים יש מקלחת, שירותים, טלפון, טלויזיה, מרפסת וWIFI בסיסי"
+    "wifi_page_he": "בכל החדרים יש מקלחת, שירותים, טלפון, טלויזיה, מרפסת וWIFI בסיסי",
+    "pool_where": "indoor"
+   },
+   "stars": null,
+   "booking_score": null,
+   "rating_source": {
+    "stars": null,
+    "score": null
    }
   },
   "Tuxer": {
@@ -717,7 +779,14 @@
     "balcony_he": "חדר שינה עם מיטה זוגית (לא ניתנת להפרדה) ומרפסת ... פינת אוכל ומרפסת",
     "notes_he": "מצעים ומגבות כלולים במסגרת החבילה - ללא החלפה במהלך השהייה",
     "lift_page_he": "וכ 15 דקות ממעלית ה PENKEN. כ 800 מטר ממעלית הסקי PENKEN",
-    "shuttle_he": "תחנת סקי בס נמצאת במרחק של 50 מטר"
+    "shuttle_he": "תחנת סקי בס נמצאת במרחק של 50 מטר",
+    "kitchenette_he": "מטבח מאובזר עם כירת בישול, מדיח כלים ותנור"
+   },
+   "stars": null,
+   "booking_score": null,
+   "rating_source": {
+    "stars": null,
+    "score": null
    }
   },
   "SCHLOSSHOF": {
@@ -778,7 +847,14 @@
     "stars_he": "מלון נהדר ברמת 4 כוכבים",
     "lift_page_he": "גלישה ישירה ממדרונות הסקי עד לפתח המלון SKI-IN לגולשים ברמה בינונית ומעלה. המלון ממוקם כ- 400 מטר ממעלית הסקי סילברטה ובקצה המסלול היורד לעיירה. ניתן לגלוש בסיום היום, עד פתח בית המלון",
     "shuttle_he": "העברות משדה התעופה למלון וחזרה",
-    "wifi_page_he": "גישה לאינטרנט בכל החדרים / אינטרנט WIFI חופשי"
+    "wifi_page_he": "גישה לאינטרנט בכל החדרים / אינטרנט WIFI חופשי",
+    "pool_where": "indoor"
+   },
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Mutmanor": {
@@ -841,6 +917,12 @@
     "lift_page_he": "כ 100 מטר בלבד מהמנהרה החדשה להולכי רגל המובילה ישירות למעלית ה Pardatschgratbahn",
     "shuttle_he": "העברות משדה התעופה למלון וחזרה",
     "wifi_page_he": "אינטרנט"
+   },
+   "stars": null,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
    }
   },
   "Castel": {
@@ -903,6 +985,12 @@
     "lift_page_he": "כ 200 מטר בלבד מהמנהרה החדשה להולכי רגל ( Prenner tunnel ) המובילה ישירות למעלית Pardatschgratbahn. DEPO לאורחי המלון בצמוד למעלית ה Fimbabahn",
     "shuttle_he": "העברות משדה התעופה למלון וחזרה",
     "wifi_page_he": "WIFI"
+   },
+   "stars": 4,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Cheval Blanc (allotment)": {
@@ -982,7 +1070,14 @@
     "stars_he": "בית דירות ברמת 3*",
     "lift_page_he": "בגלישה ישירה Ski In Ski Out. חדר לאחסון ציוד הסקי פונה ישירות למסלולים",
     "shuttle_he": "העברות",
-    "wifi_page_he": "אינטרנט אלחוטי חינם (מוגבל לחיבור של מקסימום 4 מכשירים לדירה)"
+    "wifi_page_he": "אינטרנט אלחוטי חינם (מוגבל לחיבור של מקסימום 4 מכשירים לדירה)",
+    "kitchenette_he": "מטבחון מאובזר: כיריים, תנור, מיקרוגל, מקרר, מדיח כלים, מכונת קפה, כלי אוכל ובישול"
+   },
+   "stars": 3,
+   "booking_score": 7.6,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Res Village Montana (allotment)": {
@@ -1075,7 +1170,15 @@
     "notes_he": "אפשרות לארוחות בתוספת תשלום להזמנה מהארץ: באגט וקרואסון – משלוח טרי כל בוקר של באגט וקרואסון אחד לאדם. המשלוח הינו ל-6 ימים (לא כולל את בוקר העזיבה) ארוחת בוקר - במסעדה מקומית במרחק הליכה קצרצר (כ-100 מטר) מבית הדירות (ארוחה הבוקר הינה ארוחה בסגנון בופה הכוללת: דגני בוקר, לחמים, מאפים, ריבות/דבש, פירות טריים, סלט ירקות, גבינות/יוגורט, נקניקים, ביצה מקושקשת, מיץ / קפה / תה / שוקו) ארוחת ערב - במסעדה הממוקמת במבנה הראשי (PREMIER) של בית הדירות (ארוחה ערב כוללת 3 מנות: ראשונה, עיקרית וקינוח, לא כולל שתייה)",
     "lift_page_he": "מהמבנים Premier, Valbel יש גלישה ישירה Ski in - out",
     "shuttle_he": "העברות",
-    "wifi_page_he": "אינטרנט אלחוטי (מוגבל לחיבור של מקסימום 4 מכשירים לדירה)"
+    "wifi_page_he": "אינטרנט אלחוטי (מוגבל לחיבור של מקסימום 4 מכשירים לדירה)",
+    "pool_where": "indoor",
+    "kitchenette_he": "מטבחון מאובזר: כיריים, תנור, מיקרוגל, מקרר, מדיח כלים, מכונת קפה, קומקום, טוסטר, בלנדר, כלי אוכל ובישול"
+   },
+   "stars": null,
+   "booking_score": 8.1,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
    }
   },
   "Plein Sud (allotment)": {
@@ -1152,7 +1255,14 @@
     "lift_page_he": "מלון הדירות נמצא במיקום נפלא המאפשר גלישה ישירה מ/אל פתח המלון. המיקום מאפשר גלישה ישירה SKI IN / SKI OUT",
     "shuttle_he": "העברות",
     "laundry_he": "אפשרות לשירותי כביסה",
-    "wifi_page_he": "אינטרנט חופשי בדירות עצמן ובשטחים הציבוריים"
+    "wifi_page_he": "אינטרנט חופשי בדירות עצמן ובשטחים הציבוריים",
+    "kitchenette_he": "מטבח מאובזר לחלוטין עם כיריים, תנור, מיקרוגל, מקרר, מדיח כלים וכלים"
+   },
+   "stars": null,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
    }
   },
   "Residence Oxalys": {
@@ -1231,7 +1341,15 @@
     "stars_he": "מלון דירות ברמת 4*",
     "lift_page_he": "צמוד למסלולים ומאפשר גלישה ישירה מ/ואל המלון Ski In Ski Out",
     "shuttle_he": "טיסת פינגווין ישירה לגרנובל או לליון, העברות",
-    "wifi_page_he": "אינטרנט חופשי WIFI בדירה"
+    "wifi_page_he": "אינטרנט חופשי WIFI בדירה",
+    "pool_where": "indoor",
+    "kitchenette_he": "מטבחון מאובזר ובו: מיקרוגל, מקרר, כיריים, מדיח כלים, קומקום, מכונת קפה וטוסטר"
+   },
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Hotel Kashmir": {
@@ -1300,7 +1418,15 @@
     "lift_page_he": "צמוד למסלול הסקי המוביל למעלית הסקי Plein Sud ניתן לגלוש מ/אל בית המלון. מיקום סקי אין סקי אאוט מושלם",
     "shuttle_he": "טיסת פינגווין לגרנובל או לליון, נציגים ישראלים, העברות",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "אינטרנט אלחוטי"
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "pool_where": "indoor",
+    "kitchenette_he": "מטבחון (מיקרו, מכונת קפה, טוסטר, מדיח כלים, מקרר וכלים בסיסיים)"
+   },
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Belambra Val Claret": {
@@ -1398,6 +1524,12 @@
     "shuttle_he": "טיסת פינגווין לליון, העברות",
     "gym_he": "חדר כושר",
     "wifi_page_he": "אינטרנט אלחוטי כלול"
+   },
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Belambra Les Cretes L2A 1800": {
@@ -1466,7 +1598,14 @@
     "lift_page_he": "המועדון ממוקם בחלק העליון של העיירה בגובה 1800, עם גישה ישירה למסלולים. הליכה קצרה מפתח חדר ציוד הסקי אל המעליות",
     "shuttle_he": "צמוד למועדון יש תחנת סקי בס לשימוש האורחים המעוניינים להגיע אל מרכז העיירה",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "WiFi חופשי לרשות האורחים בשטחים הציבוריים ובחדרים"
+    "wifi_page_he": "WiFi חופשי לרשות האורחים בשטחים הציבוריים ובחדרים",
+    "kitchenette_he": "מכונת נספרסו"
+   },
+   "stars": 3,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Belambra L'Oree des Pistes": {
@@ -1540,6 +1679,12 @@
     "lift_page_he": "בסמוך לרכבל Jandri Express ו50 מטר ממעליות סקי",
     "shuttle_he": "טיסת פינגווין ישירה לגרנובל או לליון, העברות",
     "wifi_page_he": "אינטרנט אלחוטי חינם"
+   },
+   "stars": 3,
+   "booking_score": 8.8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Golf": {
@@ -1616,7 +1761,14 @@
     "notes_he": "ניקיון יומי של החדר כולל סידור מיטות. החלפת מגבות לפי הצורך",
     "lift_page_he": "במרכז העיירה, ממש על המסלולים ב arcs 1800",
     "shuttle_he": "נקודת ההורדה והאיסוף מהמלון ממוקמת כ- 250 מטר מהמלון",
-    "wifi_page_he": "אינטרנט אלחוטי חינם"
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "kitchenette_he": "מקרר קטן (ללא מקפיא)"
+   },
+   "stars": 3,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Belambra Grand Massif": {
@@ -1699,6 +1851,12 @@
     "shuttle_he": "כלול מחיר הטיסה לז'נבה/ליון, העברות",
     "gym_he": "חדר כושר וחדרי טיפולים",
     "wifi_page_he": "שירותים המוצעים במועדון כוללים אינטרנט אלחוטי"
+   },
+   "stars": 3,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Belambra Avoriaz": {
@@ -1767,7 +1925,14 @@
     "lift_page_he": "במרכז העיירה וצמוד למסלולי הסקי",
     "shuttle_he": "את הדרך למלון יש לעשות רגלית או ב\"מונית\" שהיא בעצם כרכרת סוסים, או להשכיר מזחלת או חתול שלג לנשיאת המזוודות (בתשלום בנוסף).",
     "gym_he": "במועדון יש מרכז ספא עם סאונה חמאם וחדר כושר.",
-    "wifi_page_he": "אינטרנט אלחוטי כלול."
+    "wifi_page_he": "אינטרנט אלחוטי כלול.",
+    "pool_he": "בעיירה יש מרכז ספורט עם בריכת שחייה מחוממת וסאונות"
+   },
+   "stars": 4,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Belambra Tignes Val Claret": {
@@ -1863,6 +2028,13 @@
     "lift_page_he": "סקי אין סקי אאוט על המסלולים בגובה של 2100 מטר",
     "gym_he": "חדר כושר וחדרי טיפולים",
     "wifi_page_he": "אינטרנט אלחוטי כלול."
+   },
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il",
+    "note": "מדף Club Belambra Val claret (siteID 2152) — אותו מלון, siteID שונה ברשומה"
    }
   },
   "Edenarc - Arc 1800": {
@@ -1944,7 +2116,14 @@
     "stars_he": "בית דירות פרימיום ברמת 5 כוכבים",
     "lift_page_he": "במרחק הליכה קצר יש מעלית (גונדולה) המקשרת את הקומפלקס עם המרכז של ארק 1800",
     "gym_he": "חדר כושר ואזור מרגוע",
-    "wifi_page_he": "במתחם אינטרנט WIFI חופשי לשימוש הלקוחות"
+    "wifi_page_he": "במתחם אינטרנט WIFI חופשי לשימוש הלקוחות",
+    "kitchenette_he": "מטבחון מאובזר ובו: כיריים, מיקרוגל-גריל, מקרר, מדיח כלים, מכונת קפה, קומקום וטוסטר"
+   },
+   "stars": 5,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "l'Eclose Alpe d'Huez": {
@@ -2045,7 +2224,14 @@
     "notes_he": "כלול במחיר הדירה: מצעים מסודרים על המיטות ביום ההגעה + מגבות",
     "lift_page_he": "150 מטר ממעלית (גונדולה) ה ALPE EXPRESS",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "אינטרנט אלחוטי"
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kitchenette_he": "מטבחון מאובזר ובו: כיריים, מיקרוגל-גריל, מקרר, מדיח כלים, מכונת קפה, קומקום וטוסטר"
+   },
+   "stars": null,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
    }
   },
   "Ynycio": {
@@ -2140,7 +2326,14 @@
     "renovated_he": "מלון דירות מפואר וחדש (2023)",
     "rooms_features_he": "בכל הדירות מטבחון מאובזר, חדרים עם מיטה זוגית או שתי מיטות נפרדות, מייבש שיער",
     "lift_page_he": "צמוד למרכז העיירה עם אפשרות לגלישה ישירה מ/אל פתח חדר הסקי של המלון",
-    "wifi_page_he": "חיבור אינטרנט אלחוטי אחד לכל דירה"
+    "wifi_page_he": "חיבור אינטרנט אלחוטי אחד לכל דירה",
+    "kitchenette_he": "מטבחון מאובזר, כיריים קרמיות, מדיח כלים, מכונת קפה, קומקום חשמלי וטוסטר"
+   },
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Club Soleil Oz": {
@@ -2231,6 +2424,12 @@
     "shuttle_he": "הנציג יפגוש אתכם בשדה התעופה, יכוון אתכם להסעה",
     "gym_he": "חדר כושר",
     "wifi_page_he": "אינטרנט אלחוטי חינם בכל המועדון. WI-FI חינמי מהירות נמוכה (בתוספת תשלום ניתן לקבל WI-FI מהיר)"
+   },
+   "stars": 3,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Club Soleil Les 2 Alpes": {
@@ -2320,6 +2519,12 @@
     "lift_page_he": "הגישה למסלולי הסקי אפשרית דרך גרם מדרגות המוביל למסלול המסתיים בסמוך למועדון (כ- 30 מדרגות)",
     "shuttle_he": "אוטובוס הסקי העוצר בפתח המועדון. זמן הנסיעה למרכז העיירה כעשר דקות. אוטובוס הסקי פעיל במהלך היום עד שעות הערב",
     "wifi_page_he": "WI-FI חינמי מהירות נמוכה (בתוספת תשלום ניתן לקבל WI-FI מהיר)"
+   },
+   "stars": 3,
+   "booking_score": 7.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Club Soleil Montgenevre": {
@@ -2389,7 +2594,14 @@
     "lift_page_he": "המועדון ממוקם מחוץ לעיירה וצמוד למסלולי הסקי הממוקמים בקצה גרם מדרגות קצר (כ-25) הצמוד לחדר הסקי של המלון",
     "shuttle_he": "המועדון מפעיל שאטלים למרכז העיירה במהלך היום עד שעות אחה\"צ. השימוש בשאטל ללא עלות. מרחק הנסיעה בין המועדון למרכז העיירה כחמש דקות בלבד.",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "WI-FI חינמי מהירות נמוכה"
+    "wifi_page_he": "WI-FI חינמי מהירות נמוכה",
+    "laundry_he": "החלפת מצעים ומגבות פעם אחת בשבוע"
+   },
+   "stars": 3,
+   "booking_score": 7.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Club Soleil Les Menuires": {
@@ -2455,6 +2667,12 @@
     "stars_he": "רשת מועדוני השמש מציעה אירוח בסיסי ברמת שלושה כוכבים",
     "lift_page_he": "גלישה ישירה מהמלון Ski IN-Ski Out",
     "wifi_page_he": "אינטרנט אלחוטי חינם באזור הלובי והבר"
+   },
+   "stars": 3,
+   "booking_score": 8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "FONT PAS": {
@@ -2518,7 +2736,14 @@
     "stars_he": "4*",
     "lift_page_he": "סמוך למעליות הסקי ולמסלולים (כ- 50 מטר מרחק הליכה קצר)",
     "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
-    "wifi_page_he": "אינטרנט חופשי בשטחים הציבוריים"
+    "wifi_page_he": "אינטרנט חופשי בשטחים הציבוריים",
+    "kitchenette_he": "מיני-בר בחדרים"
+   },
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "MAGIC PAS": {
@@ -2583,7 +2808,14 @@
     "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
     "gym_he": "חדר כושר קטן",
     "laundry_he": "שרותי כביסה וניקוי יבש",
-    "wifi_page_he": "בר קפיטריה עם חיבור אינטרנט חינם"
+    "wifi_page_he": "בר קפיטריה עם חיבור אינטרנט חינם",
+    "kitchenette_he": "מיני בר בחדרים"
+   },
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "GRAND PAS": {
@@ -2653,7 +2885,16 @@
     "notes_he": "כניסה למתחם הספא הכולל ג\"קוזי וסאונה למבוגרים, ילדים מגיל 12 בליווי הורים בלבד. אין כניסה לילדים מתחת לגיל זה.",
     "stars_he": "4*",
     "lift_page_he": "במרחק הליכה קצר ממסלולי הגלישה",
-    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין"
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
+    "pool_where": "indoor",
+    "kitchenette_he": "מיני בר בחדרים",
+    "balcony_he": "בחלק מהחדרים יש מרפסת"
+   },
+   "stars": 4,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "LODGE PARK (Allotment)": {
@@ -2718,7 +2959,14 @@
     "lift_page_he": "250 מטר בלבד ממעליות הסקי ומוקדי הבילוי. ניתן להגיע למעלית בהליכה קצרה או בהסעה פרטית של המלון ללא תשלום.",
     "shuttle_he": "ניתן להגיע למעלית בהליכה קצרה או בהסעה פרטית של המלון ללא תשלום. העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
     "gym_he": "חדר כושר מ7:00 בבוקר עד 21:00",
-    "wifi_page_he": "אינטרנט אלחוטי ללא תשלום"
+    "wifi_page_he": "אינטרנט אלחוטי ללא תשלום",
+    "pool_where": "both"
+   },
+   "stars": 5,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
    }
   },
   "Casa Karina": {
@@ -2814,7 +3062,14 @@
     "notes_he": "*שתייה חופשית: 16:00-17:00 בחדר האוכל קפה, תה,עוגיות, בירה מהחבית, יין ומשקאות קלים חופשי. 17:00-18:30 בבר הלובי קפה, תה, עוגיות, בירה מהחבית, יין ומשקאות קלים חופשי. במהלך ארוחת הערב, ניתן להזמין משקאות בתשלום.",
     "lift_page_he": "פחות משתי דקות הליכה בלבד ממעלית הסקי",
     "shuttle_he": "מידי בוקר הסעות ישירות לאתר הסקי ללא המתנה במעלית הראשית בימי עומס, ללא תשלום!",
-    "wifi_page_he": "ארון בגדים, שולחן איפור עם מראה, חימום, טלוויזיה, אינטרנט."
+    "wifi_page_he": "ארון בגדים, שולחן איפור עם מראה, חימום, טלוויזיה, אינטרנט.",
+    "kitchenette_he": "מטבחון שאינו מתאים לבישול"
+   },
+   "stars": 4,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Vihren": {
@@ -2886,7 +3141,15 @@
     "lift_page_he": "כ- 100 מטר ממעלית הסקי",
     "shuttle_he": "מידי בוקר הסעות ישירות לאתר הסקי ללא המתנה במעלית הראשית בימי עומס, ללא תשלום",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "אינטרנט אלחוטי בלובי"
+    "wifi_page_he": "אינטרנט אלחוטי בלובי",
+    "pool_where": "indoor",
+    "kitchenette_he": "מטבחון (חלק מהחדרים)"
+   },
+   "stars": 4,
+   "booking_score": 7.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Regnum": {
@@ -2968,7 +3231,16 @@
     "lift_page_he": "כ-500 מטר ממעלית הסקי. הסעות פרטיות הלוך ושוב מפתח בית המלון או כחמש דקות הליכה.",
     "shuttle_he": "הסעות פרטיות הלוך ושוב מפתח בית המלון. מידי בוקר הסעות ישירות לאתר הסקי ללא המתנה. המלום מספק הסעות חינם למרכז העיירה ומעלית הסקי",
     "gym_he": "חדר כושר",
-    "wifi_page_he": "גישה חופשית לאינטרנט אלחוטי."
+    "wifi_page_he": "גישה חופשית לאינטרנט אלחוטי.",
+    "pool_where": "indoor",
+    "kitchenette_he": "מטבחון הכולל קומקום, כיריים וסט כלים",
+    "balcony_he": "מרפסת (בחדרים מסוימים בתשלום נוסף)"
+   },
+   "stars": 5,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   },
   "Rila": {
@@ -3065,9 +3337,17 @@
     "renovated_he": "המלון שופץ לחלוטין בעיצוב מודרני וצעיר והשהייה בו היא חוויה יוצאת דופן!",
     "notes_he": "דירוג 8.9 - נהדר. עם ציון 9 בבוקינג לא צריך לחפש שום מלון אחר לחופשה המושלמת שלכם. קזינו מכונות מזל בקומת הכניסה. חצי פנסיון. לא ניתן לארח שלושה מבוגרים בחדרים אלו. החדרים בקטגוריה זו מתאימים עד ל 3 אורחים מבוגרים + ילד.",
     "lift_page_he": "אפשרות גלישה עד 20 מטר מהמלון",
-    "gym_he": "חדר כושר"
+    "gym_he": "חדר כושר",
+    "pool_where": "indoor"
+   },
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
    }
   }
  },
- "_rooms_source": "pingwin.co.il hotel pages, 23/08/2026 — see data/rooms-raw.json"
+ "_rooms_source": "pingwin.co.il hotel pages, 23/08/2026 — see data/rooms-raw.json",
+ "_facts_note": "page_facts הושלמו 31/08/2026 מדפי pingwin.co.il (איסוף מלא, ללא מחירים); ערך שנאסף ב-26/08 נשמר כמו שהוא."
 }
