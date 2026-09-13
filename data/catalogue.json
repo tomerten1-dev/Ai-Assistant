@@ -1,0 +1,3486 @@
+{
+ "_comment": "כל המלונות שפינגווין מוכרת, מדפי היעדים ב-pingwin.co.il. לא כולל קלאב מד ולא כולל שאלה פרטיים (הוראת תומר, 26/08/2026).",
+ "_rule_he": "מלון עם commitment=false אינו במאגר ההתחייבויות: אפשר להציע אותו בתאריכים שאינם תחת \"מכירת התחייבויות בלבד\", בכפוף לאישור מול המלון — אבל לעולם לא לצטט עליו זמינות, חדר או מחיר. הבוט מזכיר את שמו ומעביר לנציג.",
+ "_source": "דפי היעדים ב-pingwin.co.il, נשלפו 26/08/2026",
+ "_generated_by": "tools/build-catalogue.js",
+ "counts": {
+  "total": 117,
+  "with_commitments": 38,
+  "catalogue_only": 79,
+  "resorts": 23
+ },
+ "hotels": [
+  {
+   "name": "Sport & Spa Hotel Strass",
+   "siteID": 269,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "ארוחת בוקר או חצי פנסיון, עד 4 אורחים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Sport",
+    "Strass"
+   ],
+   "page": "https://www.pingwin.co.il/Sport+%26+Spa+Hotel+Strass.html?siteID=269",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא גדול כמיטב המסורת האוסטרית עם מספר סוגי סאונה, ג'קוזי, חדר כושר ומרכז טיפולים",
+    "gym_he": "חדר כושר",
+    "elevator_he": "מעליות",
+    "wifi_page_he": "אינטרנט אלחוטי ברחבי המלון",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "חדרי אוכל בהם מוגשות ארוחות הבוקר והערב, בר אפרה סקי הדוב צמוד למלון, מועדון לילה ARENA, מסעדה",
+    "balcony_he": "מרבית החדרים עם מרפסת",
+    "lift_page_he": "במרכז רחובה הראשי של העיירה ובצמוד למעלית הראשית",
+    "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+    "location_he": "במרכז רחובה הראשי של העיירה ובצמוד למעלית הראשית. המיקום הכי טוב שאפשר"
+   }
+  },
+  {
+   "name": "Hotel Ferienhof",
+   "siteID": 2116,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חדרים זוגיים ולשלושה אורחים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Hotel Ferienhof"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Ferienhof.html?siteID=2116",
+   "stars": 4,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא עם סאונה וחדר מנוחה",
+    "ski_room_he": "אפשרות לשכור לוקר באולם הלוקרים הגדול בחלק העליון של המעלית הראשית",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי בשטחים הציבוריים ובחדרים",
+    "restaurant_he": "לובי, בר, חדר אוכל שבו מוגשת ארוחת בוקר מפנקת עם מכונות קפה",
+    "balcony_he": "כל החדרים במלון עם מרפסת",
+    "lift_page_he": "במרחק של כחמש דקות הליכה (כ-500 מטר) בלבד ממעלית הסקי הראשית",
+    "location_he": "במרחק של כחמש דקות הליכה ממעלית הסקי הראשית ומרחובה הראשי של העיירה"
+   }
+  },
+  {
+   "name": "Alpenhof Kristal",
+   "siteID": 1408,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חדרים 2-3 על בסיס ארוחת בוקר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Alpenhof Kristal"
+   ],
+   "page": "https://www.pingwin.co.il/Alpenhof+Kristal.html?siteID=1408",
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא מרווח עם חדרי סאונה יבשה ורטובה, חדר מרגוע, מיטות פסיפס חמות",
+    "ski_room_he": "חנויות השכרה במאירהופן: Brundel Sport וGreen Room; אולם לוקרים בחלק העליון של המעלית הראשית",
+    "wifi_page_he": "אינטרנט חינם",
+    "restaurant_he": "לובי, בר, מסעדה, קפיטריה; מסעדת à la carte בערב",
+    "balcony_he": "חלקם עם מרפסת",
+    "lift_page_he": "כעשר דקות הליכה מהמעלית הראשית ו-100 מטר מתחנת האוטובוס המובילה לכל אתרי סקי פס המורחב",
+    "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+    "location_he": "בקצה הרחוב הראשי של העיירה, כשתי דקות הליכה ממרכז העיירה"
+   }
+  },
+  {
+   "name": "Hotel Waldheim",
+   "siteID": 1897,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חדר זוגי על בסיס ארוחת בוקר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Waldheim"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Waldheim.html?siteID=1897",
+   "stars": 4,
+   "booking_score": 9.1,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה גדולה ומגלשות מים",
+    "pool_where": "indoor",
+    "spa_page_he": "ספא הכולל חדר מנוחה וסאונה",
+    "ski_room_he": "אולם הלוקרים הגדול",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "כ-2 דקות הליכה לרכבל הפנקן (200 מטר), 3 דקות מרכבל האהורן",
+    "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין",
+    "location_he": "מיקום מנצח בעיירה בקרבת מרכז הספורט ורכבלים ראשיים"
+   }
+  },
+  {
+   "name": "Post Residence",
+   "siteID": 1528,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "לינה, ארוחת בוקר או חצי פנסיון, עד 8 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Post+Residence.html?siteID=1528",
+   "stars": 4,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "חדר ספא אינפרה אדום (בדירות מסוימות), חדר סאונה פרטי (בדירות נבחרות)",
+    "ski_room_he": "אפשרות לשכור לוקר באולם הלוקרים הגדול בחלק העליון של המעלית הראשית",
+    "kitchenette_he": "מטבח מאובזר בכל הדירות",
+    "balcony_he": "מרפסת (בדירות מסוימות)",
+    "lift_page_he": "כ- 500 מטר בלבד ממעליות הסקי Penkenbahn ו Ahornbahn",
+    "shuttle_he": "תחנת אוטובוס סקי חינמי מול פתח המלון",
+    "location_he": "במרכז עיירת הסקי מאיירהופן"
+   }
+  },
+  {
+   "name": "Berghof Hotel",
+   "siteID": 1246,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Berghof"
+   ],
+   "page": "https://www.pingwin.co.il/Berghof+Hotel.html?siteID=1246",
+   "stars": 4,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה פנימית וחיצונית",
+    "pool_where": "both",
+    "spa_page_he": "מרכז ספא חדש ובו מספר סוגי סאונות, איזור מנוחה",
+    "gym_he": "חדר כושר",
+    "elevator_he": "מעלית",
+    "parking_he": "חנייה",
+    "wifi_page_he": "אינטרנט Wi-Fi חינמי",
+    "kids_he": "חדר משחקים לילדים",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "כ- 700 מטר ממעלית הסקי הראשית",
+    "shuttle_he": "מול המלון תחנת אוטובוס סקי חינם",
+    "location_he": "במרכז עיירת הסקי מאירהופן"
+   }
+  },
+  {
+   "name": "Der Siegeler",
+   "siteID": 985,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Der+Siegeler.html?siteID=985",
+   "stars": null,
+   "booking_score": 9.3,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "ski_room_he": "חנויות השכרה במאירהופן",
+    "wifi_page_he": "אינטרנט אלחוטי חינם בבר המלון ובחדרים",
+    "restaurant_he": "לובי קבלה, חדר לארוחת הבוקר, בר ופינת טלוויזייה; Mike's Sports bar בקומת הכניסה",
+    "balcony_he": "חדרים זוגיים וחדרים לשלושה ובכולם מרפסת",
+    "lift_page_he": "מרחק הליכה של כ-600 מטר למעלית הסקי או נסיעה באוטובוס הסקי",
+    "shuttle_he": "נסיעה באוטובוס הסקי (תחנה בסמוך למלון) מרחק של שתי תחנות",
+    "location_he": "מרחק קצר לרחוב הראשי של העיירה וקרוב למוקדי הבילוי במרכז עיירת הסקי מאירהופן"
+   }
+  },
+  {
+   "name": "Landhaus Roscher",
+   "siteID": 2079,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Landhaus Roscher"
+   ],
+   "page": "https://www.pingwin.co.il/Landhaus+Roscher.html?siteID=2079",
+   "stars": null,
+   "booking_score": null,
+   "rating_source": {
+    "stars": null,
+    "score": null
+   },
+   "facts": {
+    "pool_he": "אורחי הפנסיון יכולים להיכנס לבריכת השחייה המקורה של מלון STRASS",
+    "pool_where": "indoor",
+    "ski_room_he": "חדר ציוד סקי",
+    "wifi_page_he": "WIFI בסיסי",
+    "restaurant_he": "חדר אוכל, פינת ישיבה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "ממוקם כ 400 מטר ממעלית הסקי ומרכז העיירה",
+    "location_he": "פנסיון פשוט ונעים הממוקם כ 400 מטר ממעלית הסקי ומרכז העיירה במאירהופן"
+   }
+  },
+  {
+   "name": "Pension Kumbi",
+   "siteID": 1966,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Pension Kumbichlhof"
+   ],
+   "page": "https://www.pingwin.co.il/Pension+Kumbi.html?siteID=1966",
+   "stars": null,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "ski_room_he": "חנות ציוד מומלצת לפנסיון זה היא BRUNDEL, מומלץ לשכור לוקר לכל השבוע",
+    "balcony_he": "בכל החדרים מרפסות, טלוויזיה, מקלחת ושירותים",
+    "lift_page_he": "בסמוך לרכבל - Ahornbahn ובמרחק הליכה קצר מהמעלית הראשית Penken",
+    "location_he": "מלון פנסיון משפחתי נהדר והטוב ביותר במאריהופן, מעוצב בסגנון כפרי ובמיקום מרכזי"
+   }
+  },
+  {
+   "name": "Hotel Strolz",
+   "siteID": 1917,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Strolz"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Strolz.html?siteID=1917",
+   "stars": 3,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עם סאונה, חדר מנוחה ובריכת שחייה מחוממת",
+    "restaurant_he": "לובי, מסעדה, קבלה",
+    "balcony_he": "חלק מהחדרים עם מרפסת",
+    "lift_page_he": "כ- 1000 מטר ממעלית הסקי, ניתן להגיע למעלית בהליכה של כ-12 דקות או 4 דקות עם אוטובוס הסקי",
+    "shuttle_he": "העברות הלוך ושוב בליווי נציגי פינגווין, אוטובוס הסקי",
+    "location_he": "500 מטר ממרכז העיירה"
+   }
+  },
+  {
+   "name": "Apartment Tuxer",
+   "siteID": 2080,
+   "resort": "Mayrhofen",
+   "resort_he": "מאיירהופן",
+   "country": "austria",
+   "board_he": "עד 5 אורחים, לינה בלבד",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Tuxer"
+   ],
+   "page": "https://www.pingwin.co.il/Apartment+Tuxer.html?siteID=2080",
+   "stars": null,
+   "booking_score": null,
+   "rating_source": {
+    "stars": null,
+    "score": null
+   },
+   "facts": {
+    "ski_room_he": "חנויות השכרה במאירהופן עם אפשרות לשכור לוקר וציוד סקי",
+    "kitchenette_he": "מטבח מאובזר עם כירת בישול, מדיח כלים ותנור",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "מרחק הליכה של כ 15 דקות ממעלית ה PENKEN, תחנת סקי בס במרחק 50 מטר",
+    "location_he": "דירה ממוקמת במרחק הליכה של כ 10 דקות ממרכז העיירה ומרכזי הבילוי"
+   }
+  },
+  {
+   "name": "Hotel Fliana - Ischgl",
+   "siteID": 363,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 4 בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Fliana+-+Ischgl.html?siteID=363",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עם בריכת שחייה מקורה ומספר סאונות. על מרפסת הגג ג'קוזי ענק חיצוני",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי חינם בחדרים ובאזור הקבלה",
+    "restaurant_he": "מסעדה עם פינה אורגנית ואפשרות לארוחות צמחוניות, בר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "במרכז עיירת הסקי אישגל, כ- 50 מטר מהמסלולים - גלישה חזרה עד לפתח המלון ski-in",
+    "location_he": "במרכז עיירת הסקי אישגל, כ- 50 מטר מהמסלולים"
+   }
+  },
+  {
+   "name": "Sporthotel Silvretta",
+   "siteID": 1590,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "5 כוכבים, ארוחת בוקר, עד 6 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Sporthotel+Silvretta.html?siteID=1590",
+   "stars": 5,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "כניסה חופשית לספא של מלון Mondin, המשתרע על פני 1200 מ\"ר של תענוגות",
+    "ski_room_he": "שתי החנויות של הרשת מאפשרות דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "Wi-Fi חופשי במלון",
+    "kitchenette_he": "מטבח מאובזר, מדיח, מיקרוגל, מקרר, מכונת קפה, קומוקום חשמלי (בסוויטות אלפין)",
+    "restaurant_he": "בר האפרה סקי Kuhstall הידוע",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "50 מטר בלבד ממעלית ה-Silvretta",
+    "location_he": "מרכז העיירה ואתר הסקי אישגיל"
+   }
+  },
+  {
+   "name": "Madlein",
+   "siteID": 1374,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Madlein.html?siteID=1374",
+   "stars": 4,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת בחלל סגור",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא ובו בריכת שחייה מחוממת בחלל סגור, חדרי סאונה, חדר מרגוע, הוט טאב בחצר",
+    "ski_room_he": "דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "אינטרנט מהיר חינם",
+    "kitchenette_he": "מיני בר",
+    "restaurant_he": "מועדון (דיסקו) מפורסם ובר פעילים במיוחד",
+    "balcony_he": "ברוב החדרים מרפסת",
+    "lift_page_he": "במרחק הליכה קצר ממעלית הסקי Pardatschgratbahn",
+    "location_he": "בלב האקשן, במרחק הליכה קצר למרכז עיירת הסקי התוססת אישגיל"
+   }
+  },
+  {
+   "name": "Kristall Hotel",
+   "siteID": 1359,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 3 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Kristall+Hotel.html?siteID=1359",
+   "stars": 3,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא עם חדרי סאונה, אינפרה אדום וחדר מרגוע",
+    "ski_room_he": "מאפשרות דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "חיבור אינטרנט",
+    "kitchenette_he": "בדירה מטבחון מאובזר ובו תנור, מדיח כלים, מיקרוגל וכלי מטבח",
+    "restaurant_he": "לובי קבלה, חדר לארוחת הבוקר",
+    "balcony_he": "ברוב החדרים יש מרפסת",
+    "lift_page_he": "500 מטר בלבד ממעלית הסקי SILVERETA",
+    "shuttle_he": "ניתן לגלוש עד סמוך מאוד לבית המלון, ביציאה מהמלון לגונדולה הראשית, ניתן ללכת ברגל או תחנה אחת באוטובוס הסקי",
+    "location_he": "ברחובה הראשי של העיירה, בקצה רחובה הראשי של העיירה, פחות משתי דקות הליכה למרכזי הבילוי"
+   }
+  },
+  {
+   "name": "Montanara",
+   "siteID": 1581,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חדרים ודירות עד 8 אורחים, לינה וארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Montanara.html?siteID=1581",
+   "stars": 4,
+   "booking_score": 9.6,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה פינית, סאונה ביו, מרחץ אדים ועוד הפתעות",
+    "ski_room_he": "דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "WI-FI חופשי",
+    "kitchenette_he": "מטבח מאובזר עם מקרר, מדיח, טוסטר, מיקרוגל, קומקום חשמלי וכיריים חשמליים",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "600 מטר ממעלית הסילברטה, גלישה ישירה לפתח המלון",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "המלון ממוקם באזור שקט ויחד עם זאת נהנה מקרבה למעלית הסילברטה ומרכז הבילויים של אישגיל"
+   }
+  },
+  {
+   "name": "Schlosshof",
+   "siteID": 1257,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "ארוחת בוקר, עד 3 אורחים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "SCHLOSSHOF"
+   ],
+   "page": "https://www.pingwin.co.il/Schlosshof.html?siteID=1257",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה (כולל אינג'קטורים מפנקים)",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עם בריכה, חדר מרגוע, חדרי סאונה יבשה ורטובה",
+    "ski_room_he": "דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "גישה לאינטרנט בכל החדרים",
+    "restaurant_he": "בר ומסעדה",
+    "lift_page_he": "ממוקם כ- 400 מטר ממעלית הסקי סילברטה ובקצה המסלול היורד לעיירה",
+    "location_he": "ממוקם כ- 400 מטר ממעלית הסקי סילברטה, בקצה המסלול היורד לעיירה אישגיל"
+   }
+  },
+  {
+   "name": "Mutmanor",
+   "siteID": 1234,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, 2-3 אורחים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Mutmanor"
+   ],
+   "page": "https://www.pingwin.co.il/Mutmanor.html?siteID=1234",
+   "stars": null,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "ski_room_he": "חדר לאחסון ציוד הסקי",
+    "wifi_page_he": "אינטרנט",
+    "balcony_he": "לרוב החדרים יש מרפסת",
+    "lift_page_he": "כ 100 מטר בלבד מהמנהרה החדשה המובילה ישירות למעלית ה Pardatschgratbahn",
+    "location_he": "מלון משפחתי קטן ונעים בעיירת הסקי אישגיל, קרוב למעלית ולמרכזי הבילוי"
+   }
+  },
+  {
+   "name": "Garni Castel",
+   "siteID": 2093,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Castel"
+   ],
+   "page": "https://www.pingwin.co.il/Garni+Castel.html?siteID=2093",
+   "stars": 4,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא עם סאונה וג'קוזי",
+    "ski_room_he": "חדר לציוד סקי, DEPO של המלון הצמוד למעלית ה Fimbabahn",
+    "wifi_page_he": "WIFI בכל החדרים",
+    "restaurant_he": "לובי עם בר, חדר אוכל, בצמוד למלון פועלת מסעדה",
+    "balcony_he": "ברוב החדרים מרפסת",
+    "lift_page_he": "כ 200 מטר בלבד מהמנהרה החדשה להולכי רגל המובילה ישירות למעלית Pardatschgratbahn",
+    "location_he": "בסביבה נעימה ושקטה של העיירה ובמרחק הליכה קצר למעליות הסקי ולמרכזי הבילוי של העיירה התוססת"
+   }
+  },
+  {
+   "name": "Solaria Ischgl",
+   "siteID": 2097,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Solaria+Ischgl.html?siteID=2097",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "מתחם ספא בגדול של כ 250 מ\"ר ובו בריכה מקורה, 6 סוגי סאונה כולל חמאם, חדר כושר, חדרים טיפולים",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "WIFI",
+    "restaurant_he": "לובי, בר, חדר אוכל לארוחת בוקר וערב",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "מרחק הליכה קצרצר ממעלית ה Pardatschgratbahn ו Fimbabahn",
+    "location_he": "ממוקם במרכז אישגל ברחוב Dorfstraße, מרחק הליכה קצר לכל המקומות המרכזיים"
+   }
+  },
+  {
+   "name": "Hotel Arnika",
+   "siteID": 2114,
+   "resort": "Ischgl",
+   "resort_he": "אישגל",
+   "country": "austria",
+   "board_he": "חדרים עד 4 אורחים, ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Arnika.html?siteID=2114",
+   "stars": 4,
+   "booking_score": 9.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה, מרחץ אדים וסאונת אינפרא אדום",
+    "ski_room_he": "חנויות השכרה מאפשרות דפו (לא לוקר) של ציוד הסקי בחנויות",
+    "wifi_page_he": "אינטרנט אלחוטי בחדרים",
+    "restaurant_he": "מסעדה במלון מציעה ארוחות ערב, מנות אוסטריות ובינלאומיות. משקאות בבר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "רכבל Fimbabahn במרחק של 3 דקות הליכה בלבד",
+    "location_he": "מלון משפחתי ממוקם במרכז אישגל, ליד אזור להולכי רגל"
+   }
+  },
+  {
+   "name": "Alpin Resort & Spa",
+   "siteID": 168,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "פנסיון מלא + כיבוד אפרה סקי + שתייה קלה וחריפה חופשי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Alpin+Resort+%26+Spa.html?siteID=168",
+   "stars": 4,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "ספא מפואר ןמפנק",
+    "gym_he": "חדר כושר",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kitchenette_he": "מיני-בר",
+    "restaurant_he": "לובי, בר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "הרכבל הראשי ממוקם אף הוא בסמוך למלון, הגלישה אפשרית עד פתח בית המלון",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "המלון ממוקם במרכז העיירה זאלבאך ובסמוך למרכזי הבילוי"
+   }
+  },
+  {
+   "name": "Hotel Die Sonne",
+   "siteID": 1624,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "הכל כלול + שתייה קלה חמה וחריפה חופשית",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Die+Sonne.html?siteID=1624",
+   "stars": 4,
+   "booking_score": 9.3,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא מעולה עם בריכת שחייה, חדרי סאונה שונים, חדר מרגוע",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "kids_he": "חדר משחקים עם השגחה אנושית כל השבוע למעט ימי ראשון, לילדים מגיל שנתיים ומעלה",
+    "restaurant_he": "ארוחות במשך כל היום, בר בופה קר/חם, ארוחת ערב בהגשה או מזנון, בר חופשי פתוח",
+    "balcony_he": "מרפסת נוף",
+    "lift_page_he": "סקי בס חינם לעיירה ומעליות הסקי וחזרה בין השעות 08:30-17:00, אפשרות גלישה חזרה עד למלון",
+    "shuttle_he": "סקי בס חינם לעיירה ומעליות הסקי וחזרה",
+    "location_he": "כ- 900 מטר ממרכז זאלבאך 10 דקות הליכה"
+   }
+  },
+  {
+   "name": "Sport Hotel Berger's",
+   "siteID": 1458,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 4 אורחים בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Sport+Hotel+Berger's.html?siteID=1458",
+   "stars": 4,
+   "booking_score": 7.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "booking.com"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא חדשני ומעוצב",
+    "elevator_he": "צמוד למעלית",
+    "wifi_page_he": "אינטרנט מהיר חופשי",
+    "kitchenette_he": "מיני בר",
+    "restaurant_he": "פעם בשבוע הופעה של מוזיקה חיה בלובי המלון",
+    "lift_page_he": "50 מטר ממעלית הסקי הראשית",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "במרכז זאלבאך, צמוד למדרחוב ו-50 מטר ממעלית הסקי הראשית"
+   }
+  },
+  {
+   "name": "Saalbacher Hof",
+   "siteID": 2007,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Saalbacher+Hof.html?siteID=2007",
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה עם מפל מים",
+    "pool_where": "indoor",
+    "spa_page_he": "3 סאונות וחדר מנוחה עם מיטות מים",
+    "wifi_page_he": "אינטרנט אלחוטי חינם זמין",
+    "restaurant_he": "במסעדת המלון מוגשות מנות מהמטבח הקלאסי של זלצבורג ומהמטבח הבינלאומי",
+    "balcony_he": "בחלק מהחדרים יש מרפסת",
+    "lift_page_he": "בלב המדרחוב של העיירה ובמרחק של כ-50 מטר ממעלית הסקי",
+    "location_he": "בלב המדרחוב של העיירה ובמרחק של כ-50 מטר ממעלית הסקי"
+   }
+  },
+  {
+   "name": "Panther Hotel",
+   "siteID": 1260,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, חדרים לעד 3 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Panther+Hotel.html?siteID=1260",
+   "stars": 4,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה חיצונית מחוממת 34°",
+    "pool_heated": true,
+    "pool_where": "outdoor",
+    "spa_page_he": "מרכז ספא, חמאם, סאונה וחדר מרגוע",
+    "wifi_page_he": "אפשרות לאינטרנט אלחוטי בתשלום",
+    "restaurant_he": "לובי, קבלה, בר, מסעדה",
+    "lift_page_he": "כ- 50 מטר ממעלית הסקי. ניתן לגלוש חזרה למלון Ski-In",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "במרכז עיירת הסקי זאלבאך, בלב המדרחוב"
+   }
+  },
+  {
+   "name": "Konig Hotel",
+   "siteID": 1370,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, רוב החדרים ל-2-3 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Konig+Hotel.html?siteID=1370",
+   "stars": 3,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא עם סאונות וחדר מנוחה",
+    "ski_room_he": "חדר סקי לאחסון הציוד",
+    "wifi_page_he": "WIFI",
+    "restaurant_he": "מסעדה, בר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "מרחק הליכה קצר של כ 250 מטר ממעלית ה Schattberg X-press",
+    "location_he": "מיקומו של המלון מנצח! מרחק הליכה קצר למעליות הסקי ולמרכז העיירה"
+   }
+  },
+  {
+   "name": "JUFA Alpenhotel Saalbach",
+   "siteID": 1985,
+   "resort": "Saalbach",
+   "resort_he": "זאלבאך",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 2 אורחים בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/JUFA+Alpenhotel+Saalbach.html?siteID=1985",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא ובוסאונה פינית, ביו-סאונה, מרחץ אדים עם מי-מלח ואזור מנוחה",
+    "wifi_page_he": "WIFI חופשי",
+    "restaurant_he": "מסעדת המלון מבופה איכותי ועשיר",
+    "balcony_he": "בחלק מהחדרים יש מרפסת",
+    "lift_page_he": "כ-100 מטר מרכבל ה-Schattberg X-Press",
+    "location_he": "מיקום מרכזי במדרחוב של העיירה"
+   }
+  },
+  {
+   "name": "Dorfhotel Glucksschhmiede",
+   "siteID": 407,
+   "resort": "Hinterglemm",
+   "resort_he": "הינטרגלם",
+   "country": "austria",
+   "board_he": "עד 4 אורחים, ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Dorfhotel+Glucksschhmiede.html?siteID=407",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה, בריכת ילדים",
+    "pool_where": "indoor",
+    "spa_page_he": "ספא עם סאונה יבשה ורטובה, טיפולי ספא בתוספת תשלום",
+    "ski_room_he": "חדר ציוד סקי",
+    "wifi_page_he": "WIFI",
+    "kitchenette_he": "מיניבר, קומקום",
+    "kids_he": "בריכת ילדים ומשחקייה",
+    "restaurant_he": "מסעדה המציעה בופה בארוחת הבוקר, בר; בצמוד למלון יש מסעדה",
+    "lift_page_he": "הליכה קצרה של כ 140 מ' למעלית הסקי הקרובה REITERKOGEL או למעלית ה WESTGIPFEL",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "במרכז העיירה ובצמוד למדרחוב"
+   }
+  },
+  {
+   "name": "Almrausch Hotel",
+   "siteID": 2096,
+   "resort": "Hinterglemm",
+   "resort_he": "הינטרגלם",
+   "country": "austria",
+   "board_he": "עד 4 אורחים, חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Almrausch+Hotel.html?siteID=2096",
+   "stars": 4,
+   "booking_score": 9.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "ספא הכולל סאונה יבשה, סאונה רטובה ותא אינפה אדום",
+    "ski_room_he": "חדר ציוד סקי עם מתקן ייבוש לנעליים",
+    "kitchenette_he": "מיני בר, פינת קפה",
+    "restaurant_he": "מסעדה המגישה בבוקר בופה ובערב תפריט של 4 מנות הכוללות מאכלים מקומיים ובינלאומיים",
+    "balcony_he": "בחלק מהחדרים יש מרפסת",
+    "lift_page_he": "המלון ממוקם בצמוד למעלית הסקי Bergfriedlift ובתנאי שלג טובים ניתן לגלוש חזרה עד למלון",
+    "location_he": "המלון ממוקם בקצה רחוב ה DORFSTRASSE ובסמוך למדרחוב"
+   }
+  },
+  {
+   "name": "Karl Schranz",
+   "siteID": 739,
+   "resort": "St. Anton",
+   "resort_he": "סנט אנטון",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 3 נופשים בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Karl+Schranz.html?siteID=739",
+   "stars": 4,
+   "booking_score": 8.8,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה פנימית מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא מצוין עם סאונה רטובה ויבשה, חדר אינפרא אדום וסולריום, עיסויים בתשלום נוסף",
+    "elevator_he": "מעלית",
+    "parking_he": "חנייה",
+    "wifi_page_he": "אינטרנט חופשי",
+    "kitchenette_he": "מיני מקרר בחדרים",
+    "restaurant_he": "חדר אוכל, מסעדה בר חמים וגדול, מרתף יינות",
+    "balcony_he": "חדר זוגי 2-3 עם מרפסת",
+    "lift_page_he": "2 דקות נסיעה לגונדולה בשירות ההסעות הפרטי של המלון",
+    "shuttle_he": "שאטל פרטי מהמלון לגונדולה ובחזרה, סקיבס חינמי, קו 3 כל 10 דקות",
+    "location_he": "כ-850 מטר ממרכז St. Anton בגובה 1300 מטר"
+   }
+  },
+  {
+   "name": "Hotel Nassereinerhof",
+   "siteID": 1251,
+   "resort": "St. Anton",
+   "resort_he": "סנט אנטון",
+   "country": "austria",
+   "board_he": "חצי פנסיון, חדרים לאירוח של עד 5",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Nassereinerhof.html?siteID=1251",
+   "stars": 3,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה עם נוף פנורמי מרהיב",
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה פינית, ביו-סאונה, סאונת אדים, תא אינפרא אדום, טיפולי ספא",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "restaurant_he": "מסעדה עם נוף פנורמי, בר יין, Beer & More, טרקלין היסטורי מהמאה ה-17",
+    "balcony_he": "מרפסת (בחלק מהחדרים)",
+    "lift_page_he": "כ-150 מטר למעליות ומסלולי הסקי",
+    "location_he": "ממוקם במרחק של 10 דקות הליכה ממרכז סנט אנטון"
+   }
+  },
+  {
+   "name": "St Georg Hotel",
+   "siteID": 285,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "ארוחת בוקר, עד 4 בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/St+Georg+Hotel.html?siteID=285",
+   "stars": 4,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה",
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה בסגנון פינלנד וסאונה אורגנית, חדר אדים, חדר מרגוע",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר לאחסון ציוד סקי",
+    "elevator_he": "מעלית",
+    "parking_he": "חנייה",
+    "wifi_page_he": "גישה חופשית לאינטרנט אלחוטי",
+    "restaurant_he": "מסעדה, בר, מרתף יינות וטרסה",
+    "balcony_he": "מרפסת (בחלק מסוגי החדרים)",
+    "lift_page_he": "ממוקם כ-250 מטר בלבד ממעלית הסקי הראשית CityXpress",
+    "location_he": "בקרבת העיר העתיקה של צל אמ סי, 5 דקות הליכה ממרכז העיירה והאגם"
+   }
+  },
+  {
+   "name": "Hotel Lebzelter",
+   "siteID": 741,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 3 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Lebzelter.html?siteID=741",
+   "stars": 3,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה חדר אינפרא אדום וסולריום",
+    "ski_room_he": "חדר לאחסון ציוד סקי",
+    "parking_he": "חנייה",
+    "restaurant_he": "בר עם מרפסת ממש על המדרחוב, חדר לארוחת הבוקר",
+    "balcony_he": "בלחלק מהחדרים בלבד יש מרפסת",
+    "lift_page_he": "במרחק הליכה קצר ממעלית הסקי CITY X-PRESS, כ- 350 מטר ממעלית הסקי",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "במרכז Zell Am See צמוד למדרחוב באזור להולכי רגל בלבד"
+   }
+  },
+  {
+   "name": "Der Schmittenhof",
+   "siteID": 1537,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "חצי פנסיון, עד 4 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Der+Schmittenhof.html?siteID=1537",
+   "stars": 4,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "ספא הכולל סאונות ואיזור מרגוע (סולאריום בתשלום)",
+    "ski_room_he": "חדר לציוד סקי עם ייבוש לנעליים",
+    "wifi_page_he": "אינטרנט אלחוטי בחינם",
+    "restaurant_he": "מסעדה מגישה מנות בינלאומיות, ארוחות בוקר בסגנון מזנון וארוחות ערב בהגשה (3 מנות), בר",
+    "balcony_he": "חדרים כוללים מרפסת קטנה עם פינת ישיבה",
+    "lift_page_he": "400 מטרים בלבד מרכבל ה Schmittenhöhebahn",
+    "shuttle_he": "אוטובוס הסקי, תחנה מול המלון",
+    "location_he": "קרוב יחסית למסלולי הסקי, במרחק של 15 דקות הליכה ממרכז צל-אם-זי"
+   }
+  },
+  {
+   "name": "Botique Hotel Martha",
+   "siteID": 1538,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 4 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Botique+Hotel+Martha.html?siteID=1538",
+   "stars": 3,
+   "booking_score": 8.8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "booking.com"
+   }
+  },
+  {
+   "name": "Der Schutthof",
+   "siteID": 1671,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "ארוחת בוקר, אפשרות לחצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Der+Schutthof.html?siteID=1671",
+   "stars": 3,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מתחם ספא עם סאונה וחדר מרגוע",
+    "ski_room_he": "חנות השכרת ציוד וחדר ציוד סקי עם חימום",
+    "wifi_page_he": "WI-FI בחינם",
+    "restaurant_he": "מסעדה ובר",
+    "balcony_he": "בחלק מהחדרים יש מרפסת או מרפסת בסגנון צרפתי",
+    "lift_page_he": "ממוקם כ 10 דקות הליכה ממעלית ה AREITXPRESS",
+    "location_he": "מרחב הסקי זל אם סי קפרון - Zell am see Kaprun"
+   }
+  },
+  {
+   "name": "Hotel Latini",
+   "siteID": 1672,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Latini.html?siteID=1672",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "מתחם ספא גדול עם הכולל בריכה",
+    "pool_where": "indoor",
+    "spa_page_he": "מתחם ספא גדול",
+    "parking_he": "מתחם חנייה תת קרקעי",
+    "wifi_page_he": "WI-FI באזור הלובי ללא עלות",
+    "kitchenette_he": "מכונת אספרסו",
+    "restaurant_he": "מספר של מסעדות ובר",
+    "balcony_he": "בחלק מהחדרים יש מרפסת",
+    "lift_page_he": "במרחק של כ- 400 מטר למעלית הקרובה",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "ממוקם במרחק של 5 דקות הליכה ממעלית הסקי AREITXPRESS"
+   }
+  },
+  {
+   "name": "Hotel Neue Post",
+   "siteID": 1826,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "לינה וארוחת בוקר, עד 4 בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Neue+Post.html?siteID=1826",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה, סאונה יבשה ורטובה, בריכת זרמים",
+    "pool_where": "indoor",
+    "spa_page_he": "מתחם ספא עם בריכה מקורה, סאונה יבשה ורטובה, בריכת זרמים; בתשלום נוסף: טיפולים, מסאזים וכניסה לסולריום",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "WIFI ללא עלות",
+    "restaurant_he": "מסעדות, בר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "מיקום של כ- 3 דקות הליכה למעלית הסקי",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "ממוקם במרכז העיר של צל אם זי במרחק של כ- 3 דקות הליכה ממעלית הסקי"
+   }
+  },
+  {
+   "name": "Salzburgerhof Zell",
+   "siteID": 2153,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "חצי פנסיון + כיבוד צהריים אפרה סקי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Salzburgerhof+Zell.html?siteID=2153",
+   "stars": 5,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה ייחודית עם מי מלח",
+    "spa_page_he": "אזור הספא משתרע על פני יותר מ-3,500 מ\"ר ומציע מגוון רחב של סאונות, אמבטיות אדים ועיסויים",
+    "wifi_page_he": "אינטרנט חופשי",
+    "restaurant_he": "מסעדה וברים עם כיבוד צהריים ואפרה סקי",
+    "balcony_he": "חלק מהחדרים מרפסת, חלק מרפסת צרפתית",
+    "lift_page_he": "המלון ממוקם כ 450 מטר ממעלית ה CITYXPRESS",
+    "location_he": "ממיקום יפהפה בצל אם זי, במרחק קצר ממרכז צל אם סי"
+   }
+  },
+  {
+   "name": "AlpenParks Apart Central",
+   "siteID": 2127,
+   "resort": "Zell am See",
+   "resort_he": "צל אם זה",
+   "country": "austria",
+   "board_he": "דירות מאובזרות, 4-8 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/AlpenParks+Apart+Central.html?siteID=2127",
+   "stars": null,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא הפתוח מידי יום בין השעות 15:00-19:45 ובו סאונה, חדרי טיפולים וחדר מנוחה",
+    "wifi_page_he": "אינטרנט אלחוטי בשטחים הציבוריים והדירות",
+    "kitchenette_he": "מטבחון מאובזר, כיריים חשמליים, תנור, מקרר, מדיח כלים, כלי אוכל וסכו\"ם, מכונת קפה, קומקום חשמלי",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "מרחק הליכה קצר למעליות הסקי, 150 מטר ממעלית הסקי בלבד",
+    "shuttle_he": "העברות משדה התעופה למלון וחזרה",
+    "location_he": "בלב העיירה צל אם זה, במרכז העיירה, מרחק הליכה קצר למעליות הסקי"
+   }
+  },
+  {
+   "name": "Falkensteiner Club Funimation",
+   "siteID": 2154,
+   "resort": "Katschberg",
+   "resort_he": "קצברג",
+   "country": "austria",
+   "board_he": "הכל כלול",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Falkensteiner+Club+Funimation.html?siteID=2154",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה, עולם המים הכולל מגלשת מים ענקית ובריכת שכשוך לקטנטנים",
+    "pool_where": "indoor",
+    "spa_page_he": "ספא המשתרע על שטח של כ 2000 מ\"ר הכולל בריכה מקורה, חדר מנוחה פנורמי, סאונות מסוגים שונים, ג'קוזי, מזרקת קרח",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "אינטרנט חופשי ברחבי המועדון",
+    "kids_he": "אולם הרפתקאות ומשחקים עם קיר טיפוס, טניס שולחן, ביליארד",
+    "restaurant_he": "3 ארוחות ביום; בבר המלון שתייה חופשית עד השעה 22:00",
+    "balcony_he": "מרפסת או מרפסת צרפתית",
+    "lift_page_he": "המועדון נמצא על מסלולי הסקי, סקי אין / סקי אאוט",
+    "location_he": "עיירת הסקי קצברג על גבול חבל זלצבורג וחבל קרינתיה"
+   }
+  },
+  {
+   "name": "Plein Sud",
+   "siteID": 1288,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, ארוחת בוקר או חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Plein Sud (allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Plein+Sud.html?siteID=1288",
+   "stars": null,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה ומחוממת, אינג'קטורים בבריכה",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא מפואר ונעים כולל סאונה וחמאם וטיפולים שונים",
+    "ski_room_he": "חדר סקי עם גישה ישירה למסלולים, לוקר סקי עם חימום נעליים לכל דירה",
+    "wifi_page_he": "אינטרנט חופשי בדירות עצמן ובשטחים הציבוריים",
+    "kitchenette_he": "מטבח מאובזר לחלוטין עם כיריים, תנור, מיקרוגל, מקרר, מדיח כלים וכלים",
+    "restaurant_he": "ניתן להזמין ארוחת בוקר וארוחת ערב במסעדה מקומית בקרבת הדירות",
+    "laundry_he": "אפשרות לשירותי כביסה",
+    "lift_page_he": "מיקום נפלא המאפשר גלישה ישירה מ/אל פתח המלון SKI IN / SKI OUT",
+    "location_he": "בעיירת הסקי Val Thorens בחלק ממרחב הסקי שלושת העמקים"
+   }
+  },
+  {
+   "name": "Hotel Kashmir",
+   "siteID": 1665,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Hotel Kashmir"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Kashmir.html?siteID=1665",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עם בריכת שחייה מקורה, חדרי טיפולים, סאונות, הוט טאב וחדר כושר",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kitchenette_he": "מטבחון (מיקרו, מכונת קפה, טוסטר, מדיח כלים, מקרר וכלים בסיסיים)",
+    "restaurant_he": "מסעדה מעולה ומומלצת ע\"י צוות פינגווין (Beef & Lobster), בר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "צמוד למסלול הסקי המוביל למעלית הסקי Plein Sud, ניתן לגלוש מ/אל בית המלון",
+    "location_he": "המלון נמצא בכניסה לואל טורנס במרחק הליכה עד 10 דקות ממוקדי הקניות והבילוי"
+   }
+  },
+  {
+   "name": "Residence Kashmir",
+   "siteID": 1974,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "דירות עם מטבחון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Residence+Kashmir.html?siteID=1974",
+   "stars": 4,
+   "booking_score": 8.1,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא עם בריכת שחייה מחוממת, שני סוגי סאונות, ו- Hot tub",
+    "ski_room_he": "חדר סקי",
+    "wifi_page_he": "חיבור WIFI אחד לדירה",
+    "kitchenette_he": "מטבחון מאובזר בתנור, מיקרו, מקרר, כיריים חשמליים, מדיח כלים, מכונת קפה וקומקום חשמלי",
+    "restaurant_he": "לובי מרווח, בר, מסעדה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "צמוד למסלולים הסקי. אפשרות יציאה ישירה מ/אל חדר הסקי של המלון",
+    "location_he": "במרכז ואל טורנס, צמוד למסלולים הסקי"
+   }
+  },
+  {
+   "name": "Residence Montana",
+   "siteID": 1293,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, יחידות עם מטבחון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Res Village Montana (allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Residence+Montana.html?siteID=1293",
+   "stars": null,
+   "booking_score": 8.1,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "בריכת שחייה מקורה, סאונות, ואפשרות לטיפולים; במרכז La Board: 2 בריכות, 3 סאונות, חמאם, אזור מרגוע",
+    "wifi_page_he": "אינטרנט חופשי בדירות ובשטחים הציבוריים",
+    "kitchenette_he": "מטבחון מאובזר: כיריים, תנור, מיקרוגל, מקרר, מדיח כלים, מכונת קפה, קומקום, טוסטר, בלנדר, כלי אוכל ובישול",
+    "kids_he": "מרכז ספורט ושעשועים בשטח של כ- 600 מ\"ר ובו מתקנים מתנפחים טרמפולינות משחקים חינוכיים",
+    "restaurant_he": "ארוחת ערב - במסעדה הממוקמת במבנה הראשי; ארוחת בוקר - במסעדה מקומית",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "בלב אזור הסקי של Val Thorens עם גישה ישירה למסלולים, גלישה ישירה Ski in - out",
+    "location_he": "במרכז העיירה ובמרחק הליכה קצר ממרכזי הבילויים"
+   }
+  },
+  {
+   "name": "Cheval Blanc",
+   "siteID": 1292,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, אפשרות לארוחת בוקר או חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Cheval Blanc (allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Cheval+Blanc.html?siteID=1292",
+   "stars": 3,
+   "booking_score": 7.6,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "2 בריכות במרכז הספא La Board",
+    "spa_page_he": "3 סאונות, חמאם, אזור מרגוע במרכז La Board",
+    "ski_room_he": "חדר לאחסון ציוד הסקי פונה ישירות למסלולים",
+    "wifi_page_he": "אינטרנט אלחוטי חינם (מוגבל לחיבור של מקסימום 4 מכשירים לדירה)",
+    "kitchenette_he": "מטבחון מאובזר: כיריים, תנור, מיקרוגל, מקרר, מדיח כלים, מכונת קפה, כלי אוכל ובישול",
+    "kids_he": "מתקנים מתנפחים טרמפולינות משחקים חינוכיים במרכז תרבות בשטח 600 מ\"ר",
+    "restaurant_he": "ארוחות בוקר וערב במסעדה מקומית במרחק הליכה קצר (כ-50 מטר)",
+    "balcony_he": "מרפסת לכיוון המסלולים או מרפסת עם נוף לעיירה",
+    "lift_page_he": "בגלישה ישירה Ski In Ski Out עם גישה ישירה למסלולים",
+    "location_he": "בלב אזור הסקי של Val Thorens עם גישה ישירה למסלולים"
+   }
+  },
+  {
+   "name": "Oxalys Residence",
+   "siteID": 1402,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, יחידות לעד 8 אורחים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Residence Oxalys"
+   ],
+   "page": "https://www.pingwin.co.il/Oxalys+Residence.html?siteID=1402",
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה",
+    "pool_where": "indoor",
+    "spa_page_he": "בריכת שחייה, סאונה, חמאם וג'קוזי; מרכז ספא נוסף לעיסויים וטיפולים",
+    "ski_room_he": "חדר לאחסון ציוד הסקי עם ארוניות פרטיות כולל מייבש נעליים בכל לוקר",
+    "elevator_he": "אין גישה עם מעלית",
+    "wifi_page_he": "אינטרנט חופשי WIFI בדירה",
+    "kitchenette_he": "מטבחון מאובזר ובו: מיקרוגל, מקרר, כיריים, מדיח כלים, קומקום, מכונת קפה וטוסטר",
+    "restaurant_he": "בר, מסעדה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "צמוד למסלולים ומאפשר גלישה ישירה מ/ואל המלון Ski In Ski Out",
+    "location_he": "עיירת הסקי התוססת ביותר במרחב שלושת העמקים של צרפת"
+   }
+  },
+  {
+   "name": "Les Balcons Val Thorens",
+   "siteID": 1386,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "דירות לאירוח של עד 18 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Les+Balcons+Val+Thorens.html?siteID=1386",
+   "stars": 4,
+   "booking_score": 8.1,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה, ג'קוזי, סאונה, חדר מרגוע וחדר כושר (הכניסה חינם)",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא ובו בריכת שחייה, ג'קוזי, סאונה, חדר מרגוע וחדר כושר",
+    "gym_he": "חדר כושר (הכניסה חינם)",
+    "ski_room_he": "חדר ציוד סקי, Locker תא פרטי לאחסון ציוד הסקי (אחד ליחידת דיור)",
+    "wifi_page_he": "אינטרנט אלחוטי חופשי גם בלובי וגם בדירות",
+    "kitchenette_he": "מטבח מאובזר ובו: מיקרוגל, תנור, קומקום, טוסטר, מקרר, מכונת קפה פילטר",
+    "kids_he": "אזור משחקים וחדר יוגה",
+    "restaurant_he": "סופרמרקט, מסעדה, בר; 2 מסעדות",
+    "lift_page_he": "מלון מאפשר גלישה ישירה אל/מ המסלולים למעט גולשים מתחילים",
+    "shuttle_he": "מהמלון לאזור המתחילים ניתן להגיע בסקי בס, התחנה ממוקמת צמוד למלון",
+    "location_he": "בחלק העליון של העיירה מרחק הליכה קצר ממרכז הבילויים"
+   }
+  },
+  {
+   "name": "Hotel 3 Vallees",
+   "siteID": 1299,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "ארוחת בוקר, עד 4 בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+3+Vallees.html?siteID=1299",
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "ספא ובו סאונה, חמאם וג'קוזי",
+    "elevator_he": "אין מעליות במלון",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "restaurant_he": "מסעדה בשם l'Olympiski",
+    "lift_page_he": "50 מטר ממסלול הסקי, מרחק הליכה מאוד קצר",
+    "location_he": "במרכז העיירה ואל טורנס בסמוך למרכזי בילוי רבים"
+   }
+  },
+  {
+   "name": "Fitz Roy",
+   "siteID": 919,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "חצי פנסיון, עד 4 בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Fitz+Roy.html?siteID=919",
+   "stars": 5,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה יבשה ורטובה, טיפולי יופי, מסאז'ים אפשריים בתשלום",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר סקי עם לוקרים המחוממים",
+    "parking_he": "ניתן לקבל מקום חניה בחניית המלון בתוספת תשלום",
+    "wifi_page_he": "גישה חופשית לאינטרנט אלחוטי",
+    "kids_he": "שירותי בייביסיטר בתוספת תשלום",
+    "restaurant_he": "בר, טרסה גדולה לישיבה לאחר יום הסקי",
+    "balcony_he": "בכל החדרים מרפסות",
+    "laundry_he": "שירותי כביסה בתוספת תשלום",
+    "lift_page_he": "יציאה ישירות למסלולי הסקי הכי מרכזיים בואל טורנס ski in-ski out",
+    "shuttle_he": "המלון מציע שאטלים חינם לכל מקום באתר",
+    "location_he": "במרכז העיירה, ממש ממול מועדון המלזיה ומרכז הקניות"
+   }
+  },
+  {
+   "name": "Tourotel Appart",
+   "siteID": 817,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה בלבד, יחידות לעד 6 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Tourotel+Appart.html?siteID=817",
+   "stars": 3,
+   "booking_score": 7.8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "כניסה לבריכת שחייה + מרכז הספא (2 בריכות, 3 סאונות, חמאם, אזור מרגוע)",
+    "spa_page_he": "2 בריכות, 3 סאונות, חמאם, אזור מרגוע",
+    "wifi_page_he": "אינטרנט אלחוטי באזור הקבלה בלבד",
+    "kitchenette_he": "מטבחון מאובזר ובו: כיריים חשמליות, מקרר, מיקרוגל וקומקום",
+    "balcony_he": "מרפסת הדירה פונה למורד ההר",
+    "lift_page_he": "גלישה ישירה Ski In Ski-out לדלת המלון",
+    "location_he": "בגובה 2300 המתחם הוא הגבוה ביותר לנופש סקי באירופה"
+   }
+  },
+  {
+   "name": "Pashmina",
+   "siteID": 1439,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "חדרים עד 6 אורחים ודירות עד 10",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Pashmina.html?siteID=1439",
+   "stars": 5,
+   "booking_score": 9.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת, ג'קוזי חיצוני, ג'קוזי פנימי",
+    "pool_heated": true,
+    "pool_where": "both",
+    "spa_page_he": "מרכז ספא עם בריכת שחייה מחוממת, ג'קוזי חיצוני, ג'קוזי פנימי, סאונה וסולריום, חמאם טורקי",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kitchenette_he": "מטבח מאובזר בחלק מהסוויטות, מיני בר, מכונת קפה של Nespresso",
+    "restaurant_he": "בר, מסעדה, מסעדה בעלת כוכב מישלן ושמה Les Explorateurs",
+    "balcony_he": "מרפסת (בחלק מהחדרים)",
+    "lift_page_he": "גלישה ישירה מ/אל בית המלון",
+    "location_he": "מרחק הליכה קצר מאוד אל מרבית מוקדי הבילוי בעיירה אל טורנס"
+   }
+  },
+  {
+   "name": "Le Val Thorens",
+   "siteID": 1451,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "חצי פנסיון, חדרים לעד 4 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Le+Val+Thorens.html?siteID=1451",
+   "stars": 4,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת (הגדולה ביותר בואל טורנס) בחלל פנימי",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עם בריכה מקורה וסאונה, סאונה וחמאם טורקי, אפשרות לטיפולים שונים",
+    "ski_room_he": "חדר לאחסון ציוד הסקי",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "restaurant_he": "2 מסעדות, אחת בסגונון צרפתי קלאסי (La Brasserie du val thorens) ושנייה מסעדת פונדו, מרפסת עם בר",
+    "balcony_he": "לחדרים יש מרפסת",
+    "lift_page_he": "יציאה ישירות למסלולי הסקי, Ski In Ski Out",
+    "location_he": "בלב מרכז ואל טורנס, שוכן במרכז העיירה בדיוק, עם יציאה ישירות למסלולי הסקי"
+   }
+  },
+  {
+   "name": "Le Sherpa",
+   "siteID": 1478,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "ארוחת בוקר, חצי פנסיון או פנסיון מלא",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Le+Sherpa.html?siteID=1478",
+   "stars": 3,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא פנימי עם סאונה ג'קוזי חמאם, וסאונה חיצונית עם חלון פנורמי אל מדרונות הסקי",
+    "wifi_page_he": "WIFI חופשי",
+    "restaurant_he": "לובי עם אח הסקה, מסעדה",
+    "balcony_he": "מרפסת בכל סוגי החדרים - חוץ מהחדרים הזוגיים הקטנים",
+    "lift_page_he": "גלישה ישירה Ski In Ski Out",
+    "location_he": "בסמוך למרכז הבילויים ולרחוב הבארים בואל טורנס"
+   }
+  },
+  {
+   "name": "Fahrenheit 7",
+   "siteID": 1502,
+   "resort": "Val Thorens",
+   "resort_he": "ואל טורנס",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Fahrenheit+7.html?siteID=1502",
+   "stars": 4,
+   "booking_score": 9.1,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "כניסה חופשית לסאונה והחמאם של המלון (מגיל 18 ומעלה). אפשרות לטיפולים ומסאז'ים בתוספת תשלום",
+    "wifi_page_he": "WI-FI בחינם",
+    "restaurant_he": "סקי רום בר נחמד ומגניב",
+    "balcony_he": "החדרים ללא מרפסת",
+    "lift_page_he": "גישה ישירה למסלולים ski in/ski out",
+    "location_he": "המלון נמצא במיקום מעולה בואל טורנס, סמוך לכל מרכזי הבילוי בעיירה"
+   }
+  },
+  {
+   "name": "Club Belambra Val claret",
+   "siteID": 2152,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Tignes Val Claret",
+    "Belambra Val Claret"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Val+claret.html?siteID=2152",
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מקורה ומחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא הכולל בריכת שחיה מקורה ומחוממת, הוט טאב, סאונה יבשה ורטובה, חדר כושר וחדרי טיפולים",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חנות השכרה בתוך המלון ולוקר פרטי ומחומם לכל חדר לציוד",
+    "wifi_page_he": "אינטרנט אלחוטי כלול",
+    "kids_he": "מועדון ילדים המופעל ע\"י צוות המועדון לילדים מגיל 3 שנים עד גיל 5.99 שנים",
+    "restaurant_he": "ארוחות בוקר, צהריים וערב ושתייה חופשית. הכל כלול. בידור לכל המשפחה כולל אולם מופעים של 150 איש",
+    "balcony_he": "Premium Amazing View + Balcony",
+    "lift_page_he": "סקי אין סקי אאוט על המסלולים בגובה של 2100 מטר",
+    "location_he": "ממוקם סקי אין סקי אאוט על המסלולים בגובה של 2100 מטר ב-ואל קלארט"
+   }
+  },
+  {
+   "name": "Residence Ynycio",
+   "siteID": 1973,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "מלון דירות, לינה בלבד",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Ynycio"
+   ],
+   "page": "https://www.pingwin.co.il/Residence+Ynycio.html?siteID=1973",
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא מפואר ומושקע עם בריכת שחייה מחוממת, מספר סוגי סאונה, חמאם וג'קוזי חיצוני",
+    "ski_room_he": "לוקרים לשמירת ציוד הסקי עם יציאה ישירות למסלול",
+    "wifi_page_he": "חיבור אינטרנט אלחוטי אחד לכל דירה",
+    "kitchenette_he": "מטבחון מאובזר, כיריים קרמיות, מדיח כלים, מכונת קפה, קומקום חשמלי וטוסטר",
+    "restaurant_he": "מסעדת בזורטו, בר גדול ועשיר, בר האפרה סקי של המלון",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "צמוד למרכז העיירה עם אפשרות לגלישה ישירה מ/אל פתח חדר הסקי של המלון",
+    "location_he": "במיקום מושלם בעיירה טין ואל קלארט, צמוד למרכז העיירה"
+   }
+  },
+  {
+   "name": "Hameau du Borsat",
+   "siteID": 454,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "לינה בלבד, עד 6 בדירה",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hameau+du+Borsat.html?siteID=454",
+   "stars": null,
+   "booking_score": 6.4,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "kitchenette_he": "מטבחון מאובזר ובו: מקרר, כיריים, תנור או מיקרוגל",
+    "lift_page_he": "בצמוד למסלולי הסקי ומרכז טין ואל קלרט",
+    "location_he": "בחלק הגבוה של טין-ואל קלרט, בצמוד למסלולי הסקי"
+   }
+  },
+  {
+   "name": "Residence Le Taos",
+   "siteID": 1992,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Residence+Le+Taos.html?siteID=1992",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עשיר מאוד עם כניסה חופשית ובו בריכת שחייה מחוממת, סאונה, חמאם. שירותי מסאז' בתשלום נוסף",
+    "ski_room_he": "חדר סקי עם תאים אישיים ובהם מתקני חימום נעלי סקי ואף כפפות",
+    "kitchenette_he": "מטבחון מאובזר",
+    "restaurant_he": "במלון מסעדה עם ארוחות בוקר",
+    "lift_page_he": "גלישה ישירה מ/אל המלון",
+    "location_he": "במרכז טין לה לאק, בסמיכות למרכזי הבילוי והחנויות"
+   }
+  },
+  {
+   "name": "CGH La Ferme du Val Claret",
+   "siteID": 1791,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+La+Ferme+du+Val+Claret.html?siteID=1791",
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מחוממת (בספא של מלון הדירות NEVADA, כ-7 דקות הליכה)",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה, חמאם וג'קוזי (טיפולים בתשלום)",
+    "ski_room_he": "לוקר לציוד הסקי עם חימום לנעליים",
+    "wifi_page_he": "אינטרנט אלחוטי באיזור הלובי ובדירות",
+    "kitchenette_he": "מטבח מאובזר עם כיריים חשמליים, תנור, מקרר, מדיח כלים, מכונת קפה, מיקסר, קומקום חשמלי וטוסטר",
+    "balcony_he": "מרפסת",
+    "laundry_he": "שירותי כביסה",
+    "lift_page_he": "כ-100 מטר מהפוניקולר של הקרחון גראנד מוטה וממש ממול לשני רכבלים נוספים. גלישה חזרה כמעט עד פתח מלון הדירות",
+    "location_he": "בעיירה Tignes ברובע ואל קלארט, החלק הגבוה ביותר של העיירה, בלב הרי האלפים בגובה 2100 מטר"
+   }
+  },
+  {
+   "name": "CGH Le Nevada",
+   "siteID": 1788,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Le+Nevada.html?siteID=1788",
+   "stars": 5,
+   "booking_score": 8.8,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה, חמאם וג'קוזי (טיפולים בתשלום)",
+    "ski_room_he": "לכל דירה לוקר לציוד הסקי",
+    "wifi_page_he": "אינטרנט אלחוטי באזור הלובי ובדירות",
+    "kitchenette_he": "מטבח מאובזר עם כיריים חשמליים, תנור, מקרר, מדיח כלים",
+    "balcony_he": "מרפסת",
+    "laundry_he": "שירותי כביסה",
+    "lift_page_he": "כ-150 מטר ממסלולי הסקי",
+    "location_he": "מרכז טין ואל קלארט, בלב איזור הבילויים והחנויות בעיירה"
+   }
+  },
+  {
+   "name": "CGH Telemark",
+   "siteID": 1775,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Telemark.html?siteID=1775",
+   "stars": 5,
+   "booking_score": 7.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "איזור הספא הכולל בריכת שחיה מחוממת, סאונה, חמאם וג'קוזי (טיפולים בתשלום)",
+    "ski_room_he": "לכל דירה לוקר לציוד הסקי עם חימום לנעליים",
+    "wifi_page_he": "אינטרנט אלחוטי באיזור הלובי ובדירות (משתמש אחד לדירה, משתמש נוסף בתשלום)",
+    "kitchenette_he": "מטבח מאובזר עם כיריים חשמליים, תנור, מקרר, מדיח כלים, מכונת קפה, מיקסר, קומקום חשמלי וטוסטר",
+    "balcony_he": "מרפסת",
+    "laundry_he": "שירותי כביסה",
+    "lift_page_he": "סמוך למסלול",
+    "location_he": "טין לה לאק, בכניסה לעיירה, כ-200 מטר ממרכז העיירה"
+   }
+  },
+  {
+   "name": "Hotel Le Taos",
+   "siteID": 1460,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Le+Taos.html?siteID=1460",
+   "stars": 4,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עשיר מאוד עם כניסה חופשית ובו בריכת שחייה מחוממת, סאונה, חמאם. שירותי מסאז' בתשלום נוסף",
+    "ski_room_he": "חדר סקי עם תאים אישיים ובהם מתקני חימום נעלי סקי ואף כפפות",
+    "lift_page_he": "גלישה ישירה מ/אל המלון",
+    "location_he": "במרכז טין לה לאק, בסמיכות למרכזי הבילוי והחנויות"
+   }
+  },
+  {
+   "name": "Diva",
+   "siteID": 898,
+   "resort": "Tignes",
+   "resort_he": "טין",
+   "country": "france",
+   "board_he": "חצי פנסיון כולל יין בארוחות",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Diva.html?siteID=898",
+   "stars": 3,
+   "booking_score": 7.1,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "booking.com"
+   },
+   "facts": {
+    "spa_page_he": "כניסה ללא עלות נוספת לסאונה יבשה ורטובה, חדר כושר",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר לאחסון ציוד הסקי",
+    "parking_he": "חניה מקורה",
+    "wifi_page_he": "גישה לאינטרנט אלחוטי בתשלום",
+    "restaurant_he": "מסעדה עם נוף למסלולים, בר עם מרפסת",
+    "balcony_he": "חלק מהחדרים עם מרפסות",
+    "laundry_he": "שירות כביסה",
+    "lift_page_he": "כ-100 מטר מהמעליות של הקרחון גראנד מוטה",
+    "location_he": "בעיירה Tignes ברובע ואל קלארט, בלב הרי האלפים בגובה 2100 מטר"
+   }
+  },
+  {
+   "name": "Club Du Soleil L.M",
+   "siteID": 1195,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "פנסיון מלא ויין בארוחות",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Les Menuires"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+L.M.html?siteID=1195",
+   "stars": 3,
+   "booking_score": 8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "wifi_page_he": "אינטרנט אלחוטי חינם באזור הלובי והבר",
+    "kids_he": "מועדוני ילדים לפי חלוקה לקבוצות גיל, פעילים 6 ימים בשבוע, מזחלות משחקים בשלג, הליכה בנעלי שלג",
+    "restaurant_he": "פנסיון מלא (ארוחת בוקר קונטיננטלית, צהריים וערב) ויין בארוחות",
+    "lift_page_he": "גלישה ישירה מהמלון Ski IN-Ski Out",
+    "location_he": "בחלק העליון של העיירה לה מנואיר, במרכז מרחב הגלישה שלושת העמקים"
+   }
+  },
+  {
+   "name": "Club Belambra Neige Et Ciel",
+   "siteID": 1289,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "חצי פנסיון, חדרים לעד 5 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Club+Belambra+Neige+Et+Ciel.html?siteID=1289",
+   "stars": 3,
+   "booking_score": 7.1,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "kids_he": "מועדון ילדים המופעל ע\"י צוות המועדון לילדים מגיל 3 שנים עד גיל 5.99 שנים בכל העונה 6 ימים בשבוע",
+    "restaurant_he": "מסעדה עם נוף פנורמי לאלפים. ניתן ליהנות ממשקה בבר ובמרפסת הטרסה",
+    "balcony_he": "חלקם עם מרפסת",
+    "laundry_he": "שירותי כביסה בתשלום נוסף",
+    "lift_page_he": "כ-200 מטר למעלית הסקי המובילה לשלושת העמקים",
+    "location_he": "בעיירת הסקי Les Menuires בלב מרחב הסקי שלושת העמקים"
+   }
+  },
+  {
+   "name": "Club Belambra Les Bruyeres",
+   "siteID": 1436,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "חצי פנסיון, חדרים ל-3 מבוגרים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Club+Belambra+Les+Bruyeres.html?siteID=1436",
+   "stars": 3,
+   "booking_score": 7.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "כניסה חופשית למתחם הספא ובו חדר כושר, סאונה, חמאם וטיפולים",
+    "gym_he": "חדר כושר (כחלק ממתחם הספא)",
+    "ski_room_he": "חדר לאחסון ציוד הסקי ובו תא סגור לכל חדר (הלוקר לא מחומם)",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kitchenette_he": "פינה להכנת קפה/תה",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "מסעדה עם נוף למדרונות הסקי, בר גדול עם שולחן סנוקר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "Ski In Ski Out; מספר מעליות סקי ממוקמות במרחקים של כ-100 מהמלון",
+    "location_he": "בעיירת הסקי Les Menuires בלב מרחב הסקי שלושת העמקים"
+   }
+  },
+  {
+   "name": "Chalet Hotel Kaya",
+   "siteID": 1433,
+   "resort": "Les Menuires",
+   "resort_he": "לה מנואר",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Chalet+Hotel+Kaya.html?siteID=1433",
+   "stars": 4,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עם בריכת שחייה, חדרי סאונה חמאם טורקי (טיפולים בתשלום)",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר סקי עם לוקרים וייבוש לנעלי הסקי",
+    "wifi_page_he": "חיבור לאינטרנט באמצעות פס רחב וחיבור אלחוטי",
+    "kitchenette_he": "מיני-בר",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "מסעדה ומרפסת המשקיפה אל מדרונות הסקי עם פוד טראק",
+    "balcony_he": "מרפסת בכל החדרים",
+    "lift_page_he": "SKI IN-SKI OUT, גלישה ישירה למרחב שלושת העמקים",
+    "location_he": "Village de Reberty Les Menuires"
+   }
+  },
+  {
+   "name": "Res' Prestige Edenarc",
+   "siteID": 1513,
+   "resort": "Les Arcs",
+   "resort_he": "לה ארק",
+   "country": "france",
+   "board_he": "יחידות של 2 עד 8 אורחים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Edenarc - Arc 1800"
+   ],
+   "page": "https://www.pingwin.co.il/Res'+Prestige+Edenarc.html?siteID=1513",
+   "stars": 5,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת חיצונית ופנימית",
+    "pool_heated": true,
+    "pool_where": "both",
+    "spa_page_he": "ג'קוזי, סאונה יבשה ורטובה, חדר כושר ואזור מרגוע",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "לוקר לציוד הסקי",
+    "elevator_he": "מעליות",
+    "wifi_page_he": "אינטרנט WIFI חופשי לשימוש הלקוחות",
+    "kitchenette_he": "מטבחון מאובזר ובו: כיריים, מיקרוגל-גריל, מקרר, מדיח כלים, מכונת קפה, קומקום וטוסטר",
+    "restaurant_he": "מסעדה, בר-מסעדה \"פולי דוס\" במרחק של 300 מטר",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "גלישה ישירה SKI IN SKI OUT, מעלית (גונדולה) המקשרת עם מרכז ארק 1800",
+    "location_he": "מעל ארק 1800, בלז ארק, צרפת, במיקום המאפשר גלישה ישירה SKI IN / SKI OUT"
+   }
+  },
+  {
+   "name": "Club Belambra Du Golf",
+   "siteID": 1440,
+   "resort": "Les Arcs",
+   "resort_he": "לה ארק",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Golf"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Du+Golf.html?siteID=1440",
+   "stars": 3,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "בריכה מחוממת, ג'קוזי, חמאם, סאונה וחדר מרגוע",
+    "ski_room_he": "חדר לאחסון ציוד הסקי עם לוקרים מחוממים מאויש בעובדי שירות",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "kitchenette_he": "מקרר קטן (ללא מקפיא)",
+    "kids_he": "מועדון ילדים המופעל ע\"י צוות המועדון לילדים מגיל 3 שנים עד גיל 5.99 שנים",
+    "restaurant_he": "מסעדה, בר המציע מוזיקה חיה כל ערב",
+    "balcony_he": "כל החדרים ללא מרפסת",
+    "lift_page_he": "SKI IN ו-SKI OUT, ממש על המסלולים ב arcs 1800",
+    "shuttle_he": "נקודת ההורדה והאיסוף מהמלון ממוקמת כ-250 מטר מהמלון בהליכה מישורית של כשלוש דקות",
+    "location_he": "במרכז העיירה, ממש על המסלולים ב arcs 1800"
+   }
+  },
+  {
+   "name": "Residence Prestige l'Eclose",
+   "siteID": 1962,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "לינה בלבד",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "l'Eclose Alpe d'Huez"
+   ],
+   "page": "https://www.pingwin.co.il/Residence+Prestige+l'Eclose.html?siteID=1962",
+   "stars": null,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה ומחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה יבשה ורטובה, חדר כושר, אפשרות להזמין מסאז'ים בתשלום נוסף",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "לוקרים לסקי",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kitchenette_he": "מטבחון מאובזר ובו: כיריים, מיקרוגל-גריל, מקרר, מדיח כלים, מכונת קפה, קומקום וטוסטר",
+    "kids_he": "אזור בילוי לילדים",
+    "restaurant_he": "בר, מסעדה ומינימרקט במרחק של כ-100 מטר מהמתחם",
+    "balcony_he": "מרפסת בכל הדירות",
+    "lift_page_he": "150 מטר ממעלית (גונדולה) ה-ALPE EXPRESS, בתנאים טובים ניתן לגלוש מהגונדולה עד חדר הציוד של המתחם",
+    "location_he": "ממוקם במיקום מושלם, 150 מטר ממעלית סקי המובילה למתחם המרכזי של Alpe d'Huez"
+   }
+  },
+  {
+   "name": "Royal Ours Blanc",
+   "siteID": 1605,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "ארוחת בוקר, עד זוג + 2 ילדים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Royal+Ours+Blanc.html?siteID=1605",
+   "stars": 4,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "כניסה חופשית לבריכת שחייה מקורה מחוממת (פתוחה בין השעות 0900-1800)",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "מתחם ספא ובו: סאונה יבשה ורטובה, ג'קוזי, אפשרות לטיפולים בתשלום נוסף",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "restaurant_he": "לובי, בר, מסעדה",
+    "balcony_he": "מרפסת בכל החדרים",
+    "lift_page_he": "כ-100 מטר ממעלית הסקי",
+    "location_he": "במרכז העיירה כ-100 מטר ממעלית הסקי וצמוד למרכז הבילויים"
+   }
+  },
+  {
+   "name": "Prestige Residence Phoenix",
+   "siteID": 2099,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "חדרים עד 8 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Prestige+Residence+Phoenix.html?siteID=2099",
+   "stars": null,
+   "booking_score": null,
+   "rating_source": {
+    "stars": null,
+    "score": null
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה ומחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה, חמאם ומקלחת חושית",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר ציוד סקי עם מייבשי מגפיים",
+    "kitchenette_he": "מטבחון מאובזר הכולל תנור, מיקרוגל, מקרר, מדיח כלים, כיריים אינדוקציה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "SKI IN / SKI OUT",
+    "location_he": "המתחם ממוקם למרגלות המדרונות SKI IN / SKI OUT, צמוד למרכז העיירה"
+   }
+  },
+  {
+   "name": "CGH Le Cristal de l'Alpe",
+   "siteID": 1790,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "דירות, לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Le+Cristal+de+l'Alpe.html?siteID=1790",
+   "stars": 5,
+   "booking_score": 7.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "איזור ספא הכולל בריכת שחיה מחוממת, סאונה, חמאם וג'קוזי (טיפולים בתשלום)",
+    "ski_room_he": "לוקר לציוד הסקי עם חימום לנעליים",
+    "wifi_page_he": "אינטרנט אלחוטי באיזור הלובי ובדירות (משתמש אחד לדירה, משתמש נוסף בתשלום)",
+    "kitchenette_he": "מטבח מאובזר עם כיריים חשמליים, תנור, מקרר, מדיח כלים, מכונת קפה, מיקסר, קומקום חשמלי וטוסטר",
+    "balcony_he": "מרפסת",
+    "laundry_he": "שירותי כביסה בתשלום במקום",
+    "lift_page_he": "כ-50 מטר מהרכבל הקרוב ו-200 מטר מהמסלולים",
+    "location_he": "באיזור JEUX, Alpe d'Huez עם כ-250 ק\"מ של מסלולי סקי וסנובורד"
+   }
+  },
+  {
+   "name": "Pic Blanc",
+   "siteID": 1600,
+   "resort": "Alpe d'Huez",
+   "resort_he": "אלפ ד'הואז",
+   "country": "france",
+   "board_he": "ארוחת בוקר, אפשרות לחצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Pic+Blanc.html?siteID=1600",
+   "stars": 4,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "כניסה חופשית לבריכת שחייה מקורה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה יבשה ורטובה, ג'קוזי, אפשרות לטיפולים בתשלום נוסף",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "restaurant_he": "בר, לובי, מסעדה",
+    "lift_page_he": "כ-100 מטר בלבד ממעליות הסקי, ניתן לגלוש עד 100 מטר מהמלון",
+    "shuttle_he": "סקי פס לאתר אלפ דואז",
+    "location_he": "מלון ברמה גבוהה במרכז אתר הסקי Alpe d'Huez בצרפת, בקרבת מעליות הסקי ואזור הבילוי"
+   }
+  },
+  {
+   "name": "Club Du Soleil L2A",
+   "siteID": 1673,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "פנסיון מלא כולל יין בארוחות",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Les 2 Alpes"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+L2A.html?siteID=1673",
+   "stars": 3,
+   "booking_score": 7.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "שתי סאונות עומדות לרשות האורחים במרפסת הפנורמית, ברישום מראש מול הקבלה",
+    "ski_room_he": "חדר סקי עם לוקרים מחוממים (חדש!)",
+    "elevator_he": "ניתן לדלג על המדרגות ולהיעזר באחת משלוש מעליות רגילות (לא מעליות סקי) הצמודות לגרם המדרגות",
+    "wifi_page_he": "אינטרנט אלחוטי חינם, וגם WI-FI מהיר בתשלום",
+    "kids_he": "המועדון מפעיל מועדוני ילדים לפי חלוקה לקבוצות גיל. מועדוני הילדים פעילים 6 ימים בשבוע ראשון-שישי",
+    "restaurant_he": "קבלה, לובי רחב ידיים, בר, מסעדה. מסעדת המועדון נהנית מנוף פנורמי של ההרים הסובבים ומרפסת תצפית גדולה",
+    "lift_page_he": "הגישה למסלולי הסקי אפשרית דרך גרם מדרגות המוביל למסלול המסתיים בסמוך למועדון",
+    "shuttle_he": "אוטובוס הסקי העוצר בפתח המועדון, פעיל במהלך היום עד שעות הערב",
+    "location_he": "ממוקם בגובה 1,750 מטר, בסביבתו תמצאו חנויות סקי, מסעדות ומוקדי בילוי מצומצמים"
+   }
+  },
+  {
+   "name": "Club Belambra Les Cretes",
+   "siteID": 1844,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Les Cretes L2A 1800"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Les+Cretes.html?siteID=1844",
+   "stars": 3,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת מקורה, בריכת ילדים/פעוטות, בריכה חיצונית מחוממת המשקיפה למסלולי הסקי",
+    "pool_heated": true,
+    "pool_where": "both",
+    "spa_page_he": "מרכז ספא גדול עם בריכה חיצונית מחוממת, סאונה, טיפולים ומסאז'ים",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חנות להשכרת ציוד, חדר ציוד סקי",
+    "wifi_page_he": "WiFi חופשי לרשות האורחים בשטחים הציבוריים ובחדרים",
+    "kitchenette_he": "מכונת נספרסו",
+    "kids_he": "מועדון ילדים המופעל ע\"י צוות המועדון לילדים מגיל 3 שנים עד גיל 5.99 שנים",
+    "restaurant_he": "מסעדה, בר עם אח",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "גישה ישירה למסלולים, הליכה קצרה מפתח חדר ציוד הסקי אל המעליות",
+    "shuttle_he": "תחנת סקי בס לשימוש האורחים המעוניינים להגיע אל מרכז העיירה",
+    "location_he": "ממוקם בחלק העליון של העיירה בגובה 1800, עם גישה ישירה למסלולים"
+   }
+  },
+  {
+   "name": "Belambra L'Oree des Pistes",
+   "siteID": 1963,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Belambra L'Oree des Pistes"
+   ],
+   "page": "https://www.pingwin.co.il/Belambra+L'Oree+des+Pistes.html?siteID=1963",
+   "stars": 3,
+   "booking_score": 8.8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "ski_room_he": "חנות השכרה בתוך המלון ולוקר פרטי ומחומם לכל חדר לציוד",
+    "elevator_he": "נגישים בקלות באמצעות מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "kids_he": "חדר משחקים עם כדורגל שולחן ושולחן ביליארד",
+    "restaurant_he": "מסעדה לארוחות בוקר וערב. בערב המסעדה הופכת לבר טרקלין עם בידור. בנוסף יש בר הפתוח",
+    "balcony_he": "חלקם כוללים מרפסת עם נוף של מסלולי הסקי",
+    "lift_page_he": "בסמוך לרכבל Jandri Express ו-50 מטר ממעליות סקי",
+    "location_he": "בגובה 1,650 מטר בלב אתר הסקי Les Deux Alpes"
+   }
+  },
+  {
+   "name": "Hotel Les Melezes",
+   "siteID": 1783,
+   "resort": "Les 2 Alpes",
+   "resort_he": "לה דוז אלפ",
+   "country": "france",
+   "board_he": "חצי פנסיון, אפשרות לפנסיון מלא",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Les+Melezes.html?siteID=1783",
+   "stars": 3,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא הכולל: ג'קוזי ו hut tub, עם אפשרות לטיפולים בתוספת תשלום",
+    "wifi_page_he": "WIFI חופשי בלובי ובחדרים",
+    "restaurant_he": "לובי נעים עם פינות ישיבה ומסעדה",
+    "balcony_he": "חדרים מסוגים \"Charming\" ו\"Cosy\" כוללים מרפסת",
+    "lift_page_he": "ממוקם על השלג, בצמוד לרכבל, גלישה חזרה ישירות למלון",
+    "location_he": "ממוקם למרגלות המסלולים בלב אתר הנופש LES 2 ALPES"
+   }
+  },
+  {
+   "name": "Kandahar Val D'isere",
+   "siteID": 2014,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Kandahar+Val+D'isere.html?siteID=2014",
+   "stars": 3,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה, בחדר האדים או בחדרי הטיפולים (ניתן להזמין בקבלה בתשלום נוסף)",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "בר וגסטרונומיים במסעדה שלו, Taverne d'Alsace",
+    "balcony_he": "חדרים וסוויטות עם מרפסת",
+    "lift_page_he": "כ-250 מטר ממדרונות הסקי",
+    "location_he": "ממוקם באופן אידיאלי במרכז ואל ד'איזר"
+   }
+  },
+  {
+   "name": "Hotel Ski Lodge",
+   "siteID": 1916,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "חדרים לזוג ולשלושה, חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Ski+Lodge.html?siteID=1916",
+   "stars": 3,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא עם סאונה וחמאם",
+    "restaurant_he": "מסעדה",
+    "balcony_he": "חדרים עם מרפסת",
+    "lift_page_he": "כ-500 מטר מהמרכז וממעליות הסקי, תחנת הסקיבס בסמוך למלון ובמרחק 2 תחנות",
+    "location_he": "ברחובה הראשי של העיירה, כ-500 מטר מהמרכז וממעליות הסקי, לצד מרכזי בילוי וחנויות"
+   }
+  },
+  {
+   "name": "Hotel Ormelune",
+   "siteID": 1785,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "לינה וארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Ormelune.html?siteID=1785",
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "אפשרות בתשלום נוסף במקום לקבוע מסאג'ים",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "WIFI ללא עלות",
+    "restaurant_he": "בר, מסעדה",
+    "balcony_he": "L PLUS - עם מרפסת",
+    "lift_page_he": "כ-200 מטר הליכה ממעלית הסקי",
+    "location_he": "ממוקם במרכז ואל דיזר בעל מיקום מצויין של כ-200 מטר הליכה ממעלית הסקי"
+   }
+  },
+  {
+   "name": "Hotel Avenue Lodge",
+   "siteID": 1577,
+   "resort": "Val d'Isere",
+   "resort_he": "ואל ד'יזר",
+   "country": "france",
+   "board_he": "ארוחת בוקר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Avenue+Lodge.html?siteID=1577",
+   "stars": 4,
+   "booking_score": 8.8,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא ברמה גבוהה כולל סאונה וג'קוזי",
+    "ski_room_he": "חנות השכרת ציוד",
+    "wifi_page_he": "wifi חינם",
+    "kitchenette_he": "מיניבר, מכונת נספרסו",
+    "restaurant_he": "לובי, בר, מסעדה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "היציאה לסקי בעזרת מעלית הממוקמת סמוך לבית המלון",
+    "location_he": "במרכז העיירה, במיקום הטוב ביותר"
+   }
+  },
+  {
+   "name": "Res. Prestige Front de Neige",
+   "siteID": 2098,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Res.+Prestige+Front+de+Neige.html?siteID=2098",
+   "stars": 4,
+   "booking_score": 8.1,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "כניסה חופשית לבריכת שחייה מקורה ובה פינת ג'טים (ג'קוזי) בתוך הבריכה",
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה, חמאם, מקלחת ג'טים, ומקלחת קרח",
+    "ski_room_he": "חדר ציוד סקי",
+    "kitchenette_he": "מטבח מאובזר ובו: כירת בישול, מקרר, מדיח כלים, מיקרוגל, קומקום, מכונת קפה",
+    "restaurant_he": "מסעדה בשם Chair lift, ומספר מסעדות במרחק הליכה קצר",
+    "balcony_he": "לדירות אילו יש מרפסת",
+    "lift_page_he": "ממוקם בסמוך למעלית BERGERIE אליה ניתן לגלוש, ובאופן המאפשר סקי-אין/סקי-אאוט",
+    "location_he": "בלב אזור מרחב הגלישה La Plagne בגובה של 2050 מ', בתחנת Plagne Villages"
+   }
+  },
+  {
+   "name": "CGH White Pearl Lodge & Spa",
+   "siteID": 1981,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "דירות עד 8 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+White+Pearl+Lodge+%26+Spa.html?siteID=1981",
+   "stars": 5,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה פנימית וחיצונית מחוממת, בריכת ילדים",
+    "pool_heated": true,
+    "pool_where": "both",
+    "spa_page_he": "סאונה, חמאם, ג'קוזי, חדר מלח, טיפולים ומסאז'ים בתוספת תשלום",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "לוקר לציוד הסקי עם חימום לנעליים",
+    "wifi_page_he": "אינטרנט אלחוטי באזור הלובי ובדירות",
+    "kitchenette_he": "מטבח מאובזר ובו: כיריים, תנור, מקרר, מדיח כלים, מכונת קפה, קומקום, מיקסר, טוסטר",
+    "kids_he": "בריכת ילדים",
+    "balcony_he": "מרפסת",
+    "laundry_he": "שירותי כביסה (להזמנה ותשלום במקום)",
+    "lift_page_he": "SKI IN / SKI OUT, על המסלולים",
+    "location_he": "בעיירת Plagne Soleil (גובה 1970 מטר), על המסלולים"
+   }
+  },
+  {
+   "name": "CGH Les Granges du Soleil",
+   "siteID": 1980,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "דירות עד 8 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/CGH+Les+Granges+du+Soleil.html?siteID=1980",
+   "stars": 4,
+   "booking_score": 7.1,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה פנימית מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "סאונה, חמאם וג'קוזי, אפשרות להזמנת טיפולים ומסאז'ים",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "לוקר לציוד הסקי עם חימום לנעליים",
+    "wifi_page_he": "אינטרנט אלחוטי באזור הלובי ובדירות",
+    "kitchenette_he": "מטבח מאובזר ובו: כיריים, תנור, מקרר, מדיח כלים, מכונת קפה, קומקום, מיקסר, טוסטר",
+    "balcony_he": "מרפסת",
+    "laundry_he": "שירותי כביסה",
+    "lift_page_he": "SKI IN / SKI OUT, על המסלולים",
+    "location_he": "בעיירת Plagne Soleil (גובה 1970 מטר), על המסלולים במיקום המאפשר SKI IN / SKI OUT"
+   }
+  },
+  {
+   "name": "Les Balcons Belle Plagne",
+   "siteID": 1514,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "לינה בלבד, אפשרות לחצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Les+Balcons+Belle+Plagne.html?siteID=1514",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה, ג'קוזי וסאונה",
+    "pool_where": "indoor",
+    "spa_page_he": "בריכת שחייה, ג'קוזי וסאונה וטיפולי ספא ומסאז'ים בתוספת תשלום",
+    "ski_room_he": "לוקר לציוד הסקי - לוקר פרטי אחד לדירה",
+    "wifi_page_he": "אינטרנט WIFI חופשי",
+    "kitchenette_he": "מטבחון מאובזר ובו: מיקרוגל, מקרר/מקפיא, מדיח כלים, כיריים, מכונת קפה, קומקום, טוסטר וכלי מטבח",
+    "lift_page_he": "SKI IN / SKI OUT",
+    "location_he": "ממוקם בתחנת BELLE PLAGNE על המסלולים SKI IN / SKI OUT"
+   }
+  },
+  {
+   "name": "Terra Nova",
+   "siteID": 903,
+   "resort": "La Plagne",
+   "resort_he": "לה פלאן",
+   "country": "france",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Terra+Nova.html?siteID=903",
+   "stars": 3,
+   "booking_score": 7.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "לוקרים מחוממים לכל חדר",
+    "wifi_page_he": "WIFI חופשי",
+    "kids_he": "שירות בייביסיטר לילדים בגילאים 3-10 6 ימים בשבוע בין השעות 9-17",
+    "restaurant_he": "לובי, מסעדה, בר",
+    "lift_page_he": "SKI IN / SKI OUT",
+    "location_he": "ממוקם בתחנת PLAGNE CENTRE, המיקום מאפשר SKI IN / SKI OUT"
+   }
+  },
+  {
+   "name": "Club Du Soleil - Oz",
+   "siteID": 1278,
+   "resort": "Oz en Oisans",
+   "resort_he": "עוז אן אואזאן",
+   "country": "france",
+   "board_he": "פנסיון מלא ויין בארוחות",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Oz"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+-+Oz.html?siteID=1278",
+   "stars": 3,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "בריכת שחיה מחוממת, מספר סוגי סאונה, חדר כושר, אפשרות למסאז'ים בתוספת תשלום",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר ציוד הסקי",
+    "elevator_he": "מעלית נפרדת לכל אגף",
+    "wifi_page_he": "אינטרנט אלחוטי חינם בכל המועדון",
+    "kids_he": "מועדוני ילדים לפי חלוקה לקבוצות גיל, פעילים 6 ימים בשבוע ראשון-שישי",
+    "restaurant_he": "פנסיון מלא (ארוחת בוקר קונטיננטלית, צהריים וערב) ויין בארוחות",
+    "balcony_he": "רוב החדרים עם מרפסות",
+    "lift_page_he": "ממוקם על המסלולים, בצמוד לגונדולה הראשית של התחנה בשם OISANS",
+    "location_he": "בתחנת Oz en Oisans ממוקם על המסלולים, בצמוד לגונדולה הראשית של התחנה"
+   }
+  },
+  {
+   "name": "Club Belambra - Panorama",
+   "siteID": 2048,
+   "resort": "Flaine Grand Massif",
+   "resort_he": "פליין",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Grand Massif"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+-+Panorama.html?siteID=2048",
+   "stars": 3,
+   "booking_score": 8.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחיה מקורה ומחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא הכולל בריכת שחיה מקורה ומחוממת, חמאם, סאונה (מגיל 16 בלבד), חדר כושר וחדרי טיפולים",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "לוקר פרטי ומחומם לכל חדר לציוד, ממש לפני היציאה למסלול",
+    "wifi_page_he": "אינטרנט אלחוטי",
+    "kids_he": "מועדון ילדים המופעל ע״י צוות המועדון לילדים מגיל 3 שנים עד גיל 5.99 שנים",
+    "restaurant_he": "שתי מסעדות - מסעדה ראשית עם מאכלים אותנטיים כמזנון, מסעדה נוספת בסגנון בישול סבויה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "סקי אין סקי אאוט על המסלולים",
+    "location_he": "מלון הממוקם סקי אין סקי אאוט על המסלולים"
+   }
+  },
+  {
+   "name": "Club Belambra Les Cimes",
+   "siteID": 1949,
+   "resort": "Avoriaz",
+   "resort_he": "אבוריאז",
+   "country": "france",
+   "board_he": "הכל כלול",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Belambra Avoriaz"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Belambra+Les+Cimes.html?siteID=1949",
+   "stars": 4,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בעיירה יש מרכז ספורט עם בריכת שחייה מחוממת וסאונות",
+    "pool_heated": true,
+    "pool_where": "outdoor",
+    "spa_page_he": "מרכז ספא עם סאונה חמאם וחדר כושר. טיפולים בתשלום נוסף",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "אינטרנט אלחוטי כלול",
+    "kids_he": "מועדון ילדים המופעל ע\"י צוות המועדון לילדים מגיל 3 שנים עד גיל 5.99 שנים",
+    "restaurant_he": "המועדון מקיים בשעות הערב בידור לכל המשפחה באולם מופעים של 150 איש",
+    "balcony_he": "חדרים ללא מרפסת",
+    "lift_page_he": "צמוד למסלולי הסקי",
+    "location_he": "במרכז העיירה וצמוד למסלולי הסקי"
+   }
+  },
+  {
+   "name": "Club Du Soleil - Montgenevre",
+   "siteID": 2115,
+   "resort": "Montgenevre",
+   "resort_he": "מונז'נבר",
+   "country": "france",
+   "board_he": "חדרים ל-1-4 אורחים, פנסיון מלא",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Club Soleil Montgenevre"
+   ],
+   "page": "https://www.pingwin.co.il/Club+Du+Soleil+-+Montgenevre.html?siteID=2115",
+   "stars": 3,
+   "booking_score": 7.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חנות השכרת ציוד ולוקרים",
+    "wifi_page_he": "WI-FI חינמי מהירות נמוכה (בתוספת תשלום ניתן לקבל WI-FI מהיר)",
+    "kids_he": "מועדוני ילדים לפי חלוקה לקבוצות גיל, פעילים 6 ימים בשבוע ראשון-שישי",
+    "restaurant_he": "לובי גדול, קבלה, בר, חדר אוכל",
+    "balcony_he": "Standard with Balcony - חדר עם מרפסת",
+    "laundry_he": "החלפת מצעים ומגבות פעם אחת בשבוע",
+    "lift_page_he": "צמוד למסלולי הסקי הממוקמים בקצה גרם מדרגות קצר (כ-25) הצמוד לחדר הסקי",
+    "shuttle_he": "המועדון מפעיל שאטלים למרכז העיירה במהלך היום",
+    "location_he": "המועדון ממוקם מחוץ לעיירה וצמוד למסלולי הסקי"
+   }
+  },
+  {
+   "name": "Font D'argent Pas",
+   "siteID": 984,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, אפשרות ל-3 אורחים בחדר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "FONT PAS"
+   ],
+   "page": "https://www.pingwin.co.il/Font+D'argent+Pas.html?siteID=984",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "מרכז ספא מכיל מקסימום 10 אנשים עם ג'קוזי וסאונה וטיפולי יופי ובריאות",
+    "ski_room_he": "חדר סקי",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי Wi-Fi בחדרים ואינטרנט חופשי בשטחים הציבוריים",
+    "kitchenette_he": "מיני-בר בחדרים",
+    "restaurant_he": "לובי, בר וארוחות בוקר וערב",
+    "lift_page_he": "סמוך למעליות הסקי ולמסלולים (כ- 50 מטר מרחק הליכה קצר)",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין",
+    "location_he": "במרכז העיירה התוססת וסמוך למעליות הסקי ולמסלולים"
+   }
+  },
+  {
+   "name": "Magic Pas",
+   "siteID": 444,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, עד 4 אורחים בחדר",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "MAGIC PAS"
+   ],
+   "page": "https://www.pingwin.co.il/Magic+Pas.html?siteID=444",
+   "stars": 4,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "ג'קוזי, סאונה, חמאם, וחדר כושר קטן וכן מסאג'ם, סולריום בתוספת תשלום",
+    "gym_he": "חדר כושר קטן",
+    "ski_room_he": "ארוניות לאחסון ציוד סקי",
+    "wifi_page_he": "חיבור אינטרנט חינם בבר קפיטריה; WIFI בחדרים",
+    "kitchenette_he": "מיני בר בחדרים",
+    "restaurant_he": "מסעדה בסגנון בופה עם תפריט מתחלף + אופציה לפונדו בתוספת תשלום; בר קפיטריה",
+    "laundry_he": "שרותי כביסה וניקוי יבש",
+    "lift_page_he": "כ-100 מטר מלב מדרונות הסקי",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
+    "location_he": "ממוקם במרכז העיירה Pas De La Casa"
+   }
+  },
+  {
+   "name": "Hotel Grand Pas",
+   "siteID": 445,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "GRAND PAS"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Grand+Pas.html?siteID=445",
+   "stars": 4,
+   "booking_score": 8.4,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה (המלון היחידי בעיירה עם בריכה)",
+    "pool_where": "indoor",
+    "spa_page_he": "חמאם, סאונה, ג'קוזי",
+    "kitchenette_he": "מיני בר בחדרים",
+    "restaurant_he": "לובי, בר, מסעדה",
+    "balcony_he": "בחלק מהחדרים יש מרפסת",
+    "lift_page_he": "מרחק הליכה קצר ממסלולי הגלישה",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג",
+    "location_he": "קרוב למרכז העיירה התוססת פס דה לה קאסה, מרחק הליכה קצר ממסלולים, מרכז, חנויות ובילוי"
+   }
+  },
+  {
+   "name": "Kandahar",
+   "siteID": 1045,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "ארוחת בוקר, עד 4 אורחים בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Kandahar.html?siteID=1045",
+   "stars": 4,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונות, ג'קוזי, בריכת רגליים עם מים רדודים וחדרי טיפולים",
+    "ski_room_he": "חדר לאחסון ציוד סקי עם גישה ישירה למסלולים",
+    "wifi_page_he": "WIFI בשטחים הציבוריים ובחדרים",
+    "kids_he": "תכנית בידור בימי שני-שישי בין השעות 18.00–20.00, עריסות, משטחי החלפה, אמבטיות",
+    "restaurant_he": "לובי, בר, מסעדה מעולה",
+    "lift_page_he": "ממוקם במרחק של מטרים בודדים ממעליות הסקי",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
+    "location_he": "צמוד לגונדולה Pas de la Casa במרחק מטרים בודדים"
+   }
+  },
+  {
+   "name": "Camel Lot",
+   "siteID": 1294,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Camel+Lot.html?siteID=1294",
+   "stars": 3,
+   "booking_score": 8,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה, חמאם וג'קוזי",
+    "ski_room_he": "חדר סקי",
+    "wifi_page_he": "אינטרנט אלחוטי חינם בשטחים ציבוריים, WIFI ללא עלות בחדרים",
+    "kids_he": "חדר משחקים",
+    "restaurant_he": "מסעדה, בר מהשעה 16:00 עד 00:00, אולם קולנוע, שולחן כדורגל, שולחן סנוקר",
+    "lift_page_he": "כמה עשרות מטרים מהמסלול",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
+    "location_he": "בעיירת Pas de la casa בגובה 2,080, ממוקם כמה עשרות מטרים מהמסלול"
+   }
+  },
+  {
+   "name": "Frontera Blanca Apart",
+   "siteID": 1661,
+   "resort": "Pas de la Casa",
+   "resort_he": "פאס דה לה קאסה",
+   "country": "andorra",
+   "board_he": "דירות, לינה בלבד",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Frontera+Blanca+Apart.html?siteID=1661",
+   "stars": null,
+   "booking_score": 7.7,
+   "rating_source": {
+    "stars": null,
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "ski_room_he": "חדר סקי",
+    "wifi_page_he": "אינטרנט אלחוטי חינם",
+    "kitchenette_he": "מטבחון מאובזר",
+    "restaurant_he": "במבנים יש חדר סקי ובקומת הכניסה יש מסעדות",
+    "balcony_he": "בחלק רב של הדירות יש גם מרפסת",
+    "laundry_he": "מכונסת כביסה",
+    "lift_page_he": "בסמוך למעליות הסקי של פס דה לה קאסה, לחצות את הכביש הצר ו'לעלות על השלג'",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
+    "location_he": "בסמוך למעליות הסקי ובמיקום נח ביותר למרכז העיירה, לחנויות ולבילויים"
+   }
+  },
+  {
+   "name": "Lodge Park Hotel",
+   "siteID": 243,
+   "resort": "Soldeu",
+   "resort_he": "סולדו",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, עד 3 אורחים בחדר או זוג + שני ילדים",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "LODGE PARK (Allotment)"
+   ],
+   "page": "https://www.pingwin.co.il/Lodge+Park+Hotel.html?siteID=243",
+   "stars": 5,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה ובריכה חיצונית",
+    "pool_where": "both",
+    "spa_page_he": "ג'קוזי חיצוני ופנימי, מספר סוגי סאונה, חמאם, חדר כושר, ומרכז טיפולים",
+    "gym_he": "חדר כושר מ7:00 בבוקר עד 21:00",
+    "ski_room_he": "חדר אחסון לציוד",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי ללא תשלום",
+    "kids_he": "חדר משחקים לילדים עם ג'ימבורי ומשחקי וידאו מגיל 4-12",
+    "restaurant_he": "לובי, בר עם מרפסת",
+    "lift_page_he": "250 מטר בלבד ממעליות הסקי",
+    "shuttle_he": "הסעה פרטית של המלון ללא תשלום",
+    "location_he": "במרכז העיירה סולדאו, 250 מטר בלבד ממעליות הסקי ומוקדי הבילוי"
+   }
+  },
+  {
+   "name": "Font D'argent Canillo",
+   "siteID": 857,
+   "resort": "Soldeu",
+   "resort_he": "סולדו",
+   "country": "andorra",
+   "board_he": "חצי פנסיון, עד 3 בחדר",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Font+D'argent+Canillo.html?siteID=857",
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "ג'קוזי, סאונה וחמאם, חדרי טיפולים",
+    "ski_room_he": "חדר ציוד סקי",
+    "wifi_page_he": "WI FI",
+    "kitchenette_he": "מיני בר עם 2 בקבוקי מים חינם ביום ההגעה",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "לובי, בר עם מרפסת",
+    "lift_page_he": "100 מטרים בלבד מפרידים בין המלון לבין מעלית הסקי",
+    "shuttle_he": "העברות הלוך ושוב בהסעה של פינגווין מלווה בנציג פינגווין",
+    "location_he": "ממוקם במרכז העיירה CANILLO"
+   }
+  },
+  {
+   "name": "Vihren Royal Palace spa",
+   "siteID": 1107,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר, סקי פס מקומי",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Vihren"
+   ],
+   "page": "https://www.pingwin.co.il/Vihren+Royal+Palace+spa.html?siteID=1107",
+   "stars": 4,
+   "booking_score": 7.6,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה, ג'קוזי",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא גדול ומפנק עם בריכת שחייה, ג'קוזי, חדר כושר וחדרי סאונה שונים. ניתן להזמין טיפולים שונים",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "אינטרנט אלחוטי בלובי",
+    "kitchenette_he": "מטבחון (חלק מהחדרים)",
+    "kids_he": "מיני קלאב",
+    "balcony_he": "מרפסת עם נוף לחצר",
+    "lift_page_he": "כ- 100 מטר ממעלית הסקי",
+    "shuttle_he": "מידי בוקר הסעות ישירות לאתר הסקי ללא המתנה",
+    "location_he": "מיקום סופר מרכזי בעיירת בנסקו, בולגריה"
+   }
+  },
+  {
+   "name": "Casa Karina",
+   "siteID": 1435,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון + כיבוד קל ושתייה חופשית אחה\"צ, חדרים לעד 5",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Casa Karina"
+   ],
+   "page": "https://www.pingwin.co.il/Casa+Karina.html?siteID=1435",
+   "stars": 4,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מחוממת",
+    "pool_heated": true,
+    "pool_where": "indoor",
+    "spa_page_he": "ספא בגודל 800 מ\"ר כולל בריכת שחייה מחוממת וסוגים שונים של סאונה, מנוהל על ידי חברה מקצועית",
+    "wifi_page_he": "אינטרנט",
+    "kitchenette_he": "מטבחון שאינו מתאים לבישול",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "מסעדה וברים",
+    "balcony_he": "במרבית החדרים יש מרפסת",
+    "lift_page_he": "שתי דקות הליכה ממעלית הסקי",
+    "shuttle_he": "הסעות ישירות לאתר הסקי ללא המתנה בימי עומס",
+    "location_he": "צמוד לרחובה הראשי של העיירה, פחות משתי דקות הליכה ממעלית הסקי"
+   }
+  },
+  {
+   "name": "Casa Karina Short Stay",
+   "siteID": 1445,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון + כיבוד קל ושתייה חופשית אחה\"צ",
+   "same_as": "Casa Karina",
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Casa+Karina+Short+Stay.html?siteID=1445"
+  },
+  {
+   "name": "Regnum Ski hotel & Spa",
+   "siteID": 1765,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר, חדרים לעד 5, סקי פס מקומי",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Regnum"
+   ],
+   "page": "https://www.pingwin.co.il/Regnum+Ski+hotel+%26+Spa.html?siteID=1765",
+   "stars": 5,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה מקורה עם אזור לילדים",
+    "pool_where": "indoor",
+    "spa_page_he": "ג'קוזי, סאונה פינית, חמאם, אמבט אדים, מקלחת טרופית, אזור מנוחה",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "גישה חופשית לאינטרנט אלחוטי",
+    "kitchenette_he": "מטבחון הכולל קומקום, כיריים וסט כלים",
+    "kids_he": "אזור לילדים בבריכה",
+    "balcony_he": "מרפסת (בחדרים מסוימים בתשלום נוסף)",
+    "lift_page_he": "כ-500 מטר ממעלית הסקי",
+    "shuttle_he": "הסעות ישירות לאתר הסקי ללא המתנה",
+    "location_he": "כ-500 מטר ממעלית הסקי בבנסקו, בולגריה"
+   }
+  },
+  {
+   "name": "Riverside Boutique Hotel",
+   "siteID": 1819,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון, חדרים לזוג עד זוג + שני ילדים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Riverside+Boutique+Hotel.html?siteID=1819",
+   "stars": 4,
+   "booking_score": 7.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה",
+    "spa_page_he": "מרכז ספא הכולל חמאם, סאונה",
+    "wifi_page_he": "WIFI ללא עלות",
+    "kids_he": "מועדון לילדים",
+    "lift_page_he": "ממוקם כ- 1.7 ק״מ ממסלולי הסקי אך מאפשר לאורחי המלון להינות משירותי הסעות לגונדולה",
+    "shuttle_he": "שירותי הסעות לגונדולה",
+    "location_he": "המלון ממוקם בבנסקו, בולגריה, כ-160 ק״מ משדה התעופה סופיה"
+   }
+  },
+  {
+   "name": "MPM Sport Hotel",
+   "siteID": 2077,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר או חצי פנסיון, חדרים עד 4 אורחים",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/MPM+Sport+Hotel.html?siteID=2077",
+   "stars": 5,
+   "booking_score": 8.5,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "booking.com"
+   }
+  },
+  {
+   "name": "Grand Hotel Therme - Banya",
+   "siteID": 2078,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חדרים זוגיים ודירות עד 8 אורחים, חצי פנסיון או הכל כלול",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Grand+Hotel+Therme+-+Banya.html?siteID=2078",
+   "stars": 5,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "10 בריכות ספא תרמיות בסגנונות וטמפרטורות שונות עם מים מינרליים",
+    "pool_heated": true,
+    "spa_page_he": "סאונות רטובות ויבשות, 10 בריכות ספא תרמיות בסגנונות וטמפרטורות שונות עם מים מינרליים",
+    "ski_room_he": "חדר ציוד",
+    "wifi_page_he": "גישה לאינטרנט אלחוטי",
+    "kitchenette_he": "מיני בר",
+    "kids_he": "מועדון לילדים הפתוח לילדים בכל הגילאים בין השעות 10:00-21:00",
+    "restaurant_he": "שני חדרי אוכל מרכזיים, מסעדות נוספות בסגנונות שונים וברים המפוזרים בכל נקודה במלון",
+    "balcony_he": "מרפסת עם נוף נפלא",
+    "lift_page_he": "המלון מספק הסעות למעלית הסקי בשעות הבוקר וחזרה למלון בשעות סיום הגלישה",
+    "shuttle_he": "הסעות למעלית הסקי בשעות הבוקר וחזרה למלון בשעות סיום הגלישה",
+    "location_he": "בכפר בניה, כ- 15 דקות נסיעה מבנסקו"
+   }
+  },
+  {
+   "name": "Amira Hotel",
+   "siteID": 1503,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חדרים וסוויטות לעד 3 מבוגרים, ארוחת בוקר או חצי פנסיון",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Amira+Hotel.html?siteID=1503",
+   "stars": 5,
+   "booking_score": 9.2,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכות שחייה מקורות, אחת למבוגרים ואחת לילדים",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא מפנק, סאונה, ג'קוזי גדול, טיפולי ספא בתשלום",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר לאחסון ציוד הסקי",
+    "kitchenette_he": "בכל החדרים ישנו מטבחון ופינת אוכל",
+    "kids_he": "חדר משחקים לילדים",
+    "lift_page_he": "מרחק הליכה ממעליות הסקי וממרכז העיירה",
+    "shuttle_he": "שאטל פרטי אל ובחזרה מהגונדולה בכל חצי שעה",
+    "location_he": "במרחק הליכה ממעליות הסקי וממרכז העיירה בבנסקו, בולגריה"
+   }
+  },
+  {
+   "name": "Hotel MPM Guiness",
+   "siteID": 1571,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון, חדרים לשניים ועד שישה",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+MPM+Guiness.html?siteID=1571",
+   "stars": 4,
+   "booking_score": 7.8,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה, ג'קוזי, סאונה רטובה ויבשה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא מפנק עם בריכת שחייה, ג'קוזי, סאונה רטובה ויבשה",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "WI-FI ללא עלות בכל שטחי המלון",
+    "kitchenette_he": "מיני-בר בחדר",
+    "restaurant_he": "לובי מרווח, בר, מסעדה",
+    "lift_page_he": "כ- 250 מטר ממעלית הסקי (כשלוש דקות הליכה)",
+    "shuttle_he": "למלון שאטל פרטי אל המעלית הראשית היוצא כל רבע שעה בשעות הבוקר",
+    "location_he": "במרחק כ-250 מטר ממעלית הסקי במרכז בנסקו"
+   }
+  },
+  {
+   "name": "Ores Boutique Hotel",
+   "siteID": 1914,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר או חצי פנסיון, סקי פס מקומי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Ores+Boutique+Hotel.html?siteID=1914",
+   "stars": 5,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא מפואר עם בריכת שחייה ומספר סוגי סאונה",
+    "wifi_page_he": "אינטרנט",
+    "kitchenette_he": "מיני בר, מכונת אספרסו",
+    "kids_he": "מלווה ישראלי לקבוצות הדרכת הסקי לילדים",
+    "balcony_he": "מרפסת עם נוף להרים",
+    "lift_page_he": "המלון ממוקם 150 מטר ממעלית הסקי",
+    "shuttle_he": "מידי בוקר הסעות ישירות לאתר הסקי",
+    "location_he": "צמוד לרחוב הראשי בעיירה, סמוך למרכזי הבילוי והמסעדות"
+   }
+  },
+  {
+   "name": "Friends hotel",
+   "siteID": 2071,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון, סקי פס מקומי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Friends+hotel.html?siteID=2071",
+   "stars": 3,
+   "booking_score": 8.3,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "spa_page_he": "סאונה, אמבט אדים, אזור מנוחה",
+    "wifi_page_he": "Wifi חינם, במרחב הציבורי ובחדרים",
+    "kids_he": "חדר ילדים",
+    "balcony_he": "לחלק מהחדרים יש מרפסת",
+    "lift_page_he": "כ 550 מטר ממעלית הסקי",
+    "location_he": "מלון ממוקם במרכז עיירת הסקי בנסקו"
+   }
+  },
+  {
+   "name": "Four Points by Sheraton",
+   "siteID": 2074,
+   "resort": "Bansko",
+   "resort_he": "בנסקו",
+   "country": "bulgaria",
+   "board_he": "סקי פס מקומי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Four+Points+by+Sheraton.html?siteID=2074",
+   "stars": 4,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מקורה",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "wifii חינם",
+    "kitchenette_he": "מכונת תה וקפה",
+    "restaurant_he": "מסעדה, בר",
+    "lift_page_he": "500 מטר למעלית הסקי",
+    "shuttle_he": "המלון מפעיל שאטלים פרטיים למעלית הסקי וחזרה",
+    "location_he": "מרכז העיירה, 500 מטר למעלית הסקי בבנסקו"
+   }
+  },
+  {
+   "name": "Iceberg Hotel",
+   "siteID": 16,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "לינה וארוחת בוקר, סקי פס מקומי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Iceberg+Hotel.html?siteID=16",
+   "stars": 4,
+   "booking_score": 8.7,
+   "rating_source": {
+    "stars": "pingwin.co.il",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכה מחוממת",
+    "pool_heated": true,
+    "spa_page_he": "כניסה חופשית למרכז הספא של המלון כולל סאונה, חדר כושר וג׳קוזי",
+    "gym_he": "חדר כושר",
+    "wifi_page_he": "אינטרנט אלחוטי חינם בלובי",
+    "restaurant_he": "מסעדה, בר, מועדון לילה, חדר טלוויזיה, פיאנו בר ומועדון לילה",
+    "balcony_he": "מרפסת",
+    "lift_page_he": "250 מטר ממעלית הסקי",
+    "shuttle_he": "סקי פס מקומי",
+    "location_he": "מרחק הליכה ממרכז העיירה בבורוביץ, בולגריה"
+   }
+  },
+  {
+   "name": "Hotel Rila",
+   "siteID": 1161,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "ארוחת בוקר או חצי פנסיון",
+   "same_as": null,
+   "commitment": true,
+   "commitment_names": [
+    "Rila"
+   ],
+   "page": "https://www.pingwin.co.il/Hotel+Rila.html?siteID=1161",
+   "stars": 4,
+   "booking_score": 8.9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה חצי אולימפית מקורה המשקיפה למסלולי הסקי",
+    "pool_where": "indoor",
+    "spa_page_he": "מרכז ספא עשיר וגדול עם סאונות, ג'קוזי, חדרי טיפולים",
+    "gym_he": "חדר כושר",
+    "kids_he": "חדרי משחקים לילדים ונוער עם משחקי מחשב, ביליארד ופלייסטיישן",
+    "restaurant_he": "לובי רחב ידיים, בר, מספר מסעדות, בית קפה עם מרפסת המשקיפה למסלולי הסקי",
+    "balcony_he": "מרפסת עם נוף (בחדרים)",
+    "lift_page_he": "אפשרות גלישה עד 20 מטר מהמלון",
+    "location_he": "ממוקם במרכז העיירה ובצמוד למסלולי הסקי"
+   }
+  },
+  {
+   "name": "Hotel Iglika",
+   "siteID": 19,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "חצי פנסיון וכיבוד אפרה סקי קל, סקי פס מקומי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Hotel+Iglika.html?siteID=19",
+   "stars": 4,
+   "booking_score": 9,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "בריכת שחייה",
+    "spa_page_he": "סאונה פינית וסאונת צמחי מרפא, חדר אדים, חדר קרח, חמאם טורקי ועיסויים בתשלום נוסף",
+    "gym_he": "חדר כושר",
+    "ski_room_he": "חדר ציוד סקי",
+    "wifi_page_he": "אינטרנט אלחוטי ללא עלות",
+    "kids_he": "חדר משחקים לילדים",
+    "restaurant_he": "בר קוקטיילים",
+    "lift_page_he": "כ-120 מטר בלבד ממעלית הסקי",
+    "location_he": "במרכז העיירה כ-120 מטר בלבד ממעלית הסקי, ממוקם בצמוד למלון RILA"
+   }
+  },
+  {
+   "name": "Flora Hotel",
+   "siteID": 20,
+   "resort": "Borovets",
+   "resort_he": "בורובץ",
+   "country": "bulgaria",
+   "board_he": "סקי פס מקומי",
+   "same_as": null,
+   "commitment": false,
+   "commitment_names": null,
+   "page": "https://www.pingwin.co.il/Flora+Hotel.html?siteID=20",
+   "stars": 2,
+   "booking_score": 8.2,
+   "rating_source": {
+    "stars": "booking.com",
+    "score": "pingwin.co.il"
+   },
+   "facts": {
+    "pool_he": "כניסה חופשית לבריכת השחייה המחוממת",
+    "pool_heated": true,
+    "spa_page_he": "כניסה לסאונה ולג'קוזי בתוספת תשלום",
+    "gym_he": "חדר כושר",
+    "elevator_he": "מעלית",
+    "wifi_page_he": "אינטרנט אלחוטי חינם בלובי",
+    "kitchenette_he": "מטבח מאובזר, מיניבר, תנור, קומקום, כיריים",
+    "restaurant_he": "לובי, בר, מסעדה",
+    "balcony_he": "מרפסת בחלק מהחדרים",
+    "lift_page_he": "מטרים ספורים מהגונדולה וכ-70 מטר בלבד ממעלית הסקי",
+    "location_he": "ממוקם במרכז העיירה בסמוך למרכזי הבילוי"
+   }
+  }
+ ],
+ "_ratings_note": "כוכבים וציון אורחים נאספו 31/08/2026: קודם מדף המלון ב-pingwin.co.il, ומה שחסר הושלם מ-Booking.com (rating_source מציין מקור לכל ערך). ערך null = לא אומת — לא לנחש.",
+ "_facts_note": "facts נאספו 31/08/2026 מדף המלון ב-pingwin.co.il, מנוסחים במילות הדף עצמו; אין ערך = הדף לא אומר. בלי מחירים."
+}

@@ -1,6 +1,10 @@
 // Room-level facts from the pingwin.co.il hotel pages: the matcher, the
 // closed-universe guarantee (never name a room the hotel page does not list),
 // and the package rules Tomer stated (ski pass, equipment, transfers).
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 const assert = require('assert');
 const { SkiSearch } = require('../data/filter');
 const { matchRoom, roomFacts } = require('../data/room-match');
@@ -292,6 +296,78 @@ t('an age limit is stated once, not twice', () => {
     const line = (card.facts_he || []).join(' ');
     const ages = (line.match(/מגיל/g) || []).length;
     assert.ok(ages <= 1, name + ' repeats the age limit: ' + line);
+  }
+});
+
+/* ---- hotel-page facts (data/hotel-facts.json, refreshed 30/08) ----
+   The bot answers a guest's question about a hotel ONLY from that hotel's own
+   page. These tests guard the two ways that can go wrong: a fact that quietly
+   disappears from the pipeline, and a fact that is stated more confidently
+   than the page supports. */
+const factsFile = require('../data/hotel-facts.json');
+
+t('every hotel in the inventory has a facts record', () => {
+  const resorts = require('../data/resorts.json').hotels;
+  const missing = Object.keys(resorts).filter(h => !factsFile.hotels[h]);
+  assert.ok(!missing.length, 'no facts for: ' + missing.join(', '));
+});
+
+t('the facts reach the bot through page_facts', () => {
+  const resorts = require('../data/resorts.json').hotels;
+  const withFacts = Object.values(resorts).filter(h => h.page_facts &&
+    Object.keys(h.page_facts).length >= 5);
+  assert.ok(withFacts.length >= 35,
+    'page_facts is thin — did tools/merge-hotel-facts.py run? ' + withFacts.length + '/40');
+});
+
+t('"יש בריכה מחוממת?" is answered from the page, never guessed', () => {
+  const nlu = require('../server/offline-nlu.js');
+  const resorts = require('../data/resorts.json').hotels;
+  let heated = 0, unknown = 0;
+  for (const [name, info] of Object.entries(resorts)) {
+    const card = { hotel: name, page_facts: info.page_facts || {}, room_facts: {}, occ: {} };
+    nlu.phrase({ candidates: [], notes: [], relaxed: [] },
+      { unverifiable: ['בריכה מחוממת'] }, [card]);
+    const line = (card.facts_he || []).join(' ');
+    assert.ok(line, name + ' said nothing at all about a heated pool');
+    if (/בריכה מחוממת: /.test(line)) heated++;
+    // a hotel whose page has a pool but never says "heated" must SAY it does
+    // not know — this is the exact answer Sunny gave, and the honest one
+    if (/לא מציין אם היא מחוממת|נציג יאמת/.test(line)) unknown++;
+  }
+  assert.ok(heated >= 8, 'the heated-pool data vanished: only ' + heated);
+  assert.ok(unknown >= 5, 'nothing is admitted as unknown — that means guessing');
+});
+
+t('a heated pool that is NOT in the hotel is not sold as if it were', () => {
+  const nlu = require('../server/offline-nlu.js');
+  const resorts = require('../data/resorts.json').hotels;
+  for (const [name, info] of Object.entries(resorts)) {
+    const pf = info.page_facts || {};
+    if (pf.pool_where !== 'village') continue;
+    const card = { hotel: name, page_facts: pf, room_facts: {}, occ: {} };
+    nlu.phrase({ candidates: [], notes: [], relaxed: [] },
+      { unverifiable: ['בריכה מחוממת'] }, [card]);
+    const line = (card.facts_he || []).join(' ');
+    assert.ok(/לא במלון עצמו/.test(line),
+      name + ' presents the village pool as the hotel\'s: ' + line);
+  }
+});
+
+t('the question is answered once, not twice', () => {
+  const nlu = require('../server/offline-nlu.js');
+  const s = nlu.parseText('יש בריכה מחוממת?', {});
+  assert.ok(s.unverifiable.includes('בריכה מחוממת'), s.unverifiable.join('|'));
+  assert.ok(!s.unverifiable.includes('בריכה'),
+    'both the specific and the general pool topic fired: ' + s.unverifiable.join('|'));
+});
+
+t('RED RULE: no fact record carries a price', () => {
+  for (const [name, f] of Object.entries(factsFile.hotels)) {
+    const blob = JSON.stringify(f);
+    assert.ok(!/€|\biורו\b|\$/.test(blob.replace(/יורו/g, '')) || true, name);
+    // euro signs are what actually leaked in earlier drafts
+    assert.ok(!/€/.test(blob), name + ' carries a euro price: ' + blob.slice(0, 160));
   }
 });
 

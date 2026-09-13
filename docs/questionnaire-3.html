@@ -1,0 +1,241 @@
+<title>שאלון פינגי 3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Frank+Ruhl+Libre:wght@500;700&display=swap">
+<style>
+:root{
+  --ground:#F2F5F8; --surface:#FFFFFF; --surface-2:#E9EEF3; --line:#CFD8E1; --ink:#14232E; --ink-2:#4B5B68; --muted:#7B8894;
+  --accent:#0F4C81; --accent-ink:#FFFFFF; --accent-soft:#DCE9F5;
+  --ok:#2E7D46; --ok-soft:#DFF0E4; --edit:#0F4C81; --edit-soft:#DCE9F5; --skip:#9A6A12; --skip-soft:#F6E9CF;
+  --shadow:0 1px 2px rgba(20,35,46,.06),0 6px 20px rgba(20,35,46,.06);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --ground:#0F1A22; --surface:#16242E; --surface-2:#1F2F3B; --line:#2C3E4C; --ink:#E8EEF2; --ink-2:#B7C3CC; --muted:#8393A0;
+  --accent:#6FB1E8; --accent-ink:#0F1A22; --accent-soft:#1D3447;
+  --ok:#7CCB93; --ok-soft:#1D3527; --edit:#6FB1E8; --edit-soft:#1D3447; --skip:#E0B15C; --skip-soft:#3B2E14;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  --ground:#0F1A22; --surface:#16242E; --surface-2:#1F2F3B; --line:#2C3E4C; --ink:#E8EEF2; --ink-2:#B7C3CC; --muted:#8393A0;
+  --accent:#6FB1E8; --accent-ink:#0F1A22; --accent-soft:#1D3447;
+  --ok:#7CCB93; --ok-soft:#1D3527; --edit:#6FB1E8; --edit-soft:#1D3447; --skip:#E0B15C; --skip-soft:#3B2E14;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}
+html{direction:rtl}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Heebo","Segoe UI",Arial,sans-serif;font-size:16px;line-height:1.6}
+.wrap{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 6rem}
+h1{font-family:"Frank Ruhl Libre",Georgia,serif;font-weight:700;font-size:2rem;margin:.2rem 0 .3rem;text-wrap:balance}
+.lede{color:var(--ink-2);margin:0 0 1.2rem;max-width:40rem}
+.lede b{color:var(--ink)}
+.bar{position:sticky;top:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:.7rem .9rem;margin:0 0 1.4rem;display:flex;flex-wrap:wrap;gap:.6rem .9rem;align-items:center}
+.count{font-variant-numeric:tabular-nums;font-weight:700}
+.track{flex:1 1 12rem;height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;display:flex}
+.track i{display:block;height:100%}
+.track .ok{background:var(--ok)} .track .ed{background:var(--edit)} .track .sk{background:var(--skip)}
+.filters{display:flex;gap:.35rem;flex-wrap:wrap}
+.filters button{font:inherit;font-size:.82rem;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:99px;padding:.15rem .7rem;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sync{font-size:.8rem;color:var(--muted);flex-basis:100%}
+h2{font-family:"Frank Ruhl Libre",Georgia,serif;font-weight:500;font-size:1.25rem;margin:1.8rem 0 .7rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem 1.1rem;margin:0 0 .9rem}
+.q[data-status="approved"]{border-color:var(--ok)} .q[data-status="rewritten"]{border-color:var(--edit)} .q[data-status="skipped"]{border-color:var(--skip);opacity:.85}
+.qh{display:flex;align-items:baseline;gap:.6rem}
+.num{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem;min-width:2ch}
+.qt{font-weight:700;margin:0;flex:1}
+.pill{font-size:.74rem;font-weight:700;border-radius:99px;padding:.1rem .6rem;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
+.pill.approved{background:var(--ok-soft);color:var(--ok)} .pill.rewritten{background:var(--edit-soft);color:var(--edit)} .pill.skipped{background:var(--skip-soft);color:var(--skip)}
+.hint{color:var(--muted);font-size:.86rem;margin:.25rem 0 .6rem}
+label.lab{display:block;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .25rem}
+textarea{width:100%;box-sizing:border-box;font:inherit;font-size:.95rem;line-height:1.55;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:.6rem .75rem;min-height:5.2rem;resize:vertical}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.q[data-status="approved"] textarea{background:var(--ok-soft)}
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem;align-items:center}
+.acts button{font:inherit;font-size:.9rem;font-weight:500;border-radius:8px;padding:.45rem .9rem;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.acts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.acts .ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.acts .ed{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.acts .sk{background:transparent;color:var(--skip);border-color:var(--skip)}
+.acts .undo{margin-inline-start:auto;font-size:.8rem;color:var(--muted);border:none;background:none;text-decoration:underline}
+.note{display:none;margin-top:.5rem}
+.q[data-status="skipped"] .note{display:block}
+input.why{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;padding:.4rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink)}
+.done{background:var(--accent-soft);border-radius:12px;padding:1rem 1.1rem;margin-top:2rem;color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.q{transition:border-color .2s}}
+</style>
+
+<div class="wrap">
+  <h1>שאלון תוכן מס' 3</h1>
+  <p class="lede">51 שאלות שלקוחות שאלו בבדיקות ואין להן תשובה מאושרת. לכל שאלה כתבתי <b>הצעת תשובה</b> בלשון פינגי — ניחוש מושכל, לא עובדה. לכל שאלה: <b>אשר</b> אם ההצעה נכונה, <b>שכתב</b> (ערוך את הטקסט ואז לחץ) אם צריך תיקון, או <b>דלג</b> אם אין לך תשובה כרגע. כל לחיצה נשמרת מיד; אפשר לצאת ולחזור. בלי מחירים במספרים.</p>
+
+  <div class="bar" id="bar">
+    <span class="count" id="count">0 / 51</span>
+    <div class="track" aria-hidden="true"><i class="ok" id="tOk"></i><i class="ed" id="tEd"></i><i class="sk" id="tSk"></i></div>
+    <div class="filters" role="group" aria-label="סינון">
+      <button data-f="all" aria-pressed="true">הכל</button>
+      <button data-f="open" aria-pressed="false">פתוחות</button>
+      <button data-f="approved" aria-pressed="false">אושרו</button>
+      <button data-f="rewritten" aria-pressed="false">שוכתבו</button>
+      <button data-f="skipped" aria-pressed="false">דילגתי</button>
+    </div>
+    <span class="sync" id="sync">מתחבר לשמירה…</span>
+  </div>
+
+  <div id="list"></div>
+  <div class="done" id="done" hidden>סיימת את כל השאלות. תודה! אני קורא את התשובות ישירות מכאן — אין צורך לשלוח כלום.</div>
+</div>
+
+<script>
+const Q = [
+ ["הזמנה ותשלום", [
+  ["כמה זמן לוקח מרגע ההזמנה עד שהיא מאושרת?", "אחרי שביצעתם הזמנה, מחלקת האופרציה מאמתת את החדר מול המלון ואת המקומות בטיסה — בדרך כלל זה עניין של יום-יומיים עסקים, ולפעמים יותר כשהמלון מגיב לאט. עד האישור לא מחייבים. אם עברו כמה ימים ולא הגיע מייל — נציג יבדוק."],
+  ["הצעת מחיר במייל — תוך כמה זמן נשלחת, ולכמה זמן היא תקפה?", "נציג שולח הצעת מחיר במייל בדרך כלל באותו יום עבודה, ולכל המאוחר ביום העסקים הבא. ההצעה משקפת את המחיר והזמינות ברגע השליחה ונשמרת ל-48 שעות — אחרי זה גם המחיר וגם החדר יכולים להשתנות."],
+  ["הוספת נוסע להזמנה קיימת — יש עלות, ועד מתי אפשר?", "הנוסע הנוסף מצטרף במחיר החבילה כפי שהוא במועד ההוספה, בכפוף למקום בחדר ובטיסה. אין דמי טיפול על עצם ההוספה. ככל שמתקרבים ליציאה הסיכוי למקום קטן — נציג יבדוק ויצרף."],
+  ["שינוי תאריך / החלפת מלון / העברת ההזמנה לאדם אחר — כרוכים בעלות, ועד מתי?", "כל שינוי כזה כפוף לזמינות ולהפרשי מחיר בין המוצרים, ובמקרים מסוימים לדמי טיפול לפי מועד הבקשה. ככל שהבקשה קרובה ליציאה — התנאים דומים יותר לתנאי הביטול. נציג יגיד בדיוק מה זה אומר להזמנה שלכם."],
+  ["מחליפים מלון והחדש זול יותר — מחזירים הפרש? יקר יותר — משלמים הפרש?", "כן: מעבר למלון יקר יותר משלמים את ההפרש, ומעבר למלון זול יותר — ההפרש מוחזר בהתאם לתנאי המוצר החדש. הכול כפוף לזמינות ולאישור נציג."],
+  ["מתי נשלחת החשבונית, ואיך מבקשים חשבונית מס על שם פרטי?", "קבלה וחשבונית מס נשלחות למייל אחרי שהחיוב מתבצע — כלומר אחרי אישור ההזמנה. חשבונית על שם פרטי אחר מהמשלם — מבקשים מנציג לפני החיוב."],
+  ["מה קורה אם לקוח מאחר בתשלום / התשלום לא עבר?", "אם החיוב לא עבר, ההזמנה לא מאושרת והחדר לא נשמר — נציג יוצר קשר כדי להסדיר אמצעי תשלום אחר. בתשלומים שסוכמו מראש עם נציג — איחור מטופל מולו ישירות."],
+  ["תשלום על מישהו אחר: ההזמנה על שם הנוסע? מי מקבל את הקבלה?", "ההזמנה תמיד על שמות הנוסעים בפועל (כמו בדרכון). הקבלה יוצאת למשלם, ואישור ההזמנה למייל שנמסר בהזמנה — אפשר לבקש שיישלח לשניהם."],
+  ["בחירת מושבים בטיסה — יש אפשרות בתשלום?", "ההושבה בטיסות שלנו נעשית בצ'ק-אין בשדה, ובחירת מושב מראש בתשלום תלויה בחברת התעופה של אותה יציאה — בחלק מהטיסות זה אפשרי דרך חברת התעופה. נציג יגיד אם ואיך ביציאה שלכם."],
+  ["החזר כספי — כמה זמן עד שהכסף חוזר?", "אחרי שההחזר אושר, הזיכוי מוחזר לאמצעי התשלום המקורי, וחברת האשראי מציגה אותו בדרך כלל תוך כמה ימי עסקים עד מחזור חיוב אחד. את סטטוס ההחזר עצמו בודקים מול נציג."],
+  ["מילואים: צריך להביא צו? ומה עם המשפחה שנוסעת בלי המשוחרר?", "כן — צו המילואים הוא הבסיס לטיפול בביטול או בשינוי של הנוסע שנקרא. שאר בני המשפחה יכולים לנסוע כרגיל באותם תנאים; שימו לב שאם החדר משתנה (למשל מחדר לארבעה לחדר לשלושה) המחיר לאדם עשוי להשתנות. נציג יטפל בזה פרטנית."],
+ ]],
+ ["טיסות והסעות", [
+  ["הטיסה מתעכבת והלקוח 'מפספס' את ההסעה — מי דואג?", "ההסעה שלנו היא פרטית ללקוחות פינגווין וממתינה לטיסה — היא לא יוצאת בלעדיכם. אם הטיסה כולה מתעכבת, הנציג בשדה מתאם את היציאה. איחור אישי (למשל מזוודה שהתעכבה) — הנציג מסדר פתרון במקום."],
+  ["לקוח שפספס טיסה — יש טיסה אחרת באותו יום, ומי מתאם?", "טיסות הצ'רטר שלנו הן אחת ליציאה, אז לרוב אין טיסה חלופית באותו יום. במקרה כזה מתקשרים מיד לנציג — הוא בודק מול חברת התעופה אם יש חלופה בתשלום, ואם לא, מה אפשר לעשות עם שאר החבילה. ההזמנה במלון נשמרת."],
+  ["טיסה מתבטלת בגלל מזג אוויר — מי מארגן לינה ומי משלם?", "כשטיסה מתבטלת מכוח עליון, מחלקת האופרציה מתאמת מול חברת התעופה את המועד החדש ומעדכנת את כולם; לינה במקרה כזה היא בדרך כלל באחריות חברת התעופה לפי הדין, ופינגווין מסייעת בתיאום. פוליסת ביטוח נסיעות מכסה לעיתים הוצאות כאלה."],
+  ["הארכה לשבועיים — אפשרי, ואיך זה מתומחר?", "אפשר לשלב שתי יציאות רצופות באותו יעד — למעשה שני שבועות חבילה ברצף, לפי מחיר כל שבוע, ולפעמים במלון אחר בשבוע השני לפי הזמינות. ההסעה בחזור בסוף השבוע השני. נציג יבנה את זה."],
+  ["ההסעה בחזור: מאיפה ובאיזו שעה אוספים ביום האחרון?", "ההסעה חזרה אוספת מהמלון (או מנקודת איסוף קרובה) בשעה שהנציג ביעד מודיע יום-יומיים לפני, לפי שעת הטיסה. ביום האחרון בדרך כלל יש עוד בוקר גלישה או זמן פנוי לפני האיסוף — תלוי בשעת הטיסה."],
+ ]],
+ ["מלון וחדרים", [
+  ["וויפי במלונות — חינם כברירת מחדל?", "ברוב המלונות שלנו אינטרנט אלחוטי כלול, ומה שכתוב על זה בדף המלון מופיע על ההצעה. במלונות שבהם זה שונה — נציג יאמת."],
+  ["אפשר לבשל בדירות עם מטבחון? יש כלים בסיסיים?", "בדירות עם מטבחון יש בדרך כלל ציוד בסיסי לבישול קל — כיריים, מקרר, כלים — וזה מצוין בתיאור הדירה באתר. מה שלא כתוב, נציג יאמת מול המלון."],
+  ["חדרים מחוברים — מובטחים? ואם אין, מה האלטרנטיבה?", "חדרים מחוברים הם בקשה מהמלון ולא הבטחה — נציג מעביר אותה ומאשר רק כשהמלון אישר. כשאין, האלטרנטיבות הן חדר משפחתי או דירה גדולה, או שני חדרים סמוכים באותה קומה — לפי מה שפנוי."],
+  ["מיטה שלישית לילד — עולה? ילד קטן בלי מיטה?", "המחיר תלוי בהרכב החדר, ולכן ילד שלישי בחדר מתומחר לפי מחיר הילד באותו חדר ולא כתוספת נפרדת. תינוק עד גיל 2 יכול בדרך כלל לישון בלי מיטה משלו (או במיטת תינוק, באישור המלון). את התנאי המדויק לחדר שבחרתם — נציג יאמת."],
+  ["שעות ארוחת ערב, ואפשר לאכול מוקדם עם ילדים?", "ארוחת הערב במלונות באלפים מוגשת בדרך כלל בערב המוקדם, ובמועדוני השמש ובלמברה יש חלון שעות רחב יותר. ברוב המקומות משפחות עם ילדים קטנים אוכלות בתחילת החלון בלי בעיה. שעות מדויקות — נציג יאמת מול המלון."],
+  ["חדר כושר/ספא — שעות פתיחה?", "שעות הפתיחה של הספא וחדר הכושר משתנות ממלון למלון, ובחלק מהמלונות הספא סגור ביום מסוים לניקיון. מה שכתוב בדף המלון מופיע על ההצעה; השאר — נציג יאמת."],
+  ["צ'ק-אין מוקדם / השארת מזוודות בבוקר ההגעה — מה קורה בפועל?", "החדרים מתפנים לפי שעת הצ'ק-אין של המלון, אבל כשהקבוצה מגיעה מוקדם המלון שומר את המזוודות בחדר מזוודות, ואפשר להתארגן, לאסוף ציוד ואפילו לצאת לגלוש. הנציג ביעד מתאם את זה עם המלון בהגעה."],
+  ["'מה זה בלמברה?' — משפט אחד ללקוח", "בלמברה היא רשת מועדוני נופש צרפתית שפינגווין מייצגת בישראל: מלון שבנוי כמו כפר נופש בתוך אתר הסקי, בדרך כלל על המסלול, עם הכל כלול, בריכה ומועדון ילדים. יש לנו אותה בטין, בלה דוז אלפ, בלז ארק, באבוריאז ובפליין."],
+  ["'מה זה מועדון השמש (Club Soleil)?' — משפט אחד ללקוח", "מועדוני השמש הם מועדוני נופש צרפתיים צמודי-מסלול שמוכרים אצלנו בפורמט הכל כלול: אירוח, ארוחות, סקי פס והשכרת ציוד כלולים בחבילה. יש לנו אותם בלה דוז אלפ, במונז'נבר, בלה מנואר ובעוז אן אואזן."],
+ ]],
+ ["קייטנה וילדים", [
+  ["מי מחזיר את הילדים מהקייטנה למלון בסוף היום?", "בסוף יום ההדרכה ההורים אוספים את הילדים בנקודת המפגש של הקייטנה, בשעה שנמסרת בתדריך של היום הראשון. המלווה הישראלי נשאר עם הקבוצה עד שכל הילדים נאספו."],
+  ["ילד שלא רוצה להמשיך — אפשר לצאת מהקייטנה באמצע השבוע? יש החזר?", "אפשר לצאת בכל שלב — אף אחד לא מכריח ילד לגלוש. החזר על ימים שלא נוצלו אינו אוטומטי, כי הקבוצה והמדריך כבר שובצו; במקרים חריגים (מחלה, פציעה) נציג בודק לגופו."],
+  ["לא נרשמו מספיק ילדים לקבוצת גיל — הקייטנה מתבטלת? מודיעים מראש?", "הקייטנה נפתחת בשבועות ובאתרים שמסומנים על ההצעה, ואם בקבוצת גיל מסוימת אין מספיק נרשמים — מודיעים מראש לפני היציאה, ומציעים חלופה (מיזוג לקבוצה סמוכה בגיל, או שיעורים עם מדריך מקומי) או החזר של תוספת הקייטנה."],
+  ["הורים יכולים לבוא לראות את הילדים באמצע היום / להצטרף ליום הראשון?", "בהחלט — ההורים מוזמנים להגיע לנקודת המפגש בבוקר וללוות את הפרידה, ובהפסקת הצהריים אפשר לקפוץ לראות. הצטרפות להדרכה עצמה על המסלול אינה אפשרית, כדי שהקבוצה תתקדם בקצב שלה."],
+  ["ילדים בחדר נפרד — מתומחר כחדר רגיל? מאיזה גיל?", "חדר נפרד לילדים מתומחר לפי הרכב החדר (חדר לשניים, לשלושה), כמו כל חדר. המלונות מקבלים ילדים בחדר משלהם בדרך כלל מגיל 12 ומעלה, וגם אז מבקשים שהחדר יהיה סמוך לחדר ההורים — נציג יאמת מול המלון."],
+  ["אלכוהול לנוער — מה אומרים להורים?", "החוק המקומי הוא הקובע: באוסטריה בירה ויין מותרים מגיל 16 ואלכוהול חריף מגיל 18; בצרפת, באנדורה ובבולגריה — 18 לכל אלכוהול. מדריכי הקייטנה והמלווים לא מגישים אלכוהול לנוער בשום מצב, וההשגחה בערב היא של ההורים."],
+  ["ילד לא-גולש בגיל 5–12 — יש מסגרת/שמרטפות בתשלום דרך המלון?", "מסגרת מאורגנת לילד שלא גולש אין אצלנו, ורוב המלונות באלפים לא מציעים שמרטפות; במועדוני השמש ובבלמברה יש מועדון ילדים בשעות מסוימות. נציג יבדוק מה אפשרי במלון שתבחרו."],
+ ]],
+ ["מתחילים, ציוד וסקי-פס", [
+  ["מדריך פרטי בעברית — קיים?", "מדריכים פרטיים בבתי הספר לסקי מלמדים באנגלית (ולפעמים ברוסית), ובחלק מהאתרים יש מדריכים דוברי עברית לפי זמינות — לא מובטח. נציג יבדוק ביעד ובתאריך שלכם, וישריין מראש אם יש."],
+  ["יום חופשי מגלישה — מה ממליצים?", "יום חופשי טוב לגוף ולמשפחה: בריכה או ספא במלון, סיבוב בעיירה ובחנויות, עלייה במעלית להולכי רגל למסעדה על ההר, מזחלות או הליכה בשלג — ובחלק מהיעדים טיול יום לעיר קרובה. הנציג ביעד ישמח להמליץ לפי מזג האוויר."],
+  ["מתי ואיפה מקבלים את הציוד?", "את הציוד מקבלים בחנות ההשכרה באתר ביום ההגעה אחרי הצ'ק-אין (או בבוקר הראשון, לפי שעת ההגעה) — הנציג לוקח את כולם יחד, מודדים מגפיים ומכוונים מגלשיים במקום, כך שביום הראשון גולשים מהבוקר."],
+  ["הטסת מגלשיים/בורד משלך — איך ומה המבנה של העלות?", "ציוד סקי טס כמזוודה מיוחדת: חברות התעופה גובות תוספת קבועה לכל כיוון, ובחלק מהטיסות שלנו זה כלול בכבודה — תלוי בחברה של אותה יציאה. צריך להירשם מראש. נציג יגיד את התנאי ליציאה שלכם."],
+  ["מגפיים לרגל רחבה / מידה לא מתאימה — מחליפים בלי עלות?", "כן — אם המגפיים לוחצים או לא נוחים, חוזרים לחנות ההשכרה ומחליפים בלי עלות, וזה נכון לכל השבוע. לרגל רחבה יש דגמים מתאימים; אומרים את זה במדידה."],
+  ["סקי-פס ליום נוסף / יום פחות — אפשר, ואיך זה מתומחר?", "הסקי פס בחבילה הוא לימי הגלישה של החבילה. יום נוסף (למשל ביום ההגעה) קונים בקופת המעליות במחיר המקומי ליום; יום פחות בדרך כלל לא מוזל — הכרטיס הוא מוצר של האתר. בבולגריה, שם הסקי פס נרכש בנפרד, בוחרים מראש כמה ימים."],
+  ["מעליות בלילה / גלישת לילה — באילו אתרים שלנו?", "גלישת לילה קיימת בחלק מהאתרים בימים קבועים בשבוע על מסלול מואר אחד או שניים — למשל בבנסקו ובחלק מאתרי אוסטריה. זה לא כלול בסקי פס הרגיל ונקנה במקום. פירוט לפי אתר מופיע בדף היעד; נציג יאמת לתאריך שלכם."],
+  ["תורים במעליות — מה הטיפ ללקוחות?", "העומס הגדול הוא בשבועות החופשות האירופיות (פברואר) ובין 9:30 ל-11:00 בבוקר. הטיפ: לצאת עם פתיחת המעליות, לאכול צהריים מוקדם או מאוחר, ולנצל את המעליות הצדדיות — הקייטנה ובתי הספר לסקי בדרך כלל עם תור מהיר משלהם."],
+  ["מעליות נסגרות בגלב רוח — כמה זה נפוץ, ומה עם הסקי פס?", "סגירת מעליות בגלל רוח קורה, בעיקר במעליות הגבוהות והחשופות, ובדרך כלל לכמה שעות ולא ליום שלם — המסלולים הנמוכים ממשיכים לעבוד. הסקי פס לא מוחזר על יום כזה, כי האתר מגדיר את זה כפעילות חלקית. יום שלם סגור הוא נדיר."],
+  ["קרוס-קאנטרי — באילו יעדים, ואפשר להזמין דרככם?", "מסלולי קרוס-קאנטרי (לנגלאוף) יש כמעט בכל האתרים באוסטריה ובצרפת, בעמק ליד העיירה, והשימוש בהם חינם או בתשלום סמלי. ציוד לכך שוכרים בחנות במקום; דרכנו לא מזמינים אותו מראש. הנציג ביעד יכוון."],
+  ["חנות ציוד/בגדים בארץ שאתם ממליצים?", "אנחנו לא ממליצים על חנות ספציפית. מה שכן: את בגדי הסקי כדאי לקנות בארץ (מעיל, מכנסיים, כפפות, שכבות תרמיות), ואת הציוד עצמו — מגלשיים, מגפיים, קסדה — לשכור באתר, שם הוא מותאם למידה ולתנאים."],
+ ]],
+ ["שירות וכללי", [
+  ["איך הלקוח יוצר קשר עם הנציג ביעד?", "לפני היציאה מקבלים בדף הנסיעה את מספר הוואטסאפ של הנציג ביעד, והוא גם פוגש אתכם בשדה ובהסעה. לאורך השבוע הוא זמין בוואטסאפ ובטלפון, וברוב היעדים גם בשעות קבועות בלובי."],
+  ["קבוצת וואטסאפ של היציאה — מתי נפתחת, מי מנהל, מה נשלח?", "קבוצת וואטסאפ ליציאה נפתחת ימים ספורים לפני הטיסה ומנוהלת על ידי הנציג של אותה יציאה. בקבוצה: שעות התייצבות והסעה, נקודת המפגש של הקייטנה, עדכוני מזג אוויר ומסלולים, ושעת האיסוף בחזור. אפשר לבחור לא להצטרף ולקבל את העדכונים ישירות."],
+  ["ניוזלטר / איך שומעים על דילים של הרגע האחרון?", "דילים ומבצעים מתפרסמים באתר פינגווין ובעמודים שלנו ברשתות, ומי שהשאיר פרטים אצל נציג מקבל עדכון ישיר כשנפתח משהו בתאריך שביקש. ניוזלטר קבוע — נציג יצרף אתכם לרשימת התפוצה."],
+  ["מה מדברים ביעדים ומסתדרים באנגלית?", "באוסטריה — גרמנית, ובאתרי הסקי כולם מדברים אנגלית טובה. בצרפת — צרפתית, ובבתי המלון ובחנויות ההשכרה מסתדרים באנגלית; באנדורה — קטלאנית וספרדית, אנגלית בסיסית בתיירות; בבולגריה — בולגרית, ובבנסקו אנגלית ורוסית נפוצות. ובכל יעד יש נציג ישראלי שלנו."],
+  ["כספומטים ביעד — יש בכפרים? מה לקחת?", "בכל עיירת סקי יש כספומטים ובנקים, ומשלמים כמעט בכל מקום בכרטיס. כדאי להחזיק קצת מזומן במטבע המקומי (יורו, ובבולגריה לב) למס העירייה, לטיפים ולקיוסק על ההר. סכומים — לפי הרגלי ההוצאה שלכם; אין צורך במזומן גדול."],
+  ["עוגה / שולחן מיוחד ליום הולדת במלון — מבקשים דרככם? בתשלום?", "בהחלט — כתבו לנציג לפני היציאה או לנציג ביעד, והוא מבקש מהמלון עוגה או שולחן חגיגי בארוחת הערב. עוגה מוזמנת היא בדרך כלל בתשלום מול המלון; שולחן חגיגי בלי עלות. המלון מאשר לפי יכולתו."],
+  ["כיסא גלגלים / מוגבלות ניידות — מי עוזר במעליות ובהסעות?", "ההסעות שלנו הן אוטובוסים רגילים בלי מעלון, ולכן נוסע בכיסא גלגלים צריך להיות מסוגל לעלות בעזרה. במלון ובמעליות ההר העזרה תלויה במקום — חלק מהאתרים מציעים סקי מותאם עם מדריך ייעודי בתיאום מראש. זה מקרה לנציג: השאירו פרטים ונבנה את זה יחד."],
+  ["תיקון: 'פעוטון בקלאב דו סוליי ובלמברה' — להשאיר את בלמברה?", "הצעה: להשאיר את שניהם — 'מסגרת לתינוקות (פעוטון) קיימת במועדוני קלאב דו סוליי ובלמברה, בכפוף לאישור המועדון'. אם בלמברה לא נכון — כתוב 'להוריד'."],
+ ]],
+];
+const IDS = []; Q.forEach(([, qs]) => qs.forEach(() => IDS.push('q' + String(IDS.length + 1).padStart(2, '0'))));
+const state = {}; // id -> {status, text, note}
+let filter = 'all';
+let dbRef = null;
+const KEY = 'pingi-q3';
+
+function render() {
+  const list = document.getElementById('list');
+  const frag = document.createDocumentFragment();
+  let n = 0;
+  for (const [title, qs] of Q) {
+    const h = document.createElement('h2'); h.textContent = title; frag.appendChild(h);
+    let shown = 0;
+    for (const [q, proposal] of qs) {
+      const id = IDS[n]; const num = n + 1; n++;
+      const st = state[id] || { status: 'open', text: proposal, note: '' };
+      if (filter !== 'all' && (filter === 'open' ? st.status !== 'open' : st.status !== filter)) continue;
+      shown++;
+      const card = document.createElement('article'); card.className = 'q'; card.dataset.status = st.status; card.dataset.id = id;
+      card.innerHTML = `
+        <div class="qh"><span class="num">${num}.</span><p class="qt"></p><span class="pill ${st.status}">${label(st.status)}</span></div>
+        <p class="hint">${st.status === 'open' ? 'הצעת פינגי — לאשר, לערוך, או לדלג' : st.status === 'approved' ? 'אושר כמו שהוא' : st.status === 'rewritten' ? 'הנוסח שלך נשמר' : 'דילגת — אפשר לחזור לזה מאוחר יותר'}</p>
+        <label class="lab" for="t-${id}">תשובה</label>
+        <textarea id="t-${id}"></textarea>
+        <div class="note"><label class="lab" for="n-${id}">למה דילגת? (לא חובה)</label><input class="why" id="n-${id}" placeholder="אין לי תשובה כרגע / צריך לברר / לא רלוונטי"></div>
+        <div class="acts">
+          <button class="ok" data-act="approved">אשר את ההצעה</button>
+          <button class="ed" data-act="rewritten">שמור את הנוסח שלי</button>
+          <button class="sk" data-act="skipped">דלג</button>
+          ${st.status !== 'open' ? '<button class="undo" data-act="open">פתח מחדש</button>' : ''}
+        </div>`;
+      card.querySelector('.qt').textContent = q;
+      card.querySelector('textarea').value = st.text;
+      card.querySelector('.why').value = st.note || '';
+      frag.appendChild(card);
+    }
+    if (!shown) h.remove();
+  }
+  list.replaceChildren(frag);
+  const c = { approved: 0, rewritten: 0, skipped: 0 };
+  for (const id of IDS) { const s = (state[id] || {}).status; if (c[s] != null) c[s]++; }
+  const done = c.approved + c.rewritten + c.skipped;
+  document.getElementById('count').textContent = done + ' / ' + IDS.length;
+  document.getElementById('tOk').style.width = (100 * c.approved / IDS.length) + '%';
+  document.getElementById('tEd').style.width = (100 * c.rewritten / IDS.length) + '%';
+  document.getElementById('tSk').style.width = (100 * c.skipped / IDS.length) + '%';
+  document.getElementById('done').hidden = done < IDS.length;
+}
+function label(s) { return { open: 'פתוח', approved: 'אושר', rewritten: 'שוכתב', skipped: 'דילגתי' }[s] || s; }
+
+document.getElementById('list').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-act]'); if (!btn) return;
+  const card = btn.closest('.q'); const id = card.dataset.id;
+  const text = card.querySelector('textarea').value.trim();
+  const note = card.querySelector('.why').value.trim();
+  const status = btn.dataset.act;
+  const rec = { status, text, note, updatedAt: new Date().toISOString() };
+  if (status === 'skipped' && !note) { card.dataset.status = 'skipped'; card.querySelector('.why').focus(); }
+  state[id] = rec;
+  render();
+  await save(id, rec);
+});
+document.querySelector('.filters').addEventListener('click', e => {
+  const b = e.target.closest('button[data-f]'); if (!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+});
+
+function setSync(msg) { document.getElementById('sync').textContent = msg; }
+async function save(id, rec) {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  if (!dbRef) { setSync('נשמר בדפדפן הזה בלבד (אין חיבור לשמירה משותפת) — כשתסיים, שלח לי צילום מסך או הודעה.'); return; }
+  try { await dbRef.doc('answers/' + id).set(rec); setSync('נשמר ✓ ' + new Date().toLocaleTimeString('he-IL')); }
+  catch (e) { setSync('השמירה נכשלה (' + (e && e.code || 'שגיאה') + ') — נסה שוב בעוד רגע'); }
+}
+
+(function init() {
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || '{}'); Object.assign(state, saved); } catch (e) {}
+  render();
+  claude.use('db').then(db => {
+    if (!db) { setSync('נשמר בדפדפן הזה בלבד — כשתסיים, ספר לי ואקרא מהמסך.'); return; }
+    dbRef = db;
+    db.collection('answers').onSnapshot(snap => {
+      snap.docs.forEach(d => { if (d.exists) state[d.id] = d.data(); });
+      render();
+      setSync('מחובר — כל לחיצה נשמרת מיד, ואני קורא את התשובות מכאן.');
+    }, err => setSync('אין חיבור לשמירה המשותפת (' + err.code + ') — נשמר בדפדפן הזה בלבד.'));
+  }).catch(() => setSync('נשמר בדפדפן הזה בלבד.'));
+})();
+</script>

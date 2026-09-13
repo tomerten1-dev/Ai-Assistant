@@ -3,6 +3,10 @@
 // layer failed, phrasing never calls a model, and a broken model degrades
 // gracefully instead of breaking the bot.
 // Run: node tests/test-orchestration.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.ANTHROPIC_API_KEY = 'sk-ant-test-stub-not-real';
 // a placeholder value, not a delete: loadEnv() would otherwise pull the real
 // key out of .env and this suite would bill actual API calls
@@ -19,12 +23,15 @@ let callCount = 0;
 // A third job joined them (24/08): choosing WHICH approved answer a question
 // deserves. It is counted apart, because it is not understanding and not
 // wording — and because it must not fire on a bare "כן".
-let slotCalls = 0, phraseCalls = 0, routeCalls = 0;
+// A fourth (06/09): the reply editor, which turns the assembled lines of a
+// no-offers turn into one written answer. Counted apart; never on a chip.
+let slotCalls = 0, phraseCalls = 0, routeCalls = 0, composeCalls = 0;
 require.cache[claudePath].exports = {
   ...real,
   callClaude: async ({ system }) => {
     callCount++;
     if (/מנתב שאלות/.test(system || '')) routeCalls++;
+    else if (/אתה עורך/.test(system || '')) composeCalls++;
     else if (/מנסח|נציג של פינגווין/.test(system || '')) phraseCalls++;
     else slotCalls++;
     if (!scripted.length) throw new Error('stub exhausted');
@@ -39,7 +46,7 @@ function t(name, cond, detail) {
   if (cond) { pass++; console.log('  ✓', name); }
   else { fail++; console.log('  ✗', name, detail ? '— ' + detail : ''); }
 }
-const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; routeCalls = 0; };
+const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCalls = 0; routeCalls = 0; composeCalls = 0; };
 
 (async () => {
   // Policy changed 24/08 (Tomer): the model reads every real message, because
@@ -49,17 +56,21 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
   console.log('[tokens] a real sentence is worth exactly one model call');
   reset(JSON.stringify({ slots: {}, ready_to_search: true }));
   const r1 = await handleChat({
-    messages: [{ role: 'user', content: 'זוג עם ילדים בני 5 ו-9, פברואר, בלי קייטנה' }],
+    // the destination is stated so the 30/08 gate is satisfied — this test is
+    // about how many model calls a real sentence costs, not about the gate
+    messages: [{ role: 'user', content: 'זוג עם ילדים בני 5 ו-9, פברואר באוסטריה, בלי קייטנה' }],
     slots: {},
   });
   t('one call to understand, one to phrase', slotCalls === 1 && phraseCalls === 1, 'slot=' + slotCalls + ' phrase=' + phraseCalls);
-  t('still produced offers', r1.cards.length === 3, 'cards=' + r1.cards.length);
+  t('still produced offers', r1.cards.length === 2, 'cards=' + r1.cards.length);
 
   console.log('[tokens] chip clicks and one-word answers are still free');
   reset();
   await handleChat({ messages: [{ role: 'user', content: 'ינואר' }], slots: { adults: 2, no_children: true } });
   await handleChat({ messages: [{ role: 'user', content: 'כן' }], slots: { adults: 2, children_ages: [7], month: 1, _lastQuestion: 'kids_club' } });
   await handleChat({ messages: [{ role: 'user', content: '4' }], slots: { _lastQuestion: 'adults' } });
+  // a bare number, a yes, a month: understood for free AND not worth editing
+  t('chip-like turns are never sent to the reply editor', composeCalls === 0, 'compose calls=' + composeCalls);
   await handleChat({ messages: [{ role: 'user', content: 'חשוב לי ספא' }], slots: { adults: 2, no_children: true, month: 1 } });
   // phrasing of the offers they produce, never a second look at the message.
   // Each of these is understood for free; the calls counted here are the
@@ -68,7 +79,7 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
 
   console.log('\n[tokens] only an unrecognised phrasing escalates to the model');
   reset(JSON.stringify({
-    slots: { adults: 2, no_children: true, month: 1 },
+    slots: { adults: 2, no_children: true, month: 1, country: 'austria' },
     reply_he: '', ready_to_search: true,
   }));
   const r2 = await handleChat({
@@ -84,7 +95,12 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
 
   console.log('\n[safety] the model never sees inventory, so cards come from data only');
   t('cards present', r2.cards.length > 0);
-  t('every card is a real workbook hotel', r2.cards.every(c => c.hotel && c.date && /^₪+$/.test(c.price_range)));
+  // 30/08: a price band is now present only for a hotel Tomer has actually
+  // classified. It used to fall back to pricing.json's TODO default for the 32
+  // of 40 hotels that have none, and that placeholder was then reasoned from.
+  // What this test is really pinning is that a band, when shown, is real.
+  t('every card is a real workbook hotel',
+    r2.cards.every(c => c.hotel && c.date && (c.price_range == null || /^₪+$/.test(c.price_range))));
 
   console.log('\n[resilience] a broken model degrades to the free layer, not to an error');
   reset('this is not json at all');
@@ -106,14 +122,23 @@ const reset = (...s) => { scripted = s; callCount = 0; slotCalls = 0; phraseCall
   // size the offers cannot be right yet.
   t('a party size alone holds the offers back', r4.cards.length === 0, 'cards=' + r4.cards.length);
   t('and asks for what is missing', /[?]/.test(r4.reply_he), r4.reply_he);
+  // Policy changed 30/08 (Tomer, after using "סאני"): the destination joined
+  // the essentials. Who, when and where decide which packages qualify; the
+  // airport only filters them, so it is still gathered as chips afterwards.
   reset();
-  const r5 = await handleChat({
+  const r4b = await handleChat({
     messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר' }], slots: {},
   });
+  t('who and when without where holds the offers', r4b.cards.length === 0, 'cards=' + r4b.cards.length);
+  t('and asks where', /יעד|אוסטריה/.test(r4b.reply_he), r4b.reply_he);
+
+  reset();
+  const r5 = await handleChat({
+    messages: [{ role: 'user', content: 'זוג בלי ילדים, ינואר באוסטריה' }], slots: {},
+  });
   t('essentials complete -> offers, no question at all',
-    r5.cards.length === 3 && !/[?]/.test(r5.reply_he), r5.reply_he);
+    r5.cards.length === 2 && !/[?]/.test(r5.reply_he), r5.reply_he);
   t('airport still gathered — as chips', (r5.chips || []).some(c => c.includes('חיפה')));
-  t('destination gathered as chips too', (r5.chips || []).some(c => c === 'אוסטריה'));
   t('pending parameter reported', r5.pending_parameter === 'airport');
 
   console.log('\n[cap] the bot never interrogates past MAX_QUESTIONS');

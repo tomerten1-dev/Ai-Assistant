@@ -1,0 +1,16 @@
+# Line endings. Without this, every file Git touches on Windows gets CRLF in
+# the working copy and LF in the repo — which is fine until someone opens the
+# project on another machine, and then the whole tree shows as modified and
+# every diff is unreadable. Normalise in the repo, leave the checkout alone.
+* text=auto eol=lf
+
+# Binary — never normalise, never diff as text
+*.png binary
+*.jpg binary
+*.xlsm binary
+*.xlsx binary
+
+# Generated or huge: keep them out of code review diffs
+tests/question-bank.json linguist-generated=true
+tests/golden.json        linguist-generated=true
+data/availability.json   linguist-generated=true

@@ -8,6 +8,10 @@
 // The model is disabled here — this is about what the deterministic path
 // delivers to the customer.
 // Run: node tests/test-end-to-end.js
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
 
@@ -159,8 +163,10 @@ t('naming one child does not delete the others', () => {
 t('a question whose answer changes nothing is not asked', () => {
   // a 16-year-old has no camp group in any week, so "תרצו קייטנה?" is a
   // formality that costs the customer a turn
+  // the destination is stated so the 30/08 gate is satisfied — what this test
+  // is about is the camp question, not the gate
   return handleChat({
-    messages: [{ role: 'user', content: 'זוג עם ילד בן 16, מרץ' }], slots: {},
+    messages: [{ role: 'user', content: 'זוג עם ילד בן 16, מרץ באוסטריה' }], slots: {},
   }).then(out => {
     assert.ok(!/קייטנ/.test(out.reply_he), 'asked about a camp anyway: ' + out.reply_he);
     assert.ok(out.cards.length, 'and it should have gone straight to offers');
@@ -239,10 +245,45 @@ t('gaps stay reachable as chips after being asked once', () => {
 
 
 t('"יקר לי" produces something genuinely cheaper, and says so', () => {
+  // Set up the objection deterministically rather than hoping a phrasing
+  // happens to land on an expensive first page: the customer has been shown
+  // the ₪₪₪₪ band and says it is too much. 30/08: this used to run against
+  // Austria, where the "spread" came from pricing.json's TODO default rather
+  // than from any real classification — the comparison was between one
+  // classified hotel and 32 placeholders.
+  const ask = 'זוג בלי ילדים, פברואר בבולגריה';
+  return handleChat({ messages: [{ role: 'user', content: ask }], slots: {} })
+    .then(first => handleChat({
+      messages: [
+        { role: 'user', content: ask },
+        { role: 'assistant', content: first.reply_he },
+        { role: 'user', content: 'יקר לי' },
+      ],
+      slots: { ...first.slots, shown_price_min: 4 },
+    }))
+    .then(out => {
+      assert.ok(out.cards.length, 'no cards after the objection');
+      const bands = out.cards.map(c => (c.price_range || '').length).filter(n => n > 0);
+      assert.ok(bands.length, 'no classified band to compare at all');
+      const now = Math.min(...bands);
+      assert.ok(now < 4, `not cheaper: floor was 4, now ${now}`);
+      assert.ok(/יש גם את ההצעה הזו/.test(out.reply_he), out.reply_he);
+      // the dearest card must not lead when we have just said "cheaper"
+      assert.strictEqual((out.cards[0].price_range || '').length, now, 'a dearer option led the list');
+    });
+});
+
+t('with no classified price band, the objection is never answered with a price claim', () => {
+  // 30/08: a band exists only for a hotel Tomer has actually classified. The
+  // three things the bot must never do over unclassified offers are claim a
+  // band is marked on each of them, claim these are the best prices we have,
+  // and quote a number. Whether it can rank anything depends on what the turn
+  // ends up showing, so the assertions are about what it must NOT say.
   const ask = 'זוג בלי ילדים, פברואר באוסטריה';
   return handleChat({ messages: [{ role: 'user', content: ask }], slots: {} })
     .then(first => {
-      const shown = Math.min(...first.cards.map(c => c.price_range.length));
+      assert.ok(first.cards.every(c => !c.price_range),
+        'expected unclassified hotels in this scenario');
       return handleChat({
         messages: [
           { role: 'user', content: ask },
@@ -250,16 +291,31 @@ t('"יקר לי" produces something genuinely cheaper, and says so', () => {
           { role: 'user', content: 'יקר לי' },
         ],
         slots: first.slots,
-      }).then(out => ({ shown, out }));
+      });
     })
-    .then(({ shown, out }) => {
-      assert.ok(out.cards.length, 'no cards after the objection');
-      const now = Math.min(...out.cards.map(c => c.price_range.length));
-      assert.ok(now < shown, `not cheaper: was ${shown}, now ${now}`);
-      assert.ok(/יש גם את ההצעה הזו/.test(out.reply_he), out.reply_he);
-      // and the dearest card must not lead when we just said "cheaper"
-      assert.strictEqual(out.cards[0].price_range.length, now, 'a dearer option led the list');
+    .then(out => {
+      const anyBand = out.cards.some(c => c.price_range);
+      if (!anyBand) {
+        assert.ok(!/טווח המחיר מסומן על כל הצעה/.test(out.reply_he),
+          'claimed a band on offers that have none: ' + out.reply_he);
+        assert.ok(!/המחירים הטובים ביותר/.test(out.reply_he),
+          'claimed the best prices without comparing any: ' + out.reply_he);
+      }
+      assert.ok(!/[0-9]+ ?(₪|אירו|יורו)/.test(out.reply_he), 'quoted a number (red rule 3)');
+      // and the objection is acknowledged one way or another, never ignored
+      assert.ok(/מחיר|זול|תקציב|נציג/.test(out.reply_he), 'ignored "יקר לי": ' + out.reply_he);
     });
+});
+
+t('the engine says so plainly when it cannot rank any of the offers on price', () => {
+  const { SkiSearch } = require('../data/filter.js');
+  const engine = new SkiSearch();
+  const r = engine.search({ adults: 2, no_children: true, month: 2, country: 'austria',
+    price_objection: true });
+  const unclassified = r.candidates.every(c => !c.price_range);
+  if (!unclassified) return;              // classification changed; nothing to pin
+  assert.ok((r.notes || []).some(n => n.type === 'price_unranked'),
+    'no price_unranked note: ' + JSON.stringify(r.notes));
 });
 
 t('with nothing cheaper left, it says so rather than reshuffling', () => {
@@ -275,6 +331,164 @@ t('with nothing cheaper left, it says so rather than reshuffling', () => {
   })).then(out => {
     assert.ok(/המחירים הטובים ביותר/.test(out.reply_he), out.reply_he);
   });
+});
+
+/* "יקר לי" where the customer is looking, but not where they are not.
+   Tomer, 30/08, after Sunny widened its own search across every Eilat hotel:
+   the bot looks one step wider and says WHERE the cheaper band is. Before this,
+   "אלה המחירים הטובים ביותר שאנחנו יכולים להציע" was printed from inside the
+   customer's own filter — a claim about the whole company made from one
+   country, while Bulgaria sat a band below it, unmentioned. */
+t('"יקר לי" inside one country points at the cheaper country', () => {
+  const q = 'זוג בלי ילדים, פברואר בצרפת';
+  return handleChat({ messages: [{ role: 'user', content: q }], slots: {} })
+    .then(first => handleChat({
+      messages: [{ role: 'user', content: q }, { role: 'assistant', content: first.reply_he },
+        { role: 'user', content: 'יקר לי' }],
+      slots: { ...first.slots, shown_price_min: 3 },
+    })).then(out => {
+      assert.ok(/בטווח מחיר נמוך יותר/.test(out.reply_he), out.reply_he);
+      assert.ok(/בולגריה|אוסטריה/.test(out.reply_he), 'did not say where: ' + out.reply_he);
+      // it offers, it does not move them: the destination they chose still stands
+      assert.ok(out.cards.every(c => c.country === 'france'),
+        'silently moved the customer: ' + out.cards.map(c => c.country).join(','));
+      // and it must not also claim these are our best prices — that was the bug
+      assert.ok(!/המחירים הטובים ביותר/.test(out.reply_he),
+        'contradicted itself in the same breath: ' + out.reply_he);
+    });
+});
+
+t('RED RULE 3: the wider look still never quotes a number', () => {
+  const q = 'זוג בלי ילדים, פברואר בצרפת';
+  return handleChat({ messages: [{ role: 'user', content: q }], slots: {} })
+    .then(first => handleChat({
+      messages: [{ role: 'user', content: q }, { role: 'assistant', content: first.reply_he },
+        { role: 'user', content: 'יקר לי' }],
+      slots: { ...first.slots, shown_price_min: 3 },
+    })).then(out => {
+      assert.ok(!/\d{3,}/.test(out.reply_he.replace(/20\d\d/g, '')), 'quoted a price: ' + out.reply_he);
+      assert.ok(!/€|\$|יורו/.test(out.reply_he), out.reply_he);
+    });
+});
+
+t('a customer who ruled a country out is not sent there to save money', () => {
+  const q = 'זוג בלי ילדים, פברואר בצרפת, לא בולגריה';
+  return handleChat({ messages: [{ role: 'user', content: q }], slots: {} })
+    .then(first => handleChat({
+      messages: [{ role: 'user', content: q }, { role: 'assistant', content: first.reply_he },
+        { role: 'user', content: 'יקר לי' }],
+      slots: { ...first.slots, shown_price_min: 3 },
+    })).then(out => {
+      assert.ok(!/בבולגריה יש אפשרויות/.test(out.reply_he),
+        'offered the country they excluded: ' + out.reply_he);
+    });
+});
+
+/* ---- conversation defects found by the 30/08 test run ---- */
+
+t('offers already shown are never taken away', async () => {
+  // "אוסטריה או בולגריה למשפחה?" → three offers; then the customer added
+  // "2 מבוגרים וילד בן 7" and the offers vanished behind a camp question.
+  // Giving us MORE must never move the conversation backwards.
+  const messages = [{ role: 'user', content: 'אוסטריה או בולגריה למשפחה?' }];
+  const first = await handleChat({ messages, slots: {} });
+  assert.ok(first.cards.length, 'setup: expected offers on the comparison');
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: '2 מבוגרים וילד בן 7, פברואר' });
+  const second = await handleChat({ messages, slots: first.slots });
+  assert.ok(second.cards.length,
+    'the offers disappeared when the customer added detail: ' + second.reply_he);
+});
+
+t('the bot does not promise a rep will check what the card just answered', async () => {
+  const messages = [{ role: 'user', content: 'זוג בפברואר בבולגריה' }];
+  const first = await handleChat({ messages, slots: {} });
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: 'יש בריכה מחוממת?' });
+  const out = await handleChat({ messages, slots: first.slots });
+  const answered = out.cards.some(c => (c.facts_he || []).some(f => /^בריכה מחוממת: /.test(f)));
+  assert.ok(answered, 'setup: no card answered about a heated pool');
+  assert.ok(!/רשמתי לפניי: בריכה|אעביר את זה לנציג/.test(out.reply_he),
+    'said it would pass to a rep, above a card that answered: ' + out.reply_he);
+});
+
+t('an elliptical follow-up is understood from the previous turn', async () => {
+  // 89 of the 162 question-bank failures were messages of four words or fewer.
+  const messages = [{ role: 'user', content: 'מאיזה שדה יוצאים?' }];
+  const first = await handleChat({ messages, slots: {} });
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: 'רק מנתב"ג?' });
+  const out = await handleChat({ messages, slots: first.slots });
+  assert.ok(!/לא בטוח שהבנתי/.test(out.reply_he), out.reply_he);
+});
+
+t('a short question with a NEW subject is not dragged to the old topic', async () => {
+  // the guard on the rule above: "יש ספא?" then "יש חדר משפחתי?" used to be
+  // answered about the spa, which is worse than not answering at all
+  const messages = [{ role: 'user', content: 'יש ספא?' }];
+  const first = await handleChat({ messages, slots: {} });
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: 'יש חדר משפחתי?' });
+  const out = await handleChat({ messages, slots: first.slots });
+  assert.ok(!/סאונה|ג'קוזי|מרכז ספא/.test(out.reply_he),
+    'answered about the spa: ' + out.reply_he);
+});
+
+t('a buying signal gets the two booking routes, not another question', async () => {
+  const messages = [{ role: 'user', content: 'זוג בפברואר באוסטריה' }];
+  const first = await handleChat({ messages, slots: {} });
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: 'המשך להזמנה' });
+  const out = await handleChat({ messages, slots: first.slots });
+  assert.ok(/המשך להזמנה|תחזרו אליי/.test(out.reply_he),
+    'the hottest customer there is was asked to keep browsing: ' + out.reply_he);
+});
+
+t('"מה התאריכים בחנוכה?" is answered with the dates, not with a question', async () => {
+  const out = await handleChat({ messages: [{ role: 'user', content: 'מה התאריכים בחנוכה?' }], slots: {} });
+  assert.ok(/היציאות שלנו בחנוכה/.test(out.reply_he), out.reply_he);
+  assert.ok(/\d{1,2}\.\d{1,2}/.test(out.reply_he), 'no actual date: ' + out.reply_he);
+});
+
+t('a window we do not fly is answered plainly, with what we do fly', async () => {
+  const out = await handleChat({
+    messages: [{ role: 'user', content: 'יש לי את הילדים רק מ-22 עד 29 בדצמבר, יש חבילה בדיוק בתאריכים האלה?' }],
+    slots: {},
+  });
+  assert.ok(/אין לנו יציאה/.test(out.reply_he), out.reply_he);
+  assert.ok(/בדצמבר היציאות שלנו/.test(out.reply_he), 'said no and offered nothing: ' + out.reply_he);
+});
+
+t('a question the card answers is never called off-topic', async () => {
+  const messages = [{ role: 'user', content: 'זוג בפברואר באוסטריה' }];
+  const first = await handleChat({ messages, slots: {} });
+  messages.push({ role: 'assistant', content: first.reply_he }, { role: 'user', content: 'מקררון?' });
+  const out = await handleChat({ messages, slots: first.slots });
+  assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he),
+    'disowned a question its own card answered: ' + out.reply_he);
+  assert.ok(out.cards.some(c => (c.facts_he || []).some(f => /^בחדר: |מקרר או כספת/.test(f))),
+    'no card said anything about the room');
+});
+
+t('a per-hotel question with no offers yet gets a pointer, not "לא הבנתי"', async () => {
+  const out = await handleChat({ messages: [{ role: 'user', content: 'מקררון?' }], slots: {} });
+  assert.ok(!/לא בטוח שהבנתי/.test(out.reply_he), 'called a recognised question gibberish: ' + out.reply_he);
+  assert.ok(!/אני כאן בעיקר להתאמת/.test(out.reply_he), 'called it off topic: ' + out.reply_he);
+  assert.ok(/כתוב על ההצעה שלו/.test(out.reply_he), out.reply_he);
+});
+
+t('...but a genuinely off-topic message still gets the off-topic line', async () => {
+  const out = await handleChat({ messages: [{ role: 'user', content: 'תן לי מתכון לעוגה' }], slots: {} });
+  assert.ok(/אני כאן בעיקר להתאמת/.test(out.reply_he), out.reply_he);
+});
+
+t('the dates answer is reported as an answer, not as an ignored question', async () => {
+  // the question bank and `npm run review` both read debug.answered_by; without
+  // this the bot said "היציאות שלנו בחנוכה: 5.12" and the run scored it a miss
+  process.env.BANK_DEBUG = '1';
+  const out = await handleChat({ messages: [{ role: 'user', content: 'מה התאריכים בחנוכה?' }], slots: {} });
+  delete process.env.BANK_DEBUG;
+  assert.strictEqual((out.debug || {}).answered_by, 'dates', JSON.stringify(out.debug));
 });
 
 t('a reply ends by moving forward, not by asking', () => {
@@ -400,11 +614,22 @@ t('an ordinary message does not open the form', () => {
   }).then(out => assert.ok(!out.open_lead_form, 'opened the form unasked'));
 });
 
-t('the callback line never talks the customer out of leaving details', () => {
+// Tomer, 24/08: never talk someone out of leaving their details.
+// Tomer, 26/08: and never tell someone writing at 23:00 to call now.
+// So the invitation holds at every hour; only the "call now" is hour-dependent.
+t('the callback line always invites details, and suits the hour', () => {
+  const guidance = require('../server/guidance.js');
   return handleChat({ messages: [{ role: 'user', content: 'תחזרו אליי' }], slots: {} })
     .then(out => {
-      assert.ok(!/סגור/.test(out.reply_he), 'announced the office is closed: ' + out.reply_he);
-      assert.ok(/04-8557722/.test(out.reply_he), out.reply_he);
+      assert.ok(out.open_lead_form, 'the form did not open');
+      assert.ok(/שם וטלפון/.test(out.reply_he), 'stopped inviting details: ' + out.reply_he);
+      if (guidance.officeOpen()) {
+        assert.ok(/04-8557722/.test(out.reply_he), 'open, but no number: ' + out.reply_he);
+        assert.ok(!/סגור/.test(out.reply_he), 'open, but says closed: ' + out.reply_he);
+      } else {
+        assert.ok(/נפתח/.test(out.reply_he), 'closed, but does not say when it opens: ' + out.reply_he);
+        assert.ok(!/להתקשר|התקשרו/.test(out.reply_he), 'closed, but tells them to call: ' + out.reply_he);
+      }
     });
 });
 
@@ -475,8 +700,12 @@ t('naming two hotels is a comparison, not a filter', () => {
     slots: {},
   }).then(out => {
     assert.ok(out.cards.length > 1, 'locked onto one hotel');
-    assert.ok(/לא אדרג/.test(out.reply_he), 'ranked them: ' + out.reply_he);
-    assert.ok(!/הכי טוב/.test(out.reply_he), 'red rule 6: ' + out.reply_he);
+    // Policy changed 06/09 (Tomer, after Sunny): the two hotels are
+    // CHARACTERIZED from their pages — "אם חשוב לכם X — A" — never ranked,
+    // never priced. "לא אדרג" was the old refusal.
+    assert.ok(/במה הם שונים|אם חשוב לכם/.test(out.reply_he), 'not characterized: ' + out.reply_he);
+    assert.ok(!/לא אדרג|הכי טוב|הכי /.test(out.reply_he), 'ranked them: ' + out.reply_he);
+    assert.ok(!/[₪€$]|\d{3,} ?(?:יורו|שקל)/.test(out.reply_he), 'a price: ' + out.reply_he);
   });
 });
 
@@ -535,7 +764,7 @@ t('a bare answer is understood long after the question was asked', () => {
     });
 });
 
-t('the party question is put again once the children are known', () => {
+t('a family whose children are known is two parents until told otherwise (13/09)', () => {
   const msgs = [{ role: 'user', content: 'היי' }];
   let slots = {};
   return handleChat({ messages: msgs, slots }).then(a => {
@@ -545,8 +774,11 @@ t('the party question is put again once the children are known', () => {
     msgs.push({ role: 'user', content: 'משפחה עם ילדים בני 6 ו-9' });
     return handleChat({ messages: msgs, slots });
   }).then(b => {
-    assert.ok(/כמה תהיו/.test(b.reply_he),
-      'never asked again once it mattered: ' + b.reply_he);
+    // "כמה תהיו?" was asked again here — a family of 2+2 answering the most
+    // obvious question in the book. Now it is assumed, said once, correctable.
+    assert.strictEqual(b.slots.adults, 2);
+    assert.ok(/הנחתי 2 מבוגרים/.test(b.reply_he), b.reply_he);
+    assert.ok(!/כמה תהיו/.test(b.reply_he), 'still asked the party size: ' + b.reply_he);
   });
 });
 
@@ -751,11 +983,11 @@ for (const [q, want] of [
   ['כמה זמן ההעברה מהשדה למלון?', /ק"מ|מרחק/],
   ['כמה רחוק המלון מהמסלול?', /מרחק מהמעלית|על המסלול/],
   ['איזה חדר זה בדיוק?', /שם החדר|חדר במלון/],
-  ['אתה בוט או בן אדם?', /עוזר אוטומטי/],
+  ['אתה בוט או בן אדם?', /העוזר האוטומטי/],
   ['הייתי אצלכם בשנה שעברה והמלון היה מאכזב', /מצטער לשמוע/],
   ['יש הנחה אם מזמינים עכשיו?', /מזמין מוקדם|מחירים העדכניים/],
   ['אפשר מדריך פרטי בעברית?', /שיעור פרטי/],
-  ['למה אין?', /באמת פנוי|מלאי/],
+  ['למה אין?', /באמת אפשר להזמין|לא כל מלון/],
 ]) {
   t('answered rather than deflected: ' + q.slice(0, 26), () =>
     handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
@@ -900,7 +1132,7 @@ for (const [q, want] of [
   ['ואינטרנט?', /האינטרנט|ויי?פיי/],
   ['אני נוסע לבד, יש תוספת ליחיד?', /סינגל בחדר זוגי/],
   ['אפשר חדר מעשנים?', /עישון/],
-  ['לבן שלי יש אוטיזם, יש קייטנה שתתאים?', /נציג יענה|יבדוק מול המדריכים/],
+  ['לבן שלי יש אוטיזם, יש קייטנה שתתאים?', /נציג אנושי|יבדוק מול צוות הקייטנה/],
   ['זה לא עונה לי', /מה לשנות/],
   ['אפשר לשריין עכשיו ולשלם אחר כך?', /מקדמה|חיוב/],
   ['כמה מטרים החדר?', /שם החדר|גודל/],
@@ -997,9 +1229,12 @@ t('the season we do sell raises nothing', () =>
   handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר 2027' }], slots: {} })
     .then(out => assert.ok(!/מוכרים כרגע את עונת/.test(out.reply_he), out.reply_he)));
 
-t('a brand we do not sell, named in English', () =>
+// Offline (no model) an English message gets the English sentence — a Hebrew
+// refusal to an English speaker helped nobody. With a model the message is
+// translated in and the refusal translated out (tests/test-translate.js).
+t('a brand we do not sell, named in English — offline, the English sentence; the parse is kept', () =>
   handleChat({ messages: [{ role: 'user', content: 'do you have the Kempinski in Bansko?' }], slots: {} })
-    .then(out => assert.ok(/לא מוכרים/.test(out.reply_he), out.reply_he)));
+    .then(out => { assert.ok(/^Hi! I'm Pingwin/.test(out.reply_he), out.reply_he); assert.equal(out.slots.destination, 'Bansko'); }));
 
 t('"תפסיק לשלוח לי הצעות" stops', () =>
   handleChat({ messages: [{ role: 'user', content: 'תפסיק לשלוח לי הצעות' }], slots: {} })
@@ -1009,7 +1244,7 @@ for (const [q, want] of [
   ['אפשר לשלוח לי את זה למייל?', /נציג ישלח|שם וטלפון/],
   ['אם אני משאיר פרטים זה מחייב אותי במשהו?', /לא מחייבת/],
   ['הקייטנה כלולה במחיר?', /אינה כלולה במחיר/],
-  ['ילד בן 13, הוא בקייטנה או עם המבוגרים?', /4–13|נוער/],
+  ['ילד בן 13, הוא בקייטנה או עם המבוגרים?', /4–14|נוער/],
   ['אפשר חצי שבוע בבנסקו וחצי בבורובץ?', /מלון אחד ליציאה/],
   ['אפשר לקחת מגלשיים משלי בטיסה?', /ציוד|מזוודה|כבודה/],
   ['מתי אפשר להיכנס לחדר?', /צ'ק אין|כניסה/],
@@ -1028,8 +1263,9 @@ for (const [q, want] of [
 /* ---- Tomer's answers to the eighteen open claims (24/08) ---- */
 for (const [q, want] of [
   ['אנחנו גולשי סנובורד בלבד, יש אתרים שמתאימים?', /כל האתרים שלנו מתאימים/],
-  ['ילד בן 14, יש לו קייטנה?', /מגיל 14 אין קייטנה/],
-  ['יש סקי לילה?', /לא מופיע סקי לילה/],
+  // Tomer, 26/08 (questionnaire q4): the 6-13 group takes children up to 14
+  ['ילד בן 14, יש לו קייטנה?', /בן 13 או 14 נכנס|מגיל 15 אין קייטנה/],
+  ['יש סקי לילה?', /סקי לילה.*(בנסקו|בורובץ|פאס דה לה קאסה)/s],   // q25: the approved table now says where
   ['אפשר חצי שבוע בבנסקו וחצי בבורובץ?', /אינו אפשרי/],
   ['מה עם חליפת סקי לילדים?', /חליפת סקי במתנה|כלולה במחיר/],
   ['אפשר מדריך פרטי בעברית?', /מדריך מקומי ובאנגלית/],
@@ -1118,9 +1354,9 @@ t('a single offer is not called "one of them"', () => {
 });
 
 for (const [q, want] of [
-  ['רוצים העברות פרטיות משדה התעופה', /הסעה פרטית|הסעות בחבילה/],
+  ['רוצים העברות פרטיות משדה התעופה', /ההסעות בחבילה|הסעה משותפת|לקוחות פינגווין בלבד/],
   ['אפשר חדרים קרובים זה לזה?', /בקשה מהמלון/],
-  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /שינוי שם|חברת התעופה/],
+  ['אפשר לשנות את השם של אחד הנוסעים אחרי ההזמנה?', /החלפת נוסע|שינוי שם/],  // wording per the terms, Tomer 26/08
 ]) {
   t('answered rather than deflected: ' + q.slice(0, 26), () =>
     handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {
@@ -1164,7 +1400,7 @@ t('a requirement beside an answered question still gets its word', () =>
 
 // "דצמבר או ינואר" — both months heard; the second is the first fallback.
 t('"דצמבר או ינואר" falls back to the second month, and says so', () =>
-  handleChat({ messages: [{ role: 'user', content: 'אנחנו 6 חברים רוצים סקי בדצמבר או ינואר' }], slots: {} })
+  handleChat({ messages: [{ role: 'user', content: 'אנחנו 6 חברים רוצים סקי בדצמבר או ינואר בבולגריה' }], slots: {} })
     .then(out => {
       assert.equal(out.slots.month, 12);
       assert.equal(out.slots.month_alt, 1);
@@ -1234,7 +1470,7 @@ t('a policy question with nothing known gets no arbitrary hotels', () =>
     }));
 
 t('the same question WITH trip details keeps the offers', () =>
-  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר, מה מדיניות הביטול?' }], slots: {} })
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה, מה מדיניות הביטול?' }], slots: {} })
     .then(out => {
       assert.ok(out.cards.length, 'no cards');
       assert.ok(/דמי הביטול/.test(out.reply_he), out.reply_he);
@@ -1325,13 +1561,22 @@ t('a comparison blocked by the month keeps both destinations', () =>
 
 // "מה יותר משתלם מבחינת X" was intercepted by whichever FAQ mentioned X and
 // answered with a definition instead of offers.
-t('a value question gets sorted offers, not a definition', () =>
-  handleChat({ messages: [{ role: 'user', content: 'מה יותר משתלם מבחינת מלון קרוב למסלולים והשכרת ציוד?' }], slots: {} })
-    .then(out => {
-      assert.ok(out.cards.length, 'no offers');
-      assert.ok(/סידרתי לפי מה שביקשתם/.test(out.reply_he), out.reply_he);
-      assert.ok(!/המרחק מהמעלית מופיע על כל הצעה/.test(out.reply_he), 'gave the definition: ' + out.reply_he);
-    }));
+// A value question from someone we know nothing about buys one question under
+// the 30/08 gate — and then the OFFERS, sorted for what they asked about.
+// What it must never get is the FAQ definition instead of a list.
+t('a value question gets sorted offers, not a definition', async () => {
+  const q = 'מה יותר משתלם מבחינת מלון קרוב למסלולים והשכרת ציוד?';
+  const messages = [{ role: 'user', content: q }];
+  const first = await handleChat({ messages, slots: {} });
+  assert.ok(!/המרחק מהמעלית מופיע על כל הצעה/.test(first.reply_he),
+    'gave the definition: ' + first.reply_he);
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: 'זוג בפברואר באוסטריה' });
+  const out = await handleChat({ messages, slots: first.slots });
+  assert.ok(out.cards.length, 'no offers');
+  assert.ok(/סידרתי לפי מה שביקשתם/.test(out.reply_he), out.reply_he);
+  assert.ok(!/המרחק מהמעלית מופיע על כל הצעה/.test(out.reply_he), 'gave the definition: ' + out.reply_he);
+});
 
 // A Sabbath-observing family had their kosher question answered and never
 // heard that Saturday departures had been filtered out for them.
@@ -1370,7 +1615,7 @@ t('ski lessons for children are not "activities off the slopes"', () =>
 // exact one is. We were obeying only the first, and every value question in
 // the exam ended with "never said the price would be checked".
 t('a money question hears where the price lives', () =>
-  handleChat({ messages: [{ role: 'user', content: 'היי מחפש חופשת סקי הכי זולה שאפשר לזוג בינואר 2027' }], slots: {} })
+  handleChat({ messages: [{ role: 'user', content: 'היי מחפש חופשת סקי הכי זולה שאפשר לזוג בינואר 2027 בבולגריה' }], slots: {} })
     .then(out => {
       assert.ok(/מסך ההזמנה|המחיר המדויק/.test(out.reply_he), out.reply_he);
       assert.ok(!/\d{3,}/.test(out.reply_he.replace(/20\d\d/g, '')), 'quoted a number');
@@ -1389,13 +1634,50 @@ t('a party size alone holds the offers and asks when', () =>
       assert.ok(/מתי|חודש/.test(out.reply_he), out.reply_he);
     }));
 
-t('party plus month is enough — offers appear', () =>
+/* The gate, as Tomer redefined it on 30/08 after using Isrotel's "סאני":
+   understand enough FIRST, then offer. "Enough" is who, when and where — plus
+   the Hebrew camp when there are children of camp age. Party and month alone
+   used to be enough, and produced three hotels in three different countries. */
+t('party plus month is NOT enough — the destination is asked first', () =>
   handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'offered before knowing where: ' + out.reply_he);
+      assert.ok(/יעד|אוסטריה|צרפת|אנדורה|בולגריה/.test(out.reply_he), out.reply_he);
+    }));
+
+t('party plus month plus destination opens the gate', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה' }], slots: {} })
     .then(out => assert.ok(out.cards.length, 'held offers although it knew enough')));
 
-t('an explicit "show me" overrides the gate', () =>
-  handleChat({ messages: [{ role: 'user', content: 'תראה לי מה יש' }], slots: {} })
-    .then(out => assert.ok(out.cards.length, 'refused to show when asked to show')));
+t('"לא משנה" on the destination is a real answer and opens the gate too', async () => {
+  const messages = [{ role: 'user', content: 'זוג בפברואר' }];
+  const first = await handleChat({ messages, slots: {} });
+  messages.push({ role: 'assistant', content: first.reply_he },
+    { role: 'user', content: 'לא משנה' });
+  const out = await handleChat({ messages, slots: first.slots });
+  assert.ok(out.cards.length, 'a customer with no preference was left at the door: ' + out.reply_he);
+});
+
+// A family's camp answer changes which WEEKS qualify, so it is asked before
+// the offers rather than alongside them.
+t('a family with camp-age children is asked about the camp before the offers', () =>
+  handleChat({ messages: [{ role: 'user', content: 'זוג עם ילדים בני 5 ו-9, ינואר בבולגריה' }], slots: {} })
+    .then(out => {
+      assert.equal(out.cards.length, 0, 'offered before knowing about the camp');
+      assert.ok(/קייטנ/.test(out.reply_he), out.reply_he);
+    }));
+
+// An explicit "show me" no longer skips the gate — it buys ONE question, and
+// the offers arrive on the next turn whatever the customer answered.
+t('an explicit "show me" buys one question, then the offers', async () => {
+  const messages = [{ role: 'user', content: 'תראה לי מה יש' }];
+  const first = await handleChat({ messages, slots: {} });
+  assert.equal(first.cards.length, 0, 'showed before understanding anything');
+  assert.ok(/\?/.test(first.reply_he), 'held the offers but asked nothing: ' + first.reply_he);
+  messages.push({ role: 'assistant', content: first.reply_he }, { role: 'user', content: 'זוג' });
+  const second = await handleChat({ messages, slots: first.slots });
+  assert.ok(second.cards.length, 'asked a second question after promising to show: ' + second.reply_he);
+});
 
 t('a named resort is enough to show', () =>
   handleChat({ messages: [{ role: 'user', content: 'רוצה סקי בבנסקו' }], slots: {} })
@@ -1405,6 +1687,61 @@ t('holding the offers does not swallow the off-topic line', () =>
   handleChat({ messages: [{ role: 'user', content: 'תן לי מתכון לעוגה' }], slots: {} })
     .then(out => assert.ok(/אני כאן בעיקר להתאמת/.test(out.reply_he), out.reply_he)));
 
+// ---- lead nudges: once, after value, never twice ----
+async function convo(turns) {
+  const messages = []; let slots = {}; let out = null;
+  for (const u of turns) {
+    messages.push({ role: 'user', content: u });
+    out = await handleChat({ messages: messages.slice(), slots });
+    slots = out.slots; messages.push({ role: 'assistant', content: out.reply_he });
+  }
+  return out;
+}
+t('"אחשוב על זה" after offers opens the form once', async () => {
+  const a = await convo(['זוג בפברואר באוסטריה', 'אחשוב על זה']);
+  assert.strictEqual(a.open_lead_form, true);
+  const b = await convo(['זוג בפברואר באוסטריה', 'אחשוב על זה', 'אחשוב על זה שוב']);
+  assert.strictEqual(b.open_lead_form, false, 'nudged twice');
+});
+t('"אחשוב על זה" before any offer does not open the form', async () => {
+  const a = await convo(['אחשוב על זה']);
+  assert.strictEqual(a.open_lead_form, false);
+});
+t('two unusable turns in a row hand over once', async () => {
+  const a = await convo(['זוג בפברואר', 'בלה בלה בלה', 'קרקר פלפל']);
+  assert.strictEqual(a.open_lead_form, true);
+  assert.ok(/נציג/.test(a.reply_he));
+  const b = await convo(['זוג בפברואר', 'בלה בלה בלה', 'קרקר פלפל', 'עוד קשקוש']);
+  assert.strictEqual(b.open_lead_form, false, 'nudged twice');
+});
+t('a chip that changes the ranking is not an unusable turn', async () => {
+  const a = await convo(['זוג בפברואר', 'בלה בלה בלה', 'חשוב לי ספא']);
+  assert.strictEqual(a.open_lead_form, false);
+  assert.strictEqual(a.slots._lost, 0);
+});
+t('lead intents: an agent gets a tagged form, a job seeker gets an address', async () => {
+  const a = await convo(['אני סוכן נסיעות, יש תנאי סוכנים?']);
+  assert.strictEqual(a.open_lead_form, true); assert.strictEqual(a.lead_kind, 'agent');
+  const j = await convo(['מחפש עבודה כמדריך במועדון ילדים, מה השכר?']);
+  assert.strictEqual(j.open_lead_form, false); assert.ok(/info@pingwin/.test(j.reply_he));
+});
+t('a foreign-language message is answered in that language with the form', async () => {
+  const r = await convo(['Есть ли у вас пакеты в Банско на январь?']);
+  assert.ok(/Pingwin/.test(r.reply_he) && /[\u0400-\u04FF]/.test(r.reply_he));
+  assert.strictEqual(r.open_lead_form, true);
+});
+t('transliterated Hebrew gets a Hebrew invitation and keeps what it parsed', async () => {
+  const r = await convo(['Shalom, yesh lachem chavilot le Bansko?']);
+  assert.ok(/בעברית/.test(r.reply_he));
+  assert.strictEqual(r.slots.country, 'bulgaria');
+});
+t('the trade-off line never precedes the offers\' introduction', async () => {
+  const r = await convo(['זוג עם 2 ילדים בני 5 ו-9 בינואר באוסטריה']);
+  const lines = r.reply_he.split('\n');
+  const trade = lines.findIndex(l => /אם תשקלו|אם תהיו גמישים|אם תוותרו/.test(l));
+  if (trade >= 0) assert.ok(trade > 0, 'trade-off was the first line: ' + lines[0]);
+});
+
 (async () => {
   for (const [name, fn] of results) {
     try { await fn(); console.log('  ✓ ' + name); pass++; }
@@ -1413,3 +1750,66 @@ t('holding the offers does not swallow the off-topic line', () =>
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();
+
+/* ---- hotel-page facts (Tomer, 26/08: "ספא ונוף אתה יכול לבדוק באתר של פינגווין") ---- */
+t('pool / view / renovation / lift distance are quoted from the hotel page, or deferred — never guessed', async () => {
+  const first = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר במאיירהופן' }], slots: {} });
+  const msgs = [{ role: 'user', content: 'זוג בפברואר במאיירהופן' }, { role: 'assistant', content: first.reply_he }];
+  const ask = q => handleChat({ messages: [...msgs, { role: 'user', content: q }], slots: first.slots });
+  const pool = await ask('יש בריכה? ונוף מהחדר?');
+  const facts = pool.cards.flatMap(c => c.facts_he || []);
+  assert.ok(facts.some(f => /^בריכה: /.test(f)), 'a hotel with a pool on its page says so: ' + facts.join(' | '));
+  // 30/08: the deferral now says WHERE we looked before it says who will
+  // confirm ("לא כתוב בדף של המלון אצלי; נציג יאמת") — a fact missing from our
+  // data is not the same as a fact the hotel lacks, and telling a customer
+  // "אין" about something the hotel may well have is the expensive mistake.
+  assert.ok(facts.every(f => /^בריכה: |^בריכה — לא כתוב בדף|אין בריכה|^נוף: |^הנוף מהחדר — לא כתוב בדף/.test(f)), facts.join(' | '));
+  assert.ok(facts.every(f => !/— נציג יאמת מול המלון$/.test(f) || /לא כתוב בדף/.test(f)),
+    'a deferral names the source it is missing from: ' + facts.join(' | '));
+  const reno = await ask('מתי שופץ? כמה מטר למעלית?');
+  const f2 = reno.cards.flatMap(c => c.facts_he || []);
+  assert.ok(f2.some(f => /^שיפוץ: /.test(f)) && f2.some(f => /^מהמעלית: /.test(f)), f2.join(' | '));
+  assert.ok(!/\d+ ?(שעות|דק')/.test(reno.reply_he), 'no journey times');
+});
+
+/* ---- chips answer the question on screen (Tomer, 26/08, screenshot) ---- */
+// Under "באיזה חודש תרצו לצאת?" the widget also offered "טיסה מנתב"ג" and
+// "טיסה מחיפה" — buttons for a question nobody asked — and no December or March.
+t('the chips answer the question that was actually asked', async () => {
+  const first = await handleChat({ messages: [{ role: 'user', content: 'שני אנשים סן אנטון מלון 4 כוכבים' }], slots: {} });
+  assert.ok(/ילדים|גילאים/.test(first.reply_he), 'expected the children question: ' + first.reply_he);
+  assert.ok(first.chips.includes('בלי ילדים'), first.chips.join('|'));
+  assert.ok(!first.chips.some(c => /טיסה|נתב/.test(c)), 'airport chips under a children question: ' + first.chips.join('|'));
+
+  const second = await handleChat({
+    messages: [{ role: 'user', content: 'שני אנשים סן אנטון' }, { role: 'assistant', content: first.reply_he },
+      { role: 'user', content: 'בלי ילדים' }],
+    slots: first.slots,
+  });
+  assert.ok(/מתי תרצו|חודש/.test(second.reply_he), 'expected the month question: ' + second.reply_he);
+  for (const m of ['דצמבר', 'ינואר', 'פברואר', 'מרץ', 'חנוכה', 'פורים', 'גמיש']) {
+    assert.ok(second.chips.includes(m), 'missing month chip ' + m + ': ' + second.chips.join('|'));
+  }
+  assert.ok(!second.chips.some(c => /טיסה|נתב/.test(c)), 'airport chips under a month question: ' + second.chips.join('|'));
+});
+t('with offers on screen the chips stay the exploring set', async () => {
+  const out = await handleChat({ messages: [{ role: 'user', content: 'זוג בפברואר באוסטריה' }], slots: {} });
+  assert.ok(out.cards.length, 'expected offers');
+  assert.ok(out.chips.length > 3, 'the preference chips disappeared: ' + out.chips.join('|'));
+});
+
+/* ---- Pingi says goodbye (Tomer, 26/08) ---- */
+t('a goodbye is recognised however it is written, and Pingi waves', async () => {
+  const offline = require('../server/offline-nlu.js');
+  // "תודה, ביי" used to get "לא בטוח שהבנתי" — the last thing a customer reads
+  for (const q of ['תודה, ביי', 'ביי', 'להתראות', 'תודה רבה ביי', 'לא תודה', 'יום טוב', 'נתראה']) {
+    assert.ok(offline.isFarewell(q), 'not a goodbye: ' + q);
+  }
+  for (const q of ['תודה!', 'תודה על העזרה מה עוד יש?', 'זוג בפברואר', 'יום טוב לגלוש בפברואר?']) {
+    assert.ok(!offline.isFarewell(q), 'treated as a goodbye: ' + q);
+  }
+  const out = await handleChat({ messages: [{ role: 'user', content: 'תודה, ביי' }], slots: {} });
+  assert.strictEqual(out.mood, 'wave', 'the widget is not told to show the wave');
+  assert.ok(/חורף נעים|אני כאן/.test(out.reply_he), out.reply_he);
+  assert.strictEqual(out.cards.length, 0, 'offered hotels to someone who said goodbye');
+});

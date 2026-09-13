@@ -8,9 +8,60 @@ const { roomFacts } = require('./room-match');
 const DATA_DIR = __dirname;
 function loadJSON(p) { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, p), 'utf8')); }
 
-const MONTHS = { 12: '12', 1: '01', 2: '02', 3: '03' };
+// The season's months, in selling order, from data/config/date-labels.json.
+// They were written out as [12, 1, 2, 3] in five places here and one more in
+// offline-nlu.js, so adding November — or selling a southern-hemisphere
+// season — meant finding all six.
+const SEASON = require('../server/season.js');
+const SEASON_MONTHS = () => SEASON.months();
+const MONTHS = (() => {
+  const m = {};
+  for (const n of SEASON.months()) m[n] = String(n).padStart(2, '0');
+  return m;
+})();
+// The camp age policy, read once at module load. It is a static property of
+// the business (Tomer's ruling, recorded in camps.json with its citation), not
+// per-instance state, and the static helpers below need it before any engine
+// exists. A missing file falls back to the documented 4-14 rather than
+// throwing — the boundary must never be undefined.
+const CAMPS_POLICY = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'camps.json'), 'utf8')).age_policy || {}; }
+  catch (e) { return {}; }
+})();
 
 class SkiSearch {
+  /* Reload the inventory when its files change on disk.
+     The engine used to be built once at boot and never again, while
+     catalogue.js and guidance.js both re-stat their files on every call. So a
+     workbook re-exported at 10:00 with a sold-out week removed kept being
+     offered until someone restarted the server — the one file where a stale
+     read is a wrong availability claim. */
+  reloadIfChanged() {
+    if (this._stamp === null) return this;      // injected data — never replace it
+    const stamp = SkiSearch.dataStamp();
+    if (stamp && stamp !== this._stamp) {
+      try {
+        this.av = loadJSON('availability.json');
+        this.resorts = loadJSON('resorts.json');
+        this.camps = loadJSON('camps.json');
+        this.pricing = loadJSON('pricing.json');
+        this.restrictions = loadJSON('restrictions.json');
+        this._stamp = stamp;
+      } catch (e) { /* keep the copy we have; a half-written file is not data */ }
+    }
+    return this;
+  }
+
+  // mtimes of every file the search reads, as one comparable string
+  static dataStamp() {
+    let out = '';
+    for (const f of ['availability.json', 'resorts.json', 'camps.json', 'pricing.json', 'restrictions.json']) {
+      try { out += f + ':' + fs.statSync(path.join(DATA_DIR, f)).mtimeMs + ';'; }
+      catch (e) { return null; }
+    }
+    return out;
+  }
+
   constructor({ availability, resorts, camps, pricing, departures } = {}) {
     this.av = availability || loadJSON('availability.json');
     this.resorts = resorts || loadJSON('resorts.json');
@@ -22,6 +73,33 @@ class SkiSearch {
     // what every package includes and what costs extra (config/inclusions.json)
     this.inclusions = JSON.parse(fs.readFileSync(
       path.join(DATA_DIR, '..', 'config', 'inclusions.json'), 'utf8'));
+    // only track reloads for an engine that owns its files; one built from
+    // injected data (the tests do this) must keep exactly what it was given
+    this._stamp = (availability || resorts || camps || pricing) ? null : SkiSearch.dataStamp();
+  }
+
+  /* "מה התאריכים בחנוכה?" / "יש חבילה בין 22 ל-29 בדצמבר?" — the departure
+     dates we actually hold, straight from the workbook.
+
+     Added 30/08 after the live run: both of those questions were answered with
+     "כמה תהיו בסך הכל?" while the answer sat in the data. Dates are facts, not
+     prices — red rule 3 does not touch them — and "what dates do you have" is
+     one of the questions a customer with a fixed window most needs answered
+     before anything else is worth discussing.
+
+     Returns sorted ISO dates. Never a promise of availability: the caller says
+     the departures exist, and the search says what is open on them. */
+  departureDates({ holiday = null, month = null, from = null, to = null } = {}) {
+    const out = new Set();
+    for (const u of this.av.units || []) {
+      if (!u.date) continue;
+      if (holiday && u.date_label !== holiday) continue;
+      if (month != null && month !== 'any' && SkiSearch.monthOf(u.date) !== +month) continue;
+      if (from && u.date < from) continue;
+      if (to && u.date > to) continue;
+      out.add(u.date);
+    }
+    return [...out].sort();
   }
 
   // Dates in a country that carry NO "מכירת התחייבויות בלבד" note. On those,
@@ -52,7 +130,23 @@ class SkiSearch {
 
   hotelInfo(name) { return this.resorts.hotels[name] || {}; }
   resortOf(name) { return this.hotelInfo(name).resort || null; }
-  price(name) { return this.pricing.hotels[name] || this.pricing.default; }
+  /* The price band, or null when this hotel has never been classified.
+     Only 8 of the 40 hotels we can offer have a band; pricing.json still says
+     so in its own _todo field ("ברירת מחדל לדמו"). The other 32 fell through
+     to "₪₪₪" — and that placeholder was not merely displayed, it was REASONED
+     FROM: it decided which card got the "המשתלם ביותר" badge, it answered
+     "יקר לי" with something "cheaper", and it told customers another country
+     was in a lower band. All of that from a TODO.
+     Unknown is now unknown. Set `unclassified: "default"` in pricing.json to
+     go back to treating it as mid-band. */
+  price(name) {
+    const known = this.pricing.hotels[name];
+    if (known) return known;
+    return this.pricing.unclassified === 'default' ? (this.pricing.default || null) : null;
+  }
+  priceKnown(name) { return !!this.price(name); }
+  // length as a rank, with unknown sorting as "no opinion" rather than as mid
+  priceRankOf(name) { const p = this.price(name); return p ? p.length : null; }
 
   // per-hotel room rule from pingwin.co.il (X+Y interpretation, rooms with no
   // occupancy digits). Returns {occ_min, occ_max, composition_he} or null.
@@ -62,45 +156,122 @@ class SkiSearch {
   }
 
   // effective occupancy after applying the hotel-page rule
+  /* A hotel-page rule describes the hotel's PRODUCT LINE; the workbook row
+     describes the specific room we hold. The rule may narrow that row, or
+     interpret an ambiguous "2+1" notation the workbook left open — it must
+     never widen it past a range the workbook stated outright.
+     It did, until 30/08. Strass holds "J. Suite 2+1", recorded as 2-3, and the
+     page rule for "J. Suite" says "up to 4 guests". On 6.3 that is the only
+     free Strass unit, so a party of four was offered it, the card read
+     "מתאים ל-4 נוסעים", and the booking link prefilled pwad=4 into a room the
+     commitments file records as holding three. */
   effectiveOcc(unit) {
     const rule = this.roomRule(unit.hotel, unit.room);
-    if (rule) return { min: rule.occ_min, max: rule.occ_max, min_adults: rule.min_adults || null, composition_he: rule.composition_he, verified: true };
-    return { min: unit.occ_min, max: unit.occ_max, min_adults: null, composition_he: null, verified: !unit.needs_hotel_rule && unit.occ_min != null };
+    if (!rule) {
+      return { min: unit.occ_min, max: unit.occ_max, min_adults: null, composition_he: null,
+        verified: !unit.needs_hotel_rule && unit.occ_min != null };
+    }
+    // The workbook gave a number → the rule may only tighten it.
+    // `needs_hotel_rule` marks the "2+1" notation, where what is ambiguous is
+    // the COMPOSITION (may the +1 be an adult?) — not the total, which is
+    // plainly three. So the ceiling still binds; the rule contributes the
+    // composition and the minimum-adults instead.
+    const stated = unit.occ_min != null && unit.occ_max != null;
+    const min = stated ? Math.max(rule.occ_min, unit.occ_min) : rule.occ_min;
+    const max = stated ? Math.min(rule.occ_max, unit.occ_max) : rule.occ_max;
+    // a rule that contradicts the row outright (no overlap at all) is a data
+    // problem, not a licence to pick one — fall back to what we hold
+    if (min > max) {
+      return { min: unit.occ_min, max: unit.occ_max, min_adults: rule.min_adults || null,
+        composition_he: rule.composition_he, verified: false };
+    }
+    return { min, max, min_adults: rule.min_adults || null,
+      composition_he: rule.composition_he, verified: true };
   }
 
   /* ---- camps: which age groups does this party need? ----
      policy (Tomer 23/08): regular camp = ages 6-13 (split by ski level,
      runs most weeks); ages 4-6 camp opens only on specific dates.
      age 6 fits either group. ---- */
+  /* ---- how many seats does this party take? ----
+     Children whose ages are not known yet still travel: "זוג עם 2 ילדים"
+     must be four people everywhere — in the search, the trade-off counts and
+     the card captions — not four in one place and two in another. */
+  static partyOf(slots) {
+    return (slots.adults || 0) +
+      Math.max((slots.children_ages || []).length, slots.children_count || 0);
+  }
+
+  /* ---- ONE source for the camp age boundary ----
+     It used to be written out in six places with two different ceilings (four
+     said 4-13, two said 4-14, and the sentence the customer reads said 4-14),
+     so a 14-year-old was simultaneously too old to trigger the club question,
+     young enough to constrain the search, and told they were in range. The
+     numbers now come from data/camps.json → age_policy.overall, which records
+     Tomer's ruling of 26/08 with its citation, and every layer reads them from
+     here. The customer-facing "4-14" is generated from the same two numbers. */
+  static campAgeRange() {
+    const p = ((CAMPS_POLICY || {}).overall) || {};
+    return { min: p.age_min != null ? p.age_min : 4, max: p.age_max != null ? p.age_max : 14 };
+  }
+  static campAgeLabel() {
+    const r = SkiSearch.campAgeRange();
+    return r.min + '-' + r.max;
+  }
+  static inCampAge(age) {
+    const r = SkiSearch.campAgeRange();
+    return typeof age === 'number' && age >= r.min && age <= r.max;
+  }
+
+  /* ---- which group (or groups) would take each child ----
+     Age six sits in the overlap: camps.json puts the young group at 4-6 and
+     the regular at 6-13, so EITHER takes them. Reporting "6-13 does not run"
+     for a six-year-old on a week that does run 4-6 is false — and false in the
+     direction that loses a booking. Each child therefore produces a list of
+     acceptable groups, not one group.
+     Under four there is no group at all — "3 ו-10 חודשים" is a no, not a
+     maybe — and past the ceiling there is none either. */
+  static campRequirements(childrenAges) {
+    const r = SkiSearch.campAgeRange();
+    const reqs = [], seen = new Set();
+    for (const a of childrenAges || []) {
+      let ok = null;
+      if (a >= r.min && a < 6) ok = ['4-6'];
+      else if (a === 6) ok = ['4-6', '6-13'];
+      else if (a > 6 && a <= r.max) ok = ['6-13'];
+      if (!ok) continue;
+      const key = ok.join('|');
+      if (seen.has(key)) continue;
+      seen.add(key); reqs.push(ok);
+    }
+    return reqs;
+  }
+
+  // The group each child is normally PLACED in — the label the reply prints.
+  // Kept as the primary group so the wording never changes for a six-year-old,
+  // while campRequirements above is what actually decides coverage.
   static neededAgeGroups(childrenAges) {
     const groups = new Set();
-    for (const a of childrenAges || []) {
-      if (a >= 4 && a < 6) groups.add('4-6');
-      else if (a > 6 && a <= 13) groups.add('6-13');
-      else if (a === 6) groups.add('6*'); // fits either group
-    }
+    for (const req of SkiSearch.campRequirements(childrenAges)) groups.add(req[req.length - 1]);
     return groups;
   }
 
   // returns {full, running, missing, waitlist_only} for resort+week
   campsCoverage(resort, week, childrenAges) {
-    const needed = SkiSearch.neededAgeGroups(childrenAges);
-    if (!needed.size) return { full: true, running: [], missing: [], waitlist_only: [] };
+    const reqs = SkiSearch.campRequirements(childrenAges);
+    if (!reqs.length) return { full: true, running: [], missing: [], waitlist_only: [] };
     const entry = (this.camps.weeks || []).find(w => w.resort === resort && w.week === week);
     const groups = entry && !entry.no_camp ? entry.groups : [];
     const openSeats = g => groups.some(x => x.age_group === g && !x.is_waitlist && x.free > 0);
     const waitSeats = g => groups.some(x => x.age_group === g && x.is_waitlist && x.free > 0);
     const running = [...new Set(groups.filter(g => g.free > 0).map(g => g.age_group))];
     const missing = [], waitlistOnly = [];
-    const check = g => {
-      if (openSeats(g)) return;
-      if (waitSeats(g)) waitlistOnly.push(g);
-      else missing.push(g);
-    };
-    for (const g of needed) {
-      if (g === '6*') {
-        if (!openSeats('4-6') && !openSeats('6-13')) check('6-13');
-      } else check(g);
+    // a requirement is met when ANY of its acceptable groups has open seats
+    for (const req of reqs) {
+      const label = req[req.length - 1];
+      if (req.some(openSeats)) continue;
+      if (req.some(waitSeats)) waitlistOnly.push(label);
+      else missing.push(label);
     }
     return { full: missing.length === 0 && waitlistOnly.length === 0, running, missing, waitlist_only: waitlistOnly };
   }
@@ -138,8 +309,7 @@ class SkiSearch {
     // children whose ages we do not know yet still take seats: "עם 3 נכדים"
     // was a party of two by this arithmetic, and five people were offered
     // rooms for three
-    const party = (slots.adults || 0) +
-      Math.max((slots.children_ages || []).length, slots.children_count || 0);
+    const party = SkiSearch.partyOf(slots);
     const notes = [];   // machine-readable notes Claude may phrase
     let relaxed = []; // which constraints were relaxed, in order
 
@@ -148,14 +318,27 @@ class SkiSearch {
         !(slots.excluded_countries || []).includes('france')) {
       notes.push({ type: 'france_february_gap' });
     }
-    // a kids club was asked for, but no child falls in 4–13
-    if (slots.needs_hebrew_kids_club && !SkiSearch.neededAgeGroups(slots.children_ages).size) {
+    // a kids club was asked for, but no child falls in 4–14
+    // ...but only once the ages are known. With "2 ילדים" and no ages yet,
+    // telling the family the camp is not for them — and then asking the
+    // ages — was both wrong and rude.
+    if (slots.needs_hebrew_kids_club && (slots.children_ages || []).length &&
+        !SkiSearch.neededAgeGroups(slots.children_ages).size) {
       notes.push({ type: 'camp_age_mismatch', ages: slots.children_ages || [] });
+    }
+    // A club was asked for and we do not know a single age. The camp filter
+    // below CANNOT run without ages (it needs the age groups), so nothing was
+    // filtered — and saying "I showed only the weeks the club runs" over that
+    // is a false availability claim. Found 30/08: a family asking for a club
+    // with no ages given was shown Bansko 4.2, a week camps.json marks
+    // no_camp:true, under exactly that sentence.
+    if (slots.needs_hebrew_kids_club && !(slots.children_ages || []).length) {
+      notes.push({ type: 'camp_unverified' });
     }
     // Some children are in range and some are not. Saying nothing about the
     // 14-year-old lets a parent assume all their children have a group.
     if (slots.needs_hebrew_kids_club) {
-      const outside = (slots.children_ages || []).filter(a => a < 4 || a > 13);
+      const outside = (slots.children_ages || []).filter(a => !SkiSearch.inCampAge(a));
       if (outside.length && SkiSearch.neededAgeGroups(slots.children_ages).size) {
         notes.push({ type: 'camp_age_partial', ages: outside });
       }
@@ -320,7 +503,7 @@ class SkiSearch {
     // do the partial ones come back, and then the phrasing says so plainly.
     const covers = (list) => list.some(c => c.camps && !(c.camps.missing || []).length);
     if (slots.needs_hebrew_kids_club && candidates.length && !covers(candidates)) {
-      const months = [12, 1, 2, 3].filter(m => m !== +slots.month);
+      const months = SEASON_MONTHS().filter(m => m !== +slots.month);
       let found = null;
       for (const m of months) {
         const alt = this._filter(slots, party, { month: m, country: slots.country, destination: slots.destination });
@@ -329,7 +512,13 @@ class SkiSearch {
       if (!found && (slots.country || slots.destination)) {
         for (const m of [+slots.month, ...months].filter(x => x != null)) {
           const alt = this._filter(slots, party, { month: m, country: null, destination: null });
-          if (covers(alt)) { found = { list: alt, note: { type: 'camp_location', to: m } }; break; }
+          if (covers(alt)) {
+            // name where the club actually runs — "יעדים אחרים" told a family
+            // that asked for Austria nothing about where they were being sent
+            const to_countries = [...new Set(alt.filter(c => c.camps && !(c.camps.missing || []).length).map(c => c.country))];
+            found = { list: alt, note: { type: 'camp_location', to: m, from_country: slots.country || null, to_countries, groups: [...SkiSearch.neededAgeGroups(slots.children_ages)] } };
+            break;
+          }
         }
       }
       if (found) {
@@ -382,7 +571,7 @@ class SkiSearch {
           const near = (d) => {
             const m = SkiSearch.monthOf(d);
             const want = +slots.month || m;
-            const order = [12, 1, 2, 3];
+            const order = SEASON_MONTHS();
             return Math.abs(order.indexOf(m) - order.indexOf(want));
           };
           return near(a) - near(b) || a.localeCompare(b);
@@ -451,15 +640,31 @@ class SkiSearch {
     if (slots.price_objection && candidates.length) {
       const ceiling = slots.shown_price_min || null;
       const cheaper = ceiling
-        ? candidates.filter(c => this.price(c.hotel).length < ceiling)
+        ? candidates.filter(c => { const r = this.priceRankOf(c.hotel); return r != null && r < ceiling; })
         : [];
       if (cheaper.length) {
         candidates = cheaper;
         notes.push({ type: 'cheaper_found' });
+      } else if (!ceiling) {
+        // We have no classified band for anything on screen, so we cannot say
+        // that one option is cheaper than another — and staying silent about
+        // "יקר לי" is the worst of the three answers. Say what we can do.
+        notes.push({ type: 'price_unranked' });
       } else if (ceiling) {
-        // only claim these are our best prices if we HAVE shown dearer ones;
-        // as an opening message "יקר לי" refers to nothing we said
-        notes.push({ type: 'no_cheaper' });
+        // Nothing cheaper WITHIN what they asked for. Sunny's move (30/08): it
+        // widened the search — "אני יכולה לבדוק בכל מלונות ישרוטל באילת" — and
+        // came back with something genuinely cheaper.
+        //
+        // This also fixes a claim that could simply be false: "אלה המחירים
+        // הטובים ביותר שאנחנו יכולים להציע" was said from inside a filter. A
+        // customer who asked for Austria heard it while Bulgaria sat two price
+        // bands below, unmentioned.
+        //
+        // We do NOT silently move them: they chose the destination. We look,
+        // and if there is something cheaper elsewhere we say where and offer.
+        const elsewhere = this._cheaperElsewhere(slots, ceiling);
+        if (elsewhere) notes.push({ type: 'cheaper_elsewhere', ...elsewhere });
+        else notes.push({ type: 'no_cheaper' });
       }
     }
 
@@ -478,7 +683,9 @@ class SkiSearch {
       const info = this.hotelInfo(c.hotel);
       // how many of the customer's stated wishes this hotel actually matches
       c.score = prefs.reduce((s, p) => s + ((info.tags || []).includes(p) ? 1 : 0), 0);
-      c.priceRank = this.price(c.hotel).length; // 2=₪₪ … 4=₪₪₪₪
+      // unknown sits in the middle of the sort: it must not be ranked cheapest
+      // (it would win the budget sort on no evidence) nor most expensive.
+      c.priceRank = this.priceRankOf(c.hotel) != null ? this.priceRankOf(c.hotel) : 3; // 2=₪₪ … 4=₪₪₪₪
       c.recommended = !!info.recommended;
       // Stated requirements are not just things to ANSWER — they should move
       // the right hotel to the top. Someone who asked for a short transfer and
@@ -566,53 +773,74 @@ class SkiSearch {
     };
   }
 
+  /* ---- the rules every unit must pass, whichever path is looking at it ----
+     _filter uses this for single rooms and _twoRoomSplits for the pool it
+     pairs from. It exists as ONE function because it used to be two
+     hand-maintained copies, and the copies drifted: the split path silently
+     lacked the kids-club rule, so a family that required a Hebrew club was
+     offered two rooms in a week where no group ran at all (found 30/08).
+     Occupancy is deliberately NOT here — a single room must hold the whole
+     party, a pair must hold it between them, and that is the real difference
+     between the two callers.
+     Returns null when the unit is out, or { camps } when it is in. */
+  _unitPasses(u, slots, opts) {
+    const o = opts || {};
+    const sheets = o.ignoreAirport ? null : this.allowedSheets(slots.departure_airport);
+    // 0. departure airport — Haifa flies only specific products, and some
+    //    products are exclusive to one airport
+    if (sheets && !sheets.includes(u.sheet)) return null;
+    if (!o.ignoreAirport && this.sheetBlockedFor(u.sheet, slots.departure_airport)) return null;
+    // 1. Sabbath observance — a Saturday departure is unusable, not merely
+    //    less attractive, so it is filtered out rather than down-ranked
+    if (slots.no_saturday_flights && new Date(u.date + 'T00:00:00Z').getUTCDay() === 6) return null;
+    // 2. trip length the customer actually asked for
+    if (!o.ignoreNights && slots.nights_wanted && u.nights !== slots.nights_wanted) return null;
+    // 3. month / date
+    if (o.month != null && !SkiSearch.inMonth(u.date, o.month)) return null;
+    // 4. country / destination
+    if (o.country && u.country !== o.country) return null;
+    // an exclusion the customer stated ("לא צרפת") is never relaxed away —
+    // widening the search must not resurrect what they ruled out
+    if ((slots.excluded_countries || []).includes(u.country)) return null;
+    // named a hotel by name — that is the search, not a ranking hint
+    if (slots.hotel && u.hotel !== slots.hotel) return null;
+    // a chain the customer named: narrow to it, do not lock to one hotel
+    if (slots.hotel_group && !slots.hotel_group.hotels.includes(u.hotel)) return null;
+    // asked for a specific third of the month
+    if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) return null;
+    // asked for an exact departure day — within a few days of it counts,
+    // because departures are weekly and the customer means "around then"
+    if (slots.exact_day && Math.abs(+u.date.slice(8, 10) - slots.exact_day) > 3) return null;
+    // a resort the customer ruled out ("לא בנסקו") — the country stays open
+    if ((slots.excluded_destinations || []).some(
+      d => matchDestination(d, u, this.resortOf(u.hotel)))) return null;
+    if (o.destination && !matchDestination(o.destination, u, this.resortOf(u.hotel))) return null;
+    // 5. camps — a hard filter when a club was requested AND a child is
+    //    actually of camp age. Asking for a club for a 16-year-old used to
+    //    filter every unit away and report "no availability", which was false.
+    //    With no age known at all the filter cannot run; search() emits
+    //    camp_unverified so the reply says so rather than implying otherwise.
+    let camps = null;
+    if (slots.needs_hebrew_kids_club && SkiSearch.neededAgeGroups(slots.children_ages).size) {
+      const resort = this.resortOf(u.hotel);
+      if (!resort) return null;               // unknown resort — can't promise a camp
+      camps = this.campsCoverage(resort, u.date, slots.children_ages);
+      if (!camps.running.length) return null; // no camp at all that week
+      // partial coverage allowed through but flagged — the bot must say it
+    }
+    return { camps };
+  }
+
   _filter(slots, party, { month, country, destination, ignoreAirport, ignoreNights }) {
     const out = [];
-    const sheets = ignoreAirport ? null : this.allowedSheets(slots.departure_airport);
     for (const u of this.av.units) {
-      // 0. departure airport — Haifa flies only specific products, and some
-      //    products are exclusive to one airport
-      if (sheets && !sheets.includes(u.sheet)) continue;
-      if (!ignoreAirport && this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
-      // 1. free — availability.json only contains free units by construction
-      // 2. occupancy
+      // free — availability.json only contains free units by construction
+      // occupancy: one room must hold the whole party
       const fit = this.fits(u, party, slots.adults);
       if (fit === false) continue;
-      // 2b. Sabbath observance — a Saturday departure is unusable, not merely
-      //     less attractive, so it is filtered out rather than down-ranked
-      if (slots.no_saturday_flights && new Date(u.date + 'T00:00:00Z').getUTCDay() === 6) continue;
-      // 2c. trip length the customer actually asked for
-      if (!ignoreNights && slots.nights_wanted && u.nights !== slots.nights_wanted) continue;
-      // 3. month / date
-      if (month != null && !SkiSearch.inMonth(u.date, month)) continue;
-      // 4. country / destination
-      if (country && u.country !== country) continue;
-      // an exclusion the customer stated ("לא צרפת") is never relaxed away —
-      // widening the search must not resurrect what they ruled out
-      if ((slots.excluded_countries || []).includes(u.country)) continue;
-      // named a hotel by name — that is the search, not a ranking hint
-      if (slots.hotel && u.hotel !== slots.hotel) continue;
-      // asked for a specific third of the month
-      if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
-      // asked for an exact departure day — within a few days of it counts,
-      // because departures are weekly and the customer means "around then"
-      if (slots.exact_day && Math.abs(+u.date.slice(8, 10) - slots.exact_day) > 3) continue;
-      // a resort the customer ruled out ("לא בנסקו") — the country stays open
-      if ((slots.excluded_destinations || []).some(
-        d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
-      if (destination && !matchDestination(destination, u, this.resortOf(u.hotel))) continue;
-      // 5. camps — hard filter when requested AND a child is actually of camp
-      //    age. Asking for a club for a 16-year-old used to filter every unit
-      //    away and report "no availability", which was simply false.
-      let camps = null;
-      if (slots.needs_hebrew_kids_club && SkiSearch.neededAgeGroups(slots.children_ages).size) {
-        const resort = this.resortOf(u.hotel);
-        camps = this.campsCoverage(resort, u.date, slots.children_ages);
-        if (!resort) continue;                  // unknown resort — can't promise a camp
-        if (!camps.running.length) continue;    // no camp at all that week
-        // partial coverage allowed through but flagged — the bot must say it
-      }
-      out.push({ ...u, camps, occ_unverified: fit === null });
+      const pass = this._unitPasses(u, slots, { month, country, destination, ignoreAirport, ignoreNights });
+      if (!pass) continue;
+      out.push({ ...u, camps: pass.camps, occ_unverified: fit === null });
     }
     return out;
   }
@@ -620,25 +848,22 @@ class SkiSearch {
   /* ---- two rooms in the same hotel, same date (PNR never splits a room) ---- */
   _twoRoomSplits(slots, party) {
     const byHotelDate = new Map();
-    const sheets = this.allowedSheets(slots.departure_airport);
+    // Same rules as a single room, from the same function — see _unitPasses.
+    // The months the customer named: "דצמבר או ינואר" must open both here too,
+    // or a split silently answers only half the question.
+    const months = slots.month == null ? [null]
+      : [slots.month, ...(slots.month_alt ? [slots.month_alt] : [])];
     for (const u of this.av.units) {
-      // the departure airport binds here too — never split into rooms the
-      // customer's flight cannot reach
-      if (sheets && !sheets.includes(u.sheet)) continue;
-      if (this.sheetBlockedFor(u.sheet, slots.departure_airport)) continue;
-      if (slots.month != null && !SkiSearch.inMonth(u.date, slots.month)) continue;
-      if (slots.country && u.country !== slots.country) continue;
-      if ((slots.excluded_countries || []).includes(u.country)) continue;
-      // named a hotel by name — that is the search, not a ranking hint
-      if (slots.hotel && u.hotel !== slots.hotel) continue;
-      // asked for a specific third of the month
-      if (slots.month_part && SkiSearch.partOf(u.date) !== slots.month_part) continue;
-      // a resort the customer ruled out ("לא בנסקו") — the country stays open
-      if ((slots.excluded_destinations || []).some(
-        d => matchDestination(d, u, this.resortOf(u.hotel)))) continue;
+      let pass = null;
+      for (const m of months) {
+        pass = this._unitPasses(u, slots, {
+          month: m, country: slots.country, destination: slots.destination });
+        if (pass) break;
+      }
+      if (!pass) continue;
       const k = u.hotel + '||' + u.date;
       if (!byHotelDate.has(k)) byHotelDate.set(k, []);
-      byHotelDate.get(k).push(u);
+      byHotelDate.get(k).push({ ...u, camps: pass.camps });
     }
     const splits = [];
     for (const units of byHotelDate.values()) {
@@ -647,13 +872,18 @@ class SkiSearch {
         if (i === j && a.count < 2) continue;
         const oa = this.effectiveOcc(a), ob = this.effectiveOcc(b);
         if (oa.min == null || ob.min == null) continue;
-        if (party >= oa.min + ob.min && party <= oa.max + ob.max) {
-          splits.push({
-            hotel: a.hotel, country: a.country, date: a.date, nights: a.nights,
-            rooms: [a.room, b.room], capacity: [a.occ_notation, b.occ_notation],
-            price_range: this.price(a.hotel),
-          });
-        }
+        if (party < oa.min + ob.min || party > oa.max + ob.max) continue;
+        // a room composition rule binds a pair exactly as it binds one room
+        const minAdults = Math.max(oa.min_adults || 0, ob.min_adults || 0);
+        if (minAdults && (slots.adults || 0) < minAdults) continue;
+        splits.push({
+          hotel: a.hotel, country: a.country, date: a.date, nights: a.nights,
+          rooms: [a.room, b.room], capacity: [a.occ_notation, b.occ_notation],
+          price_range: this.price(a.hotel),
+          // carried so the reply can caveat a partially-covered week; without
+          // it the caveat layer had nothing to read and said nothing at all
+          camps: a.camps,
+        });
       }
     }
     return splits.sort((x, y) => x.date.localeCompare(y.date));
@@ -725,7 +955,7 @@ class SkiSearch {
     const out = [];
     const count = (over) => {
       const alt = { ...slots, ...over };
-      const p = (alt.adults || 0) + (alt.children_ages || []).length;
+      const p = SkiSearch.partyOf(alt);
       let list = this._filter(alt, p || party, {
         month: alt.month, country: alt.country, destination: alt.destination,
         ignoreNights: over.nights_wanted === null,
@@ -763,6 +993,58 @@ class SkiSearch {
   // distinct hotel+date pairs — the unit a customer actually chooses between
   _distinctWeeks(list) {
     return new Set(list.map(c => c.hotel + '|' + c.date)).size;
+  }
+
+  /* "יקר לי", and nothing cheaper inside what they asked for. Look ONE step
+     wider and report where a lower price band actually exists — the destination
+     first (a customer who fixed on Austria may not know Bulgaria is two bands
+     below), then the month.
+
+     Deliberately conservative:
+       - it never returns the customer's own filter back to them;
+       - it only reports a band that is genuinely LOWER than what they saw;
+       - it reports where, never a number (red rule 3);
+       - it does not change `candidates`. The customer picked a destination;
+         moving them without asking is not a discount, it is not listening.
+     Returns { by: 'country'|'month', country?, month?, band } or null. */
+  _cheaperElsewhere(slots, ceiling) {
+    const quiet = { ...slots, price_objection: false, shown_price_min: null };
+    const bandOf = list => (list.length
+      ? Math.min(...list.map(c => this.priceRankOf(c.hotel)).filter(r => r != null)) : Infinity);
+
+    // 1. the same dates, somewhere else. Their explicit exclusions still hold —
+    //    "לא בולגריה" means not Bulgaria, cheap or otherwise.
+    if (slots.country || slots.destination) {
+      const excluded = new Set(slots.excluded_countries || []);
+      let best = null;
+      for (const country of ['bulgaria', 'andorra', 'austria', 'france']) {
+        if (country === slots.country || excluded.has(country)) continue;
+        let found;
+        try {
+          found = this.search({ ...quiet, country, destination: null, hotel: null });
+        } catch (e) { continue; }              // never let this break the turn
+        const band = bandOf(found.candidates || []);
+        if (band < ceiling && (!best || band < best.band)) best = { country, band };
+      }
+      if (best) return { by: 'country', country: best.country, band: best.band };
+    }
+
+    // 2. the same destination, a different month — the other lever a customer
+    //    can actually pull.
+    if (slots.month != null && slots.month !== 'any') {
+      let best = null;
+      for (const month of SEASON_MONTHS()) {
+        if (month === +slots.month) continue;
+        let found;
+        try {
+          found = this.search({ ...quiet, month, month_alt: null, exact_day: null, month_part: null });
+        } catch (e) { continue; }
+        const band = bandOf(found.candidates || []);
+        if (band < ceiling && (!best || band < best.band)) best = { month, band };
+      }
+      if (best) return { by: 'month', month: best.month, band: best.band };
+    }
+    return null;
   }
 
   // How well a hotel meets the requirements the customer named in words
@@ -838,6 +1120,7 @@ class SkiSearch {
       board_he: info.board_he || null,         // בסיס האירוח מדף המלון
       wifi_he: info.wifi_he || null,           // ציטוט מדף המלון
       spa_he: info.spa_he || null,             // ציטוט מדף המלון
+      page_facts: info.page_facts || null,     // נוף, בריכה, מיקום, מסעדה… — ציטוטים מדף המלון (data/hotel-facts.json)
       spa_access: info.spa_access || 'none',   // free|entries|paid|guests|not_stated|none
       spa_access_he: info.spa_access_he || null,
       spa_note_he: info.spa_note_he || null,
@@ -872,8 +1155,8 @@ class SkiSearch {
 }
 
 function adjacentMonths(m) {
-  // season order: 12, 1, 2, 3
-  const order = [12, 1, 2, 3];
+  // season order, from the season file rather than written out again
+  const order = SEASON_MONTHS();
   const i = order.indexOf(m);
   if (i < 0) return order;
   return [order[i - 1], order[i + 1]].filter(Boolean);

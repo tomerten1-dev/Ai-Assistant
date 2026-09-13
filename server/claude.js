@@ -3,7 +3,21 @@
 const MODEL = 'claude-sonnet-4-6';
 const API_URL = 'https://api.anthropic.com/v1/messages';
 
-async function callClaude({ system, messages, maxTokens = 700 }) {
+/* One turn has ONE time budget, not one per call. Three model calls run in
+   sequence (slots, router, phrasing) and each used a fixed 20s ceiling, so two
+   slow ones blew the 25s cap in server.js between them and the customer got an
+   apology instead of the offers that were already found. `deadline` is a
+   timestamp for the whole turn; each call gets whatever is left of it, with a
+   floor so a nearly-spent budget fails fast rather than firing a request that
+   cannot possibly return in time. */
+function callBudgetMs(deadline) {
+  const ceiling = +(process.env.MODEL_TIMEOUT_MS || 20000);
+  if (!deadline) return ceiling;
+  const left = deadline - Date.now();
+  return Math.max(1200, Math.min(ceiling, left));
+}
+
+async function callClaude({ system, messages, maxTokens = 700, deadline }) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key || key.includes('xxxx')) {
     const err = new Error('missing_api_key');
@@ -18,6 +32,8 @@ async function callClaude({ system, messages, maxTokens = 700 }) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
+    // same reason as in openai.js: a hung request must not hold the turn
+    signal: AbortSignal.timeout(callBudgetMs(deadline)),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -27,6 +43,12 @@ async function callClaude({ system, messages, maxTokens = 700 }) {
     throw err;
   }
   const data = await res.json();
+  // same as openai.js: a reply the provider had to cut short is not a reply
+  if (data.stop_reason === 'max_tokens') {
+    const err = new Error('anthropic_truncated');
+    err.friendly = 'תקלה זמנית בשירות — נסו שוב בעוד רגע.';
+    throw err;
+  }
   return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
 }
 
@@ -42,4 +64,4 @@ function parseModelJSON(text) {
   try { return JSON.parse(t.slice(start, end + 1).replace(/,\s*([}\]])/g, '$1')); } catch { return null; }
 }
 
-module.exports = { callClaude, parseModelJSON, MODEL };
+module.exports = { callClaude, parseModelJSON, MODEL, callBudgetMs };

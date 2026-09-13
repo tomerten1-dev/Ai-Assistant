@@ -142,9 +142,18 @@ function colToNum(ref) {
   return { col: c, row: +m[2] };
 }
 
-/* ---------- main ---------- */
+/* ---------- main ----------
+   Split in two on purpose. Unzipping needs zlib here and DecompressionStream in
+   a browser; everything after it is the same code either way. So the office can
+   parse the workbook in Chrome — no install, nobody's server touched — and get
+   byte-for-byte what this build gets. See public/inventory-upload.html. */
 function readWorkbook(path) {
-  const files = unzip(fs.readFileSync(path));
+  return readWorkbookFiles(unzip(fs.readFileSync(path)));
+}
+
+// `files` is { 'xl/workbook.xml': <bytes>, ... } — Buffer in node, Uint8Array
+// with a .toString('utf8') shim in a browser.
+function readWorkbookFiles(files) {
   const txt = p => (files[p] ? files[p].toString('utf8') : null);
   const theme = themeColors(txt('xl/theme/theme1.xml'));
   const styles = parseStyles(txt('xl/styles.xml') || '', theme);
@@ -201,6 +210,12 @@ function readWorkbook(path) {
         row: rc.row, col: rc.col, ref,
         text: value == null ? '' : String(value).trim(),
         num, fillRgb: fill ? fill.rgb : null, fillId: xf.fillId || 0,
+        // Was the fill actually understood? `fill === null` means no fill at
+        // all (a white cell, decoded correctly). `fill` present with rgb null
+        // means there IS a fill and we could not resolve its colour — indexed
+        // 64/65, an uncovered theme index, a patternFill with no fgColor.
+        // Collapsing both to "no colour" let coloured (sold) cells read as free.
+        fillDecoded: !fill || fill.rgb != null,
         fillIndexed: fill ? fill.indexed : null,
         formula: fm ? unesc(fm[1]) : null,
         dateISO: (num != null && isDateFmt) ? serialToISO(num) : null,
@@ -214,4 +229,4 @@ function readWorkbook(path) {
   });
 }
 
-module.exports = { readWorkbook, serialToISO };
+module.exports = { readWorkbook, readWorkbookFiles, serialToISO };

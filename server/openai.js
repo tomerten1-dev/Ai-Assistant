@@ -28,7 +28,21 @@ function model() { return process.env.OPENAI_MODEL || DEFAULT_MODEL; }
 // for them. The phrasing call writes the sentence the customer actually reads,
 // and OPENAI_PHRASE_MODEL lets that one job ride a better model without
 // paying for it everywhere else.
-async function callOpenAI({ system, messages, maxTokens = 400, json = true, model: modelOverride }) {
+/* One turn has ONE time budget, not one per call. Three model calls run in
+   sequence (slots, router, phrasing) and each used a fixed 20s ceiling, so two
+   slow ones blew the 25s cap in server.js between them and the customer got an
+   apology instead of the offers that were already found. `deadline` is a
+   timestamp for the whole turn; each call gets whatever is left of it, with a
+   floor so a nearly-spent budget fails fast rather than firing a request that
+   cannot possibly return in time. */
+function callBudgetMs(deadline) {
+  const ceiling = +(process.env.MODEL_TIMEOUT_MS || 20000);
+  if (!deadline) return ceiling;
+  const left = deadline - Date.now();
+  return Math.max(1200, Math.min(ceiling, left));
+}
+
+async function callOpenAI({ system, messages, maxTokens = 400, json = true, model: modelOverride, deadline }) {
   const key = process.env.OPENAI_API_KEY;
   if (!key || key.includes('xxxx')) {
     const err = new Error('missing_api_key');
@@ -44,10 +58,15 @@ async function callOpenAI({ system, messages, maxTokens = 400, json = true, mode
   // JSON mode: the reply is always parseable, so no fence-stripping and no
   // tokens wasted on the model explaining itself
   if (json) body.response_format = { type: 'json_object' };
+  // A hung upstream request used to hang the turn with it: there was no
+  // timeout here at all, and the only backstop was the 25s cap in server.js.
+  // 20s keeps this call strictly inside that cap, so a slow provider degrades
+  // to the free Hebrew layer instead of holding a customer on a blank screen.
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(callBudgetMs(deadline)),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
@@ -60,7 +79,20 @@ async function callOpenAI({ system, messages, maxTokens = 400, json = true, mode
   }
   const data = await res.json();
   track(data.usage, chosen);
-  return (data.choices && data.choices[0] && data.choices[0].message.content) || '';
+  const choice = (data.choices && data.choices[0]) || {};
+  /* The provider tells us when it ran out of room, and we were ignoring it.
+     A reply cut off mid-word passes every check in validate() — none of them
+     is about completeness — so the customer read half a sentence and then the
+     offer cards. Seen live 31/08: "…אם זה חשוב לכם, העביר את" and
+     "…מופיע במסך ההזמנה — נציג מאשר". On a reasoning model the token cap
+     covers the thinking too, so this is not rare, it is a budget problem.
+     Throwing here sends the turn to the template, which is always complete. */
+  if (choice.finish_reason === 'length') {
+    const err = new Error('openai_truncated');
+    err.friendly = 'תקלה זמנית בשירות — נסו שוב בעוד רגע.';
+    throw err;
+  }
+  return (choice.message && choice.message.content) || '';
 }
 
 function track(usage, usedModel) {
@@ -76,4 +108,4 @@ function track(usage, usedModel) {
   );
 }
 
-module.exports = { callOpenAI, spend, model, DEFAULT_MODEL };
+module.exports = { callOpenAI, spend, model, DEFAULT_MODEL, callBudgetMs };

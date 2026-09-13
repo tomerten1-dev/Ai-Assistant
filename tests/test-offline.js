@@ -2,6 +2,10 @@
 // Run: node tests/test-offline.js
 // placeholders, not deletes — loadEnv() would otherwise load the real keys
 // from .env and this "offline" suite would quietly make paid API calls
+// the tests must never write to the real conversation log: it is the weekly
+// review's input, and synthetic turns bury the customers' real ones
+process.env.CHAT_LOG = 'off';
+
 process.env.ANTHROPIC_API_KEY = 'sk-ant-xxxx-disabled-in-tests';
 process.env.OPENAI_API_KEY = 'sk-proj-xxxx-disabled-in-tests';
 const { handleChat } = require('../server/server.js');
@@ -29,25 +33,29 @@ function t(name, cond, detail) {
   // rather than a list of other countries, because the binding constraint here
   // is the child's age group, not the destination.
   t('france-february gap explained', /אין לנו יציאות לצרפת בפברואר/.test(r1.reply_he), r1.reply_he);
-  t('and the reply says why these dates', /קבוצת הגיל|קבוצת 4-6|פועלת/.test(r1.reply_he), r1.reply_he);
+  // 30/08: the plural form ("פועלות קבוצות 4-6 ו-6-13") is what actually fires
+  // for two children in two groups, and the pattern only knew the singular.
+  // The line the customer needs is present either way; this now matches both.
+  t('and the reply says why these dates', /קבוצת הגיל|קבוצ\S* 4-6|פועל/.test(r1.reply_he), r1.reply_he);
   t('no card is france-in-february', r1.cards.every(c => !(c.country === 'france' && c.date.slice(5, 7) === '02')));
   t('partial camps stated when 4-6 missing', r1.cards.every(c => !c.camps || !c.camps.full ? true : true));
 
-  console.log('[3] "אנחנו 2, ינואר" → offers AND one question, never a gate');
-  const r2a = await handleChat({ messages: [{ role: 'user', content: 'אנחנו 2, ינואר' }], slots: {} });
-  // Policy changed 24/08 (Tomer): the bot must never hold the customer at the
-  // door waiting for a detail. It searches with what it has and asks alongside.
+  console.log('[3] "אנחנו 2, ינואר באוסטריה" → offers AND one question, never a gate');
+  // Policy changed 30/08 (Tomer, after "סאני"): who, when AND where are the
+  // essentials. With all three stated the bot must still never hold the
+  // customer at the door for the rest — it searches and asks alongside.
+  const r2a = await handleChat({ messages: [{ role: 'user', content: 'אנחנו 2, ינואר באוסטריה' }], slots: {} });
   t('shows offers even with children unknown', r2a.cards.length > 0, 'cards=' + r2a.cards.length);
   t('and still asks about children, once', (r2a.reply_he.match(/\?/g) || []).length === 1, r2a.reply_he);
   const r2b = await handleChat({
     messages: [
-      { role: 'user', content: 'אנחנו 2, ינואר' },
+      { role: 'user', content: 'אנחנו 2, ינואר באוסטריה' },
       { role: 'assistant', content: r2a.reply_he },
       { role: 'user', content: 'בלי ילדים' },
     ],
     slots: r2a.slots,
   });
-  t('results after one answer', r2b.cards.length === 3, 'cards=' + r2b.cards.length);
+  t('results after one answer', r2b.cards.length === 2 && (r2b.spare_cards || []).length === 1, 'cards=' + r2b.cards.length + ' spare=' + (r2b.spare_cards || []).length);
 
   console.log('[4] 6 travelers, one unit missing → split or direct');
   const r3 = await handleChat({

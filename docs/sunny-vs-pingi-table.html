@@ -1,0 +1,383 @@
+<title>סאני מול פינגי</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@500;700;800&family=Assistant:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --ground: #F5F8FA;
+    --panel: #FFFFFF;
+    --ink: #1C2830;
+    --ink-2: #4B5A66;
+    --ink-3: #7D8B96;
+    --line: #D8E0E6;
+    --pingi: #1B6FA8;
+    --pingi-soft: #E3EFF7;
+    --sunny: #B8811A;
+    --sunny-soft: #F7EDD8;
+    --tie: #E8ECEF;
+    --tie-ink: #4B5A66;
+    --fixed: #2E7D5B;
+    --fixed-soft: #E1F1E9;
+    --head: #EEF2F5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #121A20; --panel: #1A242C; --ink: #E7EDF1; --ink-2: #B4C0C9; --ink-3: #8595A1;
+      --line: #2C3A45; --pingi: #6FB3E4; --pingi-soft: #1C3346; --sunny: #E0B35A; --sunny-soft: #3D2F14;
+      --tie: #2A353E; --tie-ink: #C2CCD4; --fixed: #6CC59B; --fixed-soft: #16342A; --head: #202C35;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #121A20; --panel: #1A242C; --ink: #E7EDF1; --ink-2: #B4C0C9; --ink-3: #8595A1;
+    --line: #2C3A45; --pingi: #6FB3E4; --pingi-soft: #1C3346; --sunny: #E0B35A; --sunny-soft: #3D2F14;
+    --tie: #2A353E; --tie-ink: #C2CCD4; --fixed: #6CC59B; --fixed-soft: #16342A; --head: #202C35;
+  }
+  html { direction: rtl; }
+  body { background: var(--ground); color: var(--ink); font-family: 'Assistant', 'Segoe UI', Arial, sans-serif; font-size: 16px; line-height: 1.55; margin: 0; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+  h1, h2, h3 { font-family: 'Heebo', 'Assistant', Arial, sans-serif; text-wrap: balance; margin: 0; }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; }
+  h2 { font-size: 22px; font-weight: 700; margin-top: 44px; margin-bottom: 12px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.12em; color: var(--ink-3); text-transform: uppercase; margin-bottom: 10px; }
+  .lede { color: var(--ink-2); max-width: 70ch; margin-top: 12px; font-size: 17px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 28px; }
+  .fact { background: var(--panel); padding: 14px 16px; }
+  .fact .k { font-size: 12px; color: var(--ink-3); letter-spacing: 0.06em; }
+  .fact .v { font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 17px; margin-top: 2px; }
+  .fact .v small { font-family: 'Assistant', sans-serif; font-weight: 400; color: var(--ink-2); font-size: 14px; }
+  .tally { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .tile { flex: 1 1 160px; background: var(--panel); border: 1px solid var(--line); padding: 14px 16px; }
+  .tile .n { font-family: 'Heebo', sans-serif; font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tile .l { color: var(--ink-2); font-size: 14px; margin-top: 4px; }
+  .tile.s .n { color: var(--sunny); } .tile.p .n { color: var(--pingi); } .tile.f .n { color: var(--fixed); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--ink-2); font-size: 14px; margin: 10px 0 14px; align-items: center; }
+  .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .chip.s { background: var(--sunny-soft); color: var(--sunny); }
+  .chip.p { background: var(--pingi-soft); color: var(--pingi); }
+  .chip.t { background: var(--tie); color: var(--tie-ink); }
+  .chip.f { background: var(--fixed-soft); color: var(--fixed); }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; min-width: 980px; font-size: 15px; }
+  thead th { position: sticky; top: 0; background: var(--head); text-align: right; font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); z-index: 1; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.topic { font-family: 'Heebo', sans-serif; font-weight: 700; width: 15%; }
+  td.topic .n { display: block; font-family: 'Assistant', sans-serif; font-weight: 400; color: var(--ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+  td.s, td.p { width: 32%; color: var(--ink); }
+  td.s q, td.p q { display: block; color: var(--ink-2); font-size: 14px; margin-top: 4px; quotes: "„" "“"; }
+  td.s q::before, td.p q::before { content: open-quote; color: var(--ink-3); }
+  td.s q::after, td.p q::after { content: close-quote; color: var(--ink-3); }
+  td.who { width: 9%; white-space: nowrap; }
+  td.s.win { background: var(--sunny-soft); box-shadow: inset 4px 0 0 var(--sunny); }
+  td.p.win { background: var(--pingi-soft); box-shadow: inset 4px 0 0 var(--pingi); }
+  td.win::before { display: block; font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; margin-bottom: 4px; }
+  td.s.win::before { content: '✔ סאני טובה יותר'; color: var(--sunny); }
+  td.p.win::before { content: '✔ פינגי טוב יותר'; color: var(--pingi); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+  .side { background: var(--panel); border: 1px solid var(--line); padding: 16px 20px; }
+  .side.s { border-top: 5px solid var(--sunny); } .side.p { border-top: 5px solid var(--pingi); }
+  .side h3 { font-size: 19px; margin-bottom: 10px; }
+  .side.s h3 { color: var(--sunny); } .side.p h3 { color: var(--pingi); }
+  .side ol { margin: 0; padding-right: 20px; }
+  .side li { margin-bottom: 8px; }
+  .side li b { font-family: 'Heebo', sans-serif; }
+  .side li small { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .side .note { color: var(--ink-2); font-size: 14px; margin: 10px 0 0; border-top: 1px dashed var(--line); padding-top: 8px; }
+  td.next { width: 12%; color: var(--ink-2); font-size: 14px; }
+  .group td { background: var(--head); font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; color: var(--ink-2); padding: 8px 14px; }
+  .verdict { background: var(--panel); border: 1px solid var(--line); border-right: 4px solid var(--pingi); padding: 18px 22px; margin-top: 20px; max-width: 78ch; }
+  .verdict p { margin: 0 0 10px; } .verdict p:last-child { margin: 0; }
+  .fixes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .fix { background: var(--panel); border: 1px solid var(--line); padding: 12px 14px; font-size: 15px; }
+  .fix b { font-family: 'Heebo', sans-serif; display: block; margin-bottom: 4px; }
+  .foot { color: var(--ink-3); font-size: 13px; margin-top: 28px; max-width: 80ch; }
+  .foot a { color: var(--pingi); }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">פינגווין · 06/09/2026 · שלוש שיחות עם סאני (30/08, 06/09 בוקר, 06/09 ערב) מול אותם תרחישים בפינגי</div>
+  <h1>סאני מול פינגי</h1>
+  <p class="lede">28 יכולות, שורה לכל אחת: מה סאני (הנציגה הדיגיטלית של ישרוטל) עשתה בפועל, מה פינגי עושה על אותו תרחיש בגרסת סקי, ומי מוביל. הציטוטים אמיתיים מהשיחות; המדדים של פינגי מהריצות של היום (לייב ואופליין).</p>
+
+  <div class="facts">
+    <div class="fact"><div class="k">השקה</div><div class="v">15 באפריל 2026 <small>· "נציגת ה-AI הראשונה בתיירות בישראל"</small></div></div>
+    <div class="fact"><div class="k">מי בנה</div><div class="v">אברא (abra) <small>· לפי אברא: Azure OpenAI ומאגר ידע</small></div></div>
+    <div class="fact"><div class="k">השקעה שפורסמה</div><div class="v">כ-1 מיליון ₪</div></div>
+    <div class="fact"><div class="k">מה הובטח בהודעה לעיתונות</div><div class="v"><small>המלצות אישיות, השוואת מחירים וחדרים בין מלונות, נהלי מלון וגלריות, ניהול הזמנות אוטונומי, הפניה לערוצים</small></div></div>
+    <div class="fact"><div class="k">ערוץ</div><div class="v">אתר ההזמנות, 24/7 <small>· וידג'ט עם מזהה שיחה, "שיחה חדשה", והסתייגות "התשובות בגדר המלצה בלבד"</small></div></div>
+    <div class="fact"><div class="k">מודל עסקי</div><div class="v">בעלת המלונות <small>· לכן: מחירים על המסך, הזמנה אונליין, "תקלה טכנית" כשאין חדר</small></div></div>
+  </div>
+
+  <h2>הספירה</h2>
+  <div class="tally">
+    <div class="tile s"><div class="n">1</div><div class="l">שורות שסאני מובילה</div></div>
+    <div class="tile p"><div class="n">7</div><div class="l">שורות שפינגי מוביל</div></div>
+    <div class="tile"><div class="n">15</div><div class="l">שווה, או מדיניות שונה בכוונה</div></div>
+    <div class="tile f"><div class="n">7</div><div class="l">תיקונים שנולדו מההשוואה (5 שורות)</div></div>
+  </div>
+
+  <h2>במה כל אחד טוב יותר — בקצרה</h2>
+  <div class="split">
+    <div class="side s">
+      <h3>סאני טובה יותר בדבר אחד</h3>
+      <ol>
+        <li><b>מדיניות ביטול עם מספרים למלון הספציפי.</b> אצלנו פסקת המדרגות בלי סכומים — לפי החלטה שלך. <small>שורה 16</small></li>
+      </ol>
+      <p class="note">שלושה דברים שהיו כאן בבוקר נסגרו באותו יום: תשובה כפסקה בכל תור (12), תוכן באנגלית/רוסית (21), תגובה לג'יבריש (22).</p>
+    </div>
+    <div class="side p">
+      <h3>פינגי טוב יותר ב-7 דברים</h3>
+      <ol>
+        <li><b>מקשיב למה שכבר נאמר.</b> סאני שאלה שוב "כמה ילדים" וביקשה לאשר תאריכים שכבר נתנו. <small>שורה 2</small></li>
+        <li><b>מחפש לפי חודש / "חנוכה" / "גמיש".</b> סאני דורשת תאריכים מדויקים. <small>שורה 3</small></li>
+        <li><b>עונה על שתי שאלות בהודעה אחת.</b> אצל סאני החניה לא נענתה ב-10 תורות. <small>שורה 5</small></li>
+        <li><b>כשאין חדר שמתאים — אומר את זה ומציע פיצול/הרחבה.</b> סאני: "תקלה טכנית". <small>שורה 10</small></li>
+        <li><b>העברה לנציג אמיתית.</b> שעות משרד, טופס שם+טלפון, מייל לנציג, וממשיך לענות. סאני: מספר טלפון. <small>שורה 23</small></li>
+        <li><b>עובד גם בלי מודל.</b> שכבות דטרמיניסטיות + 29 קבצי בדיקה; סאני כולה על המודל. <small>שורה 26</small></li>
+        <li><b>לא ממציא.</b> כל מספר/שם בתשובה ערוכה חייב להופיע בחומר המאושר. <small>שורה 27</small></li>
+      </ol>
+      <p class="note">15 השורות האחרות שוות, או שונות בכוונה (מחירים, 3 כרטיסים ולא 8, סגירה דרך נציג).</p>
+    </div>
+  </div>
+
+  <h2>הטבלה המלאה</h2>
+  <div class="legend">
+    <span class="chip s">סאני</span><span>מובילה בשורה — התא שלה צבוע בזהב</span>
+    <span class="chip p">פינגי</span><span>מוביל בשורה — התא שלו צבוע בכחול</span>
+    <span class="chip t">שווה</span><span>או הבדל מדיניות, לא יכולת</span>
+    <span class="chip f">תוקן היום</span><span>הפער נמצא בהשוואה הזו ונסגר באותו יום</span>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>יכולת</th><th>סאני (ישרוטל)</th><th>פינגי (פינגווין)</th><th>מי מוביל</th><th>מה נדרש</th></tr></thead>
+    <tbody>
+      <tr class="group"><td colspan="5">פתיחה ואיסוף פרטים</td></tr>
+      <tr>
+        <td class="topic">פתיחה<span class="n">1</span></td>
+        <td class="s">שואלת את הכול בהודעה אחת: מתי, כמה מבוגרים, כמה ילדים וגילאים — ומוסיפה שאלת סגנון.<q>כדי לבדוק אפשרויות, אשמח לדעת מתי תרצו להגיע וכמה מבוגרים וכמה ילדים יהיו בחדר</q></td>
+        <td class="p">שלוש השאלות במשפט אחד בפתיחה (מ-06/09), ואחר כך שאלה אחת לתור. שואל רק מה שחסר.<q>כדי שאבדוק מה פנוי — כמה תהיו, גילאי ילדים אם יש, ומתי בערך?</q></td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">מקשיב למה שכבר נאמר<span class="n">2</span></td>
+        <td class="s">אחרי "משפחה עם 2 ילדים" שאלה שוב "כמה ילדים". אחרי "3 מבוגרים" ביקשה לאשר שוב את התאריכים לפני שחיפשה.</td>
+        <td class="p win">"היי, משפחה עם 2 ילדים" → שואל רק מבוגרים, גילאים וחודש. "בעצם 3 מבוגרים" → חיפוש מחדש באותו תור, עם "עדכנתי — 3 מבוגרים — וחיפשתי מחדש".</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">חיפוש לפי חודש<span class="n">3</span></td>
+        <td class="s">דורשת תאריכי אירוח מדויקים. "בחנוכה" לא הספיק — ביקשה תאריכים מתוך 5–12 בדצמבר.</td>
+        <td class="p win">"ינואר", "חנוכה", "גמיש" — כולם מחפשים. תאריך מדויק רק אם הלקוח נתן.</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">שאלת צד באמצע איסוף<span class="n">4</span></td>
+        <td class="s">עונה על השאלה, לא מציגה מלונות, וקושרת את השאלה הבאה למה שנשאל.<q>ספרו לי בני כמה הם ואכוון אתכם למלון המתאים ביותר</q></td>
+        <td class="p">עונה על הקייטנה, הכרטיסים מחכים, ושואל שוב מה חסר (בניסוח אחר). מהריצה: "לילד בן 7 הקייטנה מתאימה… מתי תרצו לצאת?"</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">שתי שאלות בהודעה אחת<span class="n">5</span></td>
+        <td class="s">"יש חניה? ומה עם ביטול חינם?" — שתיהן נדחו ל"אחרי שתבחר מלון", ואחרי 10 תורות החניה עדיין לא נענתה. באנגלית (נוף לים + ארוחת בוקר) ענתה על שתיהן.</td>
+        <td class="p win">ענה על שתיהן באותו תור (חניה: "לא מיועדים להגעה ברכב… שאטלים"; ביטול: מדרגות). שאלה שנייה שלא נענתה מקבלת "שאלתם עוד דבר ולא עניתי עליו".</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+
+      <tr class="group"><td colspan="5">הצעות</td></tr>
+      <tr>
+        <td class="topic">כמה מציגים<span class="n">6</span></td>
+        <td class="s">6–8 כרטיסים בבת אחת, חדר אחד לכל מלון, ואז "איזה מהמלונות מעניין אותך?"</td>
+        <td class="p">3 כרטיסים, "יש עוד?" מביא את השלושה הבאים שלא הוצגו. לפי ההנחיה שלך (25/08): לא קטלוג.</td>
+        <td class="who"><span class="chip t">מדיניות</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">מחירים<span class="n">7</span></td>
+        <td class="s">מחיר אתר ומחיר מועדון על כל כרטיס, בסיס אירוח לבחירה, "להזמנה" אונליין.</td>
+        <td class="p">טווח (₪₪) בלבד, "המחיר המדויק במסך ההזמנה — נציג מאשר". כלל 3 שלך, וגם ההחלטה מהיום: אפיון בלי מחירים.</td>
+        <td class="who"><span class="chip t">מדיניות</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">"יקר לי"<span class="n">8</span></td>
+        <td class="s">מציגה את הזול ביותר (כרטיס אחד, 1,711 ₪) ומציעה תאריכים או אזור אחר.</td>
+        <td class="p">ממיין מהחסכוניות, מסמן טווח, ומציע לדייק לפי מה שחשוב. אותו רעיון.</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">"יש עוד?"<span class="n">9</span></td>
+        <td class="s">זוכרת מה הוצג ומביאה 6 סוגי חדר נוספים באותם מלונות.</td>
+        <td class="p">זוכר מה הוצג (_shown) ומביא את הבאים. "יש עוד אפשרויות?" (עם המילה "אפשרויות") נפל היום על "מחוץ לתחום" — תוקן.</td>
+        <td class="who"><span class="chip f">תוקן היום</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">אין חדר שמתאים<span class="n">10</span></td>
+        <td class="s">3 מבוגרים בתל אביב → "תקלה טכנית בבדיקת הזמינות". כנראה אין חדר ל-3 — הוצג כתקלה.</td>
+        <td class="p win">פיצול לשני חדרים, או "לא מצאתי בתנאים האלה" + מה להרחיב (חודש, יעד, הרכב).</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">השוואה בין שני מלונות<span class="n">11</span></td>
+        <td class="s">מאפיינת, לא מדרגת: "אם חשוב לכם X — המלך שלמה; אם Y — רויאל גארדן". על "בריכה מחוממת" עונה מהמידע.</td>
+        <td class="p">מ-06/09 אותו דבר, מדפי המלונות: פרופיל לכל מלון, "אם חשוב לכם בריכה — Sport", "בשניהם יש ספא", ו"לגבי שקט — הדפים לא מציינים, נציג יאמת". בלי מחירים, בלי "הכי".</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+
+      <tr class="group"><td colspan="5">ידע ומעקב אחרי השיחה</td></tr>
+      <tr>
+        <td class="topic">תשובה כתובה כפסקה<span class="n">12</span></td>
+        <td class="s">תמיד פסקה אחת שכתובה לאותו לקוח, בלי תפרים.</td>
+        <td class="p">מ-06/09 עורך התשובה כותב פסקה אחת — בתורות ידע (Regnum, שבת, תינוק) ומהערב גם בתורות עם כרטיסים: "לזוג בינואר 2027 הצגתי שלוש אפשרויות… יש יעד שמושך אתכם?" (ריצה שלישית: 43 תורות דרך המודל, 2 עריכות נדחו). נשאר בשורות: פרופיל מלון, תלונה, סירוב.</td>
+        <td class="who"><span class="chip f">תוקן היום</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">ההקשר של הלקוח בתשובה<span class="n">13</span></td>
+        <td class="s"><q>עם ילדים בני 5 ו-9 וביקור ראשון באילת, הרבה משפחות מתלבטות בדיוק בין שני אלה</q></td>
+        <td class="p">התקציר מגיע לעורך: "לבן ה-14 יש מסגרת קייטנה… לבן ה-16 אין קייטנה" (S09 לייב). עדיין לא בכל תור.</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">המשך קצר תלוי הקשר<span class="n">14</span></td>
+        <td class="s">"ובאילת?" אחרי בקשת נציג → ענתה על שתי הכוונות האפשריות. משכתבת את השאלה עם ההקשר ומראה זאת.</td>
+        <td class="p">"ולצרפת?" → מצטט את שורת צרפת; "ובבולגריה?" → כרטיסים מבולגריה עם "עדכנתי — בולגריה". בלי מודל.</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">אותה שאלה שוב<span class="n">15</span></td>
+        <td class="s">מנסחת מחדש את אותה תשובה.</td>
+        <td class="p">מצטט את המשפט הרלוונטי ("ביט ופייפאל — לא"), ואם אין — "כאמור —" + התשובה הקצרה. "עניתי על זה למעלה" נשאר רק לפסקה ארוכה.</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">מדיניות (ביטול)<span class="n">16</span></td>
+        <td class="s win">תשובה ספציפית למלון, עם מספרים: "עד 24 שעות — ללא דמי ביטול; בתוך 24 שעות — הלילה הראשון".</td>
+        <td class="p">פסקת המדרגות המאושרת בלי סכומים, "את הסכומים המדויקים נציג ימסור". החלטה שלך — אבל הלקוח מקבל פחות.</td>
+        <td class="who"><span class="chip s">סאני</span></td>
+        <td class="next">אם תרצה: אחוזי המדרגות בטבלה מאושרת</td>
+      </tr>
+      <tr>
+        <td class="topic">פרט שאין עליו תשובה<span class="n">17</span></td>
+        <td class="s"><q>אין לי מידע שמפרט אחריות השגחה… ולכן אני לא יכולה לומר</q> — ואז ממשיכה.</td>
+        <td class="p"><q>על הפרט הזה אין לי תשובה מאושרת, ולא אנחש — נציג ישלים</q> — ואז ממשיך. הפערים נאספים לשאלון (❔).</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">"למה דווקא אצלכם / זול יותר בבוקינג"<span class="n">18</span></td>
+        <td class="s">לא משווה, מציעה לבדוק את המחירים שלה "כדי שתוכלו להשוות בעצמכם".</td>
+        <td class="p">"לא אשווה מול חברות אחרות… מה שכלול אצלנו מופיע על כל הצעה" — לפי מה שביקשת. בפעם השנייה: "כאמור".</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">תלונה<span class="n">19</span></td>
+        <td class="s">התנצלות, "אין לי גישה לפניות", טלפון, והצעה רכה להמשיך בלי לנעול.</td>
+        <td class="p">התנצלות + נציג, בלי כרטיסים ובלי "ברוכים השבים"; "בוא נראה מה יש" בתור הבא → חזרה לחיפוש.</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+
+      <tr class="group"><td colspan="5">גבולות, שפות ומסירה</td></tr>
+      <tr>
+        <td class="topic">"את בוט?" + מחוץ לתחום<span class="n">20</span></td>
+        <td class="s"><q>אני סייעת דיגיטלית של ישרוטל, לא אדם</q> — ומסרבת למתכון במפורש.</td>
+        <td class="p">"אני עוזר אוטומטי של פינגווין… מה שדורש אדם, נציג יעשה". המתכון ("ואגב…") נבלע בשקט — היום נוסף "ואגב" לזיהוי שאלה שנייה.</td>
+        <td class="who"><span class="chip f">תוקן היום</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">אנגלית / רוסית<span class="n">21</span></td>
+        <td class="s">ענתה באנגלית עם תוכן אמיתי: שמות החדרים עם נוף לים בכל מלון, ומה עם ארוחת בוקר.</td>
+        <td class="p">מהלילה: ההודעה מתורגמת לעברית, התור רץ כרגיל, והתשובה מתורגמת חזרה — עם שומרים (מספרים, טלפון, שמות מלונות, "Pingwin", "Hebrew"). בלייב: <q>In the ski camp, the local instructors teach in English, and alongside them there is an Israeli escort from Pingwin who translates for the children into Hebrew…</q> וברוסית <q>Да, лагерь на иврите предназначен для детей в возрасте 4–14 лет</q>. הכרטיסים עדיין בעברית.</td>
+        <td class="who"><span class="chip f">תוקן היום</span></td>
+        <td class="next">כרטיסים וצ'יפים בשפה</td>
+      </tr>
+      <tr>
+        <td class="topic">ג'יבריש<span class="n">22</span></td>
+        <td class="s"><q>נראה שההודעה נשלחה בטעות 😊</q></td>
+        <td class="p">מהלילה: זיהוי ריצה על שורת מקלדת / אות חוזרת → "נראה שההודעה נשלחה בטעות — אם יש שאלה, כתבו אותה ואענה", לפני כרטיסים ואחריהם (העורך: <q>נראה שההודעה נשלחה בטעות. אם יש לכם שאלה לגבי Casa Karina, Regnum או Vihren, כתבו אותה ואענה</q>).</td>
+        <td class="who"><span class="chip f">תוקן היום</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">נציג אנושי<span class="n">23</span></td>
+        <td class="s">טלפון *5585 ו"צור קשר". אין טופס, אין העברה, אין שעות.</td>
+        <td class="p win">שעות המשרד ("סגור עכשיו, נפתח מחר ב-9:00"), טופס שם+טלפון נפתח בשיחה, הפנייה נשלחת במייל, וממשיך לענות בינתיים.</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">שקיפות — מה חיפשתי<span class="n">24</span></td>
+        <td class="s">"בודקת עבורך מידע לגבי: …" לפני כל תשובת ידע, עם השאלה המשוכתבת. "מחפשת זמינות ב…" לפני כרטיסים.</td>
+        <td class="p">"בודק לגבי" רק כשהמודל ניתב או שכתב; "סידרתי לפי…" ו"הצגתי רק שבועות…" לפני כרטיסים. פחות רעש, פחות מידע.</td>
+        <td class="who"><span class="chip t">טעם</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">סגירה<span class="n">25</span></td>
+        <td class="s">"להזמנה" על הכרטיס — תשלום באתר, בלי אדם.</td>
+        <td class="p">"המשך להזמנה" (דף המלון עם החדר מסומן) או "תחזרו אליי" — נציג מאשר סופית. מודל העסק.</td>
+        <td class="who"><span class="chip t">מדיניות</span></td>
+        <td class="next">—</td>
+      </tr>
+
+      <tr class="group"><td colspan="5">מתחת למכסה</td></tr>
+      <tr>
+        <td class="topic">עמידות<span class="n">26</span></td>
+        <td class="s">הכול דרך המודל ומאגר הידע. כשהחיפוש נכשל — "תקלה טכנית". החלקה: "אני צריך" (זכר) בתוך פרסונה נקבה.</td>
+        <td class="p win">שכבות דטרמיניסטיות (FAQ, שער, פענוח) + 4 שלבי מודל עם שומרים; בלי מפתח — עדיין עונה. 29 קבצי בדיקה, 218 שרשורי FAQ, 20 שיחות עשן.</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">אמת מול ניחוש<span class="n">27</span></td>
+        <td class="s">עונה מהמאגר בשפה חופשית — "לפי המידע שיש לי". לא ראיתי המצאה, אבל אין שומר גלוי.</td>
+        <td class="p win">כל מספר, שם ומונח בתשובה ערוכה חייב להופיע בחומר המאושר; אחרת השורות המקוריות. "אין לי תשובה מאושרת" במקום ניחוש.</td>
+        <td class="who"><span class="chip p">פינגי</span></td>
+        <td class="next">—</td>
+      </tr>
+      <tr>
+        <td class="topic">זיכרון ומהירות<span class="n">28</span></td>
+        <td class="s">השיחה נשמרת בוידג'ט גם אחרי יציאה מהאתר; מזהה שיחה; ~8–15 שניות לתשובה.</td>
+        <td class="p">השיחה שורדת סגירת דפדפן; מזהה שיחה; 4–14 שניות עם מודל, אלפיות שנייה בלי.</td>
+        <td class="who"><span class="chip t">שווה</span></td>
+        <td class="next">—</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>השורה התחתונה</h2>
+  <div class="verdict">
+    <p>השורות לא שוות במשקלן. שני הדברים שהלקוח מרגיש הכי הרבה הם <b>איך התשובה כתובה</b> (12) ו<b>אם הוא נענה בשפה שלו</b> (21) — ושניהם נסגרו באותו יום: העורך כותב פסקה אחת גם מעל כרטיסים, ולקוח שכותב באנגלית או רוסית מקבל את אותה תשובה בשפה שלו, עם שומרים על המספרים, השמות והמותג.</p>
+    <p>במה שקורה <b>בתוך השיחה</b> — לזכור מה נאמר, לענות על שתי שאלות, לשנות הרכב באמצע, להעביר לנציג עם טופס ושעות, לא להמציא — פינגי היום מדויק יותר, ורוב זה נבנה בשבוע האחרון מתוך שלוש השיחות איתה.</p>
+    <p>מה שלא כדאי להעתיק: 8 כרטיסים בבת אחת, "בודקת עבורך" בכל תור, "תקלה טכנית" במקום "אין חדר ל-3", ולשאול שוב מה שכבר נאמר.</p>
+  </div>
+
+  <h2>מה נסגר היום בגלל ההשוואה הזו</h2>
+  <div class="fixes">
+    <div class="fix"><b>"יש עוד אפשרויות?"</b> נפל על "אני כאן בעיקר להתאמת חופשות סקי". נוסף לזיהוי "יש עוד" (וגם "יש עוד מלונות/הצעות", "תציג עוד").</div>
+    <div class="fix"><b>"אתה בוט או בן אדם?"</b> הוסיף ילד לשיחה ("בן כמה הילד?") — "בן אדם", "בן/בת זוג", "בת דודה" כבר לא נספרים כילדים.</div>
+    <div class="fix"><b>"בעצם אנחנו 3 מבוגרים"</b> אחרי כרטיסים חיפש מחדש בשקט. עכשיו: "עדכנתי — 3 מבוגרים — וחיפשתי מחדש". אותו דבר לילדים, חודש ויעד.</div>
+    <div class="fix"><b>העורך גם מעל כרטיסים.</b> "לזוג בינואר 2027 הצגתי שלוש אפשרויות… אם אחת מהן נראית לכם אפשר להמשיך להזמנה. יש יעד שמושך אתכם?" — פסקה אחת במקום שלוש שכבות, עם שומרים לקייטנה, לשבת, למחיר ולהזמנה.</div>
+    <div class="fix"><b>אנגלית / רוסית / צרפתית / ערבית עם תוכן.</b> תרגום פנימה, תור עברי רגיל, תרגום החוצה — עם שומרים. נתפס בלייב ותוקן: "Penguin" במקום Pingwin, ו"лагерь на русском" במקום "על עברית".</div>
+    <div class="fix"><b>ג'יבריש.</b> "אסדגכע ייי" → "נראה שההודעה נשלחה בטעות", והכרטיסים נשארים.</div>
+    <div class="fix"><b>"ואגב, …"</b> נחשב עכשיו שאלה שנייה, כך שמה שלא נענה מקבל "שאלתם עוד דבר ולא עניתי עליו" במקום להיבלע.</div>
+  </div>
+
+  <p class="foot">מקורות ציבוריים על סאני: <a href="https://www.ias.co.il/%D7%9E%D7%9C%D7%95%D7%A0%D7%95%D7%AA/%D7%A8%D7%A9%D7%AA-%D7%99%D7%A9%D7%A8%D7%95%D7%98%D7%9C-%D7%9E%D7%A9%D7%99%D7%A7%D7%94-%D7%90%D7%AA-%D7%A1%D7%90%D7%A0%D7%99-%D7%A0%D7%A6%D7%99%D7%92%D7%AA-%D7%94-ai-%D7%94%D7%A8%D7%90%D7%A9/">IAS — רשת ישרוטל משיקה את "סאני"</a> · <a href="https://www.ice.co.il/tourism/news/article/1109672">אייס — בהשקעת מיליון שקל</a> · <a href="https://www.abra-it.com/solutions/ai-solution/">abra — AI Solution</a>. השיחות עם סאני: מזהים 8e188a736c87 (06/09 בוקר) ו-db312b85dfdd (06/09 ערב) באתר isrotel.co.il. תשובות פינגי: <code>docs/smoke-threads-transcript-live.md</code> והרצת המראה האופליינית של אותה שיחה. הציטוטים קוצרו במקומות, לא שונו.</p>
+</div>
