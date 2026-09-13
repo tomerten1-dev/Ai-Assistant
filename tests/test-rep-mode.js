@@ -389,6 +389,74 @@ const CARDS_OR_COUNT = /הנה מה שנראה פנוי|סידרתי לפי|כמ
     const c = await convo(['זוג, ינואר, הכי זול שיש', 'יקר לי']);
     assert.ok(!/מה שכן מוריד מחיר/.test(c[1].reply_he), c[1].reply_he);
   });
+
+  // ── 13/09, round 10: six more conversations played as a customer ──
+  await t('"2 מבוגרים ו-3 ילדים (4, 7, 13), ב-20 בדצמבר לשבוע" is read whole', async () => {
+    const s = nlu.parseText('שלום, אנחנו 2 מבוגרים ו-3 ילדים (4, 7, 13), רוצים לצאת ב-20 בדצמבר לשבוע', {});
+    assert.deepStrictEqual(s.children_ages, [4, 7, 13]);
+    assert.strictEqual(s.exact_day, 20); assert.strictEqual(s.month, 12); assert.strictEqual(s.nights_wanted, 7);
+    assert.deepStrictEqual(nlu.parseText('3 ילדים בני 4, 7 ו-13', {}).children_ages, [4, 7, 13]);
+    assert.strictEqual(nlu.parseText('ה-5 לינואר', {}).exact_day, 5);
+  });
+  await t('"זוג בני 60" and "6 חברים, בני 25" — the travellers\' own age is not another traveller', async () => {
+    assert.strictEqual(nlu.parseText('זוג בני 60', {}).adults, 2);
+    const s = nlu.parseText('אנחנו 6 חברים, בני 25, פברואר, משהו עם חיי לילה', {});
+    assert.strictEqual(s.adults, 6);
+    assert.strictEqual(s.no_children, true, 'friends were asked about their children');
+    assert.strictEqual(nlu.parseText('2 מבוגרים וילד בן 18', {}).adults, 3, 'a child of 18 is still an adult');
+  });
+  await t('six friends: no paragraph about villages or six-person rooms above the offers, and seven get their two-room splits', async () => {
+    const r = await convo(['אנחנו 6 חברים, בני 25, פברואר, משהו עם חיי לילה']);
+    assert.ok(r[0].cards.length, 'no offers: ' + r[0].reply_he.slice(0, 80));
+    assert.ok(!/בכל האתרים שאנחנו מוכרים יש כפר|יש מלונות עם חדרים ל-5/.test(r[0].reply_he), r[0].reply_he.slice(0, 200));
+    assert.ok(!/נוסעים גם ילדים/.test(r[0].reply_he), 'asked about children');
+    const q = await convo(['יש לכם חדר ל-6?']);
+    assert.ok(/חדרים ל-5 ול-6/.test(q[0].reply_he), 'the question itself lost its answer: ' + q[0].reply_he.slice(0, 80));
+    const s = await convo(['אנחנו 7 חברים, פברואר']);
+    assert.ok((s[0].two_room_splits || []).length, 'no splits');
+    assert.ok(!/לא מצאתי התאמה במערכת/.test(s[0].reply_he), '"nothing found" above three two-room splits: ' + s[0].reply_he);
+  });
+  await t('"תומר 0501234567" is greeted by name; "תשלחו לי הצעה במייל" opens the form', async () => {
+    const r = await convo(['תומר 0501234567']);
+    assert.ok(/קיבלתי, תומר/.test(r[0].reply_he), r[0].reply_he);
+    assert.ok(!/איך לקרוא לכם/.test(r[0].reply_he), 'asked for the name it was just given');
+    assert.deepStrictEqual(r[0].lead_prefill, { phone: '0501234567', name: 'תומר' });
+    const bare = await convo(['0501234567']);
+    assert.ok(/איך לקרוא לכם/.test(bare[0].reply_he), bare[0].reply_he);
+    const m = await convo(['זוג, ינואר, אוסטריה', 'תשלחו לי הצעה במייל']);
+    assert.ok(m[1].open_lead_form, 'the form did not open for an offer by mail');
+  });
+  await t('"ואיך עם שיעורים?", "כמה זמן הטיסה?" and "הילד בן 4 יכול להיות בקייטנה?" get their own answers', async () => {
+    const a = await convo(['אני לבד, מרץ, אוסטריה', 'ואיך עם שיעורים?']);
+    assert.ok(/לא חייבים לקחת שיעורים/.test(a[1].reply_he), a[1].reply_he.slice(0, 100));
+    const b = await convo(['זוג, ינואר, צרפת', 'כמה זמן הטיסה?']);
+    assert.ok(/לצרפת \(ליון או ז'נבה\) — בערך/.test(b[1].reply_he), b[1].reply_he.slice(0, 160));
+    assert.ok(!/לבולגריה \(סופיה\)/.test(b[1].reply_he), 'the other countries\' flights listed too');
+    assert.strictEqual((b[1].reply_he.match(/נציג ימסור/g) || []).length, 1, b[1].reply_he);
+    const c = await convo(['2 מבוגרים ו-3 ילדים (4, 7, 13), דצמבר, צרפת', 'כן', 'הילד בן 4 יכול להיות בקייטנה?']);
+    assert.ok(/קבוצת 4-6 לבני 4–5/.test(c[2].reply_he), c[2].reply_he.slice(0, 120));
+    assert.ok(!/מגיל 15 אין קייטנה/.test(c[2].reply_he), 'the teenager\'s answer given for the four-year-old');
+  });
+  await t('"רוצים משהו מפנק עם ספא" is a wish, not a question about luxury or a shrug', async () => {
+    const r = await convo(['זוג בלי ילדים, ינואר, רוצים משהו מפנק עם ספא']);
+    assert.ok(!/אשמח להשוות לפי הנתונים/.test(r[0].reply_he), 'the luxury-comparison paragraph: ' + r[0].reply_he.slice(0, 80));
+    assert.ok(!/זה משתנה ממלון למלון/.test(r[0].reply_he), 'the per-hotel shrug: ' + r[0].reply_he.slice(0, 80));
+    assert.ok((r[0].slots.preferences || []).includes('ספא'));
+    const q = await convo(['איזה מלון הכי מפנק?']);
+    assert.ok(/אשמח להשוות/.test(q[0].reply_he), 'the real question lost its answer');
+  });
+  await t('"לקחתי בחשבון: …" is read back once, and a comparison covers only the offers on screen', async () => {
+    const r = await convo(['2 מבוגרים ו-3 ילדים (4, 7, 13), ב-20 בדצמבר לשבוע, ספא', 'כן קייטנה', 'אפשר לשלם בתשלומים?', 'יש חניה?']);
+    const all = r.map(x => x.reply_he).join('\n');
+    assert.ok((all.match(/לקחתי בחשבון/g) || []).length <= 1, all);
+    const s = await convo(['אנחנו 6 חברים, פברואר', 'בעצם צרפת', 'איזה מהם הכי קרוב למסלולים?']);
+    assert.ok(/עדכנתי — צרפת/.test(s[1].reply_he.split('\n')[0]), 'the update line is not first: ' + s[1].reply_he.slice(0, 80));
+    assert.ok(!/Casa Karina/.test(s[2].reply_he), 'a hotel from two searches ago was compared: ' + s[2].reply_he.slice(0, 200));
+  });
+  await t('"יש מלון יותר טוב?" shows more instead of "איזו מההצעות מדברת אליכם?"', async () => {
+    const r = await convo(['זוג פברואר בולגריה', 'יש מלון יותר טוב?']);
+    assert.ok(r[1].cards.length && !r[1].cards_unchanged, r[1].reply_he);
+  });
   await t('chips under the offers: at most six, only what would change them, active wishes gone', async () => {
     const r = await convo(['זוג', 'פברואר', 'אוסטריה', 'תקציב חסכוני']);
     for (const x of r.filter(x => x.cards.length)) {

@@ -165,8 +165,11 @@ function parseText(text, slots) {
         for (const m of chunk.matchAll(/(?:^|[^\d])(\d{1,2})(?![\d])/g)) {
           const n = +m[1];
           if (n >= 0 && n <= 17) ages.push(n);
-          // 18 and over is an adult, whatever the sentence called them
-          else if (n >= 18 && n <= 99) grownUps++;
+          // 18 and over is an adult, whatever the sentence called them — but
+          // only when the sentence called them a child at all: "זוג בני 60"
+          // and "6 חברים בני 25" state the travellers' own age, and used to
+          // add a third person to the couple (13/09)
+          else if (n >= 18 && n <= 99 && /ילד|ילדה|(?:^|[^א-ת])ב[ןת](?![א-ת])|נער|נערה|בחור|בחורה/.test(chunk)) grownUps++;
         }
         // ages spelled out: "בני שש ותשע"
         if (!ages.length) {
@@ -181,7 +184,8 @@ function parseText(text, slots) {
     // "ילדים 6 ו-8", "ילדים: 5, 9" — the ages right after the word, with no
     // "בני" (persona P28, 03/09: this read as "רק מספר המבוגרים")
     if (!ages.length) {
-      const after = t.match(/(?:^|[^א-ת])ה?ילד(?:ים|ות|ה)?\s*[:\-]?\s*(\d{1,2}(?:\s*(?:,|\+|ו-?)\s*\d{1,2}){0,3})(?![\d])/);
+      // "(4, 7, 13)" in brackets after the count is the same census (13/09)
+      const after = t.match(/(?:^|[^א-ת])ה?ילד(?:ים|ות|ה)?\s*[:\-(]?\s*(?:בני|בגילאי|גילאי)?\s*(\d{1,2}(?:\s*(?:,|\+|ו-?)\s*\d{1,2}){0,3})(?![\d])/);
       if (after) {
         const nums = after[1].match(/\d{1,2}/g).map(Number);
         if (nums.every(x => x >= 0 && x <= 17)) ages = nums;
@@ -461,6 +465,14 @@ function parseText(text, slots) {
     if (dm2 && +dm2[1] >= 1 && +dm2[1] <= 31 && season.inSeason(+dm2[2])) {
       s.exact_day = +dm2[1];
       s.month = +dm2[2];
+    }
+  }
+  // "ב-20 בדצמבר", "ה-5 לינואר" — a day named in words is as exact as "20.12" (13/09)
+  if (s.exact_day == null) {
+    const dw = t.match(/(?:^|[^\d])(\d{1,2})\s*(?:ב|ל)-?\s*(דצמבר|ינואר|פברואר|מרץ|מארס|מרס)(?![א-ת])/);
+    if (dw && +dw[1] >= 1 && +dw[1] <= 31) {
+      const mo = dw[2].startsWith('דצ') ? 12 : dw[2].startsWith('ינ') ? 1 : dw[2].startsWith('פב') ? 2 : 3;
+      s.exact_day = +dw[1]; s.month = mo;
     }
   }
   if (s.month == null) {
@@ -774,7 +786,9 @@ function parseText(text, slots) {
 
   // "אנחנו 12 אנשים, 6 זוגות" — couples, so no children, and asking anyway
   // reads as not having listened.
-  if (/\d+ ?זוגות|זוגות בלבד|כמה זוגות/.test(t) && !(s.children_ages || []).length) {
+  // "6 חברים" is a group of adults just as much (13/09)
+  if (/\d+ ?זוגות|זוגות בלבד|כמה זוגות|\d+ ?(?:חברים|חברות|בחורים|בחורות|סטודנטים)|קבוצת חברים/.test(t) &&
+      !(s.children_ages || []).length && !/ילד|ילדה|ילדים|תינוק|פעוט/.test(t)) {
     s.no_children = true;
   }
 
@@ -1409,7 +1423,10 @@ function phrase(result, slots, cards) {
     // already voiced ("החסכוניות קודם" IS the budget) is not repeated (13/09)
     const said = lines.join(' ');
     const SAME = { 'תקציב': /חסכוני|זול|תקציב/, 'מתחילים': /מתחיל/ };
-    const items = applied.items.filter(p => p !== 'משפחות' &&
+    // …and said once per conversation: "לקחתי בחשבון: 7 לילות, ספא" under
+    // every reply is a bot reading its own notes aloud (13/09)
+    const before = new Set(slots._applied_said || []);
+    const items = applied.items.filter(p => p !== 'משפחות' && !before.has(p) &&
       !(said.includes(p) || (SAME[p] && SAME[p].test(said))));
     if (items.length >= 2) {
       lines.push('לקחתי בחשבון: ' + items.join(', ') + '.');
@@ -1764,7 +1781,7 @@ function hotelNamed(text) {
 
 // "יש עוד?" is a request for the NEXT options, not a topic to discuss. It used
 // to get "that is not my subject" and the same three cards again.
-const WANTS_MORE = /^ ?ו?(יש עוד|עוד|עוד אפשרויות|יש עוד אפשרויות|יש עוד הצעות|יש עוד מלונות|תראה עוד|תראו עוד|תציג עוד|מה עוד יש|יש עוד משהו|אפשרויות נוספות|יש אפשרויות נוספות|עוד הצעות|יש אחרים|משהו אחר|יש משהו אחר)\s*\??\s*$/;
+const WANTS_MORE = /^ ?ו?(יש (?:מלון|משהו|אפשרות) (?:יותר )?טובה?(?: יותר)?|משהו (?:יותר )?טוב(?: יותר)?|יש (?:יותר )?טוב(?: יותר)?|יש עוד|עוד|עוד אפשרויות|יש עוד אפשרויות|יש עוד הצעות|יש עוד מלונות|תראה עוד|תראו עוד|תציג עוד|מה עוד יש|יש עוד משהו|אפשרויות נוספות|יש אפשרויות נוספות|עוד הצעות|יש אחרים|משהו אחר|יש משהו אחר)\s*\??\s*$/;
 function wantsMore(text) {
   return WANTS_MORE.test(String(text || '').trim());
 }
@@ -1972,6 +1989,10 @@ function loadFaq() {
     if (!e || !e.id || !e.match || !e.answer_he) { bad.push((e && e.id) || '(ללא id)'); continue; }
     try {
       out.push({ id: e.id, re: new RegExp(e.match, 'i'), he: e.answer_he, match: e.match,
+        // an answer that needs the customer's details opens the form with it
+        // ("תשלחו לי הצעה במייל" used to promise a mail with nowhere to leave
+        // the address, 13/09)
+        open_form: e.open_form === true,
         // a specific answer can silence a general one it already covers:
         // "למה אין בפברואר" is answered by france_february, and why_none's
         // paragraph about our stock after it reads as a second, vaguer answer
@@ -2021,7 +2042,7 @@ function faqMulti(text) {
       if (hits.length >= 3) break;
       if (hits.some(h => h.id === e.id)) continue;
       const m = whole.match(e.re);
-      if (m) hits.push({ id: e.id, he: fillPlaceholders(e.he), matched: String(m[0]).trim() });
+      if (m) hits.push({ id: e.id, he: fillPlaceholders(e.he), matched: String(m[0]).trim(), open_form: e.open_form });
     }
   }
   if (!hits.length) return null;
@@ -2032,7 +2053,7 @@ function faqMulti(text) {
   const kept = hits.filter(h => !silenced.has(h.id));
   const final = kept.length ? kept : hits;
   return { id: final[0].id, he: final.map(h => h.he).join(String.fromCharCode(10)),
-    matched: final[0].matched,
+    matched: final[0].matched, open_form: final.some(h => h.open_form),
     all: final.map(h => ({ id: h.id, he: h.he, matched: h.matched })) };
 }
 
@@ -2049,7 +2070,7 @@ function faq(text) {
   // a topic name the answer file does not have.
   for (const e of loadFaq()) {
     const m = t.match(e.re);
-    if (m) return { id: e.id, he: fillPlaceholders(e.he), matched: String(m[0]).trim() };
+    if (m) return { id: e.id, he: fillPlaceholders(e.he), matched: String(m[0]).trim(), open_form: e.open_form };
   }
   return null;
 }
@@ -2135,7 +2156,15 @@ function leadIntent(text) {
   // a phone number with at most a name around it — the customer skipped the form
   const ph = raw.match(PHONE_RE);
   if (ph && raw.replace(PHONE_RE, '').replace(/[\s,.:;\-|]/g, '').length <= 25 && !/\?/.test(raw)) {
-    const name = raw.replace(PHONE_RE, '').replace(/[,.:;|\-]/g, ' ').replace(/\s+/g, ' ').trim();
+    const name = raw.replace(PHONE_RE, '').replace(/[,.:;|\-]/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/^(?:שמי|אני|קוראים לי|זה|הטלפון שלי|טלפון|נייד|מספר)\s+/, '').trim();
+    // "תומר 0501234567" — the name is right there; asking for it back reads
+    // as not having read the message (13/09)
+    const isName = name && /^[א-ת]{2,}(?: [א-ת]{2,})?$/.test(name) && !/^(?:טלפון|נייד|מספר|תתקשרו|תחזרו|אליי|בבקשה|תודה)$/.test(name);
+    if (isName) {
+      return { kind: 'phone_only', prefill: { phone: ph[0], name },
+        he: guidance.msg('phone_and_name', 'קיבלתי, {name} — על מה תרצו שנציג יחזור אליכם? (תאריכים, הרכב, יעד — מה שכבר יש)').replace('{name}', name) };
+    }
     return { ...L('phone_only'), prefill: { phone: ph[0], name: name || '' } };
   }
   if (/אני סוכן|סוכנת נסיעות|סוכן נסיעות|משרד נסיעות|תנאי סוכנים|עמלת סוכן|עמלה לסוכנים|נטו לסוכן|מחיר נטו/.test(t)) return L('agent');

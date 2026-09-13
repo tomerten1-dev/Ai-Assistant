@@ -193,9 +193,19 @@ function toSearchSlots(slots) {
 /* The resorts the conversation is about: the offers on screen first, then a
    named resort, then every resort of a named country. Latin keys as in
    resorts.json. */
+// the display names of the offers on the customer's screen: the last turn
+// that drew cards, or — for a widget that revealed a spare — the tail of
+// everything shown
+function onScreenHotels(prevSlots) {
+  if ((prevSlots._on_screen || []).length) return prevSlots._on_screen.slice(0, 3);
+  return [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
+}
+
 function resortsInPlay(slots, prevSlots) {
   const out = new Set();
-  for (const key of (prevSlots._shown || [])) {
+  const keys = (prevSlots._on_screen || []).length
+    ? prevSlots._on_screen : (prevSlots._shown || []);
+  for (const key of keys) {
     const info = engine.hotelInfo(String(key).split('|')[0]);
     if (info && info.resort) out.add(info.resort);
   }
@@ -210,7 +220,7 @@ function resortsInPlay(slots, prevSlots) {
    is Tomer's; this only picks the sentence about their resort out of it. */
 function scopeTransferAnswer(faqHit, lastUser, slots, prevSlots) {
   const ids = new Set([faqHit.id, ...((faqHit.all || []).map(a => a.id))]);
-  if (!ids.has('transfer_time') && !ids.has('flight_route')) return faqHit;
+  if (!ids.has('transfer_time') && !ids.has('flight_route') && !ids.has('flight_duration')) return faqHit;
   const resorts = resortsInPlay(slots, prevSlots);
   if (!resorts.length) return faqHit;
   const countries = [...new Set(resorts.map(r => {
@@ -245,6 +255,13 @@ function scopeTransferAnswer(faqHit, lastUser, slots, prevSlots) {
     const hit = pick(full.he, heNames, 'ל');
     const fIntro = String(full.he).split(':')[0].trim();
     if (hit) parts.push((fIntro ? fIntro + ': ' : 'הטיסה: ') + hit.join('; ') + '.');
+  }
+  if (ids.has('flight_duration') && countries.length) {
+    const full = (faqHit.all || []).find(a => a.id === 'flight_duration') || faqHit;
+    const heNames = countries.map(c => labels.country(c)).filter(Boolean);
+    const hit = pick(full.he, heNames, 'ל');
+    const fIntro = String(full.he).split(':')[0].trim();
+    if (hit) parts.push((fIntro ? fIntro + ': ' : 'משך הטיסה: ') + hit.map(h => h.split('. ')[0]).join('; ') + '. את השעות המדויקות לתאריך שלכם נציג ימסור.');
   }
   if (!parts.length) return faqHit;
   return { ...faqHit, he: parts.join(String.fromCharCode(10)), scoped: true };
@@ -534,7 +551,7 @@ function facilityLine(lastUser, prevSlots, engine) {
   if (!wanted.length) return null;
   let names = offline.hotelsNamed(text);
   if (!names.length) {
-    const shown = [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
+    const shown = onScreenHotels(prevSlots);
     const keys = Object.keys(engine.resorts.hotels);
     names = shown.map(d => keys.find(k => displayHotel(k) === d)).filter(Boolean);
   }
@@ -584,7 +601,7 @@ function ratingsLine(lastUser, prevSlots, engine) {
   let names = offline.hotelsNamed(lastUser);
   if (!names.length) {
     // המלונות שעל המסך, בסדר שהוצגו
-    const shown = [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
+    const shown = onScreenHotels(prevSlots);
     const keys = Object.keys(engine.resorts.hotels);
     names = shown.map(d => keys.find(k => displayHotel(k) === d)).filter(Boolean);
   }
@@ -823,7 +840,7 @@ function searchEcho(slots) {
     bits.push(slots.adults + ' מבוגרים + ' +
       (kids.length === 1 ? 'ילד (גיל ' + kids[0] + ')' : kids.length + ' ילדים (גילאי ' + kids.join(', ') + ')'));
   } else if (slots.adults != null) {
-    bits.push(slots.adults + ' נוסעים' + (slots.no_children === true ? ' בלי ילדים' : ''));
+    bits.push((slots.adults === 1 ? 'נוסע אחד' : slots.adults + ' נוסעים') + (slots.no_children === true ? ' בלי ילדים' : ''));
   } else if (kids.length) {
     bits.push(kids.length + ' ילדים (גילאי ' + kids.join(', ') + ')');
   }
@@ -1271,6 +1288,20 @@ async function handleChatInner(body) {
   // faqMulti: each question segment matched on its own, so a message that
   // asks two known things gets both answers with no model involved
   let faqHit = offline.faqMulti(lastUser);
+  // A statement that happens to carry a topic word is a request, not a
+  // question: "6 חברים, פברואר, משהו עם חיי לילה" is answered by the offers
+  // sorted for nightlife — not by a paragraph about villages and another about
+  // six-person rooms above them (13/09). These answers stay for the question.
+  if (faqHit && !faqHit.routed) {
+    const UNLESS_ASKED = {
+      big_family_room: /\?|חדר|סוויט/,
+      village_life: /\?|מה (?:יש|עושים)|יש מה|כפר מת|עיירה מתה|קרוב לברים|רומנטי|ירח דבש/,
+    };
+    const all = faqHit.all || [faqHit];
+    const kept = all.filter(a => !(UNLESS_ASKED[a.id] && !UNLESS_ASKED[a.id].test(lastUser)));
+    if (!kept.length) faqHit = null;
+    else if (kept.length < all.length) faqHit = { ...faqHit, id: kept[0].id, he: kept.map(a => a.he).join(String.fromCharCode(10)), matched: kept[0].matched, all: kept };
+  }
   // A SHORT follow-up carries its subject in the previous turn, not in itself.
   // "מה כלול בחבילה?" … "גם לילדים?" — the second message has no topic a
   // pattern can find, and the bot answered "לא בטוח שהבנתי" to a question a
@@ -1376,7 +1407,13 @@ async function handleChatInner(body) {
   // answer, and no router call is needed to know it (S09, 06/09 smoke: the
   // router picked "טיול מאורגן" even with the digest in front of it).
   const teenAges = (slots.children_ages || []).filter(a => a >= 13 && a <= 17);
-  if (!faqHit && teenAges.length && !offline.guard(lastUser) &&
+  // …unless the question names a younger child ("הילד בן 4 יכול להיות
+  // בקייטנה?") — that one is about the four-year-old, not the teenager (13/09)
+  const namesYounger = /ב[נןת] ?(?:[0-9]|1[0-2])(?![\d])/.test(lastUser);
+  // …and "כן, קייטנה" is an answer to our question, not a question about the
+  // teenager — the note rides only on a question (13/09)
+  const asksAboutTeen = looksLikeQuestion || /מסגרת|מי שומר|מה עושים|לבד/.test(lastUser);
+  if (!faqHit && teenAges.length && !namesYounger && asksAboutTeen && !offline.guard(lastUser) &&
       /מסגרת|קייטנ|הדרכה|מי שומר|מה עושים|לבד|מדריך/.test(lastUser) && !/מבוגרים בלבד|למבוגרים\?/.test(lastUser)) {
     const teen = offline.faqEntries().find(e => e.id === 'teen_camp');
     if (teen) faqHit = { id: 'teen_camp', he: teen.answer_he, all: [{ id: 'teen_camp', he: teen.answer_he }] };
@@ -2142,6 +2179,11 @@ async function handleChatInner(body) {
   const spareCards = cards.slice(CARDS_DEFAULT);
   cards = cards.slice(0, CARDS_DEFAULT);
   slots._shown = [...new Set([...seenBefore, ...cards.map(c => c.hotel + '|' + c.date)])].slice(-30);
+  // what is ON SCREEN now — not the last three of everything ever shown.
+  // "איזה מהם הכי קרוב למסלולים?" over two French offers used to compare a
+  // Bansko hotel from two searches ago as well (13/09)
+  if (cards.length) slots._on_screen = [...new Set(cards.map(c => c.hotel))].slice(0, 6);
+  else if (prevSlots._on_screen) slots._on_screen = prevSlots._on_screen;
   // Remember the cheapest band actually put in front of the customer, so that
   // "יקר לי" on the next turn can be answered with something genuinely cheaper
   // rather than a reshuffle of the same prices.
@@ -2244,7 +2286,10 @@ async function handleChatInner(body) {
   // "לא בטוח שהבנתי" — the bot understood the question perfectly ("מקררון?"
   // on an empty chat, 30/08 live run).
   let pointedAtCards = false;
-  if (cardTopicAsked && !faqHit && !deflection && !cards.length &&
+  // a QUESTION about a per-hotel topic — "רוצים משהו מפנק עם ספא" is a wish,
+  // and answering it with "זה משתנה ממלון למלון" reads as a shrug (13/09)
+  const askedIt = /\?/.test(lastUser) || /^\s*(?:יש|האם|מה|איך|כמה|איפה|אפשר)(?![א-ת])/.test(lastUser);
+  if (cardTopicAsked && askedIt && !faqHit && !deflection && !cards.length &&
       !preamble.includes(CARD_TOPIC_POINTER)) {
     preamble = [preamble, CARD_TOPIC_POINTER].filter(Boolean).join(String.fromCharCode(10));
     pointedAtCards = true;
@@ -2280,14 +2325,23 @@ async function handleChatInner(body) {
   const CARDS_FLOOR_HE = guidance.msg('cards_floor', 'הנה מה שבניתי לכם — הנציג יאשר סופית:');
   let templated;
   try {
+    // two-room splits are offers too: "לא מצאתי התאמה" above three of them
+    // was a lie about a search that found some (7 friends, 13/09)
+    const anySplit = (result.two_room_splits || []).length > 0;
     templated = holdingForDetails ? '' :
       (offline.phrase(result, sayingSlots, cards) ||
-        (cards.length ? CARDS_FLOOR_HE : offline.noMatchAnswer()));
+        (cards.length ? CARDS_FLOOR_HE : anySplit ? '' : offline.noMatchAnswer()));
   } catch (e) {
     // the template builder is deterministic, but it reads a dozen optional
     // shapes off the result; one unexpected null must not cost the offers
     console.error('template phrasing failed:', e.message);
     templated = cards.length ? CARDS_FLOOR_HE : FALLBACK_HE();
+  }
+  // remember which requirements were read back, so they are read back once
+  {
+    const m = String(templated).match(/לקחתי בחשבון: ([^\n]+?)\./);
+    const items = m ? m[1].split(', ') : [];
+    slots._applied_said = [...new Set([...(prevSlots._applied_said || []), ...items])].slice(-12);
   }
   // The model rewrites that in natural Hebrew (Tomer, 24/08). It only ever
   // sees the offers the deterministic filter already chose, so it cannot
@@ -2474,7 +2528,10 @@ async function handleChatInner(body) {
         // "משפחות" is who they are, not a wish they asked us to weigh (13/09)
         .filter(p => p !== 'משפחות')
         .filter(p => !mentions(p));
-      if (newPrefs.length) coverage.push('לקחתי בחשבון: ' + newPrefs.join(', ') + '.');
+      if (newPrefs.length) {
+        coverage.push('לקחתי בחשבון: ' + newPrefs.join(', ') + '.');
+        slots._applied_said = [...new Set([...(slots._applied_said || []), ...newPrefs])].slice(-12);
+      }
       const unheard = (sayingSlots.notes_from_customer || [])
         .filter(Boolean)
         // a stated number is never "covered" by the word תקציב elsewhere
@@ -2587,14 +2644,15 @@ async function handleChatInner(body) {
     let updateLine = null;
     if (alreadySawOffers && cards.length) {
       const ch = [];
-      if (slots.adults != null && prevSlots.adults != null && slots.adults !== prevSlots.adults) ch.push(slots.adults + ' מבוגרים');
+      if (slots.adults != null && prevSlots.adults != null && slots.adults !== prevSlots.adults) ch.push(slots.adults === 1 ? 'נוסע אחד' : slots.adults + ' מבוגרים');
       const k0 = (prevSlots.children_ages || []).join(','), k1 = (slots.children_ages || []).join(',');
       if (k0 && k1 && k0 !== k1) ch.push('ילדים בגילאי ' + (slots.children_ages || []).join(', '));
       if (typeof slots.month === 'number' && typeof prevSlots.month === 'number' && slots.month !== prevSlots.month && ECHO_MONTH_HE[slots.month]) ch.push(ECHO_MONTH_HE[slots.month]);
       if (slots.country && prevSlots.country && slots.country !== prevSlots.country && slots.country !== 'any' && ECHO_COUNTRY_HE[slots.country]) ch.push(ECHO_COUNTRY_HE[slots.country]);
       if (ch.length) updateLine = guidance.msg('search_updated', 'עדכנתי — {changes} — וחיפשתי מחדש:').replace('{changes}', ch.join(', '));
     }
-    const parts = [preamble, updateLine, intro, contrast, priceLine, ...coverage, tailQuestion].filter(Boolean);
+    // "עדכנתי — צרפת — וחיפשתי מחדש" opens: the search moved, then what it found
+    const parts = [updateLine, preamble, intro, contrast, priceLine, ...coverage, tailQuestion].filter(Boolean);
     // Once per conversation. Ending every turn with the same sentence is how
     // a bot sounds like a bot; a person says it when it is worth saying.
     // two-room splits are offers too — they render as their own cards in
@@ -2813,7 +2871,8 @@ async function handleChatInner(body) {
   // at if there is one. Telling someone where to find a button is not service.
   slots._lastFaqId = faqHit ? faqHit.id : null;
   slots._lastGuard = guarded || null;
-  const askForDetails = offline.wantsCallback(lastUser) || lostNudge || exhaustedNudge;
+  const askForDetails = offline.wantsCallback(lastUser) || lostNudge || exhaustedNudge ||
+    !!(faqHit && faqHit.open_form);
 
   return {
     open_lead_form: askForDetails,

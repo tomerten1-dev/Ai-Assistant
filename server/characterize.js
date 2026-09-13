@@ -57,7 +57,8 @@ const WANTS = [
 ];
 
 function shownHotels(prevSlots, engine, displayHotel) {
-  const shown = [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
+  const shown = (prevSlots._on_screen || []).length ? prevSlots._on_screen.slice(0, 3)
+    : [...new Set((prevSlots._shown || []).map(x => String(x).split('|')[0]))].slice(-3);
   const keys = Object.keys(engine.resorts.hotels);
   return shown.map(d => keys.find(k => displayHotel(k) === d)).filter(Boolean);
 }

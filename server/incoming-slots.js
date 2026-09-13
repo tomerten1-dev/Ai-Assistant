@@ -152,6 +152,8 @@ function bookkeeping(raw, out) {
   // them. Each cap matches what the server actually writes.
   out._asked = list(raw._asked, { items: 12, max: 80 });
   out._shown = list(raw._shown, { items: 30, max: 120 });
+  out._on_screen = list(raw._on_screen, { items: 6, max: 120 });
+  out._applied_said = list(raw._applied_said, { items: 12, max: 60 });
   out._compared = list(raw._compared, { items: 3, max: 120 });   // hotels just characterized
   out._notes_said = list(raw._notes_said, { items: 20, max: MAX_TEXT });
   out._fixed_said = list(raw._fixed_said, { items: 8, max: LINE_MAX });
