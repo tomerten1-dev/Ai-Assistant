@@ -636,7 +636,8 @@ function startServer() {
         assert.ok(hl.vis, 'the pill is not visible');
         assert.ok(hl.strip && /יין בארוחות/.test(hl.strip), 'no strip in the panel: ' + hl.strip);
         assert.ok(!hl.boardFact, 'the plain board fact still shows beside the pill');
-        assert.ok(/מסביר את המחיר/.test(hl.bot), 'the reply never said what the price buys');
+        assert.ok(/קלאב דו סוליי כולל במחיר/.test(hl.bot), 'the reply never said what the price buys');
+        assert.ok(!/מסביר את המחיר/.test(hl.bot + hl.strip), 'Tomer\'s wording only (13/09)');
       });
     }
 
