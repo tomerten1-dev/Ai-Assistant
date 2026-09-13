@@ -51,7 +51,9 @@ const AUDIENCE = [
   ['quiet', /שקט|רומנטי|ירח דבש|זוג מבוגר|פנסיונר|לנוח|רגוע/],
 ];
 const ATTR = [
-  ['glacier', /קרחון|בטוח שלג|ודאות שלג|שלג מובטח|הכי גבוה|גבוהים|יש שלג ב/],
+  ['glacier', /קרחון|הכי גבוה|גבוהים/],
+  // "איפה שיש שלג" is about snow certainty: high resorts, glacier or not (13/09)
+  ['snow', /בטוח שלג|ודאות שלג|שלג מובטח|יש שלג ב|איפה (?:ש)?יש שלג|הכי הרבה שלג|שלג טוב|איפה השלג|בטוח שיהיה שלג|יהיה שלג|שלג בטוח/],
   ['night', /סקי לילה|גלישת לילה|בלילה על המסלול/],
   ['park', /סנואו ?פארק|סנופארק/],
   ['skiinout', /סקי.?אין|ski.?in|קרוב למסלול|צמוד למסלול|בלי אוטובוס|ליד המעלית/i],
@@ -123,6 +125,10 @@ function detect(text, slots) {
 function reasons(p, audience, attrs) {
   const r = [];
   const a = new Set(audience), x = new Set(attrs);
+  if (x.has('snow')) {
+    if (p.glacier === true) r.push(`קרחון — גלישה עד ${p.top_m} מ׳`);
+    else if (p.top_m) r.push(`גלישה עד ${p.top_m} מ׳`);
+  }
   if (a.has('families') || a.has('beginners')) {
     if (p.beginner_near_village === true) r.push('אזור מתחילים ממש ליד הכפר');
     else if (typeof p.beginner_near_village === 'string') r.push(p.beginner_near_village);
@@ -167,6 +173,8 @@ function score(p, audience, attrs) {
   }
   for (const x of attrs) {
     if (x === 'glacier' && p.glacier === true) s += 5;
+    // the higher the surer: 3600m outranks 2500m, a glacier on top of that
+    if (x === 'snow') s += Math.min(7, ((p.top_m || 0) - 2000) / 250) + (p.glacier === true ? 2 : 0);
     if (x === 'night' && p.night_skiing === true) s += 5;
     if (x === 'park' && p.snow_park === true) s += 3;
     if (x === 'skiinout' && p.ski_in_out === true) s += 5;
@@ -183,6 +191,7 @@ function qualifies(p, audience, attrs) {
   }
   for (const x of attrs) {
     if (x === 'glacier' && p.glacier !== true) return false;
+    if (x === 'snow' && !(p.glacier === true || (p.top_m || 0) >= 2500)) return false;
     if (x === 'night' && p.night_skiing !== true) return false;
     if (x === 'park' && p.snow_park !== true) return false;
     if (x === 'skiinout' && p.ski_in_out !== true) return false;
@@ -192,7 +201,7 @@ function qualifies(p, audience, attrs) {
 }
 
 const LABEL = { families: 'למשפחות עם ילדים', beginners: 'למתחילים', apres: 'למי שרוצה אפרה-סקי', experts: 'לגולשים מנוסים', quiet: 'למי שמחפש שקט',
-  glacier: 'עם קרחון', night: 'עם סקי לילה', park: 'עם סנואו-פארק', skiinout: 'עם סקי-אין/סקי-אאוט', big: 'עם שטח גלישה גדול', near: 'קרוב לשדה התעופה', camp: 'עם קייטנה בעברית' };
+  glacier: 'עם קרחון', snow: 'עם ודאות שלג גבוהה', night: 'עם סקי לילה', park: 'עם סנואו-פארק', skiinout: 'עם סקי-אין/סקי-אאוט', big: 'עם שטח גלישה גדול', near: 'קרוב לשדה התעופה', camp: 'עם קייטנה בעברית' };
 
 function topicLabel(audience, attrs) {
   return [...audience.map(a => LABEL[a]), ...attrs.map(x => LABEL[x])].filter(Boolean).join(' ו');
@@ -314,11 +323,11 @@ function assess(intent, slots) {
   const why = reasons(p, intent.audience, intent.attrs).slice(0, 4);
   const topic = topicLabel(intent.audience, intent.attrs);
   if (ok) {
-    return { he: `כן — ${nameOf(p)} מתאים ${topic}: ${why.length ? why.join(', ') : p.reason_he}. רוצים שאבדוק מה פנוי שם?`, chips: [nameOf(p)] };
+    return { he: `כן — ${nameOf(p)} מתאים ${topic}: ${why.length ? why.join(', ') : p.reason_he}. רוצים שאבנה לכם אפשרות שם?`, chips: [nameOf(p)] };
   }
   const alt = which({ audience: intent.audience, attrs: intent.attrs }, {});
   const altNames = alt.chips.filter(n => n !== nameOf(p)).slice(0, 2);
-  return { he: `${nameOf(p)} הוא לא הבחירה הראשונה שלנו ${topic} — ${p.reason_he}${altNames.length ? ` ${topic} הייתי מסתכל קודם על ${altNames.join(' או ')}.` : ''} רוצים שאראה מה פנוי?`, chips: altNames.length ? altNames : [nameOf(p)] };
+  return { he: `${nameOf(p)} הוא לא הבחירה הראשונה שלנו ${topic} — ${p.reason_he}${altNames.length ? ` ${topic} הייתי מסתכל קודם על ${altNames.join(' או ')}.` : ''} רוצים שאבנה לכם אפשרות?`, chips: altNames.length ? altNames : [nameOf(p)] };
 }
 
 function answer(text, slots) {

@@ -24,6 +24,17 @@ const post = (body, token, method = 'POST') => new Promise(res => {
   req.end();
 });
 
+// Windows aborts the whole process ("Assertion failed: !(handle->flags &
+// UV_HANDLE_CLOSING)", 07/09) when process.exit() runs while a child process
+// handle is still closing. Kill, wait for the child to be gone, then leave.
+function stopServer(p) {
+  return new Promise(resolve => {
+    p.once('exit', () => resolve());
+    setTimeout(resolve, 3000).unref();
+    p.kill();
+  });
+}
+
 (async () => {
   let pass = 0, fail = 0;
   const t = (name, fn) => { try { fn(); pass++; console.log('  ✓ ' + name); }
@@ -36,7 +47,7 @@ const post = (body, token, method = 'POST') => new Promise(res => {
   await new Promise((ok, no) => {
     let out = '';
     srv.stdout.on('data', d => { out += d; if (out.includes('http://localhost')) ok(); });
-    setTimeout(() => no(new Error('server did not start')), 8000);
+    setTimeout(() => no(new Error('server did not start')), 8000).unref();
   });
 
   const good = JSON.parse(original);
@@ -88,7 +99,7 @@ const post = (body, token, method = 'POST') => new Promise(res => {
     });
     t('a browser POST with no Origin is still refused', () => assert.strictEqual(chat.status, 403));
   } finally {
-    srv.kill();
+    await stopServer(srv);
     fs.writeFileSync(AV, original);
   }
 
@@ -100,7 +111,7 @@ const post = (body, token, method = 'POST') => new Promise(res => {
     stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((ok, no) => {
     let out = ''; srv2.stdout.on('data', d => { out += d; if (out.includes('http://localhost')) ok(); });
-    setTimeout(() => no(new Error('second server did not start')), 8000);
+    setTimeout(() => no(new Error('second server did not start')), 8000).unref();
   });
   const post2 = (body, token) => new Promise(res => {
     const d = JSON.stringify(body);
@@ -139,11 +150,12 @@ const post = (body, token, method = 'POST') => new Promise(res => {
     });
     if (was === undefined) delete process.env.TRUST_PROXY; else process.env.TRUST_PROXY = was;
   } finally {
-    srv2.kill();
+    await stopServer(srv2);
     fs.writeFileSync(AV, original);
   }
   {
   }
   console.log(`inventory-http: ${pass} passed, ${fail} failed`);
-  process.exit(fail ? 1 : 0);
+  // a beat for libuv to finish closing the children (Windows aborts otherwise)
+  setTimeout(() => process.exit(fail ? 1 : 0), 300);
 })();

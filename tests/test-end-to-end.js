@@ -764,7 +764,7 @@ t('a bare answer is understood long after the question was asked', () => {
     });
 });
 
-t('the party question is put again once the children are known', () => {
+t('a family whose children are known is two parents until told otherwise (13/09)', () => {
   const msgs = [{ role: 'user', content: 'היי' }];
   let slots = {};
   return handleChat({ messages: msgs, slots }).then(a => {
@@ -774,8 +774,11 @@ t('the party question is put again once the children are known', () => {
     msgs.push({ role: 'user', content: 'משפחה עם ילדים בני 6 ו-9' });
     return handleChat({ messages: msgs, slots });
   }).then(b => {
-    assert.ok(/כמה תהיו/.test(b.reply_he),
-      'never asked again once it mattered: ' + b.reply_he);
+    // "כמה תהיו?" was asked again here — a family of 2+2 answering the most
+    // obvious question in the book. Now it is assumed, said once, correctable.
+    assert.strictEqual(b.slots.adults, 2);
+    assert.ok(/הנחתי 2 מבוגרים/.test(b.reply_he), b.reply_he);
+    assert.ok(!/כמה תהיו/.test(b.reply_he), 'still asked the party size: ' + b.reply_he);
   });
 });
 
@@ -980,11 +983,11 @@ for (const [q, want] of [
   ['כמה זמן ההעברה מהשדה למלון?', /ק"מ|מרחק/],
   ['כמה רחוק המלון מהמסלול?', /מרחק מהמעלית|על המסלול/],
   ['איזה חדר זה בדיוק?', /שם החדר|חדר במלון/],
-  ['אתה בוט או בן אדם?', /עוזר אוטומטי/],
+  ['אתה בוט או בן אדם?', /העוזר האוטומטי/],
   ['הייתי אצלכם בשנה שעברה והמלון היה מאכזב', /מצטער לשמוע/],
   ['יש הנחה אם מזמינים עכשיו?', /מזמין מוקדם|מחירים העדכניים/],
   ['אפשר מדריך פרטי בעברית?', /שיעור פרטי/],
-  ['למה אין?', /באמת פנוי|מלאי/],
+  ['למה אין?', /באמת אפשר להזמין|לא כל מלון/],
 ]) {
   t('answered rather than deflected: ' + q.slice(0, 26), () =>
     handleChat({ messages: [{ role: 'user', content: q }], slots: {} }).then(out => {

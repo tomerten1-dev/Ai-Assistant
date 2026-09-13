@@ -49,6 +49,23 @@ t('children travel as ages, because that is what the form asks for', () => {
   assert.strictEqual(q.pwkids, '5,9');
   assert.strictEqual(q.pwad, '2');
 });
+t('every board the hotel page names becomes a choice, in the form\'s own order (Tomer, 10/09)', () => {
+  assert.deepStrictEqual(b.pansionCodes('ארוחת בוקר או חצי פנסיון'), [2, 3]);
+  assert.deepStrictEqual(b.pansionCodes('לינה בלבד, ארוחת בוקר או חצי פנסיון'), [1, 2, 3]);
+  assert.deepStrictEqual(b.pansionCodes('ארוחת בוקר, אפשרות לחצי פנסיון'), [2, 3]);
+  assert.deepStrictEqual(b.pansionCodes('לינה וארוחת בוקר, עד 3 אורחים'), [2]);
+  assert.deepStrictEqual(b.pansionCodes('חצי פנסיון, עד 4 אורחים'), [3]);
+  // what follows the dash or sits in brackets describes the board, it is not a second one
+  assert.deepStrictEqual(b.pansionCodes('הכל כלול — ארוחת בוקר, צהריים וערב, שתייה חופשית'), [7]);
+  assert.deepStrictEqual(b.pansionCodes('פנסיון מלא (בוקר קונטיננטלי, צהריים וערב) ויין בארוחות'), [6]);
+  assert.deepStrictEqual(b.pansionCodes('חצי פנסיון + שתייה'), [5], 'the site spells it שתיה');
+  assert.deepStrictEqual(b.pansionCodes('אולטרה הכל כלול'), [12]);
+  // no board at all → nothing offered, never a guess
+  assert.deepStrictEqual(b.pansionCodes('סקי פס מקומי'), []);
+  assert.deepStrictEqual(b.pansionCodes(''), []);
+  for (const code of Object.values(b.PANSION)) assert.ok(b.PANSION_HE[code], 'no words for code ' + code);
+});
+
 t('an ambiguous board is not guessed', () => {
   assert.strictEqual(b.pansionCode('ארוחת בוקר או חצי פנסיון'), null);
   assert.strictEqual(b.pansionCode('חצי פנסיון'), 3);

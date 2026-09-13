@@ -45,6 +45,10 @@ t('no real API key is committed anywhere in the tree', () => {
       const full = path.join(dir, e.name);
       if (e.isDirectory()) { walk(full); continue; }
       if (!/\.(js|json|md|html|example|env)$/.test(e.name)) continue;
+      // the local .env is where the real key is SUPPOSED to live — it is
+      // gitignored (checked above), so it is not "in the tree" in the sense
+      // this test means. On Tomer's machine it failed the whole chain (07/09).
+      if (e.name === '.env' || (e.name.startsWith('.env.') && e.name !== '.env.example')) continue;
       let txt = '';
       try { txt = fs.readFileSync(full, 'utf8'); } catch (err) { continue; }
       for (const m of txt.matchAll(/\b(sk-proj-|sk-ant-)[A-Za-z0-9_-]{8,}/g)) {

@@ -88,8 +88,37 @@ async function fetchRooms(siteID, from, till, deps = {}) {
       roomID: String(r.roomID != null ? r.roomID : r.id),
       // the engine returns HTML entities: `2 ח&quot;ש וסלון 2-4 אורחים`
       roomName: decodeEntities(String(r.roomName || r.name || '')),
+      // The boards this room can be booked on, as the site's own form offers
+      // them (order_odyssea.js: `room.pans` feeds the סוג אירוח <select>,
+      // `room.defaultPan` is preselected). Tomer, 10/09: "בחלק מהמלונות אין
+      // חצי פנסיון ובחלק גם אין ארוחת בוקר" — this is the list that knows.
+      pans: pansOf(r.pans),
+      defaultPan: Number.isFinite(+r.defaultPan) && +r.defaultPan > 0 ? +r.defaultPan : null,
     }))
     .filter(r => r.roomID && r.roomName);
+}
+
+// [3, 2] / "3,2" / {3:..} → [3, 2]; anything else → null (unknown, not "none")
+function pansOf(v) {
+  let list = null;
+  if (Array.isArray(v)) list = v;
+  else if (typeof v === 'string') list = v.split(/[,\s]+/);
+  else if (v && typeof v === 'object') list = Object.keys(v);
+  if (!list) return null;
+  const out = [...new Set(list.map(Number).filter(n => Number.isFinite(n) && n > 0))];
+  return out.length ? out : null;
+}
+
+// The boards the site would let this room be booked on — from the cached
+// roomList answer, so it costs nothing and blocks nothing. null when the
+// cache is cold or the engine did not say (then the hotel page decides).
+function boardFor(siteID, from, till, roomID) {
+  if (!enabled() || !siteID || !roomID) return null;
+  const entry = load()[key(siteID, from, till)];
+  if (!fresh(entry)) return null;
+  const r = (entry.rooms || []).find(x => String(x.roomID) === String(roomID));
+  if (!r || !r.pans) return null;
+  return { pans: r.pans, defaultPan: r.defaultPan || null };
 }
 
 // Warm the cache without making anybody wait for it.
@@ -356,5 +385,5 @@ function idFor(siteID, from, till, room, hint, deps) {
   return match(entry.rooms || [], room, hint || {});
 }
 
-module.exports = { idFor, match, warm, fetchRooms, enabled, norm, tokens, occOf, sizeOf, holds, decodeEntities,
+module.exports = { idFor, match, warm, fetchRooms, boardFor, pansOf, enabled, norm, tokens, occOf, sizeOf, holds, decodeEntities,
   _cache: load, _key: key, CACHE_FILE };

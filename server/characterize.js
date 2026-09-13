@@ -76,6 +76,10 @@ function line(lastUser, prevSlots, slots, engine, helpers) {
   // remembered on the slots and wins over the cards; the cards remain the
   // fallback when nothing was compared yet.
   const lastCompared = (prevSlots._compared || []).filter(k => engine.hotelInfo(k));
+  // "מה ההבדל בין אוסטריה לצרפת?" names two PLACES. That is the resort
+  // engine's question (recommend.js), not a profile of whatever hotels happen
+  // to be on screen (13/09: two Bansko cards were compared instead).
+  if (!named.length && (slots.compare || []).length >= 2) return null;
   if (names.length < 2 && asksCompare) {
     const pool = lastCompared.length >= 2 ? lastCompared : shownHotels(prevSlots, engine, displayHotel);
     names = [...new Set([...named, ...pool])].slice(0, 3);

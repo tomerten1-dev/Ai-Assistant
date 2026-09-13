@@ -60,6 +60,7 @@ function body(rec) {
     c.hotel ? `ההצעה שהוא הסתכל עליה: ${c.hotel}${c.resort ? ' (' + c.resort + ')' : ''}` : 'לא נבחרה הצעה ספציפית',
     c.date ? `תאריך: ${c.date}${c.nights ? ` · ${c.nights} לילות` : ''}` : null,
     c.room ? `חדר: ${c.room}` : null,
+    c.board ? `בסיס אירוח שנבחר: ${c.board}` : null,
     (party.adults || kids) ? `נוסעים: ${party.adults || '?'} מבוגרים${kids}` : null,
     '',
     `מזהה שיחה: ${c.conversation_id || rec.id}`,

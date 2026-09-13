@@ -91,7 +91,19 @@ function startServer(port) {
     p.stdout.on('data', d => { out += d; if (out.includes('http://localhost')) resolve(p); });
     p.stderr.on('data', () => { });
     p.on('exit', c => reject(new Error('server exited ' + c)));
-    setTimeout(() => reject(new Error('server did not start')), 8000);
+    setTimeout(() => reject(new Error('server did not start')), 8000).unref();
+  });
+}
+// Windows aborts the whole process ("Assertion failed: !(handle->flags &
+// UV_HANDLE_CLOSING)", 07/09) when process.exit() runs while the child
+// process handle is still closing. So: kill, wait for the child to be gone,
+// and only then leave.
+function stopServer(p) {
+  return new Promise(resolve => {
+    const done = () => resolve();
+    p.once('exit', done);
+    setTimeout(done, 3000).unref();
+    p.kill();
   });
 }
 const post = (port, p, body) => fetch(`http://127.0.0.1:${port}${p}`, {
@@ -127,10 +139,22 @@ async function integration() {
       assert.strictEqual(without.email, null);
       assert.strictEqual(withMail.context.conversation_id, 'ctest');
     });
+    await t('the board the customer chose on the card reaches the lead (Tomer, 10/09)', async () => {
+      const ok = await post(port, '/api/lead', {
+        name: 'בדיקה3', phone: '0503333333',
+        context: { kind: 'customer', hotel: 'Strass', room: 'DBL 2-2', board: 'חצי פנסיון', conversation_id: 'ctest3' },
+      });
+      assert.strictEqual(ok.status, 200);
+      const lines = fs.readFileSync(file, 'utf8').slice(before).trim().split('\n').map(JSON.parse);
+      const rec = lines.find(l => l.name === 'בדיקה3');
+      assert.strictEqual(rec.context.board, 'חצי פנסיון');
+      const crm = require('../server/crm-lead.js').toCrm(rec);
+      assert.strictEqual(crm.offer.board, 'חצי פנסיון');
+    });
     await t('name and phone are still required', async () => {
       assert.strictEqual((await post(port, '/api/lead', { name: 'רק שם' })).status, 400);
     });
-  } finally { srv.kill(); }
+  } finally { await stopServer(srv); }
 }
 
 /* The shape the CRM receives (server/crm-lead.js). Whoever maps this into
@@ -213,5 +237,6 @@ async function crm() {
   await crm();
   await integration();
   console.log(`lead: ${pass} passed, ${fail} failed`);
-  process.exit(fail ? 1 : 0);
+  // a beat for libuv to finish closing the child and the keep-alive sockets
+  setTimeout(() => process.exit(fail ? 1 : 0), 300);
 })();

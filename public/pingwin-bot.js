@@ -241,14 +241,18 @@
     + '.fab .dot{box-shadow:0 0 0 3px ' + THEME.bg + '}}'
     // מי שביקש פחות תנועה מקבל אפס תנועה — לא רק בנקודה האדומה
     + '@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.msgs{scroll-behavior:auto!important}}'
-    + '.win{position:fixed;bottom:92px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(720px,calc(100vh - 110px));height:min(720px,calc(100dvh - 110px));'
+    /* 10/09: the launcher hides while the chat is open, so the window no
+       longer has to sit above it — it starts 20px from the bottom and gets
+       the 72px that used to be air. On a 768px laptop that is 70px more
+       conversation, which is half a row card. */
+    + '.win{position:fixed;bottom:20px;' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));height:min(760px,calc(100vh - 40px));height:min(760px,calc(100dvh - 40px));'
     + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;display:none;flex-direction:column;overflow:hidden;'
     + 'transition:width .25s ease,height .25s ease}'
     + '.win.open{display:flex}'
     // מצב מורחב — נפתח בהקלדה וכשמוצגות הצעות: רחב מספיק לשלושה כרטיסים בשורה
     // Tomer, 06/09 (screenshot): the full width already for TWO offers — each
     // card gets real room and a real photograph; the third simply joins the row
-    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 92px);height:calc(100dvh - 92px)}'
+    + '.win.big{width:min(1100px,calc(100vw - 32px));height:calc(100vh - 40px);height:calc(100dvh - 40px)}'
     + '.win.big.wide{width:min(1100px,calc(100vw - 32px))}'
     + '.win.max{width:calc(100vw - 32px);height:calc(100vh - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
     + '.win.max .msgs{padding:20px 24px}'
@@ -284,7 +288,7 @@
     + '.hdr .x:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
     // אזור השיחה בסגנון עוזר AI: תשובות הבוט כטקסט זורם עם סימן זהות,
     // הודעות הלקוח כבועה עדינה — במקום שתי בועות צבעוניות זו מול זו
-    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 14px 14px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:7px;scroll-behavior:smooth}'
+    + '.msgs{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 12px 12px;background:' + THEME.bg + ';display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth}'
     /* 06/09 (Tomer: "צריך לגלול הרבה"): the time under every message cost a
        line each. Now a small centred time appears only when the conversation
        paused for half an hour or moved to another day — like a phone chat. */
@@ -311,14 +315,14 @@
        אין פינג-פונג של בועות מימין ומשמאל, והטקסט מקבל את כל רוחב החלון.
        מה שנשאר שלנו: הפינגווין, שמופיע פעם אחת לכל רצף של פינגי במקום על
        כל הודעה — כך המיתוג נשמר בלי החזרתיות שהעמיסה את המסך. */
-    + '.m{font-size:15px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;align-self:stretch;'
-    + 'border-radius:12px;padding:10px 14px;box-shadow:0 1px 3px rgba(30,39,51,.06)}'
+    + '.m{font-size:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;align-self:stretch;'
+    + 'border-radius:12px;padding:9px 12px;box-shadow:0 1px 3px rgba(30,39,51,.06)}'
     + '.m.user{background:#E4EEF8;color:' + THEME.text + ';border:1px solid #D6E3F1}'
     + '.m.bot{background:#F3F6FA;color:' + THEME.text + ';border:1px solid #EBF0F5;position:relative;'
     + 'padding-inline-start:15px}'
     /* הפינגווין רק בראש רצף — .m.bot.lead */
-    + '.m.bot.lead{padding-inline-start:50px;min-height:44px}'
-    + '.m.bot.lead::before{content:"";position:absolute;inset-inline-start:10px;top:8px;width:30px;height:30px;border-radius:9px;'
+    + '.m.bot.lead{padding-inline-start:46px;min-height:42px}'
+    + '.m.bot.lead::before{content:"";position:absolute;inset-inline-start:9px;top:7px;width:28px;height:28px;border-radius:9px;'
     + 'background:' + THEME.ice + ' url(' + PINGI + ') center/28px 28px no-repeat}'
     + '.typing{align-self:stretch;background:#F3F6FA;border:1px solid #EBF0F5;border-radius:12px;'
     + 'box-shadow:0 2px 6px 1px rgba(30,39,51,.05);padding:13px 15px;padding-inline-start:52px;min-height:46px;'
@@ -333,6 +337,7 @@
     /* a card is never wider than half the full window: one offer alone
        used to stretch across the whole screen (Tomer, 06/09, screenshot) */
     + '.cards-row .card{flex:1 1 250px;min-width:0;max-width:min(100%,540px)}'
+    + '.cards-row .card.r{flex:1 1 100%;max-width:100%}'
     // one tap for the third offer — no round trip, the card is already here
     + '.more-opt{align-self:stretch;background:' + THEME.bg + ';border:1.5px dashed #C9D3E2;color:' + THEME.primaryDark + ';'
     + 'border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-top:-2px;transition:background .15s,border-color .15s}'
@@ -392,11 +397,14 @@
     + '{text-shadow:0 1px 3px rgba(6,14,26,.55)}'
     /* the place first and small, then the name — the order a hotel's own
        material uses, and the one that reads as a masthead and not a label */
-    + '.card.pbg:not(.open) .chead{flex-direction:column;align-items:flex-start;gap:1px}'
+    /* the text starts under the badge row: the site's full hotel name (13/09) is
+       long enough to reach the corner the badges sit in */
+    + '.card.pbg:not(.open) .chead{flex-direction:column;align-items:flex-start;gap:1px;margin-top:30px}'
     /* only the place line makes room for the badge — the hotel name gets the
        full width, or a long one wraps and the card grows for nothing */
     + '.card.pbg:not(.open) .cwhere{order:-1;font-size:11px;font-weight:600;letter-spacing:.09em;'
     + 'text-transform:uppercase;color:rgba(255,255,255,.66);padding-inline-end:58px;line-height:1.35}'
+    /* the site's full name can wrap; the first line must not run under the badges */
     + '.card.pbg:not(.open) .hname{font-size:19px;font-weight:600;line-height:1.18;'
     + 'letter-spacing:-.012em;color:#fff}'
     /* a short rule between the name and the facts — the oldest way to say
@@ -535,9 +543,9 @@
     + '.card .hrating{font-size:12.5px;color:' + THEME.textLight + ';line-height:1.4;margin-top:1px}'
     + '.card .facts{display:flex;flex-direction:column;gap:3px;border-inline-start:2px solid ' + THEME.primary + ';padding-inline-start:8px}'
     + '.card .facts div{font-size:13px;color:' + THEME.text + ';line-height:1.5}'
-    + '.m.bot.wave{padding-inline-start:76px;min-height:66px}'
-    + '.m.bot.wave::before{width:54px;height:54px;border-radius:13px;top:10px;inset-inline-start:11px;'
-    + 'background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/50px 50px no-repeat}'
+    + '.m.bot.wave{padding-inline-start:66px;min-height:58px}'
+    + '.m.bot.wave::before{width:46px;height:46px;border-radius:12px;top:9px;inset-inline-start:10px;'
+    + 'background:' + THEME.ice + ' url(' + PINGI_WAVE + ') center/42px 42px no-repeat}'
     /* השעה יושבת בפינת הכרטיס, לא על שורה משלה: בכרטיס ברוחב מלא שורה
        נפרדת השאירה את השעה תלויה באוויר בצד שמאל. (סאני לא מציגה שעות
        בכלל; אצלנו הן נשארות — שיחה שנמשכת למחרת בלי שעות נקראת כמקשה אחת,
@@ -559,16 +567,24 @@
     + '.foot .fnew:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px;border-radius:4px}'
     + '.m.after .ts,.m.wave .ts{display:none}'
     /* שורת הסיום ("אם אחת מהן נראית לכם…") היא הערה, לא הודעה: בלי כרטיס */
-    + '.m.bot.after{font-size:13px;color:' + THEME.textLight + ';margin-top:-4px;background:transparent;'
+    + '.m.bot.after{font-size:12.5px;line-height:1.4;color:' + THEME.textLight + ';margin-top:-3px;background:transparent;'
     + 'border:none;box-shadow:none;padding:0 4px}'
     + '.m.bot.after::before{display:none}'
+    /* a long reply shows its first lines and folds the rest behind "עוד" —
+       above the offers three lines, elsewhere six (Tomer, 10/09) */
+    + '.m .mtxt{display:block}'
+    + '.m.fold .mtxt{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:6}'
+    + '.m.fold.tight .mtxt{-webkit-line-clamp:3}'
+    + '.m .mmore{display:none;background:none;border:none;padding:2px 0 0;font-family:inherit;font-size:12.5px;font-weight:600;'
+    + 'color:' + THEME.primaryDark + ';cursor:pointer;text-decoration:underline;text-underline-offset:3px}'
+    + '.m.folded .mmore{display:inline-block}'
     // גילוי נאות: הערת שוליים, לא הודעה של פינגי — ולכן בלי הפרצוף שלו,
     // ובלי המחלקה .m, שסופרת הודעות בשיחה
     + '.fine{align-self:stretch;max-width:min(100%,640px);font-size:12px;line-height:1.55;'
     + 'color:' + THEME.textLight + ';margin-top:-6px;padding-inline-start:46px}'
     + '.fine a{color:' + THEME.primary + ';text-decoration:underline}'
     // שורת שקיפות בסגנון סאני (30/08): "חיפשתי במלאי לפי: ..." — סטטוס שקט מעל ההצעות
-    + '.status{align-self:stretch;padding-inline-start:46px;font-size:12.5px;color:' + THEME.textLight + ';font-style:italic;line-height:1.55}'
+    + '.status{align-self:stretch;padding-inline-start:46px;font-size:12px;color:' + THEME.textLight + ';font-style:italic;line-height:1.45}'
     // חיווי המתנה מדבר — הטקסט שמצטרף לנקודות אחרי שנייה וחצי
     + '.typing .tlab{font-size:12.5px;color:' + THEME.textLight + ';margin-inline-start:4px}'
     // פידבק על תשובה — אגודל למעלה/למטה, מתחת לתשובה האחרונה בלבד
@@ -608,6 +624,114 @@
     + '.card.j:not(.open) .tags .tag.tier{display:none}'
     /* the closed card shows at most four tags */
     + '.card.j:not(.open) .tags .tag:nth-child(n+5){display:none}'
+    /* ---- the row card (default since 10/09) ---- */
+    + '.card.r{padding:9px 10px;gap:0}'
+    + '.card.r .rhead{display:flex;gap:10px;align-items:stretch;order:1}'
+    + '.card.r .thumb{width:96px;height:78px;border-radius:7px;object-fit:cover;flex:none;background:#e8edf1}'
+    + '.card.r .rmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;justify-content:center}'
+    + '.card.r .rtop{display:flex;align-items:center;gap:8px;min-width:0}'
+    + '.card.r .rtop .hname{font-size:14.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;unicode-bidi:plaintext;text-align:end}'
+    + '.card.r .rtop .bscore{flex:none;font-size:11.5px;font-weight:600;color:' + THEME.primaryDark + ';background:' + THEME.ice + ';border-radius:99px;padding:1px 7px;font-variant-numeric:tabular-nums}'
+    + '.card.r .rwhere{font-size:12px;color:' + THEME.textLight + ';line-height:1.3}'
+    /* wraps rather than clips: a long room name goes to a second line whole */
+    + '.card.r .rline{font-size:13px;color:' + THEME.text + ';line-height:1.35;margin-top:2px;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px}'
+    + '.card.r .rline b{font-weight:600}.card.r .rline .sep{color:#c3ccd6}'
+    + '@media (max-width:480px){.card.r .thumb{width:84px;height:70px}}'
+    + '.card.r .rmeta{display:flex;align-items:center;gap:6px;margin-top:2px;min-width:0}'
+    + '.card.r .rprice{font-size:13px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px}'
+    + '.card.r .rmeta .tag{font-size:11px;padding:1px 7px;border-radius:99px;white-space:nowrap}'
+    + '.card.r .rmeta .sep{color:#c3ccd6}'
+    /* one row of actions: the details toggle at the start, the two buttons at the end */
+    + '.card.r .rfoot{display:flex;align-items:center;gap:6px;order:20;margin-top:6px;padding-top:6px;border-top:1px solid #EEF2F6}'
+    + '.card.r .rfoot .dtog{flex:none;align-self:auto;margin:0;padding:5px 4px;min-height:34px;border:none;border-radius:6px;font-size:13px;text-align:start;order:0}'
+    + '.card.r .rfoot .btns{margin:0;margin-inline-start:auto;padding:0;flex-wrap:nowrap;gap:6px;order:1}'
+    + '.card.r .rfoot .btns .btn{min-width:0;min-height:34px}'
+    + '.card.r .rfoot .btns .btn.pri{flex:none;flex-basis:auto;order:1;padding:7px 14px;font-size:13px;border-radius:7px}'
+    + '.card.r .rfoot .btns .btn.sec{flex:none;flex-basis:auto;padding:6px 12px;font-size:13px;order:0;text-decoration:none;'
+    + 'border:1.5px solid #C9D3E2;border-radius:7px;color:' + THEME.primaryDark + ';background:' + THEME.bg + '}'
+    + '.card.r .rfoot .btns .btn.sec:hover{border-color:' + THEME.primary + ';background:' + THEME.ice + ';color:' + THEME.primaryDark + '}'
+    /* closed: the head is the card; everything else waits behind "עוד פרטים" */
+    + '.card.r .chead,.card.r .brief,.card.r .hrating{display:none}'
+    + '.card.r:not(.open) .gal,.card.r:not(.open) .tags,.card.r:not(.open) .why,.card.r:not(.open) .facts,.card.r:not(.open) .rows{display:none}'
+    /* open: the photograph on top, the head under it without the thumbnail, then the facts */
+    + '.card.r.open{padding-top:0}'
+    + '.card.r.open .gal{display:block;order:0;margin:0 -10px 8px;width:calc(100% + 20px);border-radius:8px 8px 0 0}'
+    + '.card.r.open .thumb,.card.r.open .rline,.card.r.open .rmeta{display:none}'
+    + '.card.r.open .rows{order:2;margin-top:6px}.card.r.open .tags{order:3;margin-top:6px}.card.r.open .why{order:4;margin-top:6px}'
+    + '.card.r.open .facts{order:7;margin-top:6px}.card.r.open .details{order:9;margin-top:6px}.card.r.open .cfoot{order:11}'
+    + '.card.r.open .rfoot{flex-wrap:wrap}'
+    /* the dtog's generic rule gives it a top border and negative margins — not here */
+    + '.card.r .rfoot .dtog:hover{background:#F3F6FA}'
+    /* ---- the details panel (Tomer, 10/09: "שיפתח את זה בצד ולא בתוך הצ'אט") ----
+       Beside the window on a desktop — the same height, the same corner
+       radius, the same shadow, 12px away — so the two read as one surface.
+       Where there is no room beside it (a narrow screen, the maximised
+       window, a phone) it lays over the window instead, with its own ✕. */
+    + '.side{position:fixed;bottom:20px;' + THEME.position + ':calc(20px + min(460px,calc(100vw - 24px)) + 12px);'
+    + 'width:min(420px,calc(100vw - 20px - min(460px,calc(100vw - 24px)) - 44px));height:min(760px,calc(100vh - 40px));height:min(760px,calc(100dvh - 40px));'
+    + 'background:' + THEME.bg + ';border-radius:18px;box-shadow:0 24px 64px rgba(16,32,48,.26),0 2px 8px rgba(16,32,48,.08);border:1px solid #e3e9ef;'
+    + 'display:none;flex-direction:column;overflow:hidden;z-index:1}'
+    + '.side.on{display:flex;animation:pwSide .22s cubic-bezier(.05,.7,.1,1)}'
+    + '@keyframes pwSide{from{opacity:0;transform:translateX(' + (THEME.position === 'left' ? '-' : '') + '14px)}to{opacity:1;transform:none}}'
+    /* over the window: same box as .win, one layer up */
+    + '.side.over{' + THEME.position + ':20px;width:min(460px,calc(100vw - 24px));z-index:2}'
+    + '.win.max ~ .side.over{width:calc(100vw - 32px);height:calc(100vh - 32px);height:calc(100dvh - 32px);bottom:16px;' + THEME.position + ':16px}'
+    + '@media (max-width:480px){.side,.side.over{bottom:0;' + THEME.position + ':0;width:100vw;height:100vh;height:100dvh;border-radius:0}}'
+    + '.side .shead{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-bottom:1px solid #E7ECF3;background:' + THEME.bg + '}'
+    + '.side .shead .stitle{font-weight:800;font-size:16px;color:' + THEME.primaryDark + ';flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.side .shead .sx{background:none;border:none;color:' + THEME.textLight + ';font-size:19px;cursor:pointer;min-width:40px;min-height:40px;border-radius:10px;line-height:1;font-family:inherit}'
+    + '.side .shead .sx:hover{background:' + THEME.bgAlt + ';color:' + THEME.text + '}'
+    + '.side .shead .sx:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:-3px}'
+    + '.side .sbody{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;padding:0 0 14px}'
+    + '.side .sbody::-webkit-scrollbar{width:8px}.side .sbody::-webkit-scrollbar-thumb{background:#d3dae1;border-radius:99px;border:2px solid ' + THEME.bg + '}'
+    /* the gallery: a 16:9 window, two round arrows that are always visible and
+       always clickable — nothing else is drawn over them */
+    + '.side .sgal{position:relative;background:#e8edf1;aspect-ratio:16/9;max-height:min(260px,36vh);overflow:hidden;flex:none}'
+    + '.side .sgal img{width:100%;height:100%;object-fit:cover;display:block}'
+    + '.side .sgal .galb{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;'
+    + 'background:rgba(255,255,255,.94);color:' + THEME.text + ';line-height:0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;'
+    + 'opacity:1;z-index:5;box-shadow:0 1px 6px rgba(16,32,48,.3)}'
+    + '.side .sgal .galb:hover{background:#fff}.side .sgal .galb:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
+    + '.side .sgal .galb.prev{inset-inline-start:10px}.side .sgal .galb.next{inset-inline-end:10px}'
+    + '.side .sgal .galn{position:absolute;bottom:10px;inset-inline-end:12px;background:rgba(16,32,48,.62);color:#fff;'
+    + 'font-size:12px;padding:2px 8px;border-radius:99px;letter-spacing:.4px;opacity:1;z-index:5}'
+    + '.side .sgal .tier{position:absolute;top:10px;inset-inline-start:10px;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.25)}'
+    + '.side .sgal .dots{position:absolute;bottom:12px;inset-inline-start:50%;transform:translateX(50%);display:flex;gap:5px;z-index:5}'
+    + '.side .sgal .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);display:block}'
+    + '.side .sgal .dots i.on{background:#fff;width:14px;border-radius:3px}'
+    + '.side .sec{padding:0 16px;display:flex;flex-direction:column;gap:6px}'
+    + '.side .sname{font-weight:800;font-size:19px;line-height:1.25;color:' + THEME.text + ';display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
+    + '.side .sname .bscore{font-size:12px;font-weight:600;color:' + THEME.primaryDark + ';background:' + THEME.ice + ';border-radius:99px;padding:2px 9px;font-variant-numeric:tabular-nums}'
+    + '.side .swhere{font-size:13.5px;color:' + THEME.textLight + '}'
+    + '.side .sfacts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'
+    + '.side .sfacts .ft{background:' + THEME.bgAlt + ';border-radius:10px;padding:8px 10px;min-width:0}'
+    + '.side .sfacts .fk{font-size:11.5px;color:' + THEME.textLight + '}'
+    + '.side .sfacts .fv{font-weight:700;font-size:14px;margin-top:2px;line-height:1.3;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}'
+    + '.side .slab{font-size:12.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.2px}'
+    + '.side .stxt{font-size:13.5px;color:' + THEME.text + ';line-height:1.55}'
+    + '.side .srow{display:flex;gap:8px;align-items:baseline;font-size:13.5px;line-height:1.5}'
+    + '.side .srow .rlab{color:' + THEME.textLight + ';flex:none}'
+    + '.side .srow .rval{color:' + THEME.text + ';font-weight:600}'
+    + '.side .snote{font-size:12px;color:' + THEME.textLight + '}'
+    + '.side .tags{display:flex;gap:6px;flex-wrap:wrap}'
+    + '.side .sfoot{display:flex;gap:8px;padding:10px 16px 14px;border-top:1px solid #E7ECF3;background:' + THEME.bg + ';flex:none}'
+    + '.side .sfoot .btn{min-height:44px;font-size:14px;font-weight:700;border-radius:10px;text-decoration:none;padding:10px 14px}'
+    + '.side .sfoot .btn.pri{flex:1.4}'
+    + '.side .sfoot .btn.sec{flex:1;background:' + THEME.bg + ';color:' + THEME.primaryDark + ';border:1.5px solid ' + THEME.primary + '}'
+    + '.side .sfoot .btn.sec:hover{background:' + THEME.ice + '}'
+    /* the board chooser: a segmented control, one button per board the hotel
+       actually sells (Tomer, 10/09). A single board is a fact, not a control */
+    + '.bsel{display:flex;gap:6px;flex-wrap:wrap}'
+    + '.bsel button{font-family:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:99px;cursor:pointer;'
+    + 'border:1.5px solid #C9D3E2;background:' + THEME.bg + ';color:' + THEME.textLight + ';transition:background .15s,border-color .15s,color .15s}'
+    + '.bsel button:hover{border-color:' + THEME.primary + ';color:' + THEME.primaryDark + '}'
+    + '.bsel button.on{background:' + THEME.primaryDark + ';border-color:' + THEME.primaryDark + ';color:#fff}'
+    + '.bsel button:focus-visible{outline:3px solid ' + THEME.primaryDark + ';outline-offset:2px}'
+    /* on the closed row card the same choice is a small select beside the price */
+    + '.card.r .rmeta .rboard{font-size:12px;color:' + THEME.textLight + ';white-space:nowrap}'
+    + '.card.r .rmeta select.rbsel{font-family:inherit;font-size:12px;font-weight:600;color:' + THEME.primaryDark + ';background:' + THEME.ice + ';'
+    + 'border:1px solid #D6E3F1;border-radius:99px;padding:2px 8px;cursor:pointer;max-width:170px}'
+    + '.card.r.sel{border-color:' + THEME.primary + ';box-shadow:0 0 0 2px rgba(28,61,90,.12)}'
     /* Sunny's card ends in one wide navy button; the callback is a link under it */
     + '.card:not(.pbg) .btns .btn.pri{flex-basis:100%;order:-1;padding:11px 12px;font-size:14px;border-radius:8px}'
     + '.card:not(.pbg) .btns .btn.sec{flex-basis:100%;background:none;border:none;color:' + THEME.primaryDark + ';'
@@ -740,7 +864,7 @@
   ttl.appendChild(el('span', 'long', ' · פינגווין'));
   hTxt.appendChild(ttl);
   var hSub = el('div', 'sub', 'נציג דיגיטלי');
-  hSub.appendChild(el('span', 'long2', ' · זמינות מהמלאי שלנו'));
+  hSub.appendChild(el('span', 'long2', ' · בונה לכם את החופשה המתאימה'));
   // מס' שיחה גלוי (הלקח מסאני): הלקוח יכול לצטט אותו לנציג, והנציג מוצא בעזרתו
   // את השיחה ביומן ואת הליד ב-CRM — שלושתם נושאים את אותו מזהה.
   var hCid = el('span', 'cidsub', '');
@@ -864,7 +988,11 @@
     jump.classList.toggle('on', jumpArmed && msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight > 240);
   });
   win.appendChild(hdr); win.appendChild(msgs); win.appendChild(live); win.appendChild(legal); win.appendChild(inp); win.appendChild(foot);
-  wrap.appendChild(win); wrap.appendChild(fab);
+  // the details panel lives beside the window (see openSide)
+  var side = el('div', 'side');
+  side.setAttribute('role', 'dialog');
+  side.setAttribute('aria-label', 'פרטי המלון');
+  wrap.appendChild(win); wrap.appendChild(side); wrap.appendChild(fab);
   root.appendChild(wrap);
 
   /* ============== ui helpers ============== */
@@ -904,9 +1032,21 @@
       var v = new URLSearchParams(window.location.search).get('pwcard');
       if (!v && script && script.src) v = new URL(script.src).searchParams.get('card');
       // 06/09 (Tomer: "שהבוט ייראה יותר כמו סאני"): the white card with the
-      // photograph on top is the default; ?pwcard=photo brings the photo-card back
-      return v === 'photo' ? 'photo' : 'plain';
-    } catch (e) { return 'plain'; }
+      // photograph on top; ?pwcard=photo brings the photo-card back.
+      // 10/09 (Tomer: "צריך לגלול הרבה, אולי להקטין את המלונות"): the row card
+      // is the default — a thumbnail, the facts on one line, the buttons on
+      // one row, ~130px instead of ~540. ?pwcard=plain keeps option י.
+      return v === 'photo' ? 'photo' : v === 'plain' ? 'plain' : 'row';
+    } catch (e) { return 'row'; }
+  })();
+
+  // the thumbs-up/down row under answers — off by default (Tomer, 10/09)
+  var FEEDBACK_THUMBS = (function () {
+    try {
+      var v = new URLSearchParams(window.location.search).get('pwthumbs');
+      if (!v && script && script.src) v = new URL(script.src).searchParams.get('thumbs');
+      return v === '1';
+    } catch (e) { return false; }
   })();
 
   var STORE_KEY = 'pingwin_bot_session_v1';
@@ -982,6 +1122,7 @@
   }
   // Start over — for a customer whose plans changed, and for us while testing.
   function resetChat() {
+    try { closeSide(); } catch (e) { /* not built yet */ }
     try { store.removeItem(STORE_KEY); } catch (e) {}
     state.messages = []; state.slots = {}; state.lastCards = null; state.log = [];
     state.booted = false; state.turn = 0; state.busy = false;
@@ -1029,7 +1170,8 @@
     while (prev && prev.classList && (prev.classList.contains('jump') || prev.classList.contains('tdiv'))) prev = prev.previousElementSibling;
     var lead = role !== 'user' && !(prev && prev.classList &&
       prev.classList.contains('m') && prev.classList.contains('bot'));
-    var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot' + (lead ? ' lead' : '')), shown);
+    var m = el('div', 'm ' + (role === 'user' ? 'user' : 'bot' + (lead ? ' lead' : '')));
+    m.appendChild(el('span', 'mtxt', shown));
     var ts = el('span', 'ts', clockOf(at));
     ts.setAttribute('aria-hidden', 'true');   // the time is decoration for a screen reader
     m.appendChild(ts);
@@ -1047,6 +1189,27 @@
     msgs.appendChild(m); scrollDown();
     if (!silent) state.log.push({ t: role === 'user' ? 'user' : 'bot', v: text, at: at || new Date().toISOString() });
     return m;
+  }
+
+  /* Fold a long reply: the first lines stay, the rest opens on "עוד". Only
+     when the fold actually saves lines — a reply that fits is left alone.
+     `tight` is the version above the offers (three lines). */
+  function foldMsg(m, tight) {
+    if (!m || !m.querySelector) return;
+    var txt = m.querySelector('.mtxt');
+    if (!txt) return;
+    m.classList.add('fold'); if (tight) m.classList.add('tight');
+    var clipped = txt.scrollHeight - txt.clientHeight > 8;
+    if (!clipped) { m.classList.remove('fold', 'tight'); return; }
+    m.classList.add('folded');
+    var more = el('button', 'mmore', 'עוד ▾');
+    more.type = 'button';
+    more.addEventListener('click', function () {
+      var open = !m.classList.contains('fold');
+      if (open) { m.classList.add('fold'); more.textContent = 'עוד ▾'; }
+      else { m.classList.remove('fold'); more.textContent = 'פחות ▴'; }
+    });
+    m.appendChild(more);
   }
 
   // The fine print every AI assistant owes the person reading it. Kept to two
@@ -1079,7 +1242,7 @@
       // כמו אצל סאני: כשהתשובה לוקחת רגע, אומרים מה קורה במקום להשאיר נקודות.
       // רק אחרי שנייה וחצי — תשובה מהירה לא צריכה את זה.
       typingTimer = setTimeout(function () {
-        if (typingEl) { typingEl.appendChild(el('span', 'tlab', 'בודק במלאי החורף שלנו…')); scrollDown(); }
+        if (typingEl) { typingEl.appendChild(el('span', 'tlab', 'מתאים לכם אפשרויות…')); scrollDown(); }
       }, 1500);
     } else if (!on && typingEl) {
       clearTimeout(typingTimer); typingTimer = null;
@@ -1160,6 +1323,262 @@
     return s;
   }
 
+  // the name printed on a card: the site's own (display_name), the workbook's as the fallback
+  function shownName(c) { return c.display_name || c.hotel; }
+
+  /* ---------- the board (בסיס אירוח) the customer picks ----------
+     c.board_options come from the server, per hotel: the site's own booking
+     engine when it answered, the hotel page otherwise. The choice rides on
+     the card object (c._board), so the panel, the card and the booking link
+     all agree, and a restored chat remembers it. */
+  function boardOf(c) {
+    var opts = c.board_options || [];
+    if (!opts.length) return null;
+    var code = c._board || c.board_default || opts[0].code;
+    for (var i = 0; i < opts.length; i++) if (opts[i].code === code) return opts[i];
+    return opts[0];
+  }
+  function setBoard(c, code) {
+    c._board = code;
+    var b = boardOf(c);
+    c._board_he = b ? b.he : null;
+    // the link the customer clicks carries the board they chose
+    if (c.booking_url && b) c.booking_url = withParam(c.booking_url, 'pwpans', String(b.code));
+    // every control that shows this card's board follows
+    var ctrls = (c._boardCtrls || []);
+    for (var i = 0; i < ctrls.length; i++) { try { ctrls[i](b); } catch (e) { /* a control that is gone */ } }
+    persist();
+  }
+  function withParam(url, name, value) {
+    try {
+      var u = new URL(url, window.location.href);
+      u.searchParams.set(name, value);
+      return u.toString();
+    } catch (e) { return url; }
+  }
+  // a segmented control (the panel) or a small select (the card)
+  function boardControl(c, kind) {
+    var opts = c.board_options || [];
+    if (!opts.length) return null;
+    var cur = boardOf(c);
+    if (opts.length === 1) {
+      return el('span', kind === 'select' ? 'rboard' : 'stxt', cur.he);
+    }
+    var node;
+    if (kind === 'select') {
+      node = document.createElement('select');
+      node.className = 'rbsel';
+      node.setAttribute('aria-label', 'בסיס אירוח');
+      opts.forEach(function (o) {
+        var op = document.createElement('option'); op.value = String(o.code); op.textContent = o.he;
+        if (cur && o.code === cur.code) op.selected = true;
+        node.appendChild(op);
+      });
+      node.addEventListener('change', function () { setBoard(c, +node.value); track('board_pick', { hotel: c.hotel, board: node.value }); });
+      node.addEventListener('click', function (ev) { ev.stopPropagation(); });
+      c._boardCtrls = (c._boardCtrls || []).concat(function (b) { if (b) node.value = String(b.code); });
+    } else {
+      node = el('div', 'bsel');
+      node.setAttribute('role', 'radiogroup');
+      node.setAttribute('aria-label', 'בסיס אירוח');
+      var btns = [];
+      opts.forEach(function (o) {
+        var b = el('button', 'bopt' + (cur && o.code === cur.code ? ' on' : ''), o.he);
+        b.type = 'button';
+        b.setAttribute('role', 'radio');
+        b.setAttribute('aria-checked', String(!!(cur && o.code === cur.code)));
+        b.addEventListener('click', function () { setBoard(c, o.code); track('board_pick', { hotel: c.hotel, board: o.code }); });
+        node.appendChild(b); btns.push([b, o]);
+      });
+      c._boardCtrls = (c._boardCtrls || []).concat(function (b) {
+        btns.forEach(function (pair) { var on = b && pair[1].code === b.code; pair[0].classList.toggle('on', on); pair[0].setAttribute('aria-checked', String(on)); });
+      });
+    }
+    return node;
+  }
+
+  /* ---------- the details panel ----------
+     Everything we know about one offer, beside the chat instead of inside
+     it (Tomer, 10/09). Built fresh each time from the card the server sent —
+     the widget invents nothing. */
+  var sideFor = null;      // the card object the panel currently shows
+  function openSide(c, cardEl) {
+    sideFor = c;
+    side.innerHTML = '';
+    var over = window.innerWidth < 900 || win.classList.contains('max');
+    side.classList.toggle('over', over);
+    var photos = (c.images && c.images.length ? c.images : (c.image ? [c.image] : []));
+
+    var head = el('div', 'shead');
+    var sx = el('button', 'sx', '✕');
+    sx.type = 'button'; sx.setAttribute('aria-label', 'סגירת הפרטים');
+    sx.addEventListener('click', closeSide);
+    head.appendChild(el('div', 'stitle', shownName(c)));
+    head.appendChild(sx);
+    side.appendChild(head);
+
+    var body = el('div', 'sbody');
+    if (photos.length) {
+      var g = el('div', 'sgal');
+      var im = document.createElement('img'); im.src = photos[0]; im.alt = shownName(c); g.appendChild(im);
+      im.addEventListener('error', function () { g.remove(); });
+      if (c.tier_he) g.appendChild(el('span', 'tag tier', c.tier_he));
+      if (photos.length > 1) {
+        var at = 0;
+        var count = el('div', 'galn', '1/' + photos.length);
+        var dots = el('div', 'dots');
+        var dot = [];
+        for (var di = 0; di < Math.min(photos.length, 12); di++) { var d = el('i'); if (!di) d.className = 'on'; dots.appendChild(d); dot.push(d); }
+        var go = function (n) {
+          at = (n + photos.length) % photos.length;
+          im.src = photos[at];
+          count.textContent = (at + 1) + '/' + photos.length;
+          dot.forEach(function (d, i) { d.classList.toggle('on', i === at); });
+        };
+        var arrow = function (pointsLeft, delta, label, cls) {
+          var b = el('button', 'galb ' + cls);
+          b.type = 'button'; b.setAttribute('aria-label', label);
+          b.innerHTML = '<svg width="10" height="16" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + (pointsLeft ? '<polyline points="7.5 1.5 1.5 7.5 7.5 13.5"/>' : '<polyline points="1.5 1.5 7.5 7.5 1.5 13.5"/>') + '</svg>';
+          b.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); go(at + delta); });
+          return b;
+        };
+        // RTL: the arrow on the LEFT moves forward, the one on the RIGHT back —
+        // both are real buttons on their own layer, nothing sits over them
+        g.appendChild(arrow(true, 1, 'התמונה הבאה', 'next'));
+        g.appendChild(arrow(false, -1, 'התמונה הקודמת', 'prev'));
+        g.appendChild(count); g.appendChild(dots);
+        // keyboard and a finger both page the gallery
+        side.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowLeft') { go(at + 1); e.preventDefault(); }
+          if (e.key === 'ArrowRight') { go(at - 1); e.preventDefault(); }
+        });
+        var tx = null;
+        g.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+        g.addEventListener('touchend', function (e) {
+          if (tx == null) return;
+          var dx = e.changedTouches[0].clientX - tx; tx = null;
+          if (dx < -40) go(at + 1); else if (dx > 40) go(at - 1);
+        }, { passive: true });
+      }
+      body.appendChild(g);
+    }
+
+    var top = el('div', 'sec');
+    var nm = el('div', 'sname'); nm.appendChild(document.createTextNode(shownName(c)));
+    if (c.rating_he) nm.appendChild(el('span', 'bscore', '★ ' + c.rating_he.replace(' כוכבים', '')));
+    top.appendChild(nm);
+    top.appendChild(el('div', 'swhere', (c.resort ? c.resort + ' · ' : '') + c.country_he));
+    body.appendChild(top);
+
+    var facts = el('div', 'sec');
+    var grid = el('div', 'sfacts');
+    var tile = function (k, v) { var t = el('div', 'ft'); t.appendChild(el('div', 'fk', k)); t.appendChild(el('div', 'fv', v)); grid.appendChild(t); };
+    tile('יציאה', fmtDate(c.date, c.date_label, true).replace(/^יום /, ''));
+    tile('לילות', String(c.nights));
+    tile('חדר', c.room || '—');
+    tile('טווח מחיר', c.price_range || 'נציג יאשר');
+    facts.appendChild(grid);
+    body.appendChild(facts);
+
+    // the board: a choice when the hotel sells more than one
+    var bc = boardControl(c, 'segment');
+    if (bc) {
+      var bsec = el('div', 'sec');
+      bsec.appendChild(el('div', 'slab', 'בסיס אירוח'));
+      bsec.appendChild(bc);
+      if ((c.board_options || []).length > 1) bsec.appendChild(el('div', 'snote', 'הבחירה עוברת לטופס ההזמנה; המחיר המדויק לכל בסיס מופיע שם.'));
+      body.appendChild(bsec);
+    }
+
+    // answers to what THIS customer asked (beds, board, ski pass…)
+    if (c.facts_he && c.facts_he.length) {
+      var fs = el('div', 'sec');
+      fs.appendChild(el('div', 'slab', 'מה ששאלתם'));
+      c.facts_he.forEach(function (f) { fs.appendChild(el('div', 'stxt', f)); });
+      body.appendChild(fs);
+    }
+    if (c.why_he) { var w = el('div', 'sec'); w.appendChild(el('div', 'stxt', c.why_he)); body.appendChild(w); }
+
+    var tagSec = el('div', 'sec'); var tags = el('div', 'tags');
+    if (c.recommended) tags.appendChild(el('span', 'tag rec', 'מומלץ'));
+    if (c.rooms_left_he) tags.appendChild(el('span', 'tag left', c.rooms_left_he));
+    if (c.camps && c.camps.running && c.camps.running.length) {
+      tags.appendChild(el('span', 'tag', 'קייטנה בעברית'));
+      if (!c.camps.full) tags.appendChild(el('span', 'tag warn', 'קייטנה חלקית — ראו פירוט'));
+    }
+    if (c.occ_unverified) tags.appendChild(el('span', 'tag warn', 'ההרכב יאומת מול נציג'));
+    (c.tags || []).forEach(function (tg) { if (tg) tags.appendChild(el('span', 'tag amen', tg)); });
+    if (tags.childNodes.length) { tagSec.appendChild(tags); body.appendChild(tagSec); }
+
+    // the room, as the hotel page describes it
+    var rf = c.room_facts || {};
+    if (rf.size_he || rf.beds_he || rf.bath_he || rf.occupancy_he || c.occ_composition_he) {
+      var rs = el('div', 'sec');
+      rs.appendChild(el('div', 'slab', 'החדר: ' + c.room));
+      var line = function (label, val) { if (!val) return; var r = el('div', 'srow'); r.appendChild(el('span', 'rlab', label)); r.appendChild(el('span', 'rval', val)); rs.appendChild(r); };
+      if (rf.name && rf.name !== c.room) line('שם החדר באתר', rf.name);
+      line('גודל', rf.size_he); line('מיטות', rf.beds_he); line('רחצה', rf.bath_he);
+      line('תפוסה', rf.occupancy_he || c.occ_composition_he);
+      if (c.occ && c.occ.max != null) line('מתאים ל', c.occ.max + ' נוסעים');
+      if (rf.exact === false) rs.appendChild(el('div', 'snote', 'הפרטים משותפים לכל חדרי המלון — נציג יאמת את החדר המדויק.'));
+      body.appendChild(rs);
+    }
+
+    if (c.package_includes_he) {
+      var inc = el('div', 'sec');
+      inc.appendChild(el('div', 'slab', 'החבילה כוללת'));
+      inc.appendChild(el('div', 'stxt', c.package_includes_he));
+      body.appendChild(inc);
+    }
+    // what the hotel page says about the stay — only what it actually says
+    var more = el('div', 'sec'); var any = false;
+    var mline = function (label, val) { if (!val) return; any = true; var r = el('div', 'srow'); r.appendChild(el('span', 'rlab', label)); r.appendChild(el('span', 'rval', val)); more.appendChild(r); };
+    more.appendChild(el('div', 'slab', 'עוד על החופשה'));
+    mline('העברות', c.transfer_he); mline('סקי פס', c.ski_pass_he); mline('ציוד', c.equipment_he);
+    mline('אינטרנט', c.wifi_he); mline('ספא', c.spa_access_he || c.spa_he); mline('מעלית', c.lift_he);
+    if (any) body.appendChild(more);
+    if (c.desc_he) { var ds = el('div', 'sec'); ds.appendChild(el('div', 'slab', 'על המלון')); ds.appendChild(el('div', 'stxt', c.desc_he)); body.appendChild(ds); }
+    side.appendChild(body);
+
+    var foot = el('div', 'sfoot');
+    var b1 = el('button', 'btn sec', 'תחזרו אליי');
+    b1.type = 'button';
+    b1.addEventListener('click', function () { track('lead_form_open', { where: 'side', hotel: c.hotel, cid: cid() }); closeSide(); openLeadForm(c); });
+    foot.appendChild(b1);
+    if (c.booking_url) {
+      var b2 = el('button', 'btn pri', 'המשך להזמנה');
+      b2.type = 'button';
+      b2.addEventListener('click', function () {
+        track('booking_click', { hotel: c.hotel, resort: c.resort, date: c.date, nights: c.nights, board: c._board || null, where: 'side', cid: cid() });
+        window.open(c.booking_url, '_blank', 'noopener');
+      });
+      foot.appendChild(b2);
+    }
+    side.appendChild(foot);
+
+    side.classList.add('on');
+    var sel = msgs.querySelectorAll('.card.sel');
+    for (var i = 0; i < sel.length; i++) sel[i].classList.remove('sel');
+    if (cardEl) cardEl.classList.add('sel');
+    body.scrollTop = 0;
+    sx.focus();
+    track('card_expand', { hotel: c.hotel, open: true, where: 'side', cid: cid() });
+  }
+  function closeSide() {
+    if (!side.classList.contains('on')) return;
+    side.classList.remove('on');
+    var sel = msgs.querySelectorAll('.card.sel');
+    for (var i = 0; i < sel.length; i++) sel[i].classList.remove('sel');
+    var was = sideFor; sideFor = null;
+    // hand focus back to the card's own button, so a keyboard user is not lost
+    try { var d = msgs.querySelector('.card .dtog'); if (was && d) d.focus(); } catch (e) { }
+  }
+  side.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeSide(); } });
+  window.addEventListener('resize', function () {
+    if (side.classList.contains('on')) side.classList.toggle('over', window.innerWidth < 900 || win.classList.contains('max'));
+  });
+
   /* ---------- hotel card ----------
      Structure asked for by Tomer, 24/08: gallery with arrows, hotel name with
      its country, labelled departure date and nights, the room as a control
@@ -1168,6 +1587,7 @@
      the widget invents nothing. */
   function addCard(c, container) {
     var card = el('div', 'card');
+    if (c._board) { c._boardCtrls = []; setBoard(c, c._board); }
     var photos = (c.images && c.images.length ? c.images : (c.image ? [c.image] : []));
     // the offer IS the photograph, unless there is no photograph
     var asPhoto = CARD_STYLE === 'photo' && photos.length > 0;
@@ -1185,7 +1605,7 @@
       var im = document.createElement('img');
       im.className = 'photo';
       im.src = photos[0];
-      im.alt = c.hotel;
+      im.alt = shownName(c);
       im.loading = 'lazy';
       im.addEventListener('error', function () {
         // a photo we cannot load must not leave a grey rectangle where the
@@ -1236,7 +1656,7 @@
 
     // ---- name, with the country beside it
     var head = el('div', 'chead');
-    head.appendChild(el('div', 'hname', c.hotel));
+    head.appendChild(el('div', 'hname', shownName(c)));
     // "★ 4 כוכבים · 8.5 בבוקינג" — רק כשיש נתון מאומת (rating_he מהשרת);
     // מלון בלי דירוג פשוט לא מציג את השורה
     if (c.rating_he) head.appendChild(el('div', 'hrating', '★ ' + c.rating_he));
@@ -1280,11 +1700,53 @@
        יציאה · לילות · חדר · מחיר. Built for the white card only; the photo
        card keeps its scrim. head/brief stay in the DOM (the open card and the
        photo card use them) and CSS hides them under the band. */
-    if (!asPhoto) {
+    var asRow = !asPhoto && CARD_STYLE === 'row';
+    if (asRow) {
+      /* ---- the row card (Tomer, 10/09): what Booking's list does on a phone.
+         Closed: a thumbnail at the start, the name, the place, one line of
+         when/how long/which room, the price band — and one row of actions.
+         Everything else (the full photograph, the room facts, what the
+         package includes, the tags) opens under "עוד פרטים". */
+      card.classList.add('r');
+      var rhead = el('div', 'rhead');
+      if (photos.length) {
+        var th = document.createElement('img');
+        th.className = 'thumb'; th.src = photos[0]; th.alt = ''; th.loading = 'lazy';
+        th.addEventListener('error', function () { th.remove(); });
+        rhead.appendChild(th);
+      }
+      var rmain = el('div', 'rmain');
+      var rtop = el('div', 'rtop');
+      rtop.appendChild(el('div', 'hname', shownName(c)));
+      if (c.rating_he) rtop.appendChild(el('span', 'bscore', '★ ' + c.rating_he.replace(' כוכבים', '')));
+      rmain.appendChild(rtop);
+      rmain.appendChild(el('div', 'rwhere', (c.resort ? c.resort + ' · ' : '') + c.country_he));
+      var rd = new Date(c.date + 'T00:00:00');
+      var rdays = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+      var rline = el('div', 'rline');
+      rline.appendChild(el('b', '', 'יום ' + rdays[rd.getDay()] + ' ' + rd.getDate() + '.' + (rd.getMonth() + 1)));
+      rline.appendChild(el('span', 'sep', '·'));
+      rline.appendChild(el('span', '', c.nights + ' לילות'));
+      if (c.room) { rline.appendChild(el('span', 'sep', '·')); rline.appendChild(el('span', 'rroom', c.room)); }
+      rmain.appendChild(rline);
+      var rmeta = el('div', 'rmeta');
+      rmeta.appendChild(el('span', 'rprice', c.price_range || 'מחיר: נציג יאשר'));
+      // the board, chosen here or in the panel — the two stay in step
+      var rb = boardControl(c, 'select');
+      if (rb) { rmeta.appendChild(el('span', 'sep', '·')); rmeta.appendChild(rb); }
+      // one flag at most beside the price — the row must stay a row
+      if (c.rooms_left_he) rmeta.appendChild(el('span', 'tag left', 'נשאר חדר אחד'));
+      else if (c.tier_he) rmeta.appendChild(el('span', 'tag tier', c.tier_he));
+      else if (c.recommended) rmeta.appendChild(el('span', 'tag rec', 'מומלץ'));
+      rmain.appendChild(rmeta);
+      rhead.appendChild(rmain);
+      card.insertBefore(rhead, card.firstChild);
+    }
+    if (!asPhoto && !asRow) {
       card.classList.add('j');
       var band = el('div', 'band');
       var bandTxt = el('div', 'btxt');
-      bandTxt.appendChild(el('div', 'bname', c.hotel));
+      bandTxt.appendChild(el('div', 'bname', shownName(c)));
       bandTxt.appendChild(el('div', 'bwhere', (c.resort ? c.resort + ' · ' : '') + c.country_he));
       band.appendChild(bandTxt);
       if (c.rating_he) band.appendChild(el('span', 'bscore', '★ ' + c.rating_he.replace(' כוכבים', '')));
@@ -1386,6 +1848,8 @@
     dtog.setAttribute('aria-expanded', 'false');
     dtog.addEventListener('click', function (ev) {
       ev.preventDefault(); ev.stopPropagation();
+      // the row card opens its details in the panel beside the chat, not inline
+      if (card.classList.contains('r')) { openSide(c, card); return; }
       var open = card.classList.toggle('open');
       dtog.textContent = open ? 'פחות פרטים ▴' : 'עוד פרטים ▾';
       dtog.setAttribute('aria-expanded', String(open));
@@ -1463,12 +1927,16 @@
       b2.addEventListener('click', function () {
         // THE conversion event. Without it there is no way to show that the
         // bot pays for itself — every other number is activity, not outcome.
-        track('booking_click', { hotel: c.hotel, resort: c.resort, date: c.date, nights: c.nights, cid: cid() });
+        track('booking_click', { hotel: c.hotel, resort: c.resort, date: c.date, nights: c.nights, board: c._board || null, cid: cid() });
         window.open(c.booking_url, '_blank', 'noopener');
       });
       btns.appendChild(b2);
     }
-    card.appendChild(btns);
+    if (card.classList.contains('r')) {
+      var rfoot = el('div', 'rfoot');
+      rfoot.appendChild(dtog); rfoot.appendChild(btns);
+      card.appendChild(rfoot);
+    } else card.appendChild(btns);
     (container || msgs).appendChild(card);
     if (!container) scrollDown();
   }
@@ -1502,8 +1970,11 @@
     state.log.push({ t: 'chips', v: labels });
   }
   function addCardsRow(cards) {
-    win.classList.add('big');
-    if (cards.length > 2) win.classList.add('wide');
+    // 10/09: the window stays its opening size. Row cards stack under each
+    // other and read fine at 460px; the 1100px expansion covered the site
+    // and felt like a full-screen takeover (Tomer, twice). The header's
+    // expand button is still there for whoever wants the room.
+    if (CARD_STYLE !== 'row') { win.classList.add('big'); if (cards.length > 2) win.classList.add('wide'); }
     var row = el('div', 'cards-row');
     msgs.appendChild(row);
     cards.forEach(function (c) { addCard(c, row); });
@@ -1522,7 +1993,7 @@
     b.addEventListener('click', function () {
       b.remove();
       spare.forEach(function (c) { addCard(c, row); });
-      win.classList.add('wide');
+      if (CARD_STYLE !== 'row') win.classList.add('wide');
       state.lastCards = (state.lastCards || []).concat(spare);
       if (logEntry) logEntry.v = (logEntry.v || []).concat(spare);
       state.slots = state.slots || {};
@@ -1559,7 +2030,7 @@
     addMsg('bot', 'על איזו מההצעות תרצו שנציג יחזור אליכם?');
     var box = el('div', 'chips');
     cards.forEach(function (c) {
-      var ch = el('button', 'chip', iso(c.hotel) + ' · ' + fmtDate(c.date, c.date_label));
+      var ch = el('button', 'chip', iso(shownName(c)) + ' · ' + fmtDate(c.date, c.date_label));
       ch.addEventListener('click', function () { box.remove(); openLeadForm(c); });
       box.appendChild(ch);
     });
@@ -1580,7 +2051,7 @@
     var f = document.createElement('form'); f.className = 'form';
     f.setAttribute('novalidate', '');
     if (card) {
-      f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם על: ' + iso(card.hotel)));
+      f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם על: ' + iso(shownName(card))));
       f.appendChild(el('div', 'note', fmtDate(card.date, card.date_label) + ' · ' + card.nights + ' לילות · ' + card.room));
     } else {
       f.appendChild(el('div', 'ftitle', 'נציג יחזור אליכם'));
@@ -1687,6 +2158,7 @@
             hotel: card ? card.hotel : null, resort: card ? card.resort : null,
             date: card ? card.date : null, nights: card ? card.nights : null,
             room: card ? card.room : null,
+            board: card && card._board_he ? card._board_he : null,
             party: state.slots ? { adults: state.slots.adults, children_ages: state.slots.children_ages } : null,
             // מה שהלקוח חיפש, בשדות מסודרים — כדי שה-CRM יוכל לסנן ולנתב לפי
             // חודש, יעד וקהל, ולא רק לקרוא תמליל. רשימה סגורה: שום שדה פנימי
@@ -1707,7 +2179,7 @@
         // כמו אצל סאני: אומרים ללקוח שסיכום השיחה עובר לנציג — שלא יצטרך
         // לספר הכל מהתחלה בטלפון (ה-transcript כבר נשלח עם הליד)
         addMsg('bot', card
-          ? 'הפרטים התקבלו, יחד עם סיכום מה שחיפשתם כאן — כך שלא תצטרכו לחזור על הכל. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + iso(card.hotel) + '.'
+          ? 'הפרטים התקבלו, יחד עם סיכום מה שחיפשתם כאן — כך שלא תצטרכו לחזור על הכל. נציג פינגווין יחזור אליכם בהקדם בנוגע ל-' + iso(shownName(card)) + '.'
           : 'הפרטים התקבלו, יחד עם סיכום מה שחיפשתם כאן — כך שלא תצטרכו לחזור על הכל. נציג פינגווין יחזור אליכם בהקדם.');
       }).catch(function () {
         track('error', { where: 'lead' });
@@ -1793,6 +2265,10 @@
         introEl = addMsg('bot', shown);
         // the server says when the moment deserves more than the small avatar
         if (data.mood === 'wave') introEl.classList.add('wave');
+        // less text around the offers (Tomer, 10/09): above cards the intro
+        // shows three lines; a really long answer elsewhere shows six
+        var withCards = !!(data.cards && data.cards.length && !data.cards_unchanged);
+        if (withCards ? shown.length > 160 : shown.length > 420) foldMsg(introEl, withCards);
         // the one thing a screen reader should hear on this turn
         announce(shown + (data.cards && data.cards.length && !data.cards_unchanged
           ? ' — ' + data.cards.length + ' הצעות' : ''));
@@ -1827,7 +2303,10 @@
       // asked to be called back — open the form on the offer they were looking
       // at, or a blank one if they have not chosen yet
       // אגודלים מתחת לתשובה האחרונה — לא כשנפתח טופס ליד, שלא להסיח
-      if (data.reply_he && !data.open_lead_form && !data.no_retry) addFeedback(data.reply_he);
+      // 10/09 (Tomer): the thumbs under every answer are gone — "ילדותי ולא
+      // מקצועי". /api/feedback stays on the server; FEEDBACK_THUMBS=1 on the
+      // tag brings the row back for a test period.
+      if (FEEDBACK_THUMBS && data.reply_he && !data.open_lead_form && !data.no_retry) addFeedback(data.reply_he);
       if (data.open_lead_form) {
         var lc = state.lastCards || [];
         if (data.lead_kind) openLeadForm(null, { kind: data.lead_kind, prefill: data.lead_prefill || null });
@@ -1934,7 +2413,7 @@
     if (!state.booted) {
       state.booted = true;
       addMsg('bot', say('greeting_widget',
-        'היי, אני ' + BOT_NAME + ' — העוזר של ' + THEME.brand + '. מציג רק חופשות שבאמת פנויות אצלנו, ונציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.'));
+        'היי, אני ' + BOT_NAME + ' — ואני בונה אתכם את חופשת הסקי שמתאימה לכם ביותר. נציג אנושי זמין בכפתור הוואטסאפ למעלה בכל שלב.\nספרו לי בקצרה כמה נוסעים, גילאי הילדים אם יש ומתי תרצו לצאת.'));
       // Disclosure, once, under the greeting: this is an AI, it can be wrong,
       // and a person confirms everything. {privacy} becomes a real link.
       // Not logged and not sent to the model — it is a notice, not a turn.
@@ -1946,6 +2425,7 @@
     persist();
   }
   function closeWin() {
+    closeSide();
     state.open = false; win.classList.remove('open'); wrap.classList.remove('chatting');
     fab.setAttribute('aria-expanded', 'false'); fab.focus();
     persist();

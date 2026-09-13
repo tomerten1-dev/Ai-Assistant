@@ -70,6 +70,32 @@ const PANSION = {
   'באגט וקרואסון + ארוחת ערב': 10, 'אולטרה הכל כלול': 12,
   'חצי פנסיון + ארוחת צהרים קלה': 15,
 };
+// code → the words the site's own form uses (order_odyssea.js `sleep`), in
+// the order that form lists them (`seder`)
+const PANSION_HE = Object.fromEntries(Object.entries(PANSION).map(([he, code]) => [code, he]));
+const PANSION_ORDER = [1, 9, 2, 8, 10, 3, 5, 6, 7, 12, 15];
+
+/* Every board the hotel page names, as codes. "ארוחת בוקר או חצי פנסיון" →
+   [2, 3]; "לינה בלבד, ארוחת בוקר או חצי פנסיון" → [1, 2, 3]; "חצי פנסיון,
+   עד 4 אורחים" → [3]; "סקי פס מקומי" → []. Longer names are matched first so
+   "חצי פנסיון + שתיה" is not also read as plain "חצי פנסיון", and "הכל
+   כלול" inside "אולטרה הכל כלול" is not counted twice. */
+function pansionCodes(boardHe) {
+  let t = String(boardHe || '')
+    // "הכל כלול — ארוחות בוקר, צהריים וערב…" / "פנסיון מלא (בוקר, צהריים וערב)":
+    // what follows the dash or sits in brackets DESCRIBES the board, it is
+    // not a second board
+    .replace(/\s[—–-]\s.*$/, '').replace(/\([^)]*\)/g, ' ')
+    .replace(/שתייה/g, 'שתיה')
+    .replace(/לינה וארוחת בוקר/g, 'ארוחת בוקר');
+  const found = [];
+  const names = Object.keys(PANSION).sort((a, b) => b.length - a.length);
+  for (const he of names) {
+    if (t.includes(he)) { found.push(PANSION[he]); t = t.split(he).join(' '); }
+  }
+  return PANSION_ORDER.filter(c => found.includes(c));
+}
+
 // our board text is a sentence ("ארוחת בוקר או חצי פנסיון"); take the first
 // board it names, and only when it is unambiguous
 function pansionCode(boardHe) {
@@ -124,4 +150,4 @@ function deepLink(hotelInfo, card, party) {
   return base + '&' + p.toString();
 }
 
-module.exports = { buildBookingUrl, deepLink, pageFor, ddmmyyyy, addNights, pansionCode, BOOKING_BASE: BASE, NS };
+module.exports = { buildBookingUrl, deepLink, pageFor, ddmmyyyy, addNights, pansionCode, pansionCodes, PANSION, PANSION_HE, PANSION_ORDER, BOOKING_BASE: BASE, NS };

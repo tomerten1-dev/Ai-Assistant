@@ -136,7 +136,7 @@ t('one detail left is said as one detail left, with what happens next', async ()
     messages: [{ role: 'user', content: '2 מבוגרים וילדים בני 6 ו-9, בינואר, עם קייטנה בעברית' }],
     slots: {} });
   assert.ok(/חסר לי פרט אחד/.test(out.reply_he), out.reply_he);
-  assert.ok(/ואז אביא/.test(out.reply_he), 'did not say what happens after: ' + out.reply_he);
+  assert.ok(/ואז אב(?:יא|נה)/.test(out.reply_he), 'did not say what happens after: ' + out.reply_he);
 });
 
 t('the "one detail" frame stays off a turn with several gaps still open', async () => {

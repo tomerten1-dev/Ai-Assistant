@@ -29,7 +29,7 @@ const CARDS = [
     date_label: null, nights: 3, room: 'Deluxe Suite 2-4', occ: { max: 4 }, camps: null,
     facts_he: [], tags: [], recommended: true },
 ];
-const OK = { cards: CARDS, fallback: 'הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):' };
+const OK = { cards: CARDS, fallback: 'הנה מה שבניתי לכם (הנציג יאשר סופית):' };
 
 const good = 'מצאתי שתי אפשרויות בבנסקו שנראות פנויות — קאזה קארינה לשבוע שלם, ורגנום לסוף שבוע קצר. הנציג יאשר סופית.';
 
@@ -236,7 +236,7 @@ lang('054-1234567', null);
   const numCards = [{ hotel: 'Casa Karina', date: '2027-02-05', nights: 7,
     room: 'DBL 2-3', country: 'bulgaria', price_range: '₪₪', facts_he: [] }];
   const numPayload = JSON.stringify({ dates: ['2027-02-05'], nights: 7 });
-  const numFallback = 'הנה מה שנראה פנוי אצלנו.';
+  const numFallback = 'הנה מה שבניתי לכם.';
   const v = (text, userText) => phrasing.validate(text,
     { cards: numCards, fallback: numFallback, payload: numPayload, userText });
   const rejects = (name, text, userText) => t(name, () =>

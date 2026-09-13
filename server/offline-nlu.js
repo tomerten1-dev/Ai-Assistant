@@ -78,7 +78,7 @@ const PREFS = [
   [/ספא|סאונה|ג'?קוזי|בריכה|עיסוי|מרחץ/, 'ספא'],
   [/קרוב למסלול|על המסלול|קרוב למעלי|ליד המעלי|הליכה קצרה|מרחק הליכה קצר|ski ?in/i, 'קרוב למסלולים'],
   [/שקט|רגוע|לא רועש/, 'שקט'],
-  [/מתחיל|לא גלשנו|פעם ראשונה|ללמוד לגלוש/, 'מתחילים'],
+  [/מתחיל|לא גלשנו|לא גלשו|לא גלש אף פעם|לא יודע(?:ים|ת|ות)? לגלוש|פעם ראשונה|ללמוד לגלוש/, 'מתחילים'],
   [/זול|תקציב|חסכוני|משתלם|לא יקר|שלא יהיה יקר|יקר מדי|לקרוע את הכיס|במחיר נמוך|מחיר שפוי/, 'תקציב'],
   [/עיירה|אטרקציות|בילויים|דברים לעשות|אווירה טובה|אווירה/, 'עיירה תוססת'],
   [/הכל כלול/, 'הכל כלול'],
@@ -337,6 +337,16 @@ function parseText(text, slots) {
       if (total >= 3 && total <= 8) { s.adults = 2; s.children_count = total - 2; s.no_children = false; }
     }
   }
+  // "אנחנו משפחה, 2 ילדים" / "משפחה עם ילדים בני 6 ו-10": a family whose
+  // children are known and whose adults are not is two parents until told
+  // otherwise (13/09 — it was asked "כמה תהיו בסך הכל?" twice and then
+  // searched with no party at all). "משפחה" with nothing else stays open.
+  // Kept out when the adults are stated anywhere in the message.
+  if (/משפח/.test(t) && s.adults == null && !/מבוגר|זוג|לבד|סבא|סבתא|הורה|אמא|אבא/.test(t) &&
+      ((s.children_ages || []).length || s.children_count)) {
+    s.adults = 2;
+    s.adults_assumed = true;                  // the reply says so, so they can correct it
+  }
   // "הבן נהיה 13" is a birthday, not thirteen travellers
   const childTurns = /(הבן|הבת|הילד|הילדה|הוא|היא|הקטן|הקטנה|הגדול|הגדולה) (נהיה|נהיית|יהיה|תהיה) ?\d/.test(t);
   // "אנחנו 2 מבוגרים וילד בן 7" — the 2 is the adults, said explicitly, not
@@ -360,11 +370,13 @@ function parseText(text, slots) {
   }
   // "בעצם 4" — a bare number that is explicitly a correction
   if (correcting) {
-    const cm = t.match(/(?:בעצם|סליחה|טעות|התכוונתי|שיניתי)[^\d]{0,12}(\d{1,2})(?!\d)/);
+    const cm = t.match(/(?:בעצם|סליחה|טעות|התכוונתי|שיניתי)[^\d]{0,12}(\d{1,2})(?!\d)(\s*מבוגר)?/);
     if (cm) {
       const n = +cm[1];
       const kids = (s.children_ages || []).length;
-      if (n >= 1 && n <= 20) s.adults = kids && n > kids ? n - kids : n;
+      // "בעצם אנחנו 3 מבוגרים" says the adults outright — nothing to subtract
+      // (it became one adult, 13/09); "בעצם 4" is still the whole party
+      if (n >= 1 && n <= 20) s.adults = cm[2] ? n : (kids && n > kids ? n - kids : n);
     }
   }
   // "משפחה של 4" / "4 נפשות" with known kids
@@ -587,7 +599,8 @@ function parseText(text, slots) {
   // NOT כשר: asking whether the food is kosher says nothing about flying on
   // Saturday, and inferring it silently removed every Saturday departure from
   // a customer who had only asked about a meal.
-  if (/שומר(?:ת|ים|ות|י)? שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|דתיים|שבת שלום/.test(t)) {
+  // "שומרי מסורת" asking about Shabbat wants the non-Saturday departures too (13/09)
+  if (/שומר(?:ת|ים|ות|י)? שבת|לא בשבת|לא ביום שבת|לא טסים בשבת|דתי|דתיים|שבת שלום|שומרי מסורת|מסורתיים/.test(t)) {
     s.no_saturday_flights = true;
   }
 
@@ -595,7 +608,7 @@ function parseText(text, slots) {
   // shown to someone who asked for a week is the wrong product.
   // "סופ״ש" is a real product (Bansko, Friday to Wednesday), not off topic
   if (/סופ.?ש|סוף שבוע|סופשבוע|סופ שבוע|רק לכמה ימים|אין לנו שבוע/.test(t)) s.nights_wanted = 3;
-  else if (/לשבוע|שבוע שלם|7 לילות|שבועיים/.test(t)) s.nights_wanted = 7;
+  else if (/לשבוע|שבוע שלם|7 לילות|שבועיים|(?:^|[^א-ת])שבוע(?![א-ת])(?!\s*(?:הבא|שעבר|לפני|אחרי|של))/.test(t)) s.nights_wanted = 7;
   else {
     const nm = t.match(/(\d{1,2})\s*לילות/);
     if (nm) s.nights_wanted = +nm[1];
@@ -676,18 +689,37 @@ function parseText(text, slots) {
     const named = [];
     for (const [re, dest] of DESTS) {
       const m2 = re.exec(t);
-      if (m2 && !isNegated(t, m2.index)) named.push({ destination: dest });
+      if (m2 && !isNegated(t, m2.index)) named.push({ destination: dest, _at: m2.index });
     }
     for (const [re, v] of COUNTRIES) {
       const m2 = re.exec(t);
       if (m2 && !isNegated(t, m2.index) && !named.some(n => n.country === v)) {
         // a country whose resort was already named is the same wish twice
         if (!named.some(n => DESTS.some(d => d[1] === n.destination && d[2] === v))) {
-          named.push({ country: v });
+          named.push({ country: v, _at: m2.index });
         }
       }
     }
+    // in the order the customer said them — "אוסטריה לצרפת" answers Austria first
+    named.sort((a, b) => a._at - b._at);
+    named.forEach(n => { delete n._at; });
     s.compare = named.length > 1 ? named.slice(0, 3) : null;
+    // A QUESTION about two places ("מה ההבדל בין אוסטריה לצרפת?") while a
+    // search is already running is a question, not a new search: the country
+    // and the resort stay what they were. Without this the customer who asked
+    // about Austria vs France over two Bansko offers saw the offers replaced
+    // by Austria (13/09). A first message naming two places still searches both.
+    s._compare_q = false;
+    if (s.compare && (slots.country || slots.destination) &&
+        /הבדל|עדיף|מול|להשוות|תשוו|השווא|מה יותר|מה עדיף|\?/.test(t) &&
+        !/רוצים|בא לי|תראה|תציג|במקום|בעצם/.test(t)) {
+      s._compare_q = true;                    // the search ignores this compare (toSearchSlots)
+      s.country = slots.country || null;
+      s.destination = slots.destination || null;
+      s.country_fixed = slots.country_fixed || false;
+      s.excluded_countries = [...(slots.excluded_countries || [])];
+      s.excluded_destinations = [...(slots.excluded_destinations || [])];
+    }
   }
 
   // --- a hotel named by name
@@ -1336,7 +1368,29 @@ function phrase(result, slots, cards) {
   // ...and only when there is genuinely nothing cheaper anywhere do we say so.
   // This sentence used to be printed from inside the customer's own filter,
   // which made it a claim about the whole company based on one country.
-  if (obj && !elsewhere && note('no_cheaper')) lines.push(obj.none);
+  // "אלה המחירים הטובים ביותר" closes a door (13/09). What actually lowers
+  // the price is known — fewer nights, a date off the holidays, the cheaper
+  // countries — so the line ends with the levers that apply to THIS customer.
+  const priceLevers = () => {
+    const levers = [];
+    const onScreen = cards.map(c => c.country);
+    const cheapCountry = c => ['bulgaria', 'andorra'].includes(c);
+    const nightsAsked = slots.nights_wanted || (cards[0] && cards[0].nights) || 7;
+    if (nightsAsked > 3 && (!slots.country || slots.country === 'bulgaria')) levers.push('חופשה קצרה של 3 לילות בבנסקו במקום שבוע');
+    const hol = slots.holiday && slots.holiday !== 'any';
+    if (hol || slots.month === 2 || slots.month === 12) levers.push('תאריך מחוץ לחגים ולחופשות — ינואר או מרץ זולים יותר');
+    if (slots.country ? !cheapCountry(slots.country) : !onScreen.every(cheapCountry)) levers.push('בולגריה או אנדורה — היעדים המשתלמים אצלנו');
+    return levers.length
+      ? ' ' + guidance.msg('price_levers', 'מה שכן מוריד מחיר: {levers}. רוצים שאבדוק?').replace('{levers}', levers.slice(0, 2).join('; '))
+      : '';
+  };
+  if (obj && !elsewhere && note('no_cheaper')) lines.push(obj.none + priceLevers());
+  // "יקר לי" over cards that carried no band: the search re-sorted by price
+  // and the new cards do carry bands — say that this is the answer, rather
+  // than "סידרתי לפי מה שביקשתם" as if nothing had been said (13/09)
+  if (note('price_unranked') && cards.some(c => c.price_range)) {
+    lines.push('הבנתי. סידרתי מחדש — החסכוניות קודם — ואלה ההצעות עם טווח המחיר הנמוך בתנאים שביקשתם (הנציג יאשר סופית):' + priceLevers());
+  }
 
   // acknowledge an active preference, so a refine chip visibly does something
   const prefs = slots.preferences || [];
@@ -1351,9 +1405,17 @@ function phrase(result, slots, cards) {
   // say out loud what was taken into account, then what a rep must confirm
   const applied = note('applied_requirements');
   if (cards.length && applied && applied.items.length >= 2) {
-    lines.push('לקחתי בחשבון: ' + applied.items.join(', ') + '.');
+    // "משפחות" is who they are, not a wish; and a requirement the lines above
+    // already voiced ("החסכוניות קודם" IS the budget) is not repeated (13/09)
+    const said = lines.join(' ');
+    const SAME = { 'תקציב': /חסכוני|זול|תקציב/, 'מתחילים': /מתחיל/ };
+    const items = applied.items.filter(p => p !== 'משפחות' &&
+      !(said.includes(p) || (SAME[p] && SAME[p].test(said))));
+    if (items.length >= 2) {
+      lines.push('לקחתי בחשבון: ' + items.join(', ') + '.');
+    }
   }
-  if (cards.length && !lines.length) lines.push('הנה מה שנראה פנוי אצלנו (הנציג יאשר סופית):');
+  if (cards.length && !lines.length) lines.push('הנה מה שבניתי לכם (הנציג יאשר סופית):');
   // the trade-off is advice about the offers, so it follows their introduction —
   // it used to be the first and only sentence above three cards
   // What one bend would open up. Said once, for the single best trade — a list
@@ -1860,7 +1922,7 @@ function unknownResort(text) {
   const t = ' ' + String(text || '').replace(/\s+/g, ' ') + ' ';
   const m = t.match(FOREIGN_RESORTS);
   if (!m) return null;
-  return `את ${m[1].trim()} אנחנו לא מוכרים העונה — אני מציג רק יעדים שיש לנו בהם מקומות בפועל: ` +
+  return `את ${m[1].trim()} אנחנו לא מוכרים העונה — השנה אני בונה חופשות ביעדים האלה: ` +
     'בולגריה, אוסטריה, צרפת ואנדורה. אשמח להציע אתר דומה מתוכם.';
 }
 
@@ -2145,7 +2207,7 @@ function guard(text) {
   // israelis_group answer (persona P03, 03/09).
   else if (/יש עוד (?:משפחות|ישראלים|זוגות|קבוצות|אנשים|חרדים|דתיים)|עוד משפחות (?:ישראליות|דתיות|עם ילדים)/.test(t) &&
            /באות[הו] (?:תאריך|יציאה|טיסה|שבוע|מועד)|לתאריך הזה|בתאריך הזה|בשבוע הזה|בטיסה (?:הזאת|שלנו)|ביציאה (?:הזאת|שלנו)/.test(t)) {
-    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
+    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני כאן רק כדי להתאים לכם חופשה.';
   }
   else if (/מי הזמין|שם של מי|מספר ה?הזמנה|מס' ה?הזמנה|מי גר|מי נמצא|רשימת ה?לקוחות|רשימת ה?הזמנות|פרטי ה?לקוח|פרטיו של לקוח|מי תפס|שמות ה?לקוחות|שמות או טלפונים|טלפונים של (נוסעים|לקוחות|אנשים)|טלפון של (?:לקוח|נוסע|מישהו|אדם|משפחה) אחר|פרטים של (?:לקוח|נוסע) אחר|של לקוח אחר|של לקוחות אחרים|פרטי קשר של (נוסעים|לקוחות)|להתחבר לנוסעים|נוסעים שכבר הזמינו|מי עוד הזמין|מי נוסע איתנו|כמה (?:אנשים|נוסעים|משפחות) (?:כבר )?(?:הזמינו|נרשמו|רשומים|יש)|מי עוד (?:נרשם|רשום|טס|נוסע|יהיה)|מי איתנו בטיסה|מי בקבוצה/.test(t)) {
     // Their OWN booking is a different question with a different answer: we
@@ -2155,7 +2217,7 @@ function guard(text) {
       return 'אין לי גישה למערכת ההזמנות ולא אוכל לראות הזמנה קיימת. ' +
         'נציג כן יכול — ' + guidance.phone() + ', או השאירו כאן שם וטלפון ונחזור אליכם.';
     }
-    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני יכול להראות רק מה פנוי.';
+    return 'אין לי גישה לפרטי לקוחות אחרים ולא אוכל לשתף אותם. אני כאן רק כדי להתאים לכם חופשה.';
   }
   // Our cost price and commission are internal, full stop. The phrasing model
   // once answered "נציג יעביר לכם את עלות החדר לסוכן ואת העמלה" — a promise to

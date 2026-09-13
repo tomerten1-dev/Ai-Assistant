@@ -64,8 +64,15 @@ t('the signals point at the conversations worth reading', () => {
 
 // The rule the whole system is built around (spec 2a).
 t('no customer name or order number is ever written', () => {
-  const raw = fs.readFileSync(log.file(), 'utf8');
-  assert.ok(!/\d{6}/.test(raw), 'a six-digit sequence reached the log');
+  // the check is on what came from the conversation — the customer's text, the
+  // reply, the hotels, the slots. Not on the row's own bookkeeping: the random
+  // conversation id and the millisecond count are digits too, and on Tomer's
+  // machine (07/09) one of them happened to line up six of them
+  for (const line of fs.readFileSync(log.file(), 'utf8').split('\n').filter(Boolean)) {
+    const row = JSON.parse(line);
+    const content = JSON.stringify({ user: row.user, bot: row.bot, hotels: row.hotels, slots: row.slots });
+    assert.ok(!/\d{6}/.test(content), 'a six-digit sequence reached the log: ' + content.slice(0, 200));
+  }
 });
 
 t('the lead form details are not logged', () => {

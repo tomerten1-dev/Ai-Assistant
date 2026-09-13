@@ -19,7 +19,7 @@ const clear = () => { const c = sr._cache(); for (const k of Object.keys(c)) del
 const ROOMS = { rooms: [
   { roomID: 811, roomName: '2 ח"ש וסלון 2-4 אורחים', showOrder: 1 },
   { roomID: 812, roomName: 'סטודיו 2-3 אורחים', showOrder: 2 },
-  { roomID: 813, roomName: '1 bdrm apt 2-4 pax', showOrder: 3 },
+  { roomID: 813, roomName: '1 bdrm apt 2-4 pax', showOrder: 3, pans: [2, 3], defaultPan: 2 },
 ] };
 const okFetch = (seen) => async (url) => {
   if (seen) seen.push(url);
@@ -38,7 +38,7 @@ const okFetch = (seen) => async (url) => {
     assert.strictEqual(u.searchParams.get('from'), '2027-01-30', 'the engine wants yyyy-mm-dd');
     assert.strictEqual(u.searchParams.get('till'), '2027-02-06');
     assert.strictEqual(rooms.length, 3);
-    assert.deepStrictEqual(rooms[0], { roomID: '811', roomName: '2 ח"ש וסלון 2-4 אורחים' });
+    assert.deepStrictEqual(rooms[0], { roomID: '811', roomName: '2 ח"ש וסלון 2-4 אורחים', pans: null, defaultPan: null });
   });
 
   await t('a response keyed by id parses the same as a list', async () => {
@@ -53,6 +53,21 @@ const okFetch = (seen) => async (url) => {
     const id = sr.idFor(1288, '2027-01-30', '2027-02-06', 'anything', {}, { fetch: okFetch() });
     assert.strictEqual(id, null);
     assert.ok(Date.now() - started < 50, 'idFor blocked while it fetched');
+  });
+
+  await t('the boards the site sells for a room ride along with its id (Tomer, 10/09)', async () => {
+    const rooms = await sr.fetchRooms(1290, '2027-01-30', '2027-02-06', { fetch: okFetch() });
+    const apt = rooms.find(r => r.roomID === '813');
+    assert.deepStrictEqual(apt.pans, [2, 3]);
+    assert.strictEqual(apt.defaultPan, 2);
+    // a room the engine said nothing about is "unknown", never "no boards"
+    assert.strictEqual(rooms.find(r => r.roomID === '811').pans, null);
+    assert.deepStrictEqual(sr.pansOf('3,2,3'), [3, 2]);
+    assert.strictEqual(sr.pansOf([]), null);
+    await sr.warm(1290, '2027-01-30', '2027-02-06', { fetch: okFetch() });
+    assert.deepStrictEqual(sr.boardFor(1290, '2027-01-30', '2027-02-06', '813'), { pans: [2, 3], defaultPan: 2 });
+    assert.strictEqual(sr.boardFor(1290, '2027-01-30', '2027-02-06', '811'), null);
+    assert.strictEqual(sr.boardFor(4242, '2027-01-30', '2027-02-06', '813'), null, 'a cold cache answers nothing');
   });
 
   await t('once warm, our room name resolves to the site\'s own id', async () => {

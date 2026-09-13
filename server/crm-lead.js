@@ -77,6 +77,7 @@ function offer(c) {
     date: str(c.date, 20),
     nights: num(c.nights),
     room: str(c.room, 120),
+    board: str(c.board, 60),
   };
 }
 

@@ -207,6 +207,8 @@ function sanitizeIncomingSlots(raw, engine, empty) {
 
   out.country = COUNTRIES.has(raw.country) ? raw.country : null;
   out.country_fixed = bool(raw.country_fixed);
+  out.adults_assumed = bool(raw.adults_assumed);   // "משפחה, 2 ילדים" was read as two parents (13/09)
+  out._compare_q = bool(raw._compare_q);
   out.destination = R.destination(raw.destination);
   out.hotel = R.hotel(raw.hotel);
   out.excluded_countries = countries(raw.excluded_countries);

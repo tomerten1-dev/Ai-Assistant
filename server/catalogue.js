@@ -79,4 +79,19 @@ function names(list, cap = 4) {
   return rest > 0 ? `${joined} ועוד ${rest}` : joined;
 }
 
-module.exports = { load, hotels, allPages, inResort, inResortHe, catalogueOnly, names, FILE };
+/* The name the SITE gives a hotel the workbook knows by shorthand. The
+   commitments sheet says "Golf", "SCHLOSSHOF", "Belambra Les Cretes L2A 1800"
+   (L2A 1800 = the Les 2 Alpes village at 1800m); pingwin.co.il says "Club
+   Belambra Du Golf", "Schlosshof", "Club Belambra Les Cretes" — and that is
+   the name the customer meets on the page the card sends them to (Tomer,
+   13/09: "למה רשום 1800?"). The workbook name stays the identity everywhere
+   else; this is only what is printed. */
+function siteName(workbookName) {
+  const w = String(workbookName || '').replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim();
+  for (const h of allPages()) {
+    if (!h.same_as && (h.commitment_names || []).some(n => String(n).replace(/\s*\((allotment|Allotment)\)\s*/g, ' ').trim() === w)) return h.name;
+  }
+  return null;
+}
+
+module.exports = { load, hotels, allPages, inResort, inResortHe, catalogueOnly, names, siteName, FILE };

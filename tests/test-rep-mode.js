@@ -228,10 +228,13 @@ const CARDS_OR_COUNT = /הנה מה שנראה פנוי|סידרתי לפי|כמ
     assert.ok(/כמה תהיו, גילאי ילדים אם יש, ומתי בערך/.test(r[0].reply_he), r[0].reply_he);
     assert.strictEqual((r[0].reply_he.match(/\?/g) || []).length, 1, 'more than one question mark');
     assert.ok(!/כמה תהיו, גילאי ילדים/.test(r[1].reply_he), 'the bundle repeated: ' + r[1].reply_he);
+    // 13/09: a family with two children is two parents until told otherwise —
+    // so the bundle asks for the two things still missing
     const p = await convo(['היי, משפחה עם 2 ילדים']);
-    assert.ok(/כמה מבוגרים, בני כמה הילדים, ומתי בערך/.test(p[0].reply_he), p[0].reply_he);
+    assert.ok(/בני כמה הילדים ומתי בערך/.test(p[0].reply_he), p[0].reply_he);
+    assert.ok(/הנחתי 2 מבוגרים/.test(p[0].reply_he), p[0].reply_he);
     const q = await convo(['2 מבוגרים וילד בן 7, פברואר']);
-    assert.ok(!/כדי שאבדוק מה פנוי —/.test(q[0].reply_he), 'one gap left is the ordinary ladder: ' + q[0].reply_he);
+    assert.ok(!/כדי שאתאים לכם את החופשה —/.test(q[0].reply_he), 'one gap left is the ordinary ladder: ' + q[0].reply_he);
   });
 
   await t('two hotels are characterized from their pages — conditional, no prices, no "הכי"', async () => {
@@ -305,6 +308,102 @@ const CARDS_OR_COUNT = /הנה מה שנראה פנוי|סידרתי לפי|כמ
     const r = await convo(['זוג, ינואר לאוסטריה', 'בעצם אנחנו 3 מבוגרים, לא זוג']);
     assert.strictEqual(r[1].slots.adults, 3);
     assert.ok(/עדכנתי — 3 מבוגרים/.test(r[1].reply_he), r[1].reply_he);
+  });
+
+  // ── 13/09: what a customer walked into, played as five conversations ──
+  await t('"מה ההבדל בין אוסטריה לצרפת?" over Bansko offers compares the countries and leaves the search alone', async () => {
+    const r = await convo(['זוג, ינואר, בולגריה', 'מה ההבדל בין אוסטריה לצרפת?']);
+    assert.ok(/אוסטריה מול צרפת/.test(r[1].reply_he), 'not a country comparison, or not in the customer\'s order: ' + r[1].reply_he.slice(0, 80));
+    assert.ok(!/Casa Karina|Regnum/.test(r[1].reply_he), 'the hotels on screen were compared instead: ' + r[1].reply_he.slice(0, 120));
+    assert.strictEqual(r[1].slots.country, 'bulgaria', 'the question moved the search');
+    assert.ok(r[1].cards_unchanged, 'the offers on screen were replaced');
+  });
+  await t('"אנחנו משפחה, 2 ילדים" is two parents until told otherwise — said once, correctable', async () => {
+    const r = await convo(['אנחנו משפחה, 2 ילדים', '6 ו-10', 'פברואר', 'כן, קייטנה', 'בעצם אנחנו 3 מבוגרים']);
+    assert.strictEqual(r[0].slots.adults, 2);
+    assert.ok(/הנחתי 2 מבוגרים ו-2 ילדים/.test(r[0].reply_he), r[0].reply_he);
+    assert.ok(!/הנחתי/.test(r[1].reply_he), 'said twice');
+    assert.ok(!/לקחתי בחשבון: משפחות/.test(r.map(x => x.reply_he).join(' ')), '"משפחות" echoed as a wish');
+    assert.ok(r[3].cards.length > 0, 'no offers once the ages, the month and the camp are in');
+    assert.strictEqual(r[4].slots.adults, 3, '"3 מבוגרים" in a correction became ' + r[4].slots.adults);
+  });
+  await t('"שבוע במרץ" is seven nights, not a three-night weekend', async () => {
+    const r = await convo(['זוג, גולשים מנוסים, שבוע במרץ', 'בולגריה']);
+    assert.strictEqual(r[0].slots.nights_wanted, 7);
+    assert.ok(r[1].cards.length && r[1].cards.every(c => c.nights === 7), r[1].cards.map(c => c.nights).join(','));
+  });
+  await t('"איך מגיעים מהשדה למלון?" over Bansko offers answers about Bansko, not sixteen resorts', async () => {
+    const r = await convo(['זוג, ינואר, בולגריה', 'איך מגיעים מהשדה למלון?']);
+    assert.ok(/בנסקו — כ-160 ק"מ מסופיה/.test(r[1].reply_he), r[1].reply_he.slice(0, 200));
+    assert.ok(!/מאיירהופן|טין —|ואל טורנס/.test(r[1].reply_he), 'other resorts listed');
+    assert.ok(/כלולה במחיר/.test(r[1].reply_he), 'the transfer being included went unsaid');
+    assert.ok(/לבולגריה — לסופיה/.test(r[1].reply_he), 'the flight line is missing or unscoped');
+    // nothing known → the full list still comes
+    const r2 = await convo(['כמה זמן הנסיעה מהשדה?']);
+    assert.ok(/מאיירהופן/.test(r2[0].reply_he) && /בנסקו/.test(r2[0].reply_he));
+  });
+  await t('the grandchildren who never skied, "ומה עם שבת? אנחנו שומרי מסורת", and "איפה שיש שלג" are all answered', async () => {
+    const r = await convo(['סבא וסבתא עם 3 נכדים', '5, 8 ו-12', 'ינואר', 'בולגריה',
+      'הנכדים לא גלשו אף פעם', 'ומה עם שבת? אנחנו שומרי מסורת', 'איפה שיש שלג']);
+    assert.ok(/למתחילים/.test(r[4].reply_he), 'beginners: ' + r[4].reply_he.slice(0, 100));
+    assert.ok(/יציאות שלא בשבת/.test(r[5].reply_he), 'shabbat: ' + r[5].reply_he.slice(0, 100));
+    assert.ok(!/שאלתם עוד דבר ולא עניתי/.test(r[5].reply_he), 'a statement was counted as an unanswered question');
+    assert.strictEqual(r[5].slots.no_saturday_flights, true);
+    assert.ok(/ודאות שלג|גלישה עד \d+ מ׳/.test(r[6].reply_he), 'snow: ' + r[6].reply_he.slice(0, 100));
+  });
+  await t('"איפה יש הכי הרבה שלג?" ranks the highest first; "יש שלג בפברואר?" gets the honest answer', async () => {
+    const a = await convo(['איפה יש הכי הרבה שלג?']);
+    const first = (a[0].reply_he.match(/• ([^(]+) \(/) || [])[1] || '';
+    assert.ok(/לה דוז אלפ/.test(first), 'first listed: ' + first);
+    const b = await convo(['יש שלג בפברואר?']);
+    assert.ok(/לא מבטיחים שלג/.test(b[0].reply_he), b[0].reply_he.slice(0, 100));
+  });
+  await t('one-word messages: "סקי" is a hello, bare "כן" shows nothing, and no lead form on the second try', async () => {
+    const r = await convo(['??', 'סקי', 'לא יודע', 'כן', '2']);
+    assert.ok(/כמה תהיו/.test(r[1].reply_he) && !/לא בטוח שהבנתי/.test(r[1].reply_he), '"סקי": ' + r[1].reply_he.slice(0, 80));
+    assert.ok(!r[1].open_lead_form && !r[2].open_lead_form, 'a lead form before the customer said anything');
+    for (const x of r.slice(0, 4)) assert.strictEqual(x.cards.length, 0, 'offers with nothing known: ' + x.reply_he.slice(0, 60));
+    assert.ok(!/אני כאן בעיקר להתאמת/.test(r[3].reply_he), 'bare "כן" called off topic');
+    assert.ok(/ילדים/.test(r[4].reply_he), 'after "2" the next question is the children: ' + r[4].reply_he.slice(0, 80));
+  });
+
+  // ── 13/09, round 7–9: the budget said once, "יקר לי" answered with levers, chips per stage ──
+  await t('"יקר לי" is not answered by the budget three times over', async () => {
+    const r = await convo(['משפחה, 2 ילדים בני 8 ו-11, חנוכה, צרפת', 'יקר לי']);
+    const all = r.map(x => x.reply_he).join(' ');
+    assert.ok(!/לקחתי בחשבון: משפחות/.test(all), '"משפחות" echoed as a wish');
+    assert.ok(!/לקחתי בחשבון:[^.]*תקציב/.test(all), 'the budget echoed beside the price answer: ' + r[1].reply_he);
+    assert.ok(!/טווח המחיר מסומן/.test(r[1].reply_he), 'the where-the-price-lives line on top of the objection answer');
+    const s = await convo(['זוג, ינואר, אוסטריה', 'יקר לי']);
+    assert.strictEqual((s[1].reply_he.match(/החסכוניות קודם/g) || []).length, 1, s[1].reply_he);
+    assert.ok(!/טווח המחיר מסומן/.test(s[1].reply_he), s[1].reply_he);
+  });
+  await t('"יקר לי" ends with what actually lowers the price, for this customer', async () => {
+    const a = await convo(['זוג, ינואר, אוסטריה', 'יקר לי']);
+    assert.ok(/מה שכן מוריד מחיר: בולגריה או אנדורה/.test(a[1].reply_he), a[1].reply_he);
+    assert.ok(!/3 לילות בבנסקו/.test(a[1].reply_he), 'Bansko nights offered to a customer who asked for Austria');
+    assert.deepStrictEqual(a[1].chips.slice(0, 2), ['בולגריה', 'אנדורה'], 'chips after the objection are not the levers: ' + a[1].chips.join(','));
+    const b = await convo(['משפחה, 2 ילדים בני 8 ו-11, חנוכה, צרפת', 'יקר לי']);
+    assert.ok(/ינואר|מרץ/.test(b[1].chips.join(' ')), 'a holiday customer is not offered a cheaper month: ' + b[1].chips.join(','));
+    // nothing left to pull — a cheap country, three nights, January — no invented lever
+    const c = await convo(['זוג, ינואר, הכי זול שיש', 'יקר לי']);
+    assert.ok(!/מה שכן מוריד מחיר/.test(c[1].reply_he), c[1].reply_he);
+  });
+  await t('chips under the offers: at most six, only what would change them, active wishes gone', async () => {
+    const r = await convo(['זוג', 'פברואר', 'אוסטריה', 'תקציב חסכוני']);
+    for (const x of r.filter(x => x.cards.length)) {
+      assert.ok(x.chips.length <= 6, x.chips.length + ' chips: ' + x.chips.join(','));
+      assert.ok(!x.chips.some(c => /נוסעים|ילדים/.test(c)), 'party chips with the party known: ' + x.chips.join(','));
+      assert.ok(!x.chips.some(c => /חנוכה|ינואר|פברואר|פורים/.test(c)), 'month chips with the month known: ' + x.chips.join(','));
+      const airports = x.chips.filter(c => /טיסה/.test(c)).length;
+      assert.ok(airports === 0 || airports === 2, 'a lone airport chip: ' + x.chips.join(','));
+    }
+    assert.ok(!r[3].chips.includes('תקציב חסכוני'), 'the wish just tapped is offered again: ' + r[3].chips.join(','));
+    // with the country still open, the countries lead the row
+    const s = await convo(['זוג, פברואר, לא משנה לי היעד']);
+    assert.ok(s[0].cards.length, 'no offers');
+    assert.ok(!s[0].chips.some(c => /נוסעים/.test(c)), s[0].chips.join(','));
+    assert.ok(s[0].chips.length <= 6, s[0].chips.join(','));
   });
 
   console.log('\nrep-mode: ' + pass + ' passed, ' + fail + ' failed');
