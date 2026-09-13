@@ -606,6 +606,40 @@ function startServer() {
       });
     }
 
+    // ── the chain's sales point on the card and in the panel (Tomer, 13/09) ──
+    {
+      const pg = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      pg.on('pageerror', e => errors.push(String(e)));
+      let hl;
+      try {
+        await pg.goto(URL + '?pwreset=1');
+        await pg.waitForTimeout(500);
+        await pg.evaluate(`${SHADOW}.querySelector('.fab').click()`);
+        await pg.waitForTimeout(400);
+        await pg.evaluate(`(() => { const r = ${SHADOW}; const ta = r.querySelector('textarea');
+          ta.value = 'משפחה 2+2 בני 6 ו-9, ינואר, קלאב דו סוליי'; ta.dispatchEvent(new Event('input', { bubbles: true }));
+          r.querySelector('.send, .snd, button[type=submit]').click(); })()`);
+        await pg.waitForTimeout(3500);
+        await pg.evaluate(`${SHADOW}.querySelector('.card .dtog').click()`);
+        await pg.waitForTimeout(600);
+        hl = await pg.evaluate(`(() => { const r = ${SHADOW};
+          const pills = [...r.querySelectorAll('.card .rmeta .tag.hl')].map(e => e.textContent);
+          const first = r.querySelector('.card .rmeta .tag.hl');
+          const vis = first && first.getBoundingClientRect().width > 40;
+          const strip = r.querySelector('.side .shl');
+          return { pills, vis, strip: strip ? strip.textContent : null,
+            boardFact: !!r.querySelector('.card .rmeta .rboard'),
+            bot: r.querySelector('.m.bot:last-of-type, .m.bot') ? [...r.querySelectorAll('.m.bot')].map(m => m.textContent).join(' ') : '' }; })()`);
+      } finally { await pg.close(); }
+      t('Club du Soleil cards wear "פנסיון מלא + יין + ציוד כלול", the panel explains it, the board fact steps aside', () => {
+        assert.ok(hl.pills.length >= 2 && hl.pills.every(p => p === 'פנסיון מלא + יין + ציוד כלול'), JSON.stringify(hl.pills));
+        assert.ok(hl.vis, 'the pill is not visible');
+        assert.ok(hl.strip && /יין בארוחות/.test(hl.strip), 'no strip in the panel: ' + hl.strip);
+        assert.ok(!hl.boardFact, 'the plain board fact still shows beside the pill');
+        assert.ok(/מסביר את המחיר/.test(hl.bot), 'the reply never said what the price buys');
+      });
+    }
+
     t('no page errors', () => assert.deepStrictEqual(errors, []));
   } finally {
     if (browser) await browser.close().catch(() => {});

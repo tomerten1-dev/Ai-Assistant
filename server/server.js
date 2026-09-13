@@ -703,6 +703,13 @@ function presentCards(result, slots, skip, opts = {}) {
     // (Tomer, 10/09), per hotel and never invented: the site's own booking
     // engine when its answer is cached, the hotel page's own words otherwise.
     ...boardOptions(c, slots),
+    // the chain's sales highlight (Tomer, 13/09): Belambra = all-inclusive
+    // club, Club du Soleil = full board + wine + equipment — the card wears it,
+    // the panel repeats it, and the reply says it once
+    ...(() => {
+      const h = offline.groupHighlight(c.hotel, c.board_he);
+      return h ? { highlight_he: h.he, highlight_long_he: h.long_he, highlight_group: h.group } : {};
+    })(),
   })).map((card, i, arr) => ({ ...card, tier_he: opts.noTier ? null : tierLabel(card, arr) }));
 }
 
@@ -2274,9 +2281,25 @@ async function handleChatInner(body) {
   // survive — the year we are selling, and what we can or cannot do in the
   // resort they named. The rest ("הצגתי משני היעדים", "הרחבתי לינואר") describe
   // a list that is not on the screen, and over zero cards they are a lie.
+  // what a chain's price buys — said once per chain, when one of its hotels
+  // is on screen (Tomer, 13/09: "זה ממש חשוב למכירה ומסביר את המחיר")
+  const highlightLines = [...new Map(cards.filter(c => c.highlight_long_he)
+    .map(c => [c.highlight_group, c.highlight_long_he])).values()];
+  // "יקר לי" over a Belambra or Club du Soleil offer: before anything
+  // cheaper, what that price actually bought — the offer they called
+  // expensive is the one that was on screen, not the one replacing it
+  const worthLines = [];
+  if (priceObjected) {
+    const keys = Object.keys(engine.resorts.hotels || {});
+    for (const d of onScreenHotels(prevSlots)) {
+      const k = keys.find(x => displayHotel(x) === d);
+      const h = k && offline.groupHighlight(k, (engine.hotelInfo(k) || {}).board_he);
+      if (h && !worthLines.includes('שימו לב מה כלול במחיר: ' + h.long_he)) worthLines.push('שימו לב מה כלול במחיר: ' + h.long_he);
+    }
+  }
   const fixedRaw = holdingForDetails
     ? [yearLine, offCommLine]
-    : [yearLine, offCommLine, cmpLine, monthsLine, ...widened];
+    : [yearLine, offCommLine, ...worthLines, cmpLine, monthsLine, ...widened, ...highlightLines];
   const fixed = fixedRaw.filter(Boolean).filter(l => !saidFixed.has(l));
   slots._fixed_said = [...saidFixed, ...fixedRaw.filter(Boolean)].slice(-8);
   if (fixed.length) preamble = [preamble, ...fixed].filter(Boolean).join(String.fromCharCode(10));

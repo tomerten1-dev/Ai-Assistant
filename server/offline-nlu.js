@@ -1752,7 +1752,14 @@ function hotelGroups() {
     const raw = JSON.parse(require('fs').readFileSync(GROUPS_FILE, 'utf8'));
     for (const g of (raw.groups || [])) {
       if (!g || !g.match || !Array.isArray(g.hotels) || !g.hotels.length) continue;
-      try { out.push({ id: g.id, he: g.he, hotels: g.hotels, re: new RegExp(g.match, 'i') }); }
+      try {
+        out.push({ id: g.id, he: g.he, hotels: g.hotels, re: new RegExp(g.match, 'i'),
+          // the sales highlight for the chain (Tomer, 13/09) — shown only where
+          // the hotel's own board line confirms it
+          highlight_he: typeof g.highlight_he === 'string' ? g.highlight_he : null,
+          highlight_long_he: typeof g.highlight_long_he === 'string' ? g.highlight_long_he : null,
+          requires: g.requires ? new RegExp(g.requires) : null });
+      }
       catch (e) { console.error('hotel-groups.json: bad pattern for %s — %s', g.id, e.message); }
     }
   } catch (e) {
@@ -1760,6 +1767,19 @@ function hotelGroups() {
   }
   groupCache = out; groupStamp = stamp;
   return out;
+}
+
+// The chain's sales highlight for one hotel: {he, long_he, group} or null.
+// `requires` guards it against the hotel's own page — Belambra L'Oree des
+// Pistes is listed as half board, and "הכל כלול" over it would be a promise
+// the booking screen breaks.
+function groupHighlight(hotelName, boardHe) {
+  for (const g of hotelGroups()) {
+    if (!g.highlight_he || !g.hotels.includes(hotelName)) continue;
+    if (g.requires && !g.requires.test(String(boardHe || ''))) return null;
+    return { he: g.highlight_he, long_he: g.highlight_long_he || g.highlight_he, group: g.id, group_he: g.he };
+  }
+  return null;
 }
 
 // Returns a hotel only when EXACTLY one is named. "מה עדיף קאזה קארינה או
@@ -2382,7 +2402,7 @@ module.exports = {
   wantsMore,
   hotelNamed,
   hotelsNamed,
-  hotelGroups,
+  hotelGroups, groupHighlight,
   wantsCallback,
   unknownAnswer,
   noMatchAnswer, parseText, nextQuestion, blockingGaps, isElliptical, fixTypos,

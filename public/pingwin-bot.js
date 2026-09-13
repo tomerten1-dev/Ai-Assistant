@@ -598,6 +598,15 @@
     + '.tag{font-size:12px;padding:4px 10px;border-radius:6px;background:#e9eef2;color:#33475b;border:1px solid #d5dde4}'
     + '.tag.warn{background:#f7f1e3;color:#7a5c1e;border:1px solid #e5d9bd}'
     + '.tag.rec{background:#e8eef4;color:' + THEME.primaryDark + ';border:1px solid #cfdae4}'
+    /* the chain's sales point (Tomer, 13/09): Belambra = all-inclusive club,
+       Club du Soleil = full board + wine + equipment. Coral, and never hidden
+       on a closed card — it is what explains the price. */
+    + '.tag.hl{background:' + THEME.accent + ';color:#fff;border:1px solid ' + THEME.accent + ';font-weight:700}'
+    + '.card:not(.open) .tags .tag.hl{display:inline-block}'
+    + '.card.r .rmeta .tag.hl{font-size:11px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}'
+    + '.side .shl{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 11px;border-radius:8px;'
+    + 'background:#fff3ef;border:1px solid #f7c6bb;color:' + THEME.text + ';font-size:13px;line-height:1.4}'
+    + '.side .shl .tag.hl{flex:none}'
     + '.tag.tier{background:' + THEME.primaryDark + ';color:#fff;border:1px solid ' + THEME.primaryDark + ';font-weight:600}'
     + '.tag.left{background:#fbeeea;color:#8a3b2a;border:1px solid #efcfc6}'
     + '.card .price{font-size:13.5px;font-weight:700;color:' + THEME.primaryDark + ';letter-spacing:.3px;background:' + THEME.ice + ';border-radius:8px;padding:4px 10px}'
@@ -1469,6 +1478,12 @@
     if (c.rating_he) nm.appendChild(el('span', 'bscore', '★ ' + c.rating_he.replace(' כוכבים', '')));
     top.appendChild(nm);
     top.appendChild(el('div', 'swhere', (c.resort ? c.resort + ' · ' : '') + c.country_he));
+    if (c.highlight_he) {
+      var shl = el('div', 'shl');
+      shl.appendChild(el('span', 'tag hl', c.highlight_he));
+      shl.appendChild(el('span', '', c.highlight_long_he || ''));
+      top.appendChild(shl);
+    }
     body.appendChild(top);
 
     var facts = el('div', 'sec');
@@ -1733,9 +1748,14 @@
       rmeta.appendChild(el('span', 'rprice', c.price_range || 'מחיר: נציג יאשר'));
       // the board, chosen here or in the panel — the two stay in step
       var rb = boardControl(c, 'select');
-      if (rb) { rmeta.appendChild(el('span', 'sep', '·')); rmeta.appendChild(rb); }
+      // the chain's sales point stands in for a single-board fact: "קלאב
+      // הכל כלול" says more than "הכל כלול" (Tomer, 13/09)
+      var hlOnly = c.highlight_he && !(rb && rb.tagName === 'SELECT');
+      if (rb && !hlOnly) { rmeta.appendChild(el('span', 'sep', '·')); rmeta.appendChild(rb); }
+      if (c.highlight_he) { rmeta.appendChild(el('span', 'sep', '·')); rmeta.appendChild(el('span', 'tag hl', c.highlight_he)); }
       // one flag at most beside the price — the row must stay a row
-      if (c.rooms_left_he) rmeta.appendChild(el('span', 'tag left', 'נשאר חדר אחד'));
+      if (c.highlight_he) { /* the highlight is the flag */ }
+      else if (c.rooms_left_he) rmeta.appendChild(el('span', 'tag left', 'נשאר חדר אחד'));
       else if (c.tier_he) rmeta.appendChild(el('span', 'tag tier', c.tier_he));
       else if (c.recommended) rmeta.appendChild(el('span', 'tag rec', 'מומלץ'));
       rmain.appendChild(rmeta);
@@ -1888,6 +1908,7 @@
     }
 
     var tags = el('div', 'tags');
+    if (c.highlight_he) tags.appendChild(el('span', 'tag hl', c.highlight_he));
     if (c.tier_he && !photos.length) tags.appendChild(el('span', 'tag tier', c.tier_he));
     if (c.recommended) tags.appendChild(el('span', 'tag rec', 'מומלץ'));
     if (c.rooms_left_he) tags.appendChild(el('span', 'tag left', c.rooms_left_he));

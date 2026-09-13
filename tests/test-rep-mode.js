@@ -453,6 +453,22 @@ const CARDS_OR_COUNT = /הנה מה שנראה פנוי|סידרתי לפי|כמ
     assert.ok(/עדכנתי — צרפת/.test(s[1].reply_he.split('\n')[0]), 'the update line is not first: ' + s[1].reply_he.slice(0, 80));
     assert.ok(!/Casa Karina/.test(s[2].reply_he), 'a hotel from two searches ago was compared: ' + s[2].reply_he.slice(0, 200));
   });
+  // ── 13/09: the chain's sales point (Tomer: "זה ממש חשוב למכירה ומסביר את המחיר") ──
+  await t('Belambra = all-inclusive club, Club du Soleil = full board + wine + equipment — on the card, said once, and again under "יקר לי"', async () => {
+    const r = await convo(['זוג, ינואר, קלאב בלמברה', 'יש עוד?', 'יקר לי']);
+    const cretes = r[0].cards.find(c => /Cretes/.test(c.hotel));
+    assert.ok(cretes && cretes.highlight_he === 'קלאב הכל כלול', JSON.stringify(r[0].cards.map(c => [c.hotel, c.highlight_he])));
+    const oree = r[0].cards.find(c => /Oree/.test(c.hotel));
+    if (oree) assert.ok(!oree.highlight_he, 'the half-board Belambra was promised all-inclusive');
+    assert.ok(/קלאב בלמברה הוא קלאב הכל כלול/.test(r[0].reply_he), r[0].reply_he.slice(0, 120));
+    assert.ok(!/קלאב הכל כלול/.test(r[1].reply_he), 'said twice');
+    assert.ok(/שימו לב מה כלול במחיר: קלאב בלמברה/.test(r[2].reply_he), 'the objection was not answered with what the price buys: ' + r[2].reply_he.slice(0, 160));
+    const s = await convo(['משפחה 2+2 בני 6 ו-9, ינואר, קלאב דו סוליי']);
+    assert.ok(s[0].cards.length && s[0].cards.every(c => c.highlight_he === 'פנסיון מלא + יין + ציוד כלול'), JSON.stringify(s[0].cards.map(c => c.highlight_he)));
+    assert.ok(/קלאב דו סוליי כולל במחיר פנסיון מלא, יין בארוחות/.test(s[0].reply_he), s[0].reply_he.slice(0, 160));
+    const plain = await convo(['זוג, ינואר, בולגריה']);
+    assert.ok(plain[0].cards.every(c => !c.highlight_he), 'a highlight on a hotel outside the chains');
+  });
   await t('"יש מלון יותר טוב?" shows more instead of "איזו מההצעות מדברת אליכם?"', async () => {
     const r = await convo(['זוג פברואר בולגריה', 'יש מלון יותר טוב?']);
     assert.ok(r[1].cards.length && !r[1].cards_unchanged, r[1].reply_he);

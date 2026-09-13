@@ -7,13 +7,32 @@
       "id": "club_soleil",
       "he": "קלאב דו סוליי",
       "match": "קלאב ?(דו|דה|די)? ?סולי+|קלאב ?סוליי|club ?soleil",
-      "hotels": ["Club Soleil Oz", "Club Soleil Les 2 Alpes", "Club Soleil Montgenevre", "Club Soleil Les Menuires"]
+      "hotels": [
+        "Club Soleil Oz",
+        "Club Soleil Les 2 Alpes",
+        "Club Soleil Montgenevre",
+        "Club Soleil Les Menuires"
+      ],
+      "highlight_he": "פנסיון מלא + יין + ציוד כלול",
+      "highlight_long_he": "קלאב דו סוליי כולל במחיר פנסיון מלא, יין בארוחות, סקי פס וציוד סקי/סנובורד — זה מה שמסביר את המחיר.",
+      "requires": "פנסיון מלא"
     },
     {
       "id": "belambra",
       "he": "בלמברה",
       "match": "בלמברה|בלאמברה|belambra",
-      "hotels": ["Belambra Val Claret", "Belambra Les Cretes L2A 1800", "Belambra L'Oree des Pistes", "Belambra Grand Massif", "Belambra Avoriaz", "Belambra Tignes Val Claret"]
+      "hotels": [
+        "Belambra Val Claret",
+        "Belambra Les Cretes L2A 1800",
+        "Belambra L'Oree des Pistes",
+        "Belambra Grand Massif",
+        "Belambra Avoriaz",
+        "Belambra Tignes Val Claret"
+      ],
+      "highlight_he": "קלאב הכל כלול",
+      "highlight_long_he": "קלאב בלמברה הוא קלאב הכל כלול — 3 ארוחות ביום, שתייה חופשית, סקי פס ובידור בערבים כלולים במחיר. זה מה שמסביר את המחיר.",
+      "requires": "הכל כלול"
     }
-  ]
+  ],
+  "_highlight": "highlight_he — תג קצר על הכרטיס ובפאנל; highlight_long_he — משפט אחד שפינגי אומר פעם אחת כשמלון מהרשת מוצג, וגם כשלקוח אומר \"יקר לי\" (תומר, 13/09: \"זה ממש חשוב למכירה ומסביר את המחיר\"). requires — התג מוצג רק כשבסיס האירוח בדף המלון מאשר אותו (רגקס על board_he), כדי שלא נבטיח הכל כלול במלון שהדף שלו אומר חצי פנסיון."
 }
